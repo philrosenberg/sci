@@ -1,0 +1,2763 @@
+#ifndef svector_h
+#define svector_h
+
+
+#if defined _SCL_SECURE_NO_WARNINGS
+#define poo 1
+#endif
+#define _USE_MATH_DEFINES
+//2*M_PI
+#define M_2PI     6.28318530717958647692
+//sqrt(M_PI)
+#define M_SQRTPI  1.77245385090551602729
+//sqrt(2.0*M_PI)
+#define M_SQRT2PI 2.50662827463100050241
+#define NOMINMAX
+
+#include<vector>
+#include<limits>
+#include<algorithm>
+#include<numeric>
+#include<complex>
+#include<cmath>
+#include<type_traits>
+#include"dep/operators.h"
+#include"dep/math.h"
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#ifdef _DEBUG   
+#ifndef DBG_NEW      
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )      
+#define new DBG_NEW   
+#endif
+#endif  // _DEBUG
+
+//****************************************************************
+//Copyright R-Space
+//Version 1.0
+//26/9/2011
+//****************************************************************
+
+
+
+
+#ifndef SBOOL
+#define SBOOL char
+#endif
+
+
+
+namespace sci
+{
+
+	//enumeration of base types
+	enum basetype
+	{
+		SBASE_UNKNOWN=0,
+		SBASE_DOUBLE=1,
+		SBASE_FLOAT=2,
+		SBASE_LONGDOUBLE=3,
+		SBASE_BOOL=4,
+		SBASE_SIGNEDCHAR=5,
+		SBASE_UNSIGNEDCHAR=6,
+		SBASE_WCHAR=7,
+		SBASE_SIGNEDSHORT=8,
+		SBASE_UNSIGNEDSHORT=9,
+		SBASE_SIGNEDINT=10,
+		SBASE_UNSIGNEDINT=11,
+		SBASE_SIGNEDLONG=13,
+		SBASE_UNSIGNEDLONG=14,
+		SBASE_COMPLEX=15,
+		SBASE_STRING=16
+	};
+
+	//quick iterator
+	template<class T>
+	class qic
+	{
+	public:
+		inline qic(const std::vector<T> &v){m_start=&v[0];}
+		inline const T& operator[](size_t index) const 
+		{
+			T result=*(m_start+index);
+			return *(m_start+index);
+		}
+	private:
+		const T *m_start;
+	};
+	//quick const iterator
+	template<class T>
+	class qi
+	{
+	public:
+		inline qi(std::vector<T> &v){m_start=&v[0];}
+		inline T& operator[](size_t index) const 
+		{
+			T result=*(m_start+index);
+			return *(m_start+index);
+		}
+	private:
+		T *m_start;
+	};
+	
+	//********************************************************
+	//****struct which gives shorthand notation for **********
+	//****delcaring multidimensional vectors        **********
+	//********************************************************
+
+	//you can use this to declare different dimension vectors as 
+	//1d - sci::vector<double>::d1
+	//2d - sci::vector<double>::d2
+	//3d - sci::vector<double>::d3
+	//etc up to 10 dimensions
+	template<class T>
+	struct vector
+	{
+		typedef std::vector<T> d1;
+		typedef std::vector<std::vector<T> > d2;
+		typedef std::vector<std::vector<std::vector<T> > > d3;
+		typedef std::vector<std::vector<std::vector<std::vector<T> > > > d4;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > d5;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > d6;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > > d7;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > > > d8;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > > > > d9;
+		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > > > > > d10;
+	};
+
+	template<class T>
+	class sortablevector;
+	template<class T>
+	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
+	//class used for sorting and keeping track of elements
+	template<class T>
+	class sortableelement
+	{
+		friend class sortablevector<T>;
+		friend class std::vector<sortableelement<T> >;
+	private:
+		inline void setval(T element){m_element=element;};
+		inline void setoriginallocation(size_t location){m_location=location;};
+		inline T getval() const{return m_element;};
+		inline size_t getoriginallocation() const{return m_location;};
+		T m_element;
+		size_t m_location;
+	public:
+		sortableelement(){}; //to do - this was private but had to make it public when upgrading to VS2012, work out why, maybe to do with debug allocator
+		bool inline operator< (const sortableelement<T> &rhs) const {return m_element<rhs.m_element;}
+	};
+
+	//class used for sorting vectors
+	template<class T>
+	class sortablevector
+	{
+		friend void sci::sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
+	private:
+		sortablevector(const std::vector<T> &origv);
+		void getvectors(std::vector<T> &vect, std::vector<size_t> &origpositions) const;
+		std::vector< sortableelement<T> > m_vector;
+		void sort();
+	};
+
+	template<class T>
+	sortablevector<T>::sortablevector(const std::vector<T> &origv)
+	{
+		m_vector.resize(origv.size());
+		std::vector< sortableelement<T> >::iterator vbegin=m_vector.begin();
+		std::vector<T>::const_iterator origvi=origv.begin();
+		for(std::vector< sortableelement<T> >::iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
+		{
+			vi->setoriginallocation(vi-vbegin);
+			vi->setval(*origvi);
+			++origvi;
+		}
+	}
+
+	template<class T>
+	void sortablevector<T>::getvectors(std::vector<T> &vect, std::vector<size_t> &origpositions) const
+	{
+		vect.resize(m_vector.size());
+		origpositions.resize(m_vector.size());
+		std::vector<T>::iterator vecti=vect.begin();
+		std::vector<size_t>::iterator origi=origpositions.begin();
+		for(std::vector< sortableelement<T> >::const_iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
+		{
+			*vecti=vi->getval();
+			*origi=vi->getoriginallocation();
+			++vecti;
+			++origi;
+		}
+	}
+
+	template<class T>
+	void sortablevector<T>::sort()
+	{
+		std::sort(m_vector.begin(),m_vector.end());
+	}
+
+
+
+	//********************************************************
+	//**********Functions*************************************
+	//********************************************************
+
+	//********************************************************
+	//*************General vector helpers*********************
+	//********************************************************
+	
+	//concatenate two vectors
+	template <class T>
+	std::vector<T> concat(const std::vector<T> &a, const std::vector<T> &b)
+	{
+		std::vector<T> result(a.size()+b.size());
+		std::copy(a.begin(),a.end(),result.begin());
+		std::copy(b.begin(),b.end(),result.begin()+a.size());
+		return result;
+	}
+
+	//concatenate a scalar and then a vector
+	template <class T>
+	std::vector<T> concat(const T &a, const std::vector<T> &b)
+	{
+		std::vector<T> result=b;
+		result.insert(result.begin(),a);
+		return result;
+	}
+
+	//concatenate a vector and then a scalar
+	template <class T>
+	std::vector<T> concat(const std::vector<T> &b, const T &a)
+	{
+		std::vector<T> result=b;
+		result.push_back(a);
+		return result;
+	}
+
+	//concatenate two scalars into a vector creating a new dimension
+	template <class T>
+	std::vector<T> concatnewd(const T &a, const T &b)
+	{
+		std::vector<T> result(2);
+		result[0]=a;
+		result[1]=b;
+		return result;
+	}
+
+	//transposes a 2D vector. If the original vector is not rectangualar the new
+	//vector will be made rectangular by padding with NaNs
+	template <class T>
+	std::vector< std::vector<T> > transpose(const std::vector< std::vector<T> > &v)
+	{
+		std::vector< std::vector<T> > result;
+		size_t d1=0;
+		for(std::vector<std::vector <T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) d1=std::max(d1,vi->size());
+		result.resize(d1);
+		for(std::vector<std::vector <T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)resulti->resize(v.size(),std::numeric_limits<T>::quiet_NaN());
+		for(size_t i=0; i<v.size(); ++i)
+		{
+			for(size_t j=0; j<v[i].size(); j++)result[j][i]=v[i][j];
+		}
+		return result;
+	}
+	template <class T>
+	bool rectangular(const std::vector< std::vector<T> > &v)
+	{
+		if (v.size()==0) return true;
+		size_t size=v[0].size();
+		for(std::vector<std::vector<T> >::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		{
+			if(vi->size()!=size) return false;
+		}
+		return true;
+	}
+	template <class T>
+	bool square(const std::vector< std::vector<T> > &v)
+	{
+		if (v.size()==0) return true;
+		size_t size=v.size();
+		for(std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi)
+		{
+			if(vi->size()!=size) return false;
+		}
+		return true;
+	}
+	
+
+	//creates a vector from a c style array
+	template<class T>
+	std::vector<T> vectorfromarray(size_t nelements, T *data)
+	{
+		std::vector<T> result(nelements);
+		memcpy(&result[0],data,nelements*sizeof(T));
+		return result;
+	}
+
+	//checks if the vector has enough reserved space for the element then adds it to the
+	//back of the vector. If there is no spare reserved space then this function doubles
+	//the reserved space. This increases the speed with which a large data set can
+	//be built up element-by-element by avoiding having to copy the entire vector for
+	//every push_back call at the expense of using up to double the memory required
+	//for the vector.
+	template<class T>
+	void reservedpush_back(std::vector<T> &v, const T &val)
+	{
+		size_t cap=v.capacity();
+		size_t max=v.max_size();
+		size_t size=v.size();
+		if(v.capacity()==0) v.reserve(2);
+		else if((v.size())==v.capacity()) 
+		{
+			try	
+			{
+				v.reserve(std::min(v.capacity()*2,v.max_size()));
+			}
+			catch(...)
+			{
+				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const T &val)");
+			}
+		}
+		try
+		{
+			v.push_back(val);
+		}
+		catch(...)
+		{
+			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const T &val). The element has not been added.");
+		}
+	}
+
+	//as above but adds multiple copies
+	template<class T>
+	void reservedpush_back(std::vector<T> &v, const T &val, size_t n_copies)
+	{
+		if(v.capacity()==0) v.reserve(n_copies*2);
+		else if((v.size()+n_copies)>=v.capacity()) 
+		{
+			try	
+			{
+				v.reserve(std::min(v.capacity()*2,v.max_size()));
+			}
+			catch(...)
+			{
+				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const T &val, size_t n_copies)");
+			}
+		}
+		try
+		{
+			v.insert(v.end(),n_copies,val);
+		}
+		catch(...)
+		{
+			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const T &val, size_t n_copies). The elements have not been added.");
+		}
+	}
+
+	//as above push pushes back a whole vector
+	template<class T>
+	void reservedpush_back(std::vector<T> &v, const std::vector<T> &val)
+	{
+		if(v.capacity()==0) v.reserve(val.size()*2);
+		else if((v.size()+val.size())>=v.capacity()) 
+		{
+			try	
+			{
+				v.reserve(std::min(v.capacity()*2,v.max_size()));
+			}
+			catch(...)
+			{
+				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val");
+			}
+		}
+		try
+		{
+			v.insert(v.end(),val.begin(),val.end());
+		}
+		catch(...)
+		{
+			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val. The elements have not been added.");
+		}
+	}
+
+	//as above push pushes back a subvector
+	template<class T>
+	void reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements)
+	{
+		if(v.capacity()==0) v.reserve(n_elements*2);
+		else if ((v.size()+n_elements)>=v.capacity())
+		{
+			try	
+			{
+				v.reserve(std::min(v.capacity()*2,v.max_size()));
+			}
+			catch(...)
+			{
+				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements)");
+			}
+		}
+		try
+		{
+			if(begin>val.size()) v.insert(v.end(),n_elements,T());
+			else if((begin+n_elements)>val.size())
+			{
+				v.insert(v.end(),val.begin()+begin,val.end());
+				v.insert(v.end(),n_elements-(val.end()-(val.begin()+begin)),T());
+			}
+			else v.insert(v.end(),val.begin()+begin,val.begin()+begin+n_elements);
+		}
+		catch(...)
+		{
+			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements). The elements have not been added.");
+		}
+
+	}
+	template <class T>
+	size_t maxsize(const std::vector< std::vector<T> > &v)
+	{
+		if v.size()==0 return 0;
+		size_t maxsize=v[0].size();
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		{
+			maxsize=max(maxsize,vi->size());
+		}
+		return maxsize;
+	}
+	
+	//set all values in a vector to the given value
+	template <class T, class U>
+	inline void setallvalues(std::vector<T> &v, const U &val)
+	{
+		if(v.size()==0) return;
+		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) *vi=val;
+	}
+	template <class T, class U>
+	inline void setallvalues(std::vector< std::vector<T> > &v, const U &val)
+	{
+		if(v.size()==0) return;
+		for(std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi) setallvalues(*vi,val);
+	}
+
+	template <class T>
+	size_t minsize(const std::vector< std::vector<T> > &v)
+	{
+		if v.size()==0 return 0;
+		size_t minsize=v[0].size();
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		{
+			minsize=min(minsize,vi->size());
+		}
+		return minsize;
+	}
+	
+	//create a 2 d vector with dimensions as given
+	template <class T>
+	std::vector <std::vector <T> > makevector(T fillvalue, size_t dim1, size_t dim2)
+	{
+		std::vector <std::vector <T> > result(dim1);
+		for(std::vector<std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) resulti->resize(dim2,fillvalue);
+		return result;
+	}
+
+	//create a subvector from a vector
+	template <class T>
+	std::vector <T>  subvector(const std::vector<T> &src, size_t first_elem, size_t length)
+	{
+		if(first_elem>=src.size()) return std::vector<T>(0);
+		std::vector<T>::const_iterator first=src.begin()+first_elem;
+		std::vector<T>::const_iterator last;
+
+		if(first_elem+length>src.size()) last=src.end();
+		else last=src.begin()+first_elem+length;
+
+		return std::vector<T>(first,last);
+	}
+
+	//create a subvector from specified elements of a vector
+	template <class T>
+	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<size_t> &elements)
+	{
+		std::vector<T> result(elements.size());
+		for(size_t i=0; i<elements.size(); ++i) result[i]=elements[i]<src.size() ? src[elements[i]] : std::numeric_limits<T>::quiet_NaN();
+		return result;
+	}
+
+	//create a subvector from a vector of values and a vector of bools which indicates if the value should be used
+/*	template <class T>
+	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<bool> &included)
+	{
+		if(src.size()!=included.size()) return std::vector<T>(0);
+		size_t count=0;
+		for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
+		{
+			if(*inci) ++count;
+		}
+		std::vector<T> result(count);
+		std::vector<bool>::const_iterator includedi=included.begin();
+		std::vector<T>::iterator resulti=result.begin();
+		for(std::vector<T>::const_iterator srci=src.begin(); srci!=src.end(); ++srci) 
+		{
+			if(*includedi)
+			{
+				*resulti=*srci;
+				++resulti;
+			}
+			++includedi;
+		}
+		return result;
+	}*/
+
+	//create a subvector from a vector of values and a vector of bools which indicates if the value should be used
+	template <class T>
+	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<bool> &included)
+	{
+		if(src.size()!=included.size()) return std::vector<T>(0);
+		size_t count=0;
+		for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
+		{
+			if(*inci) ++count;
+		}
+		std::vector<T> result=src;
+		/*result.reserve(count);*/
+		
+		/*std::vector<bool>::const_iterator includedi=included.begin();
+		std::vector<T>::const_iterator srci=src.begin();
+		while(includedi!=included.end())
+		{
+			bool copying=*includedi;
+			while(!copying&&includedi!=included.end()) 
+			{
+				++srci;
+				++includedi;
+				copying=*includedi;
+			}
+			std::vector<T>::const_iterator sectbegin=srci;
+			while(copying&&includedi!=included.end()) 
+			{
+				++srci;
+				++includedi;
+				copying=*includedi;
+			}
+			std::vector<T>::const_iterator sectend=srci;
+			result.insert(result.end(),sectbegin,sectend);
+		}*/
+		return result;
+	}	
+	
+	//create a subvector from a vector of values and a vector of chars which indicates if the value should be used
+	//a char value of 0 indicates not included anything else indicates included. This is hoped to be faster than
+	//the bool implimentation but uses more memory
+	template <class T>
+	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<SBOOL> &included, bool sparse=false)
+	{
+		if(src.size()!=included.size() || included.size()==0) return std::vector<T>(0);
+		size_t count=0;
+		const SBOOL *includedi=&included[0];
+		const SBOOL *includedend=includedi+included.size();
+		for(; includedi!=includedend; ++includedi )
+		{
+			if(*includedi) ++count;
+		}
+		std::vector<T> result=src;
+		result.resize(count);
+		if(count==0) return result;
+
+		includedi=&included[0];
+		const T *srci=&src[0];
+
+		if(sparse)
+		{
+			T *insertpoint=&result[0];
+			T *resultend=insertpoint+result.size();
+			for(; includedi!=includedend; ++includedi)
+			{
+				if(insertpoint==resultend) break;
+				if(*includedi)
+				{
+					*insertpoint=*srci;
+					++insertpoint;
+				}
+				++includedi;
+				++srci;
+			}
+
+		}
+		else
+		{
+			T *insertpoint=&result[0];
+			//cycle through again picking out the needed sections
+			while(includedi!=includedend)
+			{
+				SBOOL copying=*includedi;
+				const SBOOL *includedemptybegin=includedi;
+				//scan through any false points
+				while(!copying&&includedi!=includedend) 
+				{
+					++includedi;
+					copying=*includedi;
+				}
+				size_t emptylen=includedi-includedemptybegin;
+				srci+=emptylen;
+				//when we find a true section record the start and end
+				const T *sectbegin=srci;
+				const SBOOL *includedsectbegin=includedi;
+				while(copying&&includedi!=includedend) 
+				{
+					++includedi;
+					copying=*includedi;
+				}
+				size_t sectlen=includedi-includedsectbegin;
+				const T *sectend=srci+sectlen;
+#pragma warning( suppress : 4996 )
+				std::copy(sectbegin,sectend,insertpoint);
+				insertpoint+=sectlen;
+				srci+=sectlen;
+			}
+		}
+		
+		
+		/*std::vector<bool>::const_iterator includedi=included.begin();
+		std::vector<T>::const_iterator srci=src.begin();
+		while(includedi!=included.end())
+		{
+			bool copying=*includedi;
+			while(!copying&&includedi!=included.end()) 
+			{
+				++srci;
+				++includedi;
+				copying=*includedi;
+			}
+			std::vector<T>::const_iterator sectbegin=srci;
+			while(copying&&includedi!=included.end()) 
+			{
+				++srci;
+				++includedi;
+				copying=*includedi;
+			}
+			std::vector<T>::const_iterator sectend=srci;
+			result.insert(result.end(),sectbegin,sectend);
+		}*/
+		return result;
+	}
+
+	//create a subvector from a vector of values and a multi-d vector of bools which indicates if the value should be used
+	template <class T,class U>
+	std::vector< std::vector<T> >  subvector(const std::vector< std::vector<T> > &src, const std::vector< std::vector<U> > &included)
+	{
+		std::vector< std::vector<T> > result(included.size());
+		for(size_t i=0; i<std::min(result.size(),src.size()); ++i) result[i]=subvector(src[i],included[i]);
+		return result;
+	}
+	
+	//create a subvector from a multi-d vector and a 1-d vector of bools to be applied to the specified dimension
+	//note that dimension is zero indexed so should be 0 to apply to the first dimension, 1 to apply to the second etc.
+	template <class T>
+	std::vector<std::vector<T>> subvector(const std::vector<std::vector<T>> &src, const std::vector<bool> &included, size_t dimension)
+	{
+		
+		if(sci::ndims(src)<dimension-1) return std::vector<std::vector<T>>(0);
+		if(sci::ndims(src)==dimension-1)
+		{
+			if(src.size()!=included.size()) return std::vector<std::vector<T>>(0);
+			size_t count=0;
+			for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
+			{
+				if(*inci) ++count;
+			}
+
+			std::vector<std::vector<T>> result(count);
+			std::vector<std::vector<T>>::iterator resulti=result.begin();
+			std::vector<std::vector<T>>::const_iterator srci=src.begin();
+
+			for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
+			{
+				if(*inci) 
+				{
+					*resulti=*srci;
+					++resulti;
+				}
+				++srci;
+			}
+			return result;
+		}
+		else
+		{
+			std::vector<std::vector<T>> result(src.size());
+			for(size_t i=0; i<result.size(); ++i)
+			{
+				result[i]=sci::subvector(src[i],included,dimension-1);
+			}
+			return result;
+		}
+	}
+
+	template <class T>
+	std::vector<T> subvector(const std::vector<T> &src, const std::vector<bool> &included, size_t dimension)
+	{
+		if(dimension!=0) return std::vector<T>(0);
+		else return sci::subvector(src,included);
+	}
+	
+
+	//create a vector with each element equal to the vector index
+	template<class T>
+	std::vector<T> indexvector(size_t size)
+	{
+		std::vector<T>result(size);
+		size_t val=0;
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			*resulti=(T)val;
+			++val;
+		}
+		return result;
+	}
+
+	//create vector with multiple dimensions filled with a constant value
+	template<class T>
+	std::vector<T>  vector1d(size_t size1, const T &value)
+	{
+		std::vector< T >result(size1,value);
+		return result;
+	}
+	template<class T>
+	std::vector< std::vector<T> > vector2d(size_t size1, size_t size2, const T &value)
+	{
+		std::vector< std::vector<T> >result(size1);
+		for(std::vector< std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) resulti->resize(size2,value);
+		return result;
+	}
+	
+	//these functions reshape, access and resize vectors which have a number of dimensions which
+	//are unknown at the time of writing the library but will be known by the user at compile time
+	template<class T, class A>
+	bool reshape(std::vector<T> &result, const std::vector<A> &v, const std::vector<size_t> &shape)
+	{
+		
+		size_t expectedlength=1;
+		for(std::vector<size_t>::const_iterator shapei=shape.begin(); shapei!=shape.end(); ++shapei) expectedlength*=*shapei;
+		if(expectedlength!=v.size())
+		{
+			return false;
+		}
+		size_t sublength=1;
+		for(std::vector<size_t>::const_iterator shapei=shape.begin()+1; shapei!=shape.end(); ++shapei) sublength*=*shapei;
+		std::vector<size_t> nextshape(shape.begin()+1,shape.end());
+		result.resize(shape[0]);
+		for(size_t i=0; i<shape[0]; ++i) 
+		{
+			std::vector<A> subv(v.begin()+i*sublength,v.begin()+i*sublength+sublength);
+			reshape(*(result.begin()+i),subv,nextshape);
+		}
+		return true;
+	}
+
+	template<class T>
+	inline bool reshape(std::vector<T> &result, std::vector<T> v, std::vector<size_t> shape)
+	{
+		result=v;
+		return true;
+	}
+
+	//if v has more than 1 dimension report an error
+	template<class T, class A>
+	bool reshape(std::vector<T> &result, const std::vector< std::vector<A> > &v, const std::vector<size_t> &shape)
+	{
+		//to do add error message
+		return false;
+	}
+
+	template<class T>
+	size_t nelements(const std::vector<std::vector<T> > &v)
+	{
+		size_t result=0;
+		for(std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=nelements(*vi);
+		return result;
+	}
+
+	template<class T>
+	size_t nelements(const std::vector<T> &v)
+	{
+		return v.size();
+	}
+
+	template<class T,class A>
+	void flatten(std::vector<T> &result, const std::vector< std::vector<A> > &v)
+	{
+		if(v.size()==0)
+		{
+			result.resize(0);
+			return;
+		}
+
+		result.reserve(nelements(v));
+		flatten(result,*v.begin());
+		std::vector<T> nextsection;
+		for(size_t i=1; i<v.size(); ++i)
+		{
+			flatten(nextsection,*(v.begin()+i));
+			result.insert(result.end(),nextsection.begin(),nextsection.end());
+		}
+	}
+
+
+	template<class T>
+	inline void flatten(std::vector<T> &result, const  std::vector<T>  &v)
+	{
+		result=v;
+	}
+
+	//access an element of a mulitidimensional vector
+	template<class T, class A>
+	inline T& at(std::vector< std::vector< A > > &v, const std::vector<size_t> &indices)
+	{
+		return at<T>(v, indices.begin(), std::min( sci::ndims(v), indices.size()) );
+	}
+	template<class T, class A>
+	inline T& at(std::vector< std::vector< A > > &v, std::vector<size_t>::const_iterator firstindex, size_t numdims)
+	{
+		//if(numdims==1) return std::numeric_limits<T>::quiet_NaN();
+		return at <T>(*(v.begin()+*firstindex),firstindex+1,numdims-1);
+	}
+	template<class T, class A>
+	inline T& at(std::vector<A> &v, std::vector<size_t>::const_iterator firstindex, size_t numdims)
+	{
+		return *(v.begin()+*firstindex);
+	}
+
+	//resize a multidimensional vector
+	template<class T>
+	void resize(std::vector< std::vector<T> > &v, const std::vector<size_t> &size)
+	{
+		size_t numdims=sci::ndims(v);
+		if(size.size()<numdims)
+		{
+			std::vector<size_t> newsize=size;
+			newsize.resize(numdims,0);
+			resize(v,newsize.begin());
+		}
+		else resize(v,size.begin());
+	}
+	template<class T>
+	void resize(std::vector< std::vector<T> > &v, std::vector<size_t>::const_iterator firstindex)
+	{
+		v.resize(*firstindex);
+		if(*firstindex==0) return;
+		for(std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi)resize(*vi,firstindex+1);
+
+	}
+	template<class T>
+	void resize(std::vector<T> &v, std::vector<size_t>::const_iterator firstindex)
+	{
+		v.resize(*firstindex);
+	}
+
+	template<class T, class U>
+	struct sameNDims
+		: std::true_type
+	{
+	};
+	template<class T, class U>
+	struct sameNDims<std::vector<T>,U>
+		: std::false_type
+	{
+	};
+	template<class T, class U>
+	struct sameNDims<T,std::vector<U>>
+		: std::false_type
+	{
+	};
+	template<class T, class U>
+	struct sameNDims<std::vector<T>,std::vector<U>>
+		: sameNDims<decltype(T()), decltype(U())>
+	{
+	};
+
+	//return the number of dimensions in a multi dimension vector v
+	template<class T>
+	size_t ndims(const std::vector< std::vector< T > > &v)
+	{
+		return (v.size()>0?ndims(v[0]):ndims(std::vector<T>()))+1;
+	}
+	//return the number of dimensions in a vector v
+	template<class T>
+	inline size_t ndims(const std::vector< T > &v)
+	{
+		return 1;
+	}
+	//return the number of dimensions in a scalar
+	template<class T>
+	inline size_t ndims(const T &v)
+	{
+		return 0;
+	}
+
+	//return the shape of a multi dimension vector v
+	template<class T>
+	std::vector<size_t> shape(const std::vector< std::vector< T > > &v)
+	{
+		size_t thissize=v.size();
+		std::vector<size_t> othershape;
+		if(thissize>0) othershape=sci::shape(v[0]);
+		else othershape=std::vector<size_t>(sci::ndims(v[0]),0);
+		othershape.insert(othershape.begin(),thissize);
+		return othershape;
+	}
+	template<class T>
+	inline std::vector<size_t> shape(const std::vector< T > &v)
+	{
+		return std::vector<size_t>(1,v.size());
+	}
+
+	//return the base type of a multi dimensional vector
+	template<class T>
+	inline basetype getbasetype(const std::vector< std::vector< T > > &v)
+	{
+		if(v.size()>0 && v[0].size()>0) return getbasetype(v[0]);//use the zeroth element and get the basetype of that
+		//note we don't use v[0][0] as this might mean we miss calling the 1d vector version
+		else return getbasetype (std::vector<T>()); //else create a new vector of Ts and check the base type of that
+	}
+	//return the base type of a vector, if this function gets called and not a specialisation then
+	//we have an unknown type, return 0;
+	template<class T>
+	inline basetype getbasetype(const std::vector< T > &v)
+	{
+		return SBASE_UNKNOWN;
+	}
+	//specialisations of the 1d version 
+	//template<class T>
+	inline basetype getbasetype(const std::vector< double > &v)
+	{
+		return SBASE_DOUBLE;
+		
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< float > &v)
+	{
+		return SBASE_FLOAT;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< long double > &v)
+	{
+		return SBASE_LONGDOUBLE;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< bool > &v)
+	{
+		return SBASE_BOOL;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< signed char > &v)
+	{
+		return SBASE_SIGNEDCHAR;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< unsigned char > &v)
+	{
+		return SBASE_UNSIGNEDCHAR;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< wchar_t > &v)
+	{
+		return SBASE_WCHAR;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< signed short > &v)
+	{
+		return SBASE_SIGNEDSHORT;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< unsigned short > &v)
+	{
+		return SBASE_UNSIGNEDSHORT;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< signed int > &v)
+	{
+		return SBASE_SIGNEDINT;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< unsigned int > &v)
+	{
+		return SBASE_UNSIGNEDINT;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< signed long > &v)
+	{
+		return SBASE_SIGNEDLONG;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< unsigned long > &v)
+	{
+		return SBASE_UNSIGNEDLONG;
+	}
+	template<class T>
+	inline basetype getbasetype(const std::vector< std::complex<T> > &v)
+	{
+		return SBASE_COMPLEX;
+	}
+	//template<class T>
+	inline basetype getbasetype(const std::vector< std::string > &v)
+	{
+		return SBASE_STRING;
+	}
+
+	//recast one vector type to another. The destination vector will be resized
+	//to the same size as source if needed
+	template<class T, class U>
+	inline void convert(std::vector<T> &destination, const std::vector<U> &source)
+	{
+		destination.resize(source.size());
+		if(destination.size()>0)
+		{
+			std::vector<T>::iterator di=destination.begin();
+			std::vector<U>::const_iterator si=source.begin();
+			for(si; si!=source.end(); ++si)
+			{
+				*di=static_cast<T>(*si);
+				++di;
+			}
+		}
+	}
+	
+	//recast one multi-d vector type to another. The destination vector will be resized
+	//to the same size as source if needed
+	template<class T, class U>
+	inline void convert(std::vector< std::vector<T> > &destination, const std::vector< std::vector<U> > &source)
+	{
+		destination.resize(source.size());
+		if(destination.size()>0)
+		{
+			std::vector< std::vector<T> >::iterator di=destination.begin();
+			std::vector< std::vector<U> >::const_iterator si=source.begin();
+			for(si; si!=source.end(); ++si)
+			{
+				convert(*di,*si);
+				++di;
+			}
+		}
+	}
+
+	//this should never get called, it is to catch any odd conversions that
+	//need to be compiled ut will never run
+	template<class T, class U>
+	inline void convert(T &destination, const U &source)
+	{
+	}
+	
+	//Uses the Fisher Yates method to shuffle a vector in place
+	template<class T>
+	void shuffle(std::vector<T> &v)
+	{
+		T* pbegin=&v[0];
+		T* pi;
+		T* pj;
+		for(pi=pbegin+v.size()-1; pi>pbegin; --pi)
+		{
+			pj=pbegin+sci::randInt(pi-pbegin+1);
+			std::swap(pi,pj);
+		}
+	}
+
+			
+	//********************************************************
+	//**********Functions giving information******************
+	//********************************************************
+
+
+	//********************************************************
+	//**********statistics of the vector**********************
+	//********************************************************	
+	
+	template<class T>
+	T sum(const std::vector<T> &v)
+	{
+		if(v.size()==0) return T(0.0); //this handilly returns the value zero or if T is a vector a zero size vector
+		T result=v[0];
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) result+=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		return result;
+	}
+	
+	template<class T>
+	std::vector<T> sum(const std::vector<std::vector<T>> &v)
+	{
+		if(v.size()==0) return std::vector<T>(0);
+		std::vector<T> result(v[0].size(),0.0);
+		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		return result;
+	}
+
+	template<class T>
+	T product(const std::vector<T> &v)
+	{
+		if(v.size()==0) return 0;
+		T result=T(1.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		return result;
+	}
+
+	template<class T>
+	std::vector<T> product(const std::vector<std::vector<T>> &v)
+	{
+		if(v.size()==0) return return std::vector<T>(0);
+		std::vector<T> result(v[0].size(), 1.0);
+		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		return result;
+	}
+
+	template<class T>
+	T anyBaseVal(const std::vector<T> &v)
+	{
+		T val;
+		return val;
+	}
+	template<class T>
+	auto anyBaseVal(const std::vector<std::vector<T>> &v) -> decltype( anyBaseVal(T(0)) )
+	{
+		if(v.size()>0)
+			return anyBaseVal(V[0]);
+		else
+			return anyBaseVal(T(0));
+	}
+
+	template<class T>
+	T mean(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		T result=v[0];			
+		const T *vi=&v[0]+1;
+		const T *vilimit=&v[0]+v.size();
+		for(; vi<vilimit; ++vi) 
+			result+=*vi;
+		auto count=decltype( anyBaseVal(v) )(v.size());
+		return result/count;
+
+
+		//T result(0.0);
+		//for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		//return result/(T)v.size();
+	}
+
+	template<class T>
+	T meanIgnoreNans(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		T result(0.0);
+		size_t count=0;
+		const T *vi=&v[0];
+		const T *vilimit=vi+v.size();
+		for(; vi<vilimit; ++vi)
+		{
+			if(*vi==*vi)
+			{
+				result+=*vi;
+				++count;
+			}
+		}
+		return result/decltype( anyBaseVal(v) )(count);
+
+
+		//T result(0.0);
+		//for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		//std::accumulate(v.begin(), v.end(),result);
+		//return result/(T)v.size();
+	}
+
+	template<class T>
+	std::vector<T> mean(const std::vector<std::vector<T>> &v)
+	{
+		if(v.size()==0) return std::vector<T>(0);
+		std::vector<T> result(v[0].size(), 0.0);
+		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		return result/decltype( anyBaseVal(v) )(v.size());
+	}
+
+	template<class T>
+	T variance(const std::vector<T> &v)
+	{
+		T meanval=sci::mean(v);
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=(*vi-meanval)*(*vi-meanval);
+		//std::accumulate(v.begin(), v.end(),result);
+		return result/decltype( anyBaseVal(v) )(v.size());
+	}
+
+	template<class T>
+	T stdev(const std::vector<T> &v)
+	{
+		T meanval=sci::mean(v);
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=(*vi-meanval)*(*vi-meanval);
+		//std::accumulate(v.begin(), v.end(),result);
+		return std::sqrt(result/((T)v.size()-1.0));
+	}
+
+	template<class T>
+	T stdevnobessel(const std::vector<T> &v)
+	{
+		T meanval=sci::mean(v);
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=(*vi-meanval)*(*vi-meanval);
+		//std::accumulate(v.begin(), v.end(),result);
+		return std::sqrt(result/(T)v.size());
+	}
+
+	template<class T>
+	T geometricMean(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		T result=v[0];			
+		const T *vi=&v[0]+1;
+		const T *vilimit=&v[0]+v.size();
+		for(; vi<vilimit; ++vi) 
+			result+=*vi**vi;
+		auto count=decltype( anyBaseVal(v) )(v.size());
+		return std::sqrt(result)/count;
+	}
+
+	template<class T>
+	T geometricMeanIgnoreNans(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		T result(0.0);
+		size_t count=0;
+		const T *vi=&v[0];
+		const T *vilimit=vi+v.size();
+		for(; vi<vilimit; ++vi)
+		{
+			if(*vi==*vi)
+			{
+				result+=*vi**vi;
+				++count;
+			}
+		}
+		return std::sqrt(result)/decltype( anyBaseVal(v) )(count);
+	}
+
+	template<class T>
+	std::vector<T> geometricMean(const std::vector<std::vector<T>> &v)
+	{
+		if(v.size()==0) return std::vector<T>(0);
+		std::vector<T> result(v[0].size(), 0.0);
+		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=*vi**vi;
+		return sci::sqrt(result)/decltype( anyBaseVal(v) )(v.size());
+	}
+
+	template<class T>
+	std::vector<T> cumsum(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::vector<T>(0);
+		std::vector<T> result(v.size());
+		result[0]=v[0];
+		std::vector<T>::iterator resulti=result.begin()+1;
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) 
+		{
+			*resulti=(*vi+*(resulti-1));
+			++resulti;
+		}
+		return result;
+	}
+
+
+	template< class T>
+	inline T min(const T& v)
+	{
+		return v;
+	}
+
+	template< class U, class T>
+	inline U min(const std::vector<T>& v)
+	{
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		U result = min<U>(*vi);
+		++vi;
+		while(result!=result && vi!=v.end())
+		{
+			result = min<U>(*vi);
+			++vi;
+		}
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmin=min<U>(*vi);
+			result=newmin<result ? newmin : result;
+		}
+		return result;
+	}
+
+	//return the minimum value from a vector greater than a given limit
+	template< class U, class T>
+	U mingtlimit(const std::vector<T>& v, U limit)
+	{
+		//this will only be called by 1d vectors as we have a 2d specialisation
+		U result=std::numeric_limits<U>::quiet_NaN();
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end() && !(*vi>limit))
+		{
+			++vi;
+		}
+		if(vi==v.end()) return result;
+		result=*vi;
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>limit ? (*vi) : result;
+		return result;
+	}
+	//return the minimum value from a vector greater than a given limit
+	template< class U, class T>
+	U mingtlimit(const std::vector< std::vector<T> >& v, U limit)
+	{
+		//this is the 2d specialisation
+		U result=std::numeric_limits<U>::quiet_NaN();
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end())
+		{
+			result=mingtlimit(*vi,limit);
+			if(!(result>=limit)) result=std::numeric_limits<U>::quiet_NaN();
+			++vi;
+		}
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmin=mingtlimit(*vi,limit);
+			result=newmin<result && newmin>limit ? newmin : result;
+		}
+		return result;
+	}
+	
+	//return the minimum value from a vector greater than or equal to a given limit
+	template< class U, class T>
+	U mingtelimit(const std::vector<T>& v, U limit)
+	{
+		//this will only be called by 1d vectors as we have a 2d specialisation
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		U result=std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end() &&!(*vi>=limit))
+		{
+			++vi;
+		}
+		if(vi==v.end()) return result;
+		result=*vi;
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>=limit ? (*vi) : result;
+		return result;
+	}
+	//return the minimum value from a vector greater than or equal to a given limit
+	template< class U, class T>
+	U mingtelimit(const std::vector< std::vector<T> >& v, U limit)
+	{
+		//this is the 2d specialisation
+		U result=std::numeric_limits<U>::quiet_NaN();
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end())
+		{
+			result=mingtelimit(*vi,limit);
+			if(!(result>=limit)) result=std::numeric_limits<U>::quiet_NaN()
+			++vi;
+		}
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmin=mingtelimit(*vi,limit);
+			result=newmin<result && newmin>=limit ? newmin : result;
+		}
+		return result;
+	}
+	
+
+	//return the maximum value from a vector less than a given limit
+	template< class U, class T>
+	U maxltlimit(const std::vector<T>& v, U limit)
+	{
+		//this will only be called by 1d vectors as we have a 2d specialisation
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		U result=std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end() && !(*vi<limit))
+		{
+			++vi;
+		}
+		if(vi==v.end()) return result;
+		result=*vi;
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<limit ? (*vi) : result;
+		return result;
+	}
+	//return the maximum value from a vector less than a given limit
+	template< class U, class T>
+	U maxltlimit(const std::vector< std::vector<T> >& v, U limit)
+	{
+		//this is the 2d specialisation
+		U result=std::numeric_limits<U>::quiet_NaN();
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end())
+		{
+			result=maxltlimit(*vi,limit);
+			if(!(result<limit)) result=std::numeric_limits<U>::quiet_NaN();
+			++vi;
+		}
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmax=maxltlimit(*vi,limit);
+			result=newmax>result && newmax<limit ? newmax : result;
+		}
+		return result;
+	}
+	
+	//return the maximum value from a vector less than or equal to a given limit
+	template< class U, class T>
+	U maxltelimit(const std::vector<T>& v, U limit)
+	{
+		//this will only be called by 1d vectors as we have a 2d specialisation
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		U result=std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end() && !(*vi<=limit))
+		{
+			++vi;
+		}
+		if(vi==v.end()) return result;
+		result=*vi;
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<=limit ? result : (*vi);
+		return result;
+	}
+
+	//return the maximum value from a vector less than or equal to a given limit
+	template< class U, class T>
+	U maxltelimit(const std::vector< std::vector<T> >& v, U limit)
+	{
+		//this is the 2d specialisation
+		U result=std::numeric_limits<U>::quiet_NaN();
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		while (result!=result && vi!=v.end())
+		{
+			result=maxgtelimit(*vi,limit);
+			if(!result<=limit) result=std::numeric_limits<U>::quiet_NaN();
+			++vi;
+		}
+		//search the remaining numbers
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmax=maxgtelimit(*vi,limit);
+			result=newmax>result && newmax<=limit ? newmax : result;
+		}
+		return result;
+	}
+	
+	
+	template< class T>
+	inline T max(const T& v)
+	{
+		return v;
+	}
+
+	template<class U,class T >
+	U max(const std::vector<T> &v)
+	{
+		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
+		std::vector<T>::const_iterator vi=v.begin();
+		U result = max<U>(*vi);
+		++vi;
+		while(result!=result && vi!=v.end())
+		{
+			result = max<U>(*vi);
+			++vi;
+		}
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			U newmax=max<U>(*vi);
+			result=newmax>result ? newmax : result;
+		}
+		return result;
+	}
+
+	template<class T>
+	size_t indexofmax(std::vector<T> v)
+	{
+		if(v.size()==0) return std::numeric_limits<size_t>::quiet_NaN();
+		size_t result=0;
+		std::vector<T>::const_iterator vi=v.begin();
+		T currentmax = *vi;
+		++vi;
+		while(currentmax!=currentmax && vi!=v.end())
+		{
+			currentmax = *vi;
+			++vi;
+			++result;
+		}
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			if(*vi>currentmax)
+			{
+				result=vi-v.begin();
+				currentmax=*vi;
+			}
+		}
+		return result;
+	}
+
+	template<class T>
+	size_t indexofmin(std::vector<T> v)
+	{
+		if(v.size()==0) return std::numeric_limits<size_t>::quiet_NaN();
+		size_t result=0;
+		std::vector<T>::const_iterator vi=v.begin();
+		T currentmin = *vi;
+		++vi;
+		while(currentmin!=currentmin && vi!=v.end())
+		{
+			currentmin = *vi;
+			++vi;
+			++result;
+		}
+		for(vi; vi!=v.end(); ++vi) 
+		{
+			if(*vi<currentmin)
+			{
+				result=vi-v.begin();
+				currentmin=*vi;
+			}
+		}
+		return result;
+	}
+
+	template<class T>
+	std::vector<T> max(const std::vector<T> &v1, const std::vector<T> &v2)
+	{
+		std::vector<T> result(std::min(v1.size(),v2.size()));
+		if(result.size()==0) return result;
+		std::vector<T>::const_iterator v1i=v1.begin();
+		std::vector<T>::const_iterator v2i=v2.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			*resulti=std::max(*v1i,*v2i);
+			++v1i;
+			++v2i;
+		}
+		return result;
+	}
+
+	template<class T>
+	std::vector<T> min(const std::vector<T> &v1, const std::vector<T> &v2)
+	{
+		std::vector<T> result(std::min(v1.size(),v2.size()));
+		if(result.size()==0) return result;
+		std::vector<T>::const_iterator v1i=v1.begin();
+		std::vector<T>::const_iterator v2i=v2.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			*resulti=std::min(*v1i,*v2i);
+			++v1i;
+			++v2i;
+		}
+		return result;
+	}
+
+
+
+	//replace nans with another value
+	template<class T>
+	inline void replacenans(T &element, const T &replacement)
+	{
+		if(element!=element) element=replacement;
+	}
+	template<class T, class U>
+	void replacenans(std::vector<T> &v, const U &replacement)
+	{
+		if(v.size()==0)
+			return;
+		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replacenans(*vi,replacement);
+	}
+	
+	template<class T>
+	inline void replaceinfs(T &element, const T &replacement)
+	{
+		if(element==std::numeric_limits<T>::infinity() || -element==std::numeric_limits<T>::infinity()) element=replacement;
+	}
+	template<class T, class U>
+	void replaceinfs(std::vector<T> &v, const U &replacement)
+	{
+		if(v.size()==0)
+			return;
+		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replaceinfs(*vi,replacement);
+	}
+	
+	template<class T>
+	inline void replaceNegativeInfs(T &element, const T &replacement)
+	{
+		if(-element==std::numeric_limits<T>::infinity()) element=replacement;
+	}
+	template<class T, class U>
+	void replaceNegativeInfs(std::vector<T> &v, const U &replacement)
+	{
+		if(v.size()==0)
+			return;
+		for(T* vi=&v[0]; vi!=&v.back()+1; ++vi) replaceNegativeInfs(*vi,replacement);
+	}
+	
+	template<class T>
+	inline void replacePositiveInfs(T &element, const T &replacement)
+	{
+		if(element==std::numeric_limits<T>::infinity()) element=replacement;
+	}
+	template<class T, class U>
+	void replacePositiveInfs(std::vector<T> &v, const U &replacement)
+	{
+		if(v.size()==0)
+			return;
+		for(T* vi=&v[0]; vi!=&v.back()+1; ++vi) replacePositiveInfs(*vi,replacement);
+	}
+
+	template<class T>
+	std::vector<T> reverse(const std::vector<T> &v)
+	{
+		std::vector<T> result(v.size());
+		if(v.size()==0)
+			return result;
+		const T *vlower=&v[0];
+		const T *vupper=vlower+v.size()-1;
+		T *resultlower=&result[0];
+		T *resultupper=resultlower+v.size()-1;
+		while(vupper>=vlower)
+		{
+			*resultlower=*vupper;
+			*resultupper=*vlower;
+			++resultlower;
+			++vlower;
+			--resultupper;
+			--vupper;
+		}
+		return result;
+	}
+	
+	//returns a vector in which the ith element consists of the mean of period elements of v starting at 
+	//element i*step.
+	//the new vector will have a size of floor((v.size()-period)/step)+1, unless this gives a size
+	//less than zero in which case an empty vector is returned
+	template<class T>
+	std::vector<T> rollingaverage(const std::vector<T> &v, size_t period, size_t step=1)
+	{
+		if(v.size()<period) return std::vector<double>(0);
+		std::vector<T> result((v.size()-period)/step+1,0);
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			*resulti/=(T)period;
+			vsubbegin+=step;;
+		}
+		return result;
+	}
+
+	//As above but with user defined weights. If weights doesn't have the same size as v then an empty vector is
+	//returned
+	template<class T>
+	std::vector<T> rollingaverage(const std::vector<T> &v, const std::vector<T> weight, size_t period, size_t step=1)
+	{
+		if(v.size()!=weight.size())
+			return std::vector<T>(0);
+		if(v.size()<period) return std::vector<double>(0);
+		std::vector<T> result((v.size()-period)/step+1,0);
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		std::vector<T>::const_iterator weightsubbegin=weight.begin();
+		T totalweight;
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			totalweight=0;
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) 
+			{
+				std::vector<T>::const_iterator weighti=weightsubbegin;
+				*resulti+=*vi**weighti;
+				totalweight+=*weighti;
+				++weighti;
+			}
+			*resulti/=totalweight;
+			vsubbegin+=step;;
+			weightsubbegin+=step;
+		}
+		return result;
+	}
+
+	//returns a vector which consists of the boxcar mean of v over period elements
+	//the new vector will have a size of floor(v.size()/period).
+	template<class T>
+	std::vector<T> boxcaraverage(const std::vector<T> &v, size_t period)
+	{
+		std::vector<T> result(v.size()/period,0); //integer division so no need to round down
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			*resulti/=(T)period;
+			vsubbegin+=period;
+		}
+		return result;
+	}
+
+	//returns a vector for which element 0 is the average over the first period elements of
+	//v, element 1 is the average over the next period*base elements of v, element 2 
+	//is the average over the next period*base*base ements of v, etc. This is particularly
+	//useful when the averaged vector is to be plotted on a log scale as these points will
+	//then be evenly spaced
+	template<class T>
+	std::vector<T> logboxcaraverage(const std::vector<T> &v, size_t period, size_t base)
+	{
+		if(base<2)return std::vector<double>(0);
+		if(period==0) return std::vector<double>(0);
+		size_t size=0;
+		size_t oldsizeest=period;
+		size_t lastaddition=period;
+		while(oldsizeest<=v.size())
+		{
+			++size;
+			lastaddition*=base;
+			oldsizeest+=lastaddition;
+		}
+		std::vector<T> result(size,0); //integer division so no need to round down
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			*resulti/=(T)period;
+			vsubbegin+=period;
+			period*=base;
+		}
+		return result;
+	}
+
+	//returns a vector which consists of the boxcar sum of v over period elements
+	//the new vector will have a size of floor(v.size()/period).
+	template<class T>
+	std::vector<T> boxcarsum(const std::vector<T> &v, size_t period)
+	{
+		std::vector<T> result(v.size()/period,0); //integer division so no need to round down
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			vsubbegin+=period;
+		}
+		return result;
+	}
+
+	//returns a vector for which element 0 is the average over the first period elements of
+	//v, element 1 is the average over the next period*base elements of v, element 2 
+	//is the average over the next period*base*base ements of v, etc. This is particularly
+	//useful when the summed vector is to be plotted on a log x scale as these points will
+	//then be evenly spaced and the areas under the curve will be equivalent throughout the
+	//x range
+	template<class T>
+	std::vector<T> logboxcarsum(const std::vector<T> &v, size_t period, size_t base)
+	{
+		if(base<2)return std::vector<double>(0);
+		if(period==0) return std::vector<double>(0);
+		size_t size=0;
+		size_t oldsizeest=period;
+		size_t lastaddition=period;
+		while(oldsizeest<=v.size())
+		{
+			++size;
+			lastaddition*=base;
+			oldsizeest+=lastaddition;
+		}
+		std::vector<T> result(size,0); //integer division so no need to round down
+		std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		{
+			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			vsubbegin+=period;
+			period*=base;
+		}
+		return result;
+	}
+
+
+	template <class T>
+	bool ascending(const std::vector<T> &v)
+	{
+		if (v.size()==0) return true;
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		{
+			if(*vi<=*(vi-1)) return false;
+		}
+		return true;
+	}
+
+	template <class T>
+	bool descending(const std::vector<T> &v)
+	{
+		if (v.size()==0) return true;
+		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		{
+			if(*vi>=*(vi-1)) return false;
+		}
+		return true;
+	}
+
+	template <class T>
+	void assign(std::vector<T> &v, const T &val)
+	{
+		if(v.size()==0) return;
+		T* vi=&v[0];
+		T* vend=vi+v.size();
+		for(vi; vi<vend; ++vi) *vi=val;
+	}
+
+	template <class T>
+	void assign(std::vector<T> &v, std::vector<SBOOL> locations, const T &val)
+	{
+		if(v.size()==0) return;
+		if(v.size()!=locations.size()) return;
+		T* vi=&v[0];
+		T* vend=vi+v.size();
+		SBOOL *loci=&locations[0];
+		for(vi; vi<vend; ++vi) 
+		{
+			if(*loci) *vi=val;
+			++loci;
+		}
+	}
+
+	template <class T, class U>
+	void assign(std::vector<std::vector<T>> &v, std::vector<std::vector<U>> locations, const T &val)
+	{
+		if(v.size()==0) return;
+		if(v.size()!=locations.size()) return;
+		std::vector<T>* vi=&v[0];
+		std::vector<T>* vend=vi+v.size();
+		std::vector<U> *loci=&locations[0];
+		for(; vi<vend; ++vi, ++loci) 
+			assign(*vi, *loci, val);
+	}
+
+	template <class T>
+	void reverseinplace(std::vector<T> &v)
+	{
+		std::reverse(v.begin(), v.end());
+	}
+
+
+	//********************************************************
+	//*******Specialized function with external support*******
+	//********************************************************
+
+
+	//resample at a differeent frequency for either double or float vectors
+	//input is the original vector
+	//factor is the new frequency divided by the old frequency
+	//output will be filled with the resampled data. Note that output can have a size from 
+	//floor((inputsize-1)*factor) to ceil((inputsize+1)*factor)
+	void resample(const std::vector<double> &input, double factor, std::vector<double> &output);
+	void resample(const std::vector<float> &input, float factor, std::vector<float> &output);
+	void outputerr(std::string err);
+	//fft
+	//note that if you wish to normalise the result you must divide the result by the number of elements in input
+	void fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output);
+	//discrete power spectrum normalised so that the sum of the output is equal to the variance of the input
+	std::vector<double> powerspectrum(const std::vector<double> &v);
+	//discrete cospectrum normalised so that the sum of the output is equal to the covariance of the inputs
+	std::vector<double> cospectrum(const std::vector<double> &x, const std::vector<double> &y);
+	//resamples parameters x and y such that when logspacex and and logspacey are plotted with a logarithmic x axis
+	//all areas accross the plota are equivalent and the data point are approximately evenly spaced. Often in
+	//this case y will be a differential parameter i.e. dparam/dx such as in a probability distribution or 
+	//a spectrum. The nth value of logspacex and logspacey will be taken over floor(newxinterval/xinterval*base^n) 
+	//points giving approximately equal spacin on a log scaled plot. base must be >=1 .0 and xinterval and newxinterval must be > 0.0
+	// otherwise empty vectors will be returned
+	void logspace(double xstart, double xinterval, std::vector<double> y, double newxinterval, double newxbase, std::vector<double> &logspacex, std::vector<double> &logspacey);
+
+	template <class T>
+	T integrate(const std::vector<T> &x, const std::vector<T> &y)
+	{
+		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
+		if(x.size()==0) return 0;
+		T result=0;
+		std::vector<T>::const_iterator yi=y.begin()+1;
+		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
+		{
+			result+=(*yi+*(yi-1))*(*xi-*(xi-1));
+			++yi;
+		}
+		result*=0.5;
+		return result;
+	}
+
+		template <class T>
+	T integrate(const std::vector<T> &x, const std::vector<T> &y, T minx, T maxx)
+	{
+		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
+		T result=0;
+		std::vector<T>::const_iterator yi=y.begin()+1;
+		T highlimit=std::max(maxx,minx);
+		T lowlimit=std::min(maxx,minx);
+		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
+		{
+			T x0=*(xi-1);
+			T x1=*xi;
+			T y0=*(yi-1);
+			T y1=*yi;
+			if(x0>x1)
+			{
+				std::swap(x0,x1);
+				std::swap(y0,y1);
+			}
+			if(x1<lowlimit) continue;
+			if(x0>highlimit) continue;
+			if(x0<lowlimit)
+			{
+				y0=sci::linearinterpolate(lowlimit,x0,x1,y0,y1);
+				x0=lowlimit;
+			}
+			if(x1>highlimit)
+			{
+				y1=sci::linearinterpolate(highlimit,x0,x1,y0,y1);
+				x1=highlimit;
+			}
+
+			result+=(y0+y1)*(x1-x0);
+			++yi;
+		}
+		result*=0.5;
+		if(maxx<minx) result*=-1.0;
+		return result;
+	}
+
+	template <class T>
+	void integrate(const std::vector<T> &x, const std::vector<T> &y, const std::vector<T> &deltay, T &integral, T &deltaintegral)
+	{
+		if(x.size()!=y.size() || x.size()!=deltay.size()) 
+		{
+			integral=std::numeric_limits<T>::quiet_NaN();
+			deltaintegral=std::numeric_limits<T>::quiet_NaN();
+		}
+
+		integral=0;
+		deltaintegral=0;
+		for(size_t i=1; i<x.size(); ++i)
+		{
+			integral+=(y[i]+y[i-1])*(x[i]-x[i-1]);
+			deltaintegral+=(x[i]-x[i-1])*(x[i]-x[i-1])*(deltay[i]*deltay[i]+deltay[i-1]*deltay[i-1]);
+		}
+		integral*=0.5;
+		deltaintegral=0.5*sqrt(deltaintegral);
+	}
+
+	template <class T>
+	T integrate(const std::vector<T> &data, T interval)
+	{
+		T result=0;
+		for(std::vector<T>::const_iterator datai=data.begin()+1; datai!=data.end(); ++datai) result+=(*datai+*(datai-1));
+		result*=interval*0.5;
+		return result;
+	}
+
+	template <class T>
+	std::vector<T> differentiate(std::vector<T> x, std::vector<T> y)
+	{
+		if(x.size()==0 && y.size()==0)
+			return std::vector<T>(0);
+		std::vector<T> result(std::max(x.size(),y.size())-1,std::numeric_limits<T>::quiet_NaN());
+		size_t n=std::min(x.size(),y.size());
+		T* xi=&x[0]+1;
+		T* yi=&y[0]+1;
+		T* xend=&x[0]+n;
+		T* resulti=&result[0];
+		for(;xi!=xend; ++xi,++yi,++resulti)
+			*resulti=(*yi-*(yi-1))/(*xi-*(xi-1));
+		return result;
+	}
+	
+	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept);
+	void fitpolynomial(const std::vector<double> &x, const std::vector<double> &y, size_t max_power, std::vector<double> &coefs, std::vector<std::vector<double>> &covariancematrix);
+	size_t fitstraightlinewithoutlierremoval(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double maxresidual);
+	void fitpowerlaw(double power, const std::vector<double> &x, const std::vector<double> &y, double &k, double &vark);
+	void crosscorr(const std::vector<double> &f, const std::vector<double> &g, std::vector<double> &r, std::vector<long> &fshifts, bool circular=false);
+	size_t minimise(std::vector<double> &tunableparams, const std::vector<double> &fixedparams, double (*functiontominimise)(const std::vector<double> &,const std::vector<double> &));
+	size_t minimise(std::vector<double> &tunableparams, const std::vector< std::vector<double> > &fixedparams, double (*functiontominimise)(const std::vector<double> &,const std::vector< std::vector<double> > &));
+	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,const std::vector<double> &), const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
+	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,double), const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
+
+
+	double integrate(double xMin, double xMax, double intervalMax, double (*functionToIntegrate)(double x, const std::vector<double> &params), const std::vector<double> &params);
+	
+
+	//********************************************************
+	//*********************My own functions*******************
+	//********************************************************
+	
+	//generates a histogram of data based on limits. If limits has size zero then counts will be returned with size
+	//zero.
+	//Otherwise counts will have a size one higher than limits. counts[0]will include data too small
+	//to be counted in other bins and counts[counts.size()-1] will include data too large to be included in other bins.
+	//If roundup is true then data which falls exactly on a limit will be counted in the bin above the limit
+	//If roundup is false then data which falls exactly on a limit will be counted in the bin below
+	//the limit or belowlimits.
+	//Limits must be monotonically nondecreasing for this function to work.
+	template<class T>
+	void histogram(std::vector<size_t> &counts, const std::vector<T> &limits, const std::vector<T> &data, bool roundup=true)
+	{
+		if(limits.size()==0)
+		{
+			counts.resize(0);
+			return;
+		}
+		
+		size_t nbins=limits.size()+1;
+		sci::setallvalues(counts,0);
+		counts.resize(nbins,0);
+		std::vector<size_t>::iterator count0=counts.begin();
+		if(roundup)
+		{
+			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			{
+				if(*datai<limits[0]) ++*count0;
+				else if(*datai>=limits.back()) ++*(count0+nbins-1);
+				else
+				{
+					for(std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
+					{
+						if(*datai>=*(limiti-1) && *datai <*limiti)
+						{
+							++(*(count0+(size_t)(limiti-limits.begin())));
+							break;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			{
+				if(*datai<=limits[0]) ++*count0;
+				else if(*datai>limits.back()) ++*(count0+nbins-1);
+				else
+				{
+					for(std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
+					{
+						if(*datai>*(limiti-1) && *datai <=*limiti)
+						{
+							++(*(count0+(size_t)(limiti-limits.begin())));
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	//generates a histogram of data based on limitstart nlimits and limitspacing. If nlimits is zero 
+	//then counts will be returned with size zero and both belowlimits and abovelimits will be set to zero.
+	//Otherwise counts will have a size one lower than limits and belowlimits will include data too small
+	//to be counted in counts and abovelimits will include data too large to be included in counts;
+	//if roundup is true then data which falls exactly on a limit will be counted in the bin above the limit or
+	//abovelimits. If roundup is false then data which falls exactly on a limit will be counted in the bin below
+	//the limit or belowlimits.
+	template<class T>
+	void histogram(std::vector<size_t> &counts, const T &limitstart, const T &limitspacing, size_t nlimits, const std::vector<T> &data, bool roundup=true)
+	{
+		if(nlimits==0)
+		{
+			counts.resize(0);
+			return;
+		}
+		
+		sci::setallvalues(counts,0);
+		counts.resize(nlimits+1);
+		std::vector<size_t>::iterator count0=counts.begin();
+		T limittop=limitstart+(T)(nlimits-1)*limitspacing;
+		if(roundup)
+		{
+			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			{
+				if(*datai<limitstart) ++*count0;
+				else if(*datai>=limittop) ++*(count0+nlimits);
+				else
+				{
+					size_t bin=(size_t)((*datai-limitstart)/limitspacing)+1;
+					++*(count0+bin);
+				}
+			}
+		}
+		else
+		{
+			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			{
+				if(*datai<=limitstart) ++*count0;
+				else if(*datai>limittop) ++*(count0+nlimits);
+				else
+				{
+					T Tbin=((*datai-limitstart)/limitspacing)+1;
+					size_t bin=(size_t)Tbin;
+					if(Tbin==(T)bin) --bin;
+					++*(count0+bin);
+				}
+			}
+		}
+	}
+	
+	//generates a histogram of data based on limits. If limits has size zero or any of the elements of limits has
+	//size zero then counts will be returned with size zero.
+	//Otherwise the nth dimension of counts will have a size one higher than the nth element of limits.
+	//For each dimension odf counts the first element will include data too small to be counted in other 
+	//bins and the last element will include data too large to be included in other bins.
+	//If roundup is true then data which falls exactly on a limit will be counted in the bin above the limit
+	//If roundup is false then data which falls exactly on a limit will be counted in the bin below
+	//the limit or belowlimits.
+	//Limits must be monotonically nondecreasing for this function to work.
+	template<class T, class U>
+	void histogram(std::vector< std::vector<U> > &counts, const std::vector< std::vector<T> >&limits, const std::vector< std::vector<T> > &data, bool roundup=true)
+	{
+		if(limits.size()==0)
+		{
+			counts.resize(0);
+			return;
+		}
+		size_t numdims=sci::ndims(counts);
+		if (numdims!=limits.size())
+		{
+			counts.resize(0);
+			return;
+		}
+		std::vector<size_t> nbins(limits.size());
+		for(size_t i=0; i<limits.size(); ++i)nbins[i]=limits[i].size()+1;
+		sci::setallvalues(counts,0);
+		sci::resize(counts,nbins);
+		
+		if(roundup)
+		{
+			std::vector<size_t> index(numdims);
+			size_t npoints=data[0].size();
+			for(size_t i=0; i<npoints; ++i)
+			{
+				for(size_t j=0; j<numdims; ++j)
+				{
+					if(data[j][i]<limits[j][0]) index[j]=0;
+					else if(data[j][i]>=limits[j].back()) index[j]=nbins[j]-1;
+					else 
+					{
+						for(size_t k=1; k<limits[j].size(); ++k)
+						{
+							if(data[j][i]<limits[j][k] &&data[j][i]>=limits[j][k-1])
+							{
+								index[j]=k;
+								break;
+							}
+						}
+					}
+				}
+				sci::at<double>(counts,index)+=1;
+			}
+		}
+		else
+		{
+			std::vector<size_t> index(numdims);
+			size_t npoints=data[0].size();
+			for(size_t i=0; i<npoints; ++i)
+			{
+				for(size_t j=0; j<numdims; ++j)
+				{
+					if(data[j][i]<=limits[j][0]) index[j]=0;
+					else if(data[j][i]>limits[j].back()) index[j]=nbins[j]-1;
+					else 
+					{
+						for(size_t k=1; k<limits[j].size(); ++k)
+						{
+							if(data[j][i]<=limits[j][k] &&data[j][i]>limits[j][k-1])
+							{
+								index[j]=k;
+								break;
+							}
+						}
+					}
+				}
+				sci::at<double>(counts,index)+=1;
+			}
+		}
+	}
+
+	
+	//generates a histogram of data based on limitstart nlimits and limitspacing. If nlimits is zero 
+	//then counts will be returned with size zero.
+	//Otherwise counts will have a size one larger than limits with the first and last element in each 
+	//dimension being counts below and above the limits respectively.
+	//If roundup is true then data which falls exactly on a limit will be counted in the bin above the limit or
+	//if roundup is false then data which falls exactly on a limit will be counted in the bin below the limit.
+	template<class T, class U>
+	void histogram(std::vector< std::vector<U> > &counts, const std::vector<T> &limitstarts, const std::vector<T> &limitspacings, const std::vector<size_t> &nlimits, const std::vector< std::vector<T> > &data, bool roundup=true)
+	{
+		size_t numdims=sci::ndims(counts);
+		if (numdims!=data.size() || numdims!=limitstarts.size() || numdims!=limitspacings.size() || numdims!=nlimits.size())
+		{
+			counts.resize(0);
+			return;
+		}
+		if(!sci::rectangular(data))
+		{
+			counts.resize(0);
+			return;
+		}
+		sci::setallvalues(counts,0);
+		sci::resize(counts,nlimits+(size_t)1);
+		//copy the sizes into a T vector
+		std::vector<T> nlimitsd(nlimits.size());
+		for(size_t i=0; i<nlimits.size(); ++i) nlimitsd[i]=(T)nlimits[i];
+		std::vector<T> limitstops=limitstarts+limitspacings*nlimitsd;
+		
+		if(roundup)
+		{
+			std::vector<size_t> index(numdims);
+			size_t npoints=data[0].size();
+			for(size_t i=0; i<npoints; ++i)
+			{
+				for(size_t j=0; j<numdims; ++j)
+				{
+					if(data[j][i]<limitstarts[j]) index[j]=0;
+					else if(data[j][i]>=limitstops[j]) index[j]=nlimits[j];
+					else index[j]=(size_t)((data[j][i]-limitstarts[j]) / limitspacings[j])+1;
+				}
+				sci::at<U>(counts,index)+=1;
+			}
+		}
+		else
+		{
+			std::vector<size_t> index(numdims);
+			size_t npoints=data[0].size();
+			for(size_t i=0; i<npoints; ++i)
+			{
+				for(size_t j=0; j<numdims; ++j)
+				{
+					if(data[j][i]<=limitstarts[j]) index[j]=0;
+					else if(data[j][i]>limitstops[j]) index[j]=nlimits[j];
+					else 
+					{
+						T bin=((data[j][i]-limitstarts[j]) / limitspacings[j])+1;
+						index[j]=(size_t)bin;
+						if(bin==(T)index[j]) index[j]--;
+					}
+				}
+				sci::at<U>(counts,index)+=1;
+			}
+		}
+	}
+
+	double round(double n);
+
+	double linearinterpolate(double x, double x1, double x2, double y1, double y2);
+
+	template<class T>
+	void erase(std::vector<T> &v, size_t index)
+	{
+		if(index<v.size()) v.erase(v.begin()+index);
+	}
+
+	template<class T>
+	void erase(std::vector<T> &v, size_t index, size_t n_elements)
+	{
+		if (n_elements==0) return;
+		if(index<v.size())
+		{
+			if(index+n_elements-1<v.size()) v.erase(v.begin()+index,v.begin()+index+n_elements);
+		}
+		else
+		{
+			v.erase(v.begin()+index,v.end());
+		}
+	}
+
+	template<class T>
+	void erase(std::vector<std::vector<T>> &v, std::vector<size_t> index, std::vector<size_t> n_elements)
+	{
+		if(index.size()!=n_elements.size()) return;
+		if(sci::ndims(v)!=index.size()) return;
+		for(size_t i=0; i<v.size(); ++i) 
+		{
+			erase(v[i],index[1],n_elements[1]);
+		}
+		sci::erase(v,index[0],n_elements[0]);
+	}
+
+	template<class T>
+	void erase(std::vector<T> &v, std::vector<size_t> index, std::vector<size_t> n_elements)
+	{
+		if(index.size()!=n_elements.size()) return;
+		if(index.size()!=1) return;
+		erase(v,index[0],n_elements[0]);
+	}
+
+
+	//*****************************************************************
+	//***********matrix multiplication*********************************
+	//*****************************************************************
+
+	//dot product of vectors
+	template <class T>
+	T dot(const std::vector<T> &a, const std::vector<T> &b)
+	{
+		//check validity
+		if(a.size()!=b.size()) return std::numeric_limits<T>::quiet_NaN();
+		if(a.size()==0) return T(0);
+		//create quick iterators to vectors
+		qic<T> ai(a);
+		qic<T> bi(b);
+		//do the sum
+		T sum=0.0;
+		for(size_t i=0; i<a.size(); ++i)
+		{
+			sum+=ai[i]*bi[i];
+		}
+		return sum;
+	}
+
+	//generate invalid output for multi d vectors
+	template <class T>
+	T dot(const std::vector< std::vector<T> > &a, const std::vector<T> &b)
+	{
+		return std::numeric_limits<T>::quiet_NaN();
+	}
+	template <class T>
+	T dot(const std::vector<T> &a, const std::vector< std::vector<T> > &b)
+	{
+		return std::numeric_limits<T>::quiet_NaN();
+	}
+
+	//cross product of vectors
+	template <class T>
+	std::vector<T> cross(const std::vector<T> &a, const std::vector<T> &b)
+	{
+		//check validity, must have 3 elements, return empty vector otherwise
+		if(a.size()!=3) return std::vector<T>();
+		if(b.size()!=3) return std::vector<T>();
+
+		//create the result
+		std::vector<T> result(3);
+		//create quick iterators to vectors
+		qic<T> ai(a);
+		qic<T> bi(b);
+		qi<T> resulti(result);
+
+		//set the values of result
+		resulti[0]=ai[1]*bi[2]-ai[2]*bi[1];
+		resulti[1]=ai[2]*bi[0]-ai[0]*bi[2];
+		resulti[2]=ai[0]*bi[1]-ai[1]*bi[0];
+
+		//return the result
+		return result;
+	}
+
+	//generate invalid output for multi d vectors
+	template <class T>
+	std::vector<T> cross(const std::vector< std::vector<T> > &a, const std::vector<T> &b)
+	{
+		return std::vector<T>();
+	}
+	template <class T>
+	std::vector<T> cross(const std::vector<T> &a, const std::vector< std::vector<T> > &b)
+	{
+		return std::vector<T>();
+	}
+
+	//matrix multiplication. note the first index is the row and the second is the column
+	template <class T>
+	std::vector< std::vector<T> > matrixmult(const std::vector< std::vector<T> > &a, const std::vector< std::vector<T> > &b)
+	{
+		//check validity, must be rectangular and a.size() must be the same as b[0].size()
+		//return an empty vector if they fail
+		if(a.size()==0) return std::vector< std::vector<T> >();
+		if(b.size()==0) return std::vector< std::vector<T> >();
+		if(!sci::rectangular(a)) return std::vector< std::vector<T> >();
+		if(!sci::rectangular(b)) return std::vector< std::vector<T> >();
+		if(a[0].size()==0) return std::vector< std::vector<T> >();
+		if(a[0].size()!=b.size()) return std::vector< std::vector<T> >();
+
+		std::vector< std::vector<T> > result(b.size());
+		size_t dim1=a.size();
+		size_t dim2=b[0].size();
+		qi< std::vector<T> > resulti(result);
+		qic< std::vector<T> > ai(a);
+		qic< std::vector<T> > bi(b);
+		for(size_t i=0; i<dim1; ++i)
+		{
+			resulti[i].resize(b[0].size(),0.0);
+			qi<T> resultii(resulti[i]);
+			qic<T> aii(ai[i]);
+			for(size_t j=0; j<dim2; ++j)
+			{
+				resultii[j]+=aii[j]*bi[j][i];
+			}
+		}
+		return result;
+	}
+
+	//matrix multiplication. In the 2D vector the first index is the row and the second is the column
+	//The 1D vector is assumed to be a column
+	template <class T>
+	std::vector<T> matrixmult(const std::vector< std::vector<T> > &a, const std::vector<T> &b)
+	{
+		//check validity, must be rectangular and a.size() must be the same as b[0].size()
+		//return an empty vector if they fail
+		if(a.size()==0) return std::vector<T>();
+		if(!sci::rectangular(a)) return std::vector<T>();
+		if(a[0].size()==0) return std::vector<T>();
+		if(a[0].size()!=b.size()) return std::vector<T>();
+
+		std::vector<T> result(a.size(),0.0);
+		size_t dim1=a.size();
+		size_t dim2=a[0].size();
+		qi<T> resulti(result);
+		qic< std::vector<T> > ai(a);
+		qic<T> bi(b);
+		for(size_t i=0; i<dim1; ++i)
+		{
+			qic<T> aii(ai[i]);
+			for(size_t j=0; j<dim2; ++j)
+			{
+				resulti[i]+=aii[j]*bi[j];
+			}
+		}
+		return result;
+	}
+
+	//matrix multiplication. In the 2D vector the first index is the row and the second is the column
+	//The 1D vector is assumed to be a row
+	template <class T>
+	std::vector<T> matrixmult(const std::vector<T> &a, const std::vector< std::vector<T> > &b)
+	{
+		//check validity, must be rectangular and a.size() must be the same as b[0].size()
+		//return an empty vector if they fail
+		if(b.size()==0) return std::vector<T>();
+		if(!sci::rectangular(b)) return std::vector<T>();
+		if(b[0].size()==0) return std::vector<T>();
+		if(a.size()!=b.size()) return std::vector<T>();
+
+		std::vector<T> result(b[0].size(),0.0);
+		size_t dim1=b.size();
+		size_t dim2=b[0].size();
+		qi<T> resulti(result);
+		qic<T> ai(a);
+		qic< std::vector<T> > bi(b);
+		for(size_t i=0; i<dim2; ++i)
+		{
+			for(size_t j=0; j<dim1; ++j)
+			{
+				resulti[i]+=ai[j]*bi[j][i];
+			}
+		}
+		return result;
+	}
+
+	//matrix multiplication.
+	//The first vector is assumed to be a row and the second a column
+	//This is the same as doing a dot product
+	template <class T>
+	T matrixmult(const std::vector<T> &a, const std::vector<T> &b)
+	{
+		//check validity
+		if(a.size()!=b.size()) return std::numeric_limits<T>::quiet_NaN();
+		if(a.size()==0) return T(0);
+		//create quick iterators to vectors
+		qic<T> ai(a);
+		qic<T> bi(b);
+		//do the sum
+		T sum=0.0;
+		for(size_t i=0; i<a.size(); ++i)
+		{
+			sum+=ai[i]*bi[i];
+		}
+		return sum;
+	}
+
+	std::vector< std::vector<double> > inverse(const std::vector< std::vector<double> > &mat);
+
+
+	//sort
+	template<class T>
+	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &newlocations)
+	{
+		sci::sortablevector<T> sortv(v);
+		sortv.sort();
+		std::vector<size_t> originallocations;
+		sortv.getvectors(sortedv,originallocations);
+		newlocations.resize(originallocations.size());
+		for(size_t i=0; i<originallocations.size(); ++i)
+		{
+			newlocations[originallocations[i]]=i;
+		}
+	}
+
+	template<class T>
+	inline std::vector<T> sort(std::vector<T> v)
+	{
+		std::sort(v.begin(),v.end());
+		return v;
+	}
+
+	template<class T>
+	std::vector<T> reorder(const std::vector<T> &v, const std::vector<size_t> &newlocations)
+	{
+		std::vector<T> result(v.size());
+		for(size_t i=0; i<result.size(); ++i) result[newlocations[i]]=v[i];
+		return result;
+	}
+
+
+	bool pointinpolygon(std::vector<double> polygonx, std::vector<double> polygony, double pointx, double pointy);
+	void intersect(double xline1point1, double yline1point1, double xline1point2, double yline1point2, double xline2point1, double yline2point1, double xline2point2, double yline2point2, double &intersectx, double &intersecty, double &m1, double &m2);
+	void eigenvalues(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary);
+	void eigenvector(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary, std::vector<std::vector<double>> &eigenvectors);
+
+
+	template<class T>
+	class shared_ptr
+	{
+	public:
+		shared_ptr(T *ptr=NULL);
+		~shared_ptr();
+		shared_ptr(const shared_ptr &other);
+		shared_ptr<T> & operator=(const shared_ptr &rhs);
+		shared_ptr<T> & operator=(T *rhs);
+		T & operator*() const ;
+		T* operator->() const;
+		T* get() const;
+		operator bool() const;
+	private:
+		void decrementPointer();
+		size_t *m_count;
+		T *m_ptr;
+	};
+
+	template<class T>
+	shared_ptr<T>::shared_ptr(T *ptr)
+	{
+		m_ptr=ptr;
+		m_count=new size_t;
+		*m_count=1;
+	}	
+	template<class T>
+	shared_ptr<T>::shared_ptr(const shared_ptr &other)
+	{
+		m_ptr=other.m_ptr;
+		m_count=other.m_count;
+		++*m_count;
+	}	
+	template<class T>
+	shared_ptr<T> & shared_ptr<T>::operator=(const shared_ptr &rhs)
+	{
+		decrementPointer();
+		m_ptr=rhs.m_ptr;
+		m_count=rhs.m_count;
+		++*m_count;
+		return *this;
+	}
+	template<class T>
+	shared_ptr<T> & shared_ptr<T>::operator=(T *rhs)
+	{
+		decrementPointer();
+		m_ptr=rhs;
+		m_count=new size_t;
+		*m_count=1;
+		return *this;
+	}
+
+	template<class T>
+	shared_ptr<T>::~shared_ptr()
+	{
+		decrementPointer();
+	}
+	template<class T>
+	void shared_ptr<T>::decrementPointer()
+	{
+		--*m_count;
+		if(m_count==0)
+		{
+			delete m_ptr;
+			delete m_count;
+		}
+	}
+	template<class T>
+	T & shared_ptr<T>::operator*() const
+	{
+		return *m_ptr;
+	}
+	template<class T>
+	T* shared_ptr<T>::operator->() const
+	{
+		return m_ptr;
+	}
+	template<class T>
+	T* shared_ptr<T>::get() const
+	{
+		return m_ptr;
+	}
+	template<class T>
+	shared_ptr<T>::operator bool() const
+	{
+		return m_ptr!=NULL;
+	}
+	
+	template<class T>
+	bool operator == (const shared_ptr<T> &lhs, const T *rhs)
+	{
+		return lhs.get()==rhs;
+	}
+	template<class T>
+	bool operator == (const T *rhs, const shared_ptr<T> &lhs )
+	{
+		return lhs==rhs.get();
+	}
+	template<class T>
+	bool operator == (const shared_ptr<T> &lhs, const shared_ptr<T> &rhs)
+	{
+		return lhs.get()==rhs.get();
+	}
+
+	size_t randInt(size_t maxVal=SIZE_MAX);
+	
+	namespace distribution
+	{
+		double normal(double x, double mean, double standardDeviation);
+		double cumulativeNormal(double x, double mean, double standardDeviation);
+		double lognormal(double x, double logMean, double logStandardDeviation);
+		double cumulativeLognormal(double x, double logMean, double logStandardDeviation);
+		double exponential(double x, double rate);
+		double cumulativeExponential(double x, double rate);
+		double gamma(double x, double shape, double scale);
+		double cumulativeGamma(double x, double shape, double scale);
+		double generalisedGamma(double x, double shapeK, double shapeGamma, double scale);
+		double cumulativeGeneralisedGamma(double x, double shapeK, double shapeGamma, double scale);
+		double weibull(double x, double shape, double scale);
+		double cumulativeWeibull(double x, double shape, double scale);
+		double rayleigh(double x, double scale);
+		double cumulativeRayleigh(double x, double scale);
+		double boltzmann(double energy, double temperature);
+		double cumulativeBoltzmann(double energy, double temperature);
+		double cauchy(double x, double mean, double halfWidthAtHalfMaximum);
+		double cumulativeCauchy(double x, double mean, double halfWidthAtHalfMaximum);
+		
+	}
+
+	double gamma( double x );
+	double lowerIncompleteGamma( double a, double x );
+	double upperIncompleteGamma( double a, double x );
+
+	void solveQuadratic(double a, double b, double c, std::complex<double> &sln1, std::complex<double> &sln2);
+	void solveCubic(double a, double b, double c, double d, std::complex<double> &sln1, std::complex<double> &sln2, std::complex<double> &sln3);
+	void solveQuadratic(double a, double b, double c, double &sln1, double &sln2);
+	void solveCubic(double a, double b, double c, double d, double &sln1, double &sln2, double &sln3);
+
+	inline double realOrNan(std::complex<double> a)
+	{
+		return a.imag()==0.0 ? a.real() : std::numeric_limits<double>::quiet_NaN();
+	}
+
+	bool anyTrue(const std::vector<SBOOL> &v);
+	bool allTrue(const std::vector<SBOOL> &v);
+	bool anyFalse(const std::vector<SBOOL> &v);
+	bool allFalse(const std::vector<SBOOL> &v);
+
+	std::vector<SBOOL> rollingOr(const std::vector<SBOOL> &v, size_t n);
+	std::vector<SBOOL> rollingAnd(const std::vector<SBOOL> &v, size_t n);
+
+	//differentiate the function (or functor) FUNCTION, which takes a vector of x values
+	//x is the x values where you wishe to differentiate
+	//index is the x value you wish to differentiate against
+	//n is the differential you want (1-4 for 1st to 4th differential)
+	//order is the accuracy order - currently only 2 is supported
+	/*template<double (*FUNCTION)(const std::vector<double> &)>
+	double differential(const std::vector<double> x, size_t index, size_t n, size_t order=2)
+	{
+		sci::assertThrow(n>0 && n<5);
+		sci::assertThrow(index<x.size());
+		sci::assertThrow(order==2);
+		double h=std::max(std::numeric_limits<double>::min(),std::sqrt(std::numeric_limits<double>::epsilon())*x[index]);
+
+		std::vector<double> xMinusH=x;
+		std::vector<double> xPlusH=x;
+		xMinusH[index]-=h;
+		xPlusH[index]+=h;
+		if(n==2)
+		{
+			switch (n)
+			{
+			case 1:
+				return( -1.0/2.0*(-FUNCTION(xMinusH)+FUNCTION(xPlusH)) )/h;
+			case 2:
+				return( FUNCTION(xMinusH)+FUNCTION(xPlusH)
+					-2.0*FUNCTION(x) )/h/h;
+			case 3:
+				std::vector<double> xMinus2H=xMinusH;
+				std::vector<double> xPlus2H=xPlusH;
+				xMinus2H[index]-=h;
+				xPlus2H[index]+=h;
+				return( -1.0/2.0*(-FUNCTION(xMinus2H)+FUNCTION(xPlus2H))
+					+FUNCTION(xMinusH)-FUNCTION(xPlusH) )/h/h/h;
+			case 4:
+				std::vector<double> xMinus2H=xMinusH;
+				std::vector<double> xPlus2H=xPlusH;
+				xMinus2H[index]-=h;
+				xPlus2H[index]+=h;
+				return( FUNCTION(xMinus2H)+FUNCTION(xPlus2H)
+					-4.0*(xMinusH+xPlusH)
+					+6.0*x )/h/h/h/h;
+			}
+		}
+		else return std::numeric_limits<double>::quietNan();
+
+	}*/
+
+	
+	//template<double (*FUNCTION)(const std::vector<double> &)>
+	//double differential(const std::vector<double> x, size_t index, size_t n, size_t order=2)
+
+	template<double (*FUNCTION)(const std::vector<double> &)>
+	double differential(const std::vector<double> &x, size_t index)
+	{
+		double h=std::max(std::numeric_limits<double>::min(),std::numeric_limits<double>::epsilon());
+		std::vector<double> xMinus=x;
+		std::vector<double> xPlus=x;
+		double upperLimit=std::numeric_limits<double>::max();
+		double lowerLimit=-upperLimit;
+		double result=0.0;
+		int n=0;
+		while(1)
+		{
+			xMinus[index]=x[index]-h;
+			xPlus[index]=x[index]+h;
+			double hActual=xPlus[index]-xMinus[index];
+			double dif=(FUNCTION(xPlus)-FUNCTION(xMinus))/hActual;
+			double err=std::numeric_limits<double>::epsilon()/hActual+dif*std::numeric_limits<double>::epsilon();
+			upperLimit=std::min(upperLimit,dif+err);
+			lowerLimit=std::max(lowerLimit,dif-err);
+			if(lowerLimit>upperLimit)
+				break;
+			result=dif;
+			h*=2.0;
+			++n;
+		}
+		return result;
+	}
+
+	size_t count(const std::vector<SBOOL> &v);
+
+	//end of namespace sci
+}
+
+
+
+
+#endif
