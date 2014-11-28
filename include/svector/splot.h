@@ -508,7 +508,7 @@ class splotlegend : public splot
 	friend class splotwindow;
 public:
 	void addentry(std::string text, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1, std::string linestyle="");
-	void addentry(std::string text, const splotcolourscale &colourscale, double headingoffset=0.05, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
+	void addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
 	void addentry(std::string text, const splotsizescale &sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), std::string pointsymbol="A", size_t nlines=5);
 private:
 	//private constructor so only friends can create a legend
@@ -526,9 +526,11 @@ private:
 	std::vector<wxColour> m_textcolour;
 	std::vector<bool> m_contours;
 	std::vector<bool> m_horizontal;
+	std::vector<bool> m_filloffscaletop;
+	std::vector<bool> m_filloffscalebottom;
 
 	std::vector<size_t> m_nlines;
-	void adddatasetproperties(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, std::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal);
+	void adddatasetproperties(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, std::string linestyle, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal);
 	void plot(plstream *pl, double linewidthmultiplier=1.0);
 	void calculateautolimits(){}; //do nothing - function only created as it is pure virtual
 };

@@ -2011,6 +2011,21 @@ void splot2d::setlogyaxis(bool log)
 	calculateautolimits();
 }
 
+class PlTempTransformer
+{
+public:
+	PlTempTransformer( plstream *pl, void (*transform)(PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer) , PLPointer input)
+		:m_pl(pl)
+	{
+		m_pl->stransform(transform, input);
+	}
+	~PlTempTransformer()
+	{
+		m_pl->stransform(NULL, NULL);
+	}
+private:
+	plstream *m_pl;
+};
 
 //when called with a plstream pl.init() should have already been called
 //and the window and driver should have been set so the stream should 
@@ -2122,7 +2137,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 			
 
 		//add the user provided transform
-		pl->stransform( m_transformers[i] ? splotTransform : NULL , m_transformers[i].get() );
+		PlTempTransformer tempTransformer( pl, (m_transformers[i] ? splotTransform : NULL) , (void*)(m_transformers[i].get()) );
 
 		//vectors/arrows
 		if(m_us[i].size()>0 && m_vs[i].size()>0)
@@ -3344,18 +3359,18 @@ splotlegend::splotlegend(std::string title, double titlesize, double titledistan
 
 void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, int linewidth, std::string linestyle)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,pointsize,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),linecolour,linewidth,linestyle,splotcolourscale(),splotsizescale(),0,false,1,0.0, false);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,pointsize,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),linecolour,linewidth,linestyle,splotcolourscale(),false,false,splotsizescale(),0,false,1,0.0, false);
 }
-void splotlegend::addentry(std::string text, const splotcolourscale &colourscale, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, unsigned int ncolourlevels, bool contours, size_t height, bool horizontal)
+void splotlegend::addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, unsigned int ncolourlevels, bool contours, size_t height, bool horizontal)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,wxColour(0,0,0),0.0,"",pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",colourscale,splotsizescale(),ncolourlevels,contours,height,headingoffset, horizontal);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,wxColour(0,0,0),0.0,"",pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",colourscale,filloffscaletop,filloffscalebottom,splotsizescale(),ncolourlevels,contours,height,headingoffset, horizontal);
 }
 void splotlegend::addentry(std::string text, const splotsizescale &sizescale, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, std::string pointsymbol, size_t nlines)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,0.0,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",splotcolourscale(),sizescale,0,false,nlines,headingoffset, false);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,0.0,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",splotcolourscale(),false,false,sizescale,0,false,nlines,headingoffset, false);
 }
 
-void splotlegend::adddatasetproperties(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, std::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal)
+void splotlegend::adddatasetproperties(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, std::string linestyle, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal)
 {
 	m_headingoffset.push_back(headingoffset);
 	m_text.push_back(wxString(text.c_str(),wxConvUTF8));
@@ -3376,15 +3391,19 @@ void splotlegend::adddatasetproperties(std::string text, double textoffset, doub
 	m_colourscale.push_back(colourscale);
 	m_sizescale.push_back(sizescale);
 
-	m_filloffscaletop.push_back(false);
-	m_filloffscalebottom.push_back(false);
+	m_filloffscaletop.push_back(filloffscaletop);
+	m_filloffscalebottom.push_back(filloffscalebottom);
 	m_colourlevels.resize(m_colourlevels.size()+1);
 	if(ncolourlevels>0) 
 	{
 		m_colourlevels.back()=sci::indexvector<double>(std::max((int)ncolourlevels+1,2));
 		m_colourlevels.back()*=(m_colourscale.back().m_top-m_colourscale.back().m_bottom)/m_colourlevels.back().back();
 		m_colourlevels.back()+=m_colourscale.back().m_bottom;
-
+		double interval=m_colourlevels.back().size()>1 ? m_colourlevels.back()[1]-m_colourlevels.back()[0] : 1.0;
+		if(filloffscalebottom)
+			m_colourlevels.back().insert(m_colourlevels.back().begin(),(m_colourlevels.back())[0]-interval);
+		if(filloffscaletop)
+			m_colourlevels.back().push_back(m_colourlevels.back().back()+interval);
 	}
 	m_minstructz.push_back(std::numeric_limits<double>::quiet_NaN());
 	m_maxstructz.push_back(std::numeric_limits<double>::quiet_NaN());
@@ -3634,6 +3653,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			std::vector<double> x=sci::indexvector<double>(2);
 			//std::vector<double> y=m_colourscale[i].m_value*(m_colourscale[i].m_top-m_colourscale[i].m_bottom)+m_colourscale[i].m_bottom;
 			std::vector<double> y=m_colourlevels[i];
+
 			std::vector<std::vector<double> > z(2);
 			z[0]=y;
 			z[1]=y;
@@ -3649,6 +3669,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			double ymin=vporymaxnorm-(position+m_nlines[i])*scaledcharheightworld*(vporymaxnorm-vporyminnorm);
 			double ymax=vporymaxnorm-(position-0.5)*scaledcharheightworld*(vporymaxnorm-vporyminnorm);
 			pl->vpor( xmin, xmax, ymin, ymax );
+			//set up the min/max x/y values within the viewport
 			pl->wind( x[0], x.back(), y[0], y.back() );
 			//create a contourable object for plotting
 			splot2dmatrix matrix(&z);
@@ -3673,10 +3694,11 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				//get the edges - being careful for crossing off the ends of the scale
 				double lowLimit=m_colourlevels[i][j-1];
 				double highLimit=m_colourlevels[i][j];
-				if(m_colourscale[i].getNormalisedValue( m_colourlevels[i][j-1] ) < 0.0 )
-					lowLimit=m_colourscale[i].m_bottom;
-				if(m_colourscale[i].getNormalisedValue( m_colourlevels[i][j-1] ) > 1.0 )
-					highLimit=m_colourscale[i].m_top;
+				//I'm pretty sure these limit checks are not needed
+				//if(m_colourscale[i].getNormalisedValue( m_colourlevels[i][j-1] ) < 0.0 && !m_filloffscalebottom[i])
+				//	lowLimit=m_colourscale[i].m_bottom;
+				//if(m_colourscale[i].getNormalisedValue( m_colourlevels[i][j] ) > 1.0 && !m_filloffscaletop[i])
+				//	highLimit=m_colourscale[i].m_top;
 				//draw the band
 				pl->shade( matrix, x[0], x.back(), y[0], y.back(), lowLimit, 
 					highLimit, 0, 1, 1, 0, 0, 0, 0, true, nullptr);
