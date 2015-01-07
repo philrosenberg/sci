@@ -9,6 +9,7 @@
 #include<wx/wx.h>
 #include<wx/filename.h>
 #include<wx/dcps.h>
+#include <wx/dcsvg.h>
 #include<wx/metafile.h>
 #include<wx/gdicmn.h>
 #include"../include/svector/serr.h"
@@ -3115,7 +3116,6 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 	else if(extension==wxT("emf"))
 	{
 		//here we redraw the plot like OnPaint but using a wxMetafile DC.
-		GetClientSize(&width, &height);
 		wxMetafileDC metadc(filename,width,height);
 		DrawPlots(&metadc,width,height,0,false,linewidthmultiplier);//0 gives vector output
 		//close the file - note this gives us a copy of the file in memory which we must delete
@@ -3128,6 +3128,12 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 		int miny=metadc.MinY();
 		int maxy=metadc.MaxY();
 		//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
+	}
+	else if (extension=="svg")
+	{
+		wxSVGFileDC dc(filename, width, height, 72);
+		DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+		result=true;
 	}
 	else
 	{
