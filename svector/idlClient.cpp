@@ -1,8 +1,8 @@
 #include"../idl/idl_h.h"
 #include<string>
 #include<vector>
-#include<svector/serr.h>
-#include<svector/apexWorkspace.h>
+#include"../include/svector/serr.h"
+#include"../include/svector/apexWorkspace.h"
 
 
 class RpcStringBinding

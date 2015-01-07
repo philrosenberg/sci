@@ -311,7 +311,6 @@
     <ClCompile Include="wgdos.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\svector\apexWorkspace.h" />
     <ClInclude Include="..\include\svector\dep\math.h" />
     <ClInclude Include="..\include\svector\dep\operators.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
