@@ -3047,7 +3047,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 	
 	bool result;
 
-	if(extension=="ps" || extension =="eps" || extension =="pdf")
+	if(extension =="eps" || extension =="pdf")
 	{
 		//check we have access to the output
 		std::fstream fout;
@@ -3089,7 +3089,8 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			result=false;
 	}
 
-	/*{
+	else if(extension=="ps")
+	{
 		//here we redraw the plot like OnPaint but using a postscript DC.
 		wxPrintData setupdata;
 		setupdata.SetColour(true);
@@ -3108,7 +3109,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 		if(result==false) return result;
 		DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,0,false,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
 		psdc.EndDoc();
-	}*/
+	}
 	else if(extension=="pdf")
 		print( false, "PDFCreator" );
 	else if(extension==wxT("emf"))
@@ -3230,10 +3231,7 @@ void splotwindow::DrawPlots(wxDC *dc, int width, int height, int backend, bool u
 
 	//Check we have some plots to plot
 	if(m_plots.size()==0 &&m_legends.size()==0)
-	{
-		dc->FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
 		return;
-	}
 
 	//create the stream
 	plstream *pl=new plstream();
