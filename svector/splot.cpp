@@ -19,6 +19,17 @@ BEGIN_EVENT_TABLE( splotwindow, wxPanel )
     EVT_ERASE_BACKGROUND(splotwindow::OnEraseBackGround)
 END_EVENT_TABLE()
 
+class TempFile
+{
+public:
+	TempFile(){m_filename=wxFileName::CreateTempFileName("");}
+	~TempFile(){if(m_filename!="") wxRemoveFile(m_filename);}
+	wxString getFilename(){return m_filename;}
+private:
+	wxString m_filename;
+
+};
+
 int splotexitcatcher(const char *message)
 {
 	wxString err(message, wxConvUTF8);
@@ -3040,159 +3051,204 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 //strings then png is used, although the given extension will still be used 
 //in the filename
 
-bool splotwindow::writetofile(wxString filename, int width, int height, double linewidthmultiplier)
+bool splotwindow::writetofile(wxString filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
 {
 	//get the extension
 	wxFileName fullfile=filename;
 	wxString extension=fullfile.GetExt().Lower();
 	
-	bool result;
+	bool result=true;
 
-	if(extension =="eps" || extension =="pdf")
-	{
-		//check we have access to the output
-		std::fstream fout;
-		fout.open(filename.mb_str(), std::ios::out);
-		if(fout.is_open())
-		{
-			fout.close();
-			wxString printer="Apex++ "+extension.Upper();
-			wxString intermediateFile="C:\\ProgramData\\Apex++\\print."+extension;
-			if(wxFile::Exists(intermediateFile))
-				wxRemoveFile(intermediateFile);
-			result=print(false, printer);
-			if(result)
-			{
-				//wait for the file to appear
-				while(!wxFileExists(intermediateFile))
-				{
-				}
-				//repeatedly try to rename the file until it succeeds
-				while(!MoveFile(intermediateFile, filename))
-				{
-					DWORD err=GetLastError();
-					if(err != 32 //sharing violation - i.e. the file is still in use/being written
-						&& err != 80 ) //destination file already exists
-						result=false;
-					if(err == 80 )
-					{
-						wxRemoveFile(filename);
-						//check if the delete was successful
-						if(wxFile::Exists(filename))
-							result=false;
-					}
-					if( !result )
-						break;
-				}
-			}
-		}
-		else
-			result=false;
-	}
-
-	else if(extension=="ps")
-	{
-		//here we redraw the plot like OnPaint but using a postscript DC.
-		wxPrintData setupdata;
-		setupdata.SetColour(true);
-		setupdata.SetFilename(filename);
-		//setupdata.SetPaperId(wxPAPER_A4);
-		setupdata.SetPaperId(wxPAPER_NONE);
-		//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
-		//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
-		//than the screen. Here we've multiplied by 10 to get 30 times better.
-		int sizemultiplier=10;
-		setupdata.SetPaperSize(wxSize(width*sizemultiplier,height*sizemultiplier));
-		setupdata.SetPrintMode(wxPRINT_MODE_FILE);
-		//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
-		wxPostScriptDC psdc(setupdata);
-		result=psdc.StartDoc(wxT("Writing ")+filename);
-		if(result==false) return result;
-		DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,0,false,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
-		psdc.EndDoc();
-	}
-	else if(extension=="pdf")
-		print( false, "PDFCreator" );
-	else if(extension==wxT("emf"))
-	{
-		//here we redraw the plot like OnPaint but using a wxMetafile DC.
-		wxMetafileDC metadc(filename,width,height);
-		DrawPlots(&metadc,width,height,0,false,linewidthmultiplier);//0 gives vector output
-		//close the file - note this gives us a copy of the file in memory which we must delete
-		wxMetafile *metafile=metadc.Close();
-		result=metafile!=NULL;
-		delete metafile;
-		//we must call this function to make the file importable into other software
-		int minx=metadc.MinX();
-		int maxx=metadc.MaxX();
-		int miny=metadc.MinY();
-		int maxy=metadc.MaxY();
-		//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
-	}
-	else if (extension=="svg")
+	//write the image to file - if we are using inkscape then we write it to an svg first then use inkscape
+	//to convert to the apropriate format - of course if we want an svg then no conversion is needed
+	if(extension=="svg")
 	{
 		wxSVGFileDC dc(filename, width, height, 72);
 		DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
-		result=true;
+	}
+	else if(preferInkscape)
+	{
+		TempFile tempFile;
+		if(tempFile.getFilename()=="")
+			return false;
+		{
+			//put the dc in its own context so that it closes the file
+			//before we try to convert it
+			wxSVGFileDC dc(tempFile.getFilename(), width, height, 72);
+			if(!dc.IsOk())
+				return false;
+			DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+			if(!dc.IsOk())
+				return false;
+		}
+		//wxString inkscapePath="C:\\Program Files (x86)\\Inkscape\\Inkscape.exe";
+		wxString inkscapePath="D:\\usr\\local\\bin\\InkscapePortable\\InkscapePortable.exe";
+		if(!wxFileExists(inkscapePath))
+			return false;
+		if(extension=="ps")
+			wxExecute("\""+inkscapePath+"\" --export-ps \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		else if(extension=="pdf")
+			wxExecute("\""+inkscapePath+"\" --export-pdf \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		else if(extension=="eps")
+			wxExecute("\""+inkscapePath+"\" --export-eps \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		else if(extension=="png")
+			wxExecute("\""+inkscapePath+"\" --export-dpi 72 --export-png \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		else if(extension=="emf")
+			wxExecute("\""+inkscapePath+"\" --export-emf \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		else
+			result=writetofile(filename,width,height,linewidthmultiplier,false);
 	}
 	else
 	{
-		//load the image handlers
-		wxInitAllImageHandlers();
-		//create a wxBitmapType to define the type saved as
-		//again use PNG as default
-		wxBitmapType type=wxBITMAP_TYPE_PNG;
-		if(extension==wxT("jpg")) type=wxBITMAP_TYPE_JPEG;
-		else if(extension==wxT("bmp")) type=wxBITMAP_TYPE_BMP;
-		else if(extension==wxT("tif")) type=wxBITMAP_TYPE_TIF;
-		else if(extension==wxT("pcx")) type=wxBITMAP_TYPE_PCX;
-		else if(extension==wxT("xpm")) type=wxBITMAP_TYPE_XPM;
-		else if(extension==wxT("xbm")) type=wxBITMAP_TYPE_XBM;
-		else if(extension==wxT("pnm")) type=wxBITMAP_TYPE_PNM;
-
-		//we are outputting as a bitmap type, basically here we want to draw the plot then write the 
-		//pixels to a file
-		if(width==m_bitmapwidth && height==m_bitmapheight)
+		//some file types we can only deal with using inkscape test these first
+		if(extension=="eps" || extension=="pdf")
+			result=writetofile(filename,width,height,linewidthmultiplier,true);
+		
+		//old code from using pdfcreator
+		/*if(extension =="eps" || extension =="pdf")
 		{
-			//first refresh the screen because this function can get called before the panels have been painted
-			Refresh();
-			Update();
-			wxSafeYield();
-			//write the bitmap to file
-			result=m_bitmap->SaveFile(filename,type);
+			//check we have access to the output
+			std::fstream fout;
+			fout.open(filename.mb_str(), std::ios::out);
+			if(fout.is_open())
+			{
+				fout.close();
+				wxString printer="Apex++ "+extension.Upper();
+				wxString intermediateFile="C:\\ProgramData\\Apex++\\print."+extension;
+				if(wxFile::Exists(intermediateFile))
+					wxRemoveFile(intermediateFile);
+				result=print(false, printer);
+				if(result)
+				{
+					//wait for the file to appear
+					while(!wxFileExists(intermediateFile))
+					{
+					}
+					//repeatedly try to rename the file until it succeeds
+					while(!MoveFile(intermediateFile, filename))
+					{
+						DWORD err=GetLastError();
+						if(err != 32 //sharing violation - i.e. the file is still in use/being written
+							&& err != 80 ) //destination file already exists
+							result=false;
+						if(err == 80 )
+						{
+							wxRemoveFile(filename);
+							//check if the delete was successful
+							if(wxFile::Exists(filename))
+								result=false;
+						}
+						if( !result )
+							break;
+					}
+				}
+			}
+			else
+				result=false;
+		}*/
+
+		else if(extension=="ps")
+		{
+			//here we redraw the plot like OnPaint but using a postscript DC.
+			wxPrintData setupdata;
+			setupdata.SetColour(true);
+			setupdata.SetFilename(filename);
+			//setupdata.SetPaperId(wxPAPER_A4);
+			setupdata.SetPaperId(wxPAPER_NONE);
+			//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
+			//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
+			//than the screen. Here we've multiplied by 10 to get 30 times better.
+			int sizemultiplier=10;
+			setupdata.SetPaperSize(wxSize(width*sizemultiplier,height*sizemultiplier));
+			setupdata.SetPrintMode(wxPRINT_MODE_FILE);
+			//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
+			wxPostScriptDC psdc(setupdata);
+			result=psdc.StartDoc(wxT("Writing ")+filename);
+			if(result==false) return result;
+			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,0,false,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
+			psdc.EndDoc();
+		}
+		else if(extension=="emf")
+		{
+			//here we redraw the plot like OnPaint but using a wxMetafile DC.
+			wxMetafileDC metadc(filename,width,height);
+			DrawPlots(&metadc,width,height,0,false,linewidthmultiplier);//0 gives vector output
+			//close the file - note this gives us a copy of the file in memory which we must delete
+			wxMetafile *metafile=metadc.Close();
+			result=metafile!=NULL;
+			delete metafile;
+			//we must call this function to make the file importable into other software
+			int minx=metadc.MinX();
+			int maxx=metadc.MaxX();
+			int miny=metadc.MinY();
+			int maxy=metadc.MaxY();
+			//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
+		}
+		else if (extension=="svg")
+		{
+			wxSVGFileDC dc(filename, width, height, 72);
+			DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+			result=true;
 		}
 		else
 		{
-			//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
-			//except if using AGG then we create an image instead which we'll need to copy to the bitmap
-			wxMemoryDC memdc;
-			wxBitmap bitmap(width,height,32);
-			memdc.SelectObject(bitmap);
-			//fill the bitmap with white giving a white background for plplot
-			//or to show blank if there are no plots
-			memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
+			//load the image handlers
+			wxInitAllImageHandlers();
+			//create a wxBitmapType to define the type saved as
+			//use PNG as default
+			wxBitmapType type=wxBITMAP_TYPE_PNG;
+			if(extension==wxT("jpg")) type=wxBITMAP_TYPE_JPEG;
+			else if(extension==wxT("bmp")) type=wxBITMAP_TYPE_BMP;
+			else if(extension==wxT("tif")) type=wxBITMAP_TYPE_TIF;
+			else if(extension==wxT("pcx")) type=wxBITMAP_TYPE_PCX;
+			else if(extension==wxT("xpm")) type=wxBITMAP_TYPE_XPM;
+			else if(extension==wxT("xbm")) type=wxBITMAP_TYPE_XBM;
+			else if(extension==wxT("pnm")) type=wxBITMAP_TYPE_PNM;
 
-			//the plots themselve update their own status in the plot function
-			//DrawPlots(&memdc,0,false); //testing dc
-			//DrawPlots(&memdc,1,false); //testing agg no freetype
-			//DrawPlots(&memdc,1,true); //testing agg with freetype
-			//DrawPlots(&memdc,0,false);
-		
-			//select the backend
-			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
-			if(m_antialiasing)
+			//we are outputting as a bitmap type, basically here we want to draw the plot then write the 
+			//pixels to a file
+			if(width==m_bitmapwidth && height==m_bitmapheight)
 			{
-				//wxGCDC gcdc(memdc);
-				//DrawPlots(&gcdc,width,height,3,false);
-				DrawPlots(&memdc,width,height,2,false,linewidthmultiplier);
+				//first refresh the screen because this function can get called before the panels have been painted
+				Refresh();
+				Update();
+				wxSafeYield();
+				//write the bitmap to file
+				result=m_bitmap->SaveFile(filename,type);
 			}
-			else DrawPlots(&memdc,width,height,0,false,linewidthmultiplier);
+			else
+			{
+				//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
+				//except if using AGG then we create an image instead which we'll need to copy to the bitmap
+				wxMemoryDC memdc;
+				wxBitmap bitmap(width,height,32);
+				memdc.SelectObject(bitmap);
+				//fill the bitmap with white giving a white background for plplot
+				//or to show blank if there are no plots
+				memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
 
-			//reselect null bitmap for the memdc
-			memdc.SelectObject(wxNullBitmap);
+				//the plots themselve update their own status in the plot function
+				//DrawPlots(&memdc,0,false); //testing dc
+				//DrawPlots(&memdc,1,false); //testing agg no freetype
+				//DrawPlots(&memdc,1,true); //testing agg with freetype
+				//DrawPlots(&memdc,0,false);
+		
+				//select the backend
+				//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
+				if(m_antialiasing)
+				{
+					//wxGCDC gcdc(memdc);
+					//DrawPlots(&gcdc,width,height,3,false);
+					DrawPlots(&memdc,width,height,2,false,linewidthmultiplier);
+				}
+				else DrawPlots(&memdc,width,height,0,false,linewidthmultiplier);
 
-			//write the bitmap to file
-			result=bitmap.SaveFile(filename,type);
+				//reselect null bitmap for the memdc
+				memdc.SelectObject(wxNullBitmap);
+
+				//write the bitmap to file
+				result=bitmap.SaveFile(filename,type);
+			}
 		}
 	}
 
@@ -3200,14 +3256,14 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 }
 
 //asabove, but the size will be a multiple of the window size
-bool splotwindow::writetofile(wxString filename, double sizemultiplier)
+bool splotwindow::writetofile(wxString filename, double sizemultiplier, bool preferInkscape)
 {
 	Refresh();
 	Update();
 	wxSafeYield();
 	int width=sci::round(GetClientSize().GetX()*sizemultiplier);
 	int height=sci::round(GetClientSize().GetY()*sizemultiplier);
-	return writetofile(filename,width,height,sizemultiplier);
+	return writetofile(filename,width,height,sizemultiplier, preferInkscape);
 }
 
 bool splotwindow::print( bool showDialog )

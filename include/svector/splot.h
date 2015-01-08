@@ -548,8 +548,8 @@ public:
 	splot2d* addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
 	splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title="", double titlesize=1.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
 	splot2d* addcanvas(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false);
-	bool writetofile(wxString filename, double sizemultiplier);
-	bool writetofile(wxString filename, int width, int height, double linewidthmultiplier);
+	bool writetofile(wxString filename, double sizemultiplier, bool preferInkscape);
+	bool writetofile(wxString filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
 	bool print( bool showDialog );
 	void removeplot(splot *plot);
 private:
@@ -604,8 +604,8 @@ public:
 	inline splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title, double titlesize=1.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, title, titlesize, titledistance,titlespacing, titlefont, titlestyle, titlecolour, outlinecolour, outlinewidth);};
 	splotlegend* addlegend(double xpos, double ypos, double width, double height, wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, "", 0.2, 2.0, 0.2, "", 0, wxColour(0,0,0), outlinecolour, outlinewidth);};
 	splot2d* addcanvas(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false){return m_plotwind->addcanvas(xpos,ypos,width,height,logx,logy);}
-	bool writetofile(std::string filename, int sizemultiplier=1){return m_plotwind->writetofile(wxString(filename.c_str(),wxConvUTF8),sizemultiplier);};
-	bool writetofile(std::string filename, int width, int height, double linewidthmultiplier=1.0){return m_plotwind->writetofile(wxString(filename.c_str(),wxConvUTF8),width,height,linewidthmultiplier);};
+	bool writetofile(std::string filename, int sizemultiplier=1, bool preferInkscape=false){return m_plotwind->writetofile(wxString(filename.c_str(),wxConvUTF8),sizemultiplier, preferInkscape);};
+	bool writetofile(std::string filename, int width, int height, double linewidthmultiplier=1.0, bool preferInkscape=false){return m_plotwind->writetofile(wxString(filename.c_str(),wxConvUTF8),width,height,linewidthmultiplier, preferInkscape);};
 	bool print(bool showDialog){return m_plotwind->print( showDialog );}
 	inline void removeplot(splot *plot){m_plotwind->removeplot(plot);}
 private:
