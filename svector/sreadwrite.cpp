@@ -1,5 +1,6 @@
 #include"../include/svector/sreadwrite.h"
 #include<wx/filefn.h>
+#include<wx/dir.h>
 
 sci::csv_err sci::readcsvcolumns(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
 {
@@ -756,4 +757,90 @@ bool sci::getFileLocked (std::string fileName)
 	}
 	else 
 		return true;
+}
+
+std::vector< std::string > sci::getAllFiles( std::string directory, bool recursive, bool includeHidden )
+{
+	wxArrayString wxResult(false);
+	int flags = wxDIR_FILES | ( recursive ? wxDIR_DIRS : 0 ) | ( includeHidden ? wxDIR_HIDDEN : 0 );
+	wxDir::GetAllFiles( directory, &wxResult, "", flags);
+	std::vector<std::string> result(wxResult.size());
+	for(size_t i=0; i<wxResult.size(); ++i)
+		result[i] = wxResult[i];
+
+	return result;
+}
+
+size_t getLastDirectorySeparator( std::string path )
+{
+#ifdef _WIN32
+	return path.find_last_of( "/\\" );
+#else
+	return path.find_last_of( "/" );
+#endif
+}
+
+bool isDirectorySeparator( char character )
+{
+#ifdef _WIN32
+	return character == '/' || character == '\\';
+#else
+	return character == '/'
+#endif
+}
+
+std::string getDirectorySeparator()
+{
+#ifdef _WIN32
+	return "\\";
+#else
+	return "/"
+#endif
+}
+
+std::string sci::getFileExtension( std::string fileName )
+{
+	std::string result;
+	size_t lastSlash = getLastDirectorySeparator( fileName );
+	size_t lastDot = fileName.find_last_of( '.' );
+	if( lastDot > lastSlash || lastSlash == std::string::npos )
+		return fileName.substr( lastDot+1 );
+	else
+		return "";
+}
+
+//Returns the last element of fullPath assuming fullPath is a
+//path separated by apropriate slashes (\ or / or Windows, / on
+//linux). If the last character is a slash then an empty string
+//will be returned.
+std::string sci::getFileName( std::string fullPath )
+{
+	size_t lastSlash = getLastDirectorySeparator( fullPath );
+	if( lastSlash == std::string::npos )
+		return fullPath;
+	return fullPath.substr( lastSlash +1 );
+}
+
+//Returns the full path of the directory part of fullPath. The 
+//trailing slash is left on the path. If fullpath ends with a 
+//slash then the string will be returned unchanged. This behaviour
+//means that fullPath == getContainingDirectoryPath( fullPath ) +
+//getFileName( fullPath ) will be true;
+std::string sci::getContainingDirectoryPath( std::string fullPath )
+{
+	size_t lastSlash = getLastDirectorySeparator( fullPath );
+	if( lastSlash == std::string::npos )
+		return "";
+	return fullPath.substr( 0, lastSlash +1 );
+}
+
+//Returns the concatenation of the two paths with a slash added
+//if necessary
+std::string sci::concatPath( std::string part1, std::string part2)
+{
+	if( part1.length() == 0 )
+		return part2;
+	if( isDirectorySeparator( part1.back() ) )
+		return part1 + part2;
+	return part1 + getDirectorySeparator() + part2;
 }
