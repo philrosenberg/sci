@@ -659,6 +659,7 @@ namespace sci
 
 	
 	void splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators, std::vector<std::string> &splitstring);
+	std::vector<std::string> splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators);
 	bool getFileLocked (std::string fileName);
 
 	std::vector< std::string > getAllFiles( std::string directory, bool recursive, bool includeHidden );

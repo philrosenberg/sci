@@ -743,6 +743,13 @@ void sci::splitstring(const std::string &datastring, const std::string &separato
 	if(separatorlocations[n-1]+1<datastring.length())splitstring[n]=datastring.substr(separatorlocations[n-1]+1);
 }
 
+std::vector<std::string> sci::splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators)
+{
+	std::vector< std::string > result;
+	sci::splitstring( datastring, separators, mergeadjacentseparators, result );
+	return result;
+}
+
 
 bool sci::getFileLocked (std::string fileName)
 {
