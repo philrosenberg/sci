@@ -7,6 +7,7 @@
 #include <alg/alglibinternal.h>
 #include <alg/fasttransforms.h>
 #include <alg/interpolation.h>
+#include<time.h>
 
 void sci::resample(const std::vector<double> &input, double factor, std::vector<double> &output)
 {
@@ -206,6 +207,105 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	vargrad=report.covpar[0][0];
 	varintercept=report.covpar[1][1];
 	covar=report.covpar[0][1];
+}
+
+//fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
+// in both dimensions. The last element represents the covariance with the intercept.
+void sci::fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+	std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar)
+{
+	//fit y=mx+c
+	//Alglib needs us to separate our function into basis functions for linear fitting. Instead of submitting y, x
+	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
+	//approximation of y=sum(Ci*Fi(x))
+	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
+	sci::assertThrow(x.size()>0,sci::err());
+	for(size_t i=1; i<x.size(); ++i)
+		sci::assertThrow( x[i].size() == x[0].size(), sci::err() );
+	sci::assertThrow( y.size()==x[0].size(), sci::err() );
+	grad.resize( x.size(), std::numeric_limits<double>::quiet_NaN() );
+	intercept = std::numeric_limits<double>::quiet_NaN();
+	covar = sci::makevector( std::numeric_limits<double>::quiet_NaN(), x.size()+1, x.size()+1 );
+
+
+	std::vector < std::vector<double> > basises;
+	for(size_t i=0; i<x.size(); ++i)
+		basises.push_back(x[i]);
+	basises.push_back(std::vector<double>(x[0].size(),1.0));
+	//convert vectors to alg arrays
+	alglib::real_1d_array algy;
+	alglib::real_2d_array algbasises;
+	svi::vectortoalg(y,algy);
+	svi::transposedvectortoalg(basises,algbasises);
+
+	//create output variables
+	alglib::ae_int_t info;
+	alglib::real_1d_array c;
+	alglib::lsfitreport report;
+
+	//run fit
+	try
+	{
+		alglib::lsfitlinear(algy,algbasises,y.size(),x.size()+1,info,c,report);
+	}
+	catch(alglib::ap_error err)
+	{
+		sci::outputerr(err.msg);
+		return;
+	}
+
+	//put results in outputs
+	intercept=c[x.size()];
+	svi::algtovector(c, grad);
+	grad.resize(x.size()); //clip the last one off as this is the intercept;
+	svi::algtovector( report.covpar, covar );
+}
+
+void sci::fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+	std::vector<double> &grad, std::vector<std::vector<double>> &covar)
+{
+	//fit y=mx+c
+	//Alglib needs us to separate our function into basis functions for linear fitting. Instead of submitting y, x
+	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
+	//approximation of y=sum(Ci*Fi(x))
+	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
+	sci::assertThrow(x.size()>0,sci::err());
+	for(size_t i=1; i<x.size(); ++i)
+		sci::assertThrow( x[i].size() == x[0].size(), sci::err() );
+	sci::assertThrow( y.size()==x[0].size(), sci::err() );
+	grad.resize( x.size(), std::numeric_limits<double>::quiet_NaN() );
+	covar = sci::makevector( std::numeric_limits<double>::quiet_NaN(), x.size(), x.size() );
+
+
+	std::vector < std::vector<double> > basises;
+	for(size_t i=0; i<x.size(); ++i)
+		basises.push_back(x[i]);
+	basises.push_back(std::vector<double>(x[0].size(),1.0));
+	//convert vectors to alg arrays
+	alglib::real_1d_array algy;
+	alglib::real_2d_array algbasises;
+	svi::vectortoalg(y,algy);
+	svi::transposedvectortoalg(basises,algbasises);
+
+	//create output variables
+	alglib::ae_int_t info;
+	alglib::real_1d_array c;
+	alglib::lsfitreport report;
+
+	//run fit
+	try
+	{
+		alglib::lsfitlinear(algy,algbasises,y.size(),x.size(),info,c,report);
+	}
+	catch(alglib::ap_error err)
+	{
+		sci::outputerr(err.msg);
+		return;
+	}
+
+	//put results in outputs
+	svi::algtovector(c, grad);
+	svi::algtovector( report.covpar, covar );
 }
 
 void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar)
@@ -1131,4 +1231,17 @@ size_t sci::count(const std::vector<SBOOL> &v)
 		if(*vi)
 			++result;
 	return result;
+}
+
+double sci::dateToUnixTime( int year, int month, int day, int hour, int minute, double second, bool daylightSaving )
+{
+	tm time;
+	time.tm_sec = (int)second;
+	time.tm_min = minute;
+	time.tm_hour = hour;
+	time.tm_mday = day;
+	time.tm_mon = month - 1;
+	time.tm_year = year - 1900;
+	time.tm_isdst = daylightSaving ? 1 : 0;
+	return (double)mktime( &time ) - floor( second ) + second;
 }

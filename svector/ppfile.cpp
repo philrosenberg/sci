@@ -15,16 +15,22 @@ PpFile::PpFile(std::string name)
 	if(!m_fin.is_open())
 		throw(PPERR_CANNOT_OPEN_FILE);
 
+	bool isPp; //Decide whether this is a pp (sequential) or UM (indexed tabled) file
 
-	//read the size of the first record, this should be the 256 word fixed length header
+	//read the size of the first record, this should be the 256 word fixed length header for a pp file
 	__int32 headerSize=getNextRecordSize();
 	if(headerSize!=256)
 	{
 		m_bigEndian=true;
 		swapEndian(headerSize);
 		if(headerSize!=256)
-			throw(PPERR_CANNOT_DETERMINE_ENDIANNESS);
+			isPp=true;
+			//throw(PPERR_CANNOT_DETERMINE_ENDIANNESS);
+		else
+			isPp=false;
 	}
+	else
+		isPp = true;
 	while (1)
 	{
 		Section section;

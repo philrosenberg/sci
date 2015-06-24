@@ -29,6 +29,12 @@ namespace sci
 	std::string beforeLast(std::string source, std::string textToFind);
 	std::string afterFirst(std::string source, std::string textToFind);
 	std::string beforeFirst(std::string source, std::string textToFind);
+	std::string lower( const std::string &str );
+	std::string upper( const std::string &str );
+	void toLower( std::string &str );
+	void toUpper( std::string &str );
+	std::string trimmed( const std::string &str );
+	void trim( std::string &str );
 }
 
 

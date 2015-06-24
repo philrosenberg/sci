@@ -704,8 +704,7 @@ void sci::splitstring(const std::string &datastring, const std::string &separato
 	}
 
 	//count how many separators we have and set their locations
-	size_t n=0;
-	std::vector<size_t> separatorlocations(0);
+	std::vector<size_t> separatorlocations(1, -1);
 	separatorlocations.reserve(datastring.length());
 	/*size_t nextcomma=datastring.find(',',0);
 	while(nextcomma!=std::string::npos)
@@ -714,33 +713,32 @@ void sci::splitstring(const std::string &datastring, const std::string &separato
 		nextcomma=datastring.find(',',nextcomma+1);
 		++n;
 	}*/
-	bool useseparator=true;
 	for(size_t i=0; i<datastring.length(); ++i) 
 	{
 		for(size_t j=0; j<separators.length(); ++j)
 		{
 			if(datastring[i]==separators[j])
 			{
-				if(useseparator) 
-				{
-					++n;
-					separatorlocations.push_back(i);
-				}
-				useseparator= !mergeadjacentseparators;
+				separatorlocations.push_back(i);
+				break;
 			}
-			else useseparator=true;
 		}
 	}
 	//size our vector appropriately
-	splitstring.resize(n+1);
+	splitstring.reserve( separatorlocations.size() );
 
 	//if we have no separators then just push back the string as is
-	splitstring[0]=datastring.substr(0,separatorlocations[0]);
-	for(size_t i=1; i<n; ++i)
+	if( separatorlocations.size() == 0 )
 	{
-		splitstring[i]=datastring.substr(separatorlocations[i-1]+1,separatorlocations[i]-separatorlocations[i-1]-1);
+		splitstring.push_back( datastring );
+		return;
 	}
-	if(separatorlocations[n-1]+1<datastring.length())splitstring[n]=datastring.substr(separatorlocations[n-1]+1);
+	for(size_t i=1; i<separatorlocations.size(); ++i)
+	{
+		if( separatorlocations[i-1] != separatorlocations[i]-1 || !mergeadjacentseparators )
+			splitstring.push_back( datastring.substr(separatorlocations[i-1]+1,separatorlocations[i]-separatorlocations[i-1]-1) );
+	}
+	splitstring.push_back( datastring.substr(separatorlocations.back()+1) );
 }
 
 std::vector<std::string> sci::splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators)

@@ -1,17 +1,31 @@
 #define _USE_MATH_DEFINES
 #define _CRT_SECURE_NO_WARNINGS
-#include"../include/svector/splot.h"
-#include"../include/svector/svector.h"
-#include"../include/svector/sstring.h"
-#include"../include/svector/sreadwrite.h"
-#include<cmath>
-#include<algorithm>
+
+
+//#include<vector>
+//#include<wx/colour.h>
+//#include<plplot/plstream.h>
+//#include<wx/scrolwin.h>
+//#include<limits>
+//#include<wx/print.h>
+//#include<wx/printdlg.h>
+
+#include<wx/wx.h>
 #include<wx/wx.h>
 #include<wx/filename.h>
 #include<wx/dcps.h>
 #include <wx/dcsvg.h>
 #include<wx/metafile.h>
 #include<wx/gdicmn.h>
+#include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
+                       // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
+                       //not sure why.
+#include"../include/svector/splot.h"
+#include"../include/svector/svector.h"
+#include"../include/svector/sstring.h"
+#include"../include/svector/sreadwrite.h"
+#include<cmath>
+#include<algorithm>
 #include"../include/svector/serr.h"
 
 BEGIN_EVENT_TABLE( splotwindow, wxPanel )
@@ -2313,7 +2327,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		//text
 		else if(m_text[i]!="")
 		{
-			pl->sfontf(m_textFont[i].c_str());
+			//pl->sfontf(m_textFont[i].c_str());
 			pl->sfci(m_textFci[i]);
 			pl->schr(0.0,m_textSize[i]);
 			a=m_pointcolour[i].Alpha()/255.0;
@@ -2456,7 +2470,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 			{
 				pl->sfci(m_pointfci[i]);
 				pl->sfci(0);
-				pl->sfontf(m_pointfont[i].mb_str());
+				//pl->sfontf(m_pointfont[i].mb_str());
 				pl->schr(0.0,m_pointsize[i]);
 				r=m_pointcolour[i].Red();
 				g=m_pointcolour[i].Green();
@@ -2706,7 +2720,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	pl->width(m_xaxis.m_linethickness*linewidthmultiplier);
 	//set the font for the labels
 	pl->sfci(m_xaxis.m_labelfci);
-	pl->sfontf(m_xaxis.m_labelfont.mb_str());
+	//pl->sfontf(m_xaxis.m_labelfont.mb_str());
 	pl->schr(0.0,m_xaxis.m_labelsize);
 	//set the tick lengths
 	pl->smin(0.0,m_xaxis.m_minorticklength);
@@ -2733,7 +2747,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	pl->width(m_yaxis.m_linethickness*linewidthmultiplier);
 	//set the font for the labels
 	pl->sfci(m_yaxis.m_labelfci);
-	pl->sfontf(m_yaxis.m_labelfont.mb_str());
+	//pl->sfontf(m_yaxis.m_labelfont.mb_str());
 	pl->schr(0.0,m_yaxis.m_labelsize);
 	//set the tick lengths
 	pl->smin(0.0,m_yaxis.m_minorticklength);
@@ -2758,7 +2772,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//we draw them separately
 	//first the x axis
 	pl->sfci(m_xaxis.m_titlefci);
-	pl->sfontf(m_xaxis.m_titlefont.mb_str());
+	//pl->sfontf(m_xaxis.m_titlefont.mb_str());
 	pl->schr(0.0,m_xaxis.m_titlesize);
 	r=m_xaxis.m_titlecolour.Red();
 	g=m_xaxis.m_titlecolour.Green();
@@ -2769,7 +2783,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	else pl->mtex("b",m_xaxis.m_titledistance,0.5,0.5,m_xaxis.m_title.mb_str());
 	//then the y axis
 	pl->sfci(m_yaxis.m_titlefci);
-	pl->sfontf(m_yaxis.m_titlefont.mb_str());
+	//pl->sfontf(m_yaxis.m_titlefont.mb_str());
 	pl->schr(0.0,m_yaxis.m_titlesize);
 	r=m_yaxis.m_titlecolour.Red();
 	g=m_yaxis.m_titlecolour.Green();
@@ -2800,7 +2814,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 
 	//draw the title
 	pl->sfci(m_titlefci);
-	pl->sfontf(m_titlefont.mb_str());
+	//pl->sfontf(m_titlefont.mb_str());
 	pl->schr(0.0,m_titlesize);
 	r=m_titlecolour.Red();
 	g=m_titlecolour.Green();
@@ -3021,13 +3035,13 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 		//if(m_antialiasing) DrawPlots(&memdc,2,false);
 		if(m_antialiasing) 
 		{
-			//wxGCDC gcdc(memdc);
-			//DrawPlots(&gcdc,width,height,3,false);
-			DrawPlots(&memdc,width,height,2,false);
-			//DrawPlots(&memdc,width,height,1,true); //testing agg with freetype
+			wxGCDC gcdc(memdc);
+			DrawPlots(&gcdc,width,height);
 		}
 		else 
-			DrawPlots(&memdc,width,height,0,false);
+		{
+			DrawPlots(&memdc,width,height);
+		}
 	}
 	else
 	{
@@ -3064,7 +3078,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 	if(extension=="svg")
 	{
 		wxSVGFileDC dc(filename, width, height, 72);
-		DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+		DrawPlots(&dc, width, height, linewidthmultiplier);
 	}
 	else if(preferInkscape)
 	{
@@ -3077,7 +3091,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			wxSVGFileDC dc(tempFile.getFilename(), width, height, 72);
 			if(!dc.IsOk())
 				return false;
-			DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+			DrawPlots(&dc, width, height, linewidthmultiplier);
 			if(!dc.IsOk())
 				return false;
 		}
@@ -3165,14 +3179,14 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			wxPostScriptDC psdc(setupdata);
 			result=psdc.StartDoc(wxT("Writing ")+filename);
 			if(result==false) return result;
-			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,0,false,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
+			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
 			psdc.EndDoc();
 		}
 		else if(extension=="emf")
 		{
 			//here we redraw the plot like OnPaint but using a wxMetafile DC.
 			wxMetafileDC metadc(filename,width,height);
-			DrawPlots(&metadc,width,height,0,false,linewidthmultiplier);//0 gives vector output
+			DrawPlots(&metadc,width,height,linewidthmultiplier);//0 gives vector output
 			//close the file - note this gives us a copy of the file in memory which we must delete
 			wxMetafile *metafile=metadc.Close();
 			result=metafile!=NULL;
@@ -3187,7 +3201,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 		else if (extension=="svg")
 		{
 			wxSVGFileDC dc(filename, width, height, 72);
-			DrawPlots(&dc, width, height, 0, false, linewidthmultiplier);
+			DrawPlots(&dc, width, height, linewidthmultiplier);
 			result=true;
 		}
 		else
@@ -3237,11 +3251,11 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 				//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
 				if(m_antialiasing)
 				{
-					//wxGCDC gcdc(memdc);
-					//DrawPlots(&gcdc,width,height,3,false);
-					DrawPlots(&memdc,width,height,2,false,linewidthmultiplier);
+					wxGCDC gcdc(memdc);
+					DrawPlots(&gcdc,width,height,linewidthmultiplier);
+					//DrawPlots(&memdc,width,height,linewidthmultiplier);
 				}
-				else DrawPlots(&memdc,width,height,0,false,linewidthmultiplier);
+				else DrawPlots(&memdc,width,height,linewidthmultiplier);
 
 				//reselect null bitmap for the memdc
 				memdc.SelectObject(wxNullBitmap);
@@ -3282,14 +3296,11 @@ bool splotwindow::print( bool showDialog, wxString printerName )
     return printer.Print(NULL, &printout, showDialog);
 }
 
-void splotwindow::DrawPlots(wxDC *dc, int width, int height, int backend, bool usefreetype, double linewidthmultiplier)
+void splotwindow::DrawPlots(wxDC *dc, int width, int height, double linewidthmultiplier)
 {
 
 	//no point in messing around if the size is zero
 	if(height==0 || width==0) return;
-	
-	//create an image pointer, we'll initialise it to non-NULL later if needed for AGG
-	wxImage *image=NULL;
 
 	//Check we have some plots to plot
 	if(m_plots.size()==0 &&m_legends.size()==0)
@@ -3306,34 +3317,17 @@ void splotwindow::DrawPlots(wxDC *dc, int width, int height, int backend, bool u
 	//pl->sfnam("D:\\contourtest.ps");
 	//pl->setopt("name", "d:\\contourtest.ps");
 
-	//set which backend to use
-	if(backend==0)pl->setopt( "-drvopt", "backend=0" );
-	else if(backend==1)
-	{
-		if(usefreetype==true)pl->setopt( "-drvopt", "freetype=1,backend=1" );
-		else pl->setopt( "-drvopt", "freetype=0,backend=1" );
-	}
-	else
-	{
-		std::string backendString="backend=";
-		backendString << backend;
-		pl->setopt( "-drvopt", backendString.c_str() );
-	}
-
 	//set up the page to the size of the bitmap
-	pl->spage(0.0,0.0,width,height,0,0);
+	//with 90 dpi resolution (for text sizing)
+	pl->spage(90.0,90.0,width,height,0,0);
+	//pass in the dc
+	pl->sdevdata( dc );
 	//initialize the stream
 	pl->init();
-	//move to the zeroth page
-	pl->adv(0);
-	//pass the memorydc to the stream for DC and GC or the wxImage for AGG
-	if(backend==0 || backend==2 || backend==3 )pl->cmd( PLESC_DEVINIT, dc );
-	else if(backend==1)
-	{
-		image=new wxImage(width,height);
-		pl->cmd( PLESC_DEVINIT, image );
-	}
-
+	//pass the dc to the stream
+	pl->cmd( PLESC_DEVINIT, dc );
+	//Advance to the next ( i.e. first ) page
+	pl->adv( 0 );
 
 	//draw each plot in turn
 	for(size_t i=0; i<m_plots.size(); ++i)
@@ -3356,15 +3350,6 @@ void splotwindow::DrawPlots(wxDC *dc, int width, int height, int backend, bool u
 
 	//we're done drawing so delete pl
 	delete pl;
-
-	//for AGG, we have generated a wximage, blt this to the dc
-	if(backend==1)
-	{
-		wxBitmap newbitmap(*image);
-		wxMemoryDC memdc(newbitmap);
-		dc->Blit(0,0,width,height,&memdc,0,0);
-	}
-
 }
 
 void splotwindow::removeplot(splot *plot)
@@ -3529,7 +3514,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	}
 
 	//draw the title
-	pl->sfontf(m_titlefont.mb_str(wxConvUTF8));
+	//pl->sfontf(m_titlefont.mb_str(wxConvUTF8));
 	pl->sfci(m_titlefci);
 	pl->schr(0.0,m_titlesize);
 	r=m_titlecolour.Red();
@@ -3555,7 +3540,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 		b=m_textcolour[i].Blue();
 		pl->scol0(1,r,g,b);
 		pl->col0(1);
-		pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+		//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 		pl->sfci(m_textfci[i]);
 		pl->schr(0.0,m_textsize[i]);
 
@@ -3604,7 +3589,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			b=m_pointcolour[i].Blue();
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
-			pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
 			pl->schr(0.0,m_pointsize[i]);
 			double x=m_textoffset[i]*0.5;
@@ -3617,7 +3602,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			b=m_textcolour[i].Blue();
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
-			pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
 			pl->schr(0.0,m_textsize[i]);
 
@@ -3640,7 +3625,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			b=m_pointcolour[i].Blue();
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
-			pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
 			position+=positionstep+0.5*std::max(sizes[0],m_textsize[i]*1.6);//here the 1.6 is only applied to text as symbols don't have tall or dangly bits;
 			pl->schr(0.0,sizes[0]);
@@ -3654,7 +3639,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			b=m_textcolour[i].Blue();
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
-			pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
 			pl->schr(0.0,m_textsize[i]);
 			wxString value;
@@ -3669,7 +3654,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				b=m_pointcolour[i].Blue();
 				pl->scol0(1,r,g,b);
 				pl->col0(1);
-				pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
+				//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 				pl->sfci(m_pointfci[i]);
 				//position+=std::max(sizes[j-1]*0.5+m_textspacing[i]*m_textsize[i],m_textsize[i]*(0.5*1.6+m_textspacing[i]));
 				position+=std::max(sizes[j-1]+m_textspacing[i]*m_textsize[i],m_textsize[i]*(1.6+m_textspacing[i]));
@@ -3684,7 +3669,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				b=m_textcolour[i].Blue();
 				pl->scol0(1,r,g,b);
 				pl->col0(1);
-				pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+				//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 				pl->sfci(m_textfci[i]);
 				pl->schr(0.0,m_textsize[i]);
 				value.clear();
@@ -3698,7 +3683,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			b=m_textcolour[i].Blue();
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
-			pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
 			pl->schr(0.0,m_textsize[i]);
 		}
@@ -3779,7 +3764,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			}
 			
 			//draw a bounding box
-			pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
+			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
 			pl->schr(0.0,m_textsize[i]);
 			pl->width(1.0*linewidthmultiplier);
@@ -3900,7 +3885,7 @@ bool splotPrintout::OnPrintPage(int pageNum)
     }
     wxDC& dc = *ptr;
 
-	m_window->DrawPlots( ptr,m_coord_system_width, m_coord_system_height, 0, false, 1.0);
+	m_window->DrawPlots( ptr,m_coord_system_width, m_coord_system_height, 1.0);
  
     return true;
 }

@@ -346,39 +346,41 @@ namespace sci
 		if(sci::ndims(var)==1) readvar=(std::vector<A> *)&var;
 
 		NcBool gotvar;
-		if(ndims>0)
+		if( npoints > 0 )
 		{
-			readvar->resize(sci::product(shape),std::numeric_limits<A>::quiet_NaN()); //create a temporary vector to initially read the data into a 1D array
-			//although get claims to want a long*, it casts this to a size_t*, which stuffs up on 64 bit builds
-			//where long and size_t are different sizes - pass it a size_t* to fix this.
-			gotvar=ncvar->get(&((*readvar)[0]),(long*)&shape[0]); //read the elements into the temp vector
-		}
-		else
-		{
-			readvar->resize(1,std::numeric_limits<A>::quiet_NaN());
-			gotvar=ncvar->get(&((*readvar)[0]),1);
-		}
+			if(ndims>0)
+			{
+				readvar->resize(sci::product(shape),std::numeric_limits<A>::quiet_NaN()); //create a temporary vector to initially read the data into a 1D array
+				//although get claims to want a long*, it casts this to a size_t*, which stuffs up on 64 bit builds
+				//where long and size_t are different sizes - pass it a size_t* to fix this.
+				gotvar=ncvar->get(&((*readvar)[0]),(long*)&shape[0]); //read the elements into the temp vector
+			}
+			else
+			{
+				readvar->resize(1,std::numeric_limits<A>::quiet_NaN());
+				gotvar=ncvar->get(&((*readvar)[0]),1);
+			}
 
-		if(gotvar==false || ncerr.get_err()!=0) //check if the read failed
-		{
-			sci::reporterr(SERR_NC,ncerr.get_err(),varname);
-			succeeded=false;
-		}
+			if(gotvar==false || ncerr.get_err()!=0) //check if the read failed
+			{
+				sci::reporterr(SERR_NC,ncerr.get_err(),varname);
+				succeeded=false;
+			}
 
-		//sometimes this fails for some reason, but still returns true. Check if the vector has been filled and if not then read in
-		//each value individually - this is probably a lot slower than above
-		if(readvar->at(0)!=readvar->at(0))
-		{
-			//to do check if this is still needed
-			//this is a warning for me to check what's going on
-			//wxMessageBox(wxT("netcdf reported correct reading but the first element is still a qnan for variable ")+varname+wxT(" and file ")+filename);
-			NcValues *ncvalues=ncvar->values();
-			for(size_t i=0; i<npoints; i++) *(readvar->begin()+i)=(A)ncvalues->as_double((long)i);
-			//delete[] ncvalues;
+			//sometimes this fails for some reason, but still returns true. Check if the vector has been filled and if not then read in
+			//each value individually - this is probably a lot slower than above
+			if(readvar->at(0)!=readvar->at(0))
+			{
+				//to do check if this is still needed
+				//this is a warning for me to check what's going on
+				//wxMessageBox(wxT("netcdf reported correct reading but the first element is still a qnan for variable ")+varname+wxT(" and file ")+filename);
+				NcValues *ncvalues=ncvar->values();
+				for(size_t i=0; i<npoints; i++) *(readvar->begin()+i)=(A)ncvalues->as_double((long)i);
+				//delete[] ncvalues;
+			}
+			//copy the elements from the temp vector to the final double vector
+			if(sci::ndims(var)!=1)sci::reshape(var,tempvar,shape);
 		}
-		//copy the elements from the temp vector to the final double vector
-		if(sci::ndims(var)!=1)sci::reshape(var,tempvar,shape);
-		
 
 		delete[] pshape;
 		delete nc;
@@ -626,8 +628,15 @@ namespace sci
 			if(var==NULL) return false;
 		}
 
+		std::vector<long> dataShapeLong(datashape.size());
+		for( size_t i=0; i<datashape.size(); ++i)
+		{
+			sci::assertThrow( datashape[i] < LONG_MAX, sci::err() );
+			dataShapeLong[i] = (long)datashape[i];
+		}
+				
 		if(data.size()>0)
-			var->put(&data[0],(long*)&datashape[0]);//this is the botch casting the size_t* to a long*
+			var->put(&data[0],(long*)&datashape[0]);
 		int err=ncerr.get_err();
 		return err==NC_NOERR;
 	}
@@ -644,7 +653,7 @@ namespace sci
 	template <class T>
 	bool writencvariable(const std::string &filename, const std::string &variablename, const std::vector<std::string> &linkeddimensions, const std::vector<std::vector<T>> &data)
 	{
-		std::vector<double> flatdata;
+		std::vector<T> flatdata;
 		sci::flatten(flatdata,data);
 		if(flatdata.size()==0) return false;
 		std::vector<size_t> datashape=sci::shape(data);

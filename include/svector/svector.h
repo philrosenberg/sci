@@ -23,6 +23,7 @@
 #include<type_traits>
 #include"dep/operators.h"
 #include"dep/math.h"
+#include"svector/serr.h"
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -34,6 +35,18 @@
 #endif
 #endif  // _DEBUG
 
+
+#include <alg/ap.h>
+#include <alg/alglibinternal.h>
+#include <alg/fasttransforms.h>
+#include <alg/interpolation.h>
+
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 //****************************************************************
 //Copyright R-Space
 //Version 1.0
@@ -1185,6 +1198,26 @@ namespace sci
 		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=(*vi-meanval)*(*vi-meanval);
 		//std::accumulate(v.begin(), v.end(),result);
+		return result/decltype( anyBaseVal(v) )(v.size()-1);
+	}
+
+	template<class T>
+	T variance(const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=(*vi-mean)*(*vi-mean);
+		//std::accumulate(v.begin(), v.end(),result);
+		return result/decltype( anyBaseVal(v) )(v.size()-1);
+	}
+
+	template<class T>
+	T variancenobessel(const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=(*vi-mean)*(*vi-mean);
+		//std::accumulate(v.begin(), v.end(),result);
 		return result/decltype( anyBaseVal(v) )(v.size());
 	}
 
@@ -1192,20 +1225,85 @@ namespace sci
 	T stdev(const std::vector<T> &v)
 	{
 		T meanval=sci::mean(v);
-		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=(*vi-meanval)*(*vi-meanval);
-		//std::accumulate(v.begin(), v.end(),result);
-		return std::sqrt(result/((T)v.size()-1.0));
+		return sci::stdev(v, meanval);
 	}
 
 	template<class T>
-	T stdevnobessel(const std::vector<T> &v)
+	T stdev(const std::vector<T> &v, const T &mean)
+	{
+		return std::sqrt( variance( v, mean ) );
+	}
+
+	template<class T>
+	T stdevnobessel(const std::vector<T> &v, const T &mean)
+	{
+		return std::sqrt( variancenobessel( v, mean ) );
+	}
+
+	template<class T>
+	T varianceofthevariance( const T &fourthMoment, const T &variance, const T &mean, T n )
+	{
+		return ( fourthMoment - T(n-3.0)/T(n-1.0)*variance*variance )/n;
+	}
+
+	template<class T>
+	T varianceofthevariance( const std::vector<T> &v )
+	{
+		T var;
+		T varOfVar;
+		sci::variance( v, var, varOfVar);
+		return var;
+	}
+
+	template<class T>
+	T varianceofthevariancenobessel( const std::vector<T> &v )
+	{
+		T var;
+		T varOfVar;
+		sci::variancenobessel( v, var, varOfVar);
+		return var;
+	}
+
+	template<class T>
+	void variance(const std::vector<T> &v, T &variance, T &varianceofthevariance )
 	{
 		T meanval=sci::mean(v);
+		variance = sci::variance( v, meanval );
+		T fourthMoment = sci::centralmoment(4, v, meanval);
+		varianceofthevariance = sci::varianceofthevariance( fourthMoment, variance, meanval, (T)v.size() );
+	}
+
+	template<class T>
+	void variancenobessel(const std::vector<T> &v, const T &mean, T &variance, T &varianceofthevariance )
+	{
+		variance = sci::variancenobessel( v, mean );
+		T fourthMoment = centralmomentnobessel(4, v, mean);
+		varianceofthevariancenobessel = sci::varianceofthevariance( fourthmoment, variance, mean, (T)v.size() );
+	}
+
+	template<class T>
+	T centralmoment(int moment, const std::vector<T> &v)
+	{
+		T mean = sci::mean(v);
+		return centralmoment(moment, v, mean);
+	}
+
+	template<class T>
+	T centralmoment(int moment, const std::vector<T> &v, const T &mean)
+	{
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=(*vi-meanval)*(*vi-meanval);
-		//std::accumulate(v.begin(), v.end(),result);
-		return std::sqrt(result/(T)v.size());
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=std::pow((*vi-mean), moment);
+		return result/decltype( anyBaseVal(v) )(v.size()-1);
+	}
+
+	template<class T>
+	T centralmomentnobessel(int moment, const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=std::pow((*vi-mean), moment);
+		return result/decltype( anyBaseVal(v) )(v.size());
 	}
 
 	template<class T>
@@ -1983,6 +2081,12 @@ namespace sci
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept);
+	//fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
+	// in both dimensions. The last element represents the covariance with the intercept.
+	void fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+		std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar);
+	void fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+	std::vector<double> &grad, std::vector<std::vector<double>> &covar);
 	void fitpolynomial(const std::vector<double> &x, const std::vector<double> &y, size_t max_power, std::vector<double> &coefs, std::vector<std::vector<double>> &covariancematrix);
 	size_t fitstraightlinewithoutlierremoval(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double maxresidual);
 	void fitpowerlaw(double power, const std::vector<double> &x, const std::vector<double> &y, double &k, double &vark);
@@ -1992,9 +2096,141 @@ namespace sci
 	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,const std::vector<double> &), const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
 	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,double), const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
 
+	template< class T > 
+	void minimiseCaller(const alglib::real_1d_array &fitParams, double &result, void *ptr )
+	{
+		T* minimisable = (T*)(ptr);
+		std::vector<double> stdFitParams( &fitParams[0], &fitParams[0]+fitParams.length() );
+		result = (*minimisable)( stdFitParams );
+	}
+	template< class T >
+	void minimise( T &minimisable, std::vector< double > &tunableParams, std::vector< double > scales )
+	{
+		//create tunable params
+		alglib::real_1d_array algtunableparams;
+		algtunableparams.setcontent( tunableParams.size(), &tunableParams[0] );
+
+		//create a state object that keeps track of the fitting
+		alglib::mincgstate state;
+		//alglib::mincgcreate(algtunableparams, state); //use this if we supply a function that reports the gradient
+		alglib::mincgcreatef(algtunableparams,1.0e-6, state); //use this is if we only suply a function that reports values
+		//set the scale of the variables. Helps algorithm converge. Should
+		//be about the magnitude of the variables or the magnitude of how much
+		//they will change
+		//we just set the scale as the initial guess or 1.0 if the initial guess is 0.0
+		//We should allow this to be modified by the user as the magnitude of how much they
+		//will change may not be of the same order as the guess -e.g. a guess might be 0.0
+		//but we might expect the result to be in the range +/- 100 so the scale should be 100
+		alglib::real_1d_array algScales=algtunableparams;
+		for(int i=0; i<algScales.length() && i < scales.size(); ++i)
+			if( scales[i] > 0.0 )
+				algScales[i]=scales[i];
+		alglib::mincgsetscale(state,algScales);
+
+		//set stopping condition,
+		//	first number is gradient acceptance condition
+		//	second is deltafunc/max(func,1) acceptance condition
+		//	third number is deltaparams/params acceptance condition
+		//	forth number is max itterations acceptance condition
+		//setting all four to zero uses a small vale of deltaparams/params
+		alglib::mincgsetcond(state, 0, 0, 0, 0);
+
+		try
+		{
+			//do the minimising
+			alglib::mincgoptimize( state, &minimiseCaller<T>, NULL, (void*)&minimisable );
+		}
+		catch(alglib::ap_error err)
+		{
+			outputerr(err.msg);
+		}
+
+		//get the results
+		alglib::mincgreport report;
+		alglib::mincgresults(state, algtunableparams, report);
+
+		tunableParams = std::vector<double>( &algtunableparams[0], &algtunableparams[0]+algtunableparams.length() );
+	}
 
 	double integrate(double xMin, double xMax, double intervalMax, double (*functionToIntegrate)(double x, const std::vector<double> &params), const std::vector<double> &params);
-	
+	template<class T>
+	double integrateZeroToInfinity( T *functionToIntegrate, size_t nNodes )
+	{
+		//get the gauss-Laguerre quadrature xs and weights. Note that these are constants
+		//for a given nNodes, which feels a bit odd. Basically there is an assumption that
+		//our function can be modelled by a polynomial of order nNodes-1 multiplied by 
+		//exp(-x) and some clever maths to prove that the given nodes work.
+		alglib::real_1d_array x();
+		alglib::real_1d_array w();
+		x.resize( nNodes );
+		w.resize( nNodes );
+		alglib::ae_int_t algresult;
+		alglib::gqgenerategausslaguerre( nNodes, 0.0, algresult, x, w );
+		if( result != 1 )
+			sci::assertThrow( algresult == 1, sci::error() );
+
+		double result = 0.0;
+		for(size_t i=0; i<x.length(); +=i)
+			result += functionToIntegrate( x[i] ) * w[i] * std::exp( x[i] );
+	}
+	template< class T >
+	void integrateAdaptiveCallback( double x, double, double, double &y, void *ptr )
+	{
+		T* integratable = (T*)(ptr);
+		y = (*integratable)( x );
+	}
+	template< class T >
+	double integrateAdaptive( T *functionToIntegrate, double limit1, double limit2 )
+	{
+		double result;
+		alglib::autogkstate state;
+		alglib::autogkreport report;
+		alglib::autogksmooth( limit1, limit2, state );
+		alglib::autogkintegrate( state, integrateAdaptiveCallback<T>, functionToIntegrate );
+		alglib::autogkresults( state, result, report );
+		sci::assertThrow( report.terminationtype == 1, sci::err() );
+		return result;
+	}
+
+	//Integrates from a starting point outwards into the tails of a distribution.
+	//Will integrate until either we reach the limits, or the change is less than
+	//a given amount or the change fraction is less than a given amount.
+	//Each step will move out from the centre integrating an amount chunkWindth.
+	//Pass 0 for the changeConditions to ignore them 
+	template< class T >
+	double integrateTailsAdaptive( T *functionToIntegrate, double limit1, double limit2, double start, double chunkWidth, double changeCondition, double fractionCangeCondition )
+	{
+		double result = 0.0;
+		double limit1Step = -chunkWidth;
+		double limit2Step = chunkWidth;
+		if( limit1 > limit2 )
+			std::swap( limit1Step, limit2Step );
+		double limit1MaxDist= std::abs( start - limit1 );
+		double limit2MaxDist= std::abs( start - limit2 );
+		double limit11 = start;
+		double limit22 = start;
+		double limit12;
+		double limit21;
+		double thisChunk;
+		do
+		{
+			limit12 = limit11;
+			limit11 += limit1Step;
+			limit21 = limit22;
+			limit22 += limit2Step;
+			if( std::abs( start- limit11 ) > limit1MaxDist )
+				limit11 = limit1;
+			if( std::abs( start- limit22 ) > limit2MaxDist )
+				limit22 = limit2;
+
+			thisChunk = integrateAdaptive( functionToIntegrate, limit11, limit12 ) +
+				integrateAdaptive( functionToIntegrate, limit21, limit22 );
+			result += thisChunk;
+		}
+		while( std::abs( thisChunk ) > std::abs( changeCondition ) && std::abs( thisChunk/result ) > std::abs( fractionCangeCondition ) );
+
+		return result;
+	}
 
 	//********************************************************
 	//*********************My own functions*******************
@@ -2754,9 +2990,10 @@ namespace sci
 
 	size_t count(const std::vector<SBOOL> &v);
 
+	double dateToUnixTime( int year, int month, int day, int hour, int minute, double second, bool daylightSaving );
+
 	//end of namespace sci
 }
-
 
 
 

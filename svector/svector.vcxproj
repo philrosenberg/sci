@@ -316,13 +316,13 @@
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
+    <ClInclude Include="..\include\svector\svi.h" />
     <ClInclude Include="sframe.h" />
     <ClInclude Include="..\include\svector\splot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="sstdwrappers.h" />
     <ClInclude Include="..\include\svector\sstring.h" />
     <ClInclude Include="..\include\svector\svector.h" />
-    <ClInclude Include="svi.h" />
     <ClInclude Include="..\include\svector\transforms.h" />
     <ClInclude Include="..\include\svector\dep\undoable.h" />
   </ItemGroup>

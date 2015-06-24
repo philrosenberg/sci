@@ -586,7 +586,7 @@ private:
 	
 	
 	//note the backends are 0 = DC, 1 = AGG, 2 = GC
-	void DrawPlots(wxDC *dc, int width, int height, int backend, bool usefreetype, double linewidthmultiplier=1.0);
+	void DrawPlots(wxDC *dc, int width, int height, double linewidthmultiplier=1.0);
 	void OnEraseBackGround(wxEraseEvent& event) {};//this is overloaded to stop flicker when resizing
 
 	DECLARE_EVENT_TABLE();

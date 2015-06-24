@@ -39,6 +39,10 @@ private:
 	friend void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output);
 	friend void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	friend void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	friend void sci::fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+		std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar);
+	friend void sci::fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+		std::vector<double> &grad, std::vector<std::vector<double>> &covar);
 	friend void sci::crosscorr(const std::vector<double> &f, const std::vector<double> &g, std::vector<double> &r, std::vector<long> &fshifts, bool circular);
 	friend void minimisablefunction1d (const alglib::real_1d_array &x, double &func, void *ptr);
 	friend void minimisablefunction2d (const alglib::real_1d_array &x, double &func, void *ptr);

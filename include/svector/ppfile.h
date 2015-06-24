@@ -50,6 +50,21 @@ inline void swapEndian(__int32 *vals, size_t nVals)
 		swapEndian(vals[i]);
 }
 
+inline void swapEndian(__int64 &val)
+{
+	char* arrVal=(char*)&val;
+	std::swap(arrVal[0],arrVal[7]);
+	std::swap(arrVal[1],arrVal[6]);
+	std::swap(arrVal[2],arrVal[5]);
+	std::swap(arrVal[3],arrVal[4]);
+}
+
+inline void swapEndian(__int64 *vals, size_t nVals)
+{
+	for(size_t i=0; i<nVals; ++i)
+		swapEndian(vals[i]);
+}
+
 class PpFile
 {
 public:
