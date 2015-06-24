@@ -65,7 +65,7 @@ inline void swapEndian(__int64 *vals, size_t nVals)
 		swapEndian(vals[i]);
 }
 
-class PpFile
+class UmFile
 {
 public:
 	struct PpHeader
@@ -153,12 +153,12 @@ private:
 	};
 	class Section
 	{
-		friend class PpFile;
+		friend class UmFile;
 	private:
 		PpHeader m_header;
 		std::streamoff m_dataStart;
 		size_t m_dataBytes;
-		PpFile *m_parent;
+		UmFile *m_parent;
 		template <class T>
 		T at(size_t index)
 		{
@@ -181,7 +181,7 @@ private:
 
 
 public:
-	PpFile(std::string name);
+	UmFile(std::string name);
 
 	//read and return the data from a particular section
 	std::vector<std::vector<double>> getData(size_t sectionIndex);
@@ -217,23 +217,23 @@ public:
 	void getCrossSectionStashCodes(size_t sectionIndex, int &xStashCode, int &yStashCode);
 
 	//Functions to allow filtering of the data based on header properties
-	PpFile& setComparator(int comparator){ m_comparator=comparator; return *this; }
+	UmFile& setComparator(int comparator){ m_comparator=comparator; return *this; }
 	void sortHeaders();
 	void resetFilteredHeaders(){m_filteredSections=m_sections;}
 	std::vector<size_t> getFilteredSectionIndices();
 
 	template <class T>
-	PpFile& operator > ( T rhs );
+	UmFile& operator > ( T rhs );
 	template <class T>
-	PpFile& operator >= ( T rhs );
+	UmFile& operator >= ( T rhs );
 	template <class T>
-	PpFile& operator < ( T rhs );
+	UmFile& operator < ( T rhs );
 	template <class T>
-	PpFile& operator <= ( T rhs );
+	UmFile& operator <= ( T rhs );
 	template <class T>
-	PpFile& operator == ( T rhs );
+	UmFile& operator == ( T rhs );
 	template <class T>
-	PpFile& operator != ( T rhs );
+	UmFile& operator != ( T rhs );
 
 	enum
 	{
@@ -326,9 +326,34 @@ private:
 };
 
 
+class UmFileBase
+{
+public:
+	UmFileBase( std::string filename );
+private:
+	virtual void open( std::string fileName );
+};
+
+class PpFile32 : public UmFileBase
+{
+};
+
+class PpFile64 : public UmFileBase
+{
+};
+
+class FieldsFile32 : public UmFileBase
+{
+};
+
+class FieldsFile64 : public UmFileBase
+{
+};
+
+
 
 template <class T>
-PpFile& PpFile::operator > ( T rhs )
+UmFile& UmFile::operator > ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
@@ -342,7 +367,7 @@ PpFile& PpFile::operator > ( T rhs )
 }
 
 template <class T>
-PpFile& PpFile::operator >= ( T rhs )
+UmFile& UmFile::operator >= ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
@@ -356,7 +381,7 @@ PpFile& PpFile::operator >= ( T rhs )
 }
 
 template <class T>
-PpFile& PpFile::operator < ( T rhs )
+UmFile& UmFile::operator < ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
@@ -370,7 +395,7 @@ PpFile& PpFile::operator < ( T rhs )
 }
 
 template <class T>
-PpFile& PpFile::operator <= ( T rhs )
+UmFile& UmFile::operator <= ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
@@ -384,7 +409,7 @@ PpFile& PpFile::operator <= ( T rhs )
 }
 
 template <class T>
-PpFile& PpFile::operator == ( T rhs )
+UmFile& UmFile::operator == ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
@@ -398,7 +423,7 @@ PpFile& PpFile::operator == ( T rhs )
 }
 
 template <class T>
-PpFile& PpFile::operator != ( T rhs )
+UmFile& UmFile::operator != ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{

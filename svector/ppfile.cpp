@@ -6,7 +6,7 @@
 #include"../include/svector/wgdos.h"
 #include<algorithm>
 
-PpFile::PpFile(std::string name)
+UmFile::UmFile(std::string name)
 {
 	m_comparator=compForecastPeriod;
 	m_bigEndian=false;
@@ -51,7 +51,7 @@ PpFile::PpFile(std::string name)
 	m_filteredSections=m_sections;
 }
 
-void PpFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes)
+void UmFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes)
 {
 	m_fin.read((char*)record,nBytes);
 	if(m_fin.gcount()!=nBytes)
@@ -67,7 +67,7 @@ void PpFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nByt
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-void PpFile::skipRecord(std::basic_istream<char>::pos_type nBytes)
+void UmFile::skipRecord(std::basic_istream<char>::pos_type nBytes)
 {
 	m_fin.seekg(m_fin.tellg()+nBytes);
 	__int32 size;
@@ -79,7 +79,7 @@ void PpFile::skipRecord(std::basic_istream<char>::pos_type nBytes)
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-__int32 PpFile::getNextRecordSize()
+__int32 UmFile::getNextRecordSize()
 {
 	__int32 size;
 	m_fin.read((char*)&size,sizeof(size));
@@ -88,7 +88,7 @@ __int32 PpFile::getNextRecordSize()
 	return size;
 }
 
-void PpFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t outDim1, size_t outDim2)
+void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t outDim1, size_t outDim2)
 {
 	size_t nread=0;
 	char *pos=dataIn;
@@ -191,7 +191,7 @@ void PpFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 
 }
 
-std::vector<std::vector<double>> PpFile::getData(size_t sectionIndex)
+std::vector<std::vector<double>> UmFile::getData(size_t sectionIndex)
 {
 	std::vector<std::vector<double>> result;
 	getData(sectionIndex,result);
@@ -200,7 +200,7 @@ std::vector<std::vector<double>> PpFile::getData(size_t sectionIndex)
 }
 
 
-void PpFile::getData(const Section &section, std::vector<std::vector<double>> &result)
+void UmFile::getData(const Section &section, std::vector<std::vector<double>> &result)
 {
 	m_fin.clear();
 	m_fin.seekg(section.m_dataStart);
@@ -266,11 +266,11 @@ void PpFile::getData(const Section &section, std::vector<std::vector<double>> &r
 
 }
 
-void PpFile::getData(size_t sectionIndex, std::vector<std::vector<double>> &result)
+void UmFile::getData(size_t sectionIndex, std::vector<std::vector<double>> &result)
 {
 	getData(m_sections[sectionIndex],result);
 }
-void PpFile::getData(const std::vector<size_t> &sectionIndices, std::vector<std::vector<std::vector<double>>> &result)
+void UmFile::getData(const std::vector<size_t> &sectionIndices, std::vector<std::vector<std::vector<double>>> &result)
 {
 	result.resize(sectionIndices.size());
 	for(size_t i=0; i<result.size(); ++i)
@@ -279,14 +279,14 @@ void PpFile::getData(const std::vector<size_t> &sectionIndices, std::vector<std:
 	}
 }
 
-std::vector<std::vector<std::vector<double>>> PpFile::getData(const std::vector<size_t> &sectionIndices)
+std::vector<std::vector<std::vector<double>>> UmFile::getData(const std::vector<size_t> &sectionIndices)
 {
 	std::vector<std::vector<std::vector<double>>> result;
 	getData(sectionIndices, result);
 	return result;
 }
 
-void PpFile::getData(const std::vector<std::vector<size_t>> &sectionIndices, std::vector<std::vector<std::vector<std::vector<double>>>> &result)
+void UmFile::getData(const std::vector<std::vector<size_t>> &sectionIndices, std::vector<std::vector<std::vector<std::vector<double>>>> &result)
 {
 	result.resize(sectionIndices.size());
 	for(size_t i=0; i<result.size(); ++i)
@@ -295,28 +295,28 @@ void PpFile::getData(const std::vector<std::vector<size_t>> &sectionIndices, std
 	}
 }
 
-std::vector<std::vector<std::vector<std::vector<double>>>> PpFile::getData(const std::vector<std::vector<size_t>> &sectionIndices)
+std::vector<std::vector<std::vector<std::vector<double>>>> UmFile::getData(const std::vector<std::vector<size_t>> &sectionIndices)
 {
 	std::vector<std::vector<std::vector<std::vector<double>>>> result;
 	getData(sectionIndices, result);
 	return result;
 }
 
-void PpFile::getFilteredData(std::vector<std::vector<std::vector<double>>> &result)
+void UmFile::getFilteredData(std::vector<std::vector<std::vector<double>>> &result)
 {
 	result.resize(m_filteredSections.size());
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 		getData(m_filteredSections[i],result[i]);
 }
 
-std::vector<std::vector<std::vector<double>>> PpFile::getFilteredData()
+std::vector<std::vector<std::vector<double>>> UmFile::getFilteredData()
 {
 	std::vector<std::vector<std::vector<double>>> result;
 	getFilteredData(result);
 	return result;
 }
 
-std::vector<PpFile::PpHeader> PpFile::getFilteredHeaders()
+std::vector<UmFile::PpHeader> UmFile::getFilteredHeaders()
 {
 	std::vector<PpHeader> result(m_filteredSections.size());
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
@@ -325,7 +325,7 @@ std::vector<PpFile::PpHeader> PpFile::getFilteredHeaders()
 }
 
 
-std::vector<__int32> PpFile::getStashCodeList()
+std::vector<__int32> UmFile::getStashCodeList()
 {
 	std::vector<__int32> list;
 	for(size_t i=0; i<m_sections.size(); ++i)
@@ -342,7 +342,7 @@ std::vector<__int32> PpFile::getStashCodeList()
 	return list;
 }
 
-void PpFile::getSectionAxes(const PpHeader &header, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxes(const PpHeader &header, std::vector<double> &x, std::vector<double> &y)
 {
 	if(header.m_gridCode==projSpectral)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
@@ -380,13 +380,13 @@ void PpFile::getSectionAxes(const PpHeader &header, std::vector<double> &x, std:
 
 }
 
-void PpFile::getSectionAxes(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxes(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y)
 {
 	getSectionAxes(m_sections[sectionIndex].m_header,x,y);
 }
 
 
-void PpFile::getPolarStereographicParams(size_t sectionIndex, double &orientation, double &referenceLatitude, double &gridLengthAtRef, double &poleX, double &poleY)
+void UmFile::getPolarStereographicParams(size_t sectionIndex, double &orientation, double &referenceLatitude, double &gridLengthAtRef, double &poleX, double &poleY)
 {
 	if(m_sections[sectionIndex].m_header.m_gridCode==projPolarStereographic)
 	{
@@ -400,7 +400,7 @@ void PpFile::getPolarStereographicParams(size_t sectionIndex, double &orientatio
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
 }
 
-double PpFile::getSpectralReferenceLongitude(size_t sectionIndex)
+double UmFile::getSpectralReferenceLongitude(size_t sectionIndex)
 {
 	if(m_sections[sectionIndex].m_header.m_gridCode==projSpectral)
 		return m_sections[sectionIndex].m_header.m_zx;
@@ -408,7 +408,7 @@ double PpFile::getSpectralReferenceLongitude(size_t sectionIndex)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
 }
 
-void PpFile::getCrossSectionStashCodes(size_t sectionIndex, int &xStashCode, int &yStashCode)
+void UmFile::getCrossSectionStashCodes(size_t sectionIndex, int &xStashCode, int &yStashCode)
 {
 	if(m_sections[sectionIndex].m_header.m_gridCode<10000)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
@@ -417,7 +417,7 @@ void PpFile::getCrossSectionStashCodes(size_t sectionIndex, int &xStashCode, int
 	xStashCode=(m_sections[sectionIndex].m_header.m_gridCode%10000)/100;
 }
 
-float PpFile::fromIbmFloat(void *ibmFloat)
+float UmFile::fromIbmFloat(void *ibmFloat)
 {
 	unsigned __int32 fraction;
 	unsigned __int32 exponent;
@@ -483,7 +483,7 @@ float PpFile::fromIbmFloat(void *ibmFloat)
 
 }
 
-void PpFile::sortHeaders()
+void UmFile::sortHeaders()
 {
 	std::sort(m_filteredSections.begin(),m_filteredSections.end());
 }
