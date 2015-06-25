@@ -68,7 +68,7 @@ inline void swapEndian(__int64 *vals, size_t nVals)
 class UmFile
 {
 public:
-	struct PpHeader
+	struct PpHeader32
 	{
 		__int32 m_validYear;
 		__int32 m_validMonth;
@@ -135,6 +135,73 @@ public:
 		float m_missingValue;
 		float m_mksScalingFactor;
 	};
+	struct PpHeader64
+	{
+		__int64 m_validYear;
+		__int64 m_validMonth;
+		__int64 m_validDayOfMonth;
+		__int64 m_validHour;
+		__int64 m_validMinute;
+		__int64 m_validDayNumberOrSeconds;
+		__int64 m_dataYear;
+		__int64 m_dataMonth;
+		__int64 m_dataDayOfMonth;
+		__int64 m_dataHour;
+		__int64 m_dataMinute;
+		__int64 m_dataDayNumberOrSeconds;
+		__int64 m_timeIndicator;
+		__int64 m_forecastPeriod;
+		__int64 m_dataLength;
+		__int64 m_gridCode;
+		__int64 m_hemisphereIndicator;
+		__int64 m_nRows;
+		__int64 m_nPointsPerRow;
+		__int64 m_extraDataLength;
+		__int64 m_packingMethod;
+		__int64 m_releaseNumber;
+		__int64 m_fieldCode;
+		__int64 m_secondFieldCode;
+		__int64 m_processingCode;
+		__int64 m_verticalCoordinateType;
+		__int64 m_verticalCoordinateTypeForReferenceLevel;
+		__int64 m_experimentNumber;
+		__int64 m_startRecord;
+		__int64 m_nRecords;
+		__int64 m_projectionNumber;
+		__int64 m_fieldType;
+		__int64 m_levelCode;
+		__int64 m_reserved1;
+		__int64 m_reserved2;
+		__int64 m_reserved3;
+		__int64 m_ensembleMemberNumber;
+		__int64 m_source;
+		__int64 m_dataType;
+		__int64 m_startAddressInData;
+		__int64 m_rimWidthHaloSizes;
+		__int64 m_ItemCode;
+		__int64 m_pseudoLevel;
+		__int64 m_userDefined;
+		__int64 m_modelCode;
+		double m_upperLayerBoundary1;
+		double m_upperLayerBoundary2;
+		double m_reserved4;
+		double m_reserved5;
+		double m_datum;
+		double m_packingAccuracy;
+		double m_level1;
+		double m_lowerLayerBoundary1;
+		double m_level2;
+		double m_lowerLayerBoundary2;
+		double m_pseusoNorthPoleRealLatitude;
+		double m_pseudoNorthPoleRealLongitude;
+		double m_gor;
+		double m_zy;
+		double m_dy;
+		double m_zx;
+		double m_dx;
+		double m_missingValue;
+		double m_mksScalingFactor;
+	};
 
 private:
 	struct FixedHeader
@@ -155,7 +222,7 @@ private:
 	{
 		friend class UmFile;
 	private:
-		PpHeader m_header;
+		PpHeader32 m_header;
 		std::streamoff m_dataStart;
 		size_t m_dataBytes;
 		UmFile *m_parent;
@@ -199,11 +266,11 @@ public:
 	std::vector<std::vector<std::vector<double>>> getFilteredData();
 
 	//return an array of filtered headers
-	std::vector<PpHeader> getFilteredHeaders();
-	static void getSectionAxes(const PpHeader &header, std::vector<double> &x, std::vector<double> &y);
+	std::vector<PpHeader32> getFilteredHeaders();
+	static void getSectionAxes(const PpHeader32 &header, std::vector<double> &x, std::vector<double> &y);
 
 	//return the header for a particular section
-	PpHeader getHeader(size_t sectionIndex){return m_sections[sectionIndex].m_header;}
+	PpHeader32 getHeader(size_t sectionIndex){return m_sections[sectionIndex].m_header;}
 	//get the number of sections in the file
 	size_t getNumSections(){return m_sections.size();}
 	//get a list of the stash codes in the file, sorted ascending, no entry will appear more than once

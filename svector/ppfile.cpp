@@ -316,9 +316,9 @@ std::vector<std::vector<std::vector<double>>> UmFile::getFilteredData()
 	return result;
 }
 
-std::vector<UmFile::PpHeader> UmFile::getFilteredHeaders()
+std::vector<UmFile::PpHeader32> UmFile::getFilteredHeaders()
 {
-	std::vector<PpHeader> result(m_filteredSections.size());
+	std::vector<PpHeader32> result(m_filteredSections.size());
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 		result[i]=m_filteredSections[i].m_header;
 	return result;
@@ -342,7 +342,7 @@ std::vector<__int32> UmFile::getStashCodeList()
 	return list;
 }
 
-void UmFile::getSectionAxes(const PpHeader &header, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxes(const PpHeader32 &header, std::vector<double> &x, std::vector<double> &y)
 {
 	if(header.m_gridCode==projSpectral)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
