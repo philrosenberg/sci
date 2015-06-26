@@ -285,7 +285,7 @@ public:
 		template <class T>
 		T at(size_t index) const
 		{
-			return T(((__int32*)&m_header)[index]);
+			return T(((__int64*)&m_header)[index]);
 		}
 	public:
 		bool operator < (const Section64 & rhs) const
