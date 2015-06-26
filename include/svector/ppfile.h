@@ -239,10 +239,7 @@ public:
 		template <class T>
 		T at(size_t index) const
 		{
-			if(index<45)
-				return T(((__int32*)&m_header)[m_parent->m_comparator]);
-			else
-				return T(((float*)&m_header)[m_parent->m_comparator]);
+			return T(((__int32*)&m_header)[index]);
 		}
 	public:
 		bool operator < (const Section32 & rhs) const
@@ -288,10 +285,7 @@ public:
 		template <class T>
 		T at(size_t index) const
 		{
-			if(index<45)
-				return T(((__int32*)&m_header)[m_parent->m_comparator]);
-			else
-				return T(((float*)&m_header)[m_parent->m_comparator]);
+			return T(((__int32*)&m_header)[index]);
 		}
 	public:
 		bool operator < (const Section64 & rhs) const
