@@ -224,7 +224,7 @@ std::vector<std::vector<double>> UmFile::getData(size_t sectionIndex)
 }
 
 
-void UmFile::getData(const Section32 &section, std::vector<std::vector<double>> &result)
+void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> &result)
 {
 	m_fin.clear();
 	m_fin.seekg(section.m_dataStart);
@@ -340,18 +340,18 @@ std::vector<std::vector<std::vector<double>>> UmFile::getFilteredData()
 	return result;
 }
 
-std::vector<UmFile::PpHeader32> UmFile::getFilteredHeaders()
+std::vector<UmFile::PpHeader64> UmFile::getFilteredHeaders()
 {
-	std::vector<PpHeader32> result(m_filteredSections.size());
+	std::vector<PpHeader64> result(m_filteredSections.size());
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 		result[i]=m_filteredSections[i].m_header;
 	return result;
 }
 
 
-std::vector<__int32> UmFile::getStashCodeList()
+std::vector<__int64> UmFile::getStashCodeList()
 {
-	std::vector<__int32> list;
+	std::vector<__int64> list;
 	for(size_t i=0; i<m_sections.size(); ++i)
 	{
 		bool gotAlready=false;
@@ -366,7 +366,7 @@ std::vector<__int32> UmFile::getStashCodeList()
 	return list;
 }
 
-void UmFile::getSectionAxes(const PpHeader32 &header, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxes(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y)
 {
 	if(header.m_gridCode==projSpectral)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
@@ -521,9 +521,18 @@ void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
 			swapEndian( (_int32*)&m_header,nBytes/4 );
 }
 
-std::vector<UmFile::Section32> PpFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+void UmFile::Section64::readHeader( std::fstream *fin, size_t nBytes )
 {
-	std::vector<UmFile::Section32> result;
+	fin->read((char*)&m_header,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(m_parent->m_bigEndian)
+			swapEndian( (_int64*)&m_header,nBytes/4 );
+}
+
+std::vector<UmFile::Section64> PpFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+{
+	std::vector<UmFile::Section64> result;
 
 	if(!fin->is_open())
 		throw(PPERR_CANNOT_OPEN_FILE);
@@ -538,7 +547,7 @@ std::vector<UmFile::Section32> PpFile32::open( std::fstream *fin, UmFile *parent
 			throw( PPERR_RECORD_WRONG_LENGTH );
 
 		//read the header
-		UmFile::Section32 section;
+		UmFile::Section32 section; //note we read in using a section 32, then convert it to a Section64 to return it
 		section.setParent( parent );
 		section.readHeader( fin, headerSize );
 
@@ -563,7 +572,8 @@ std::vector<UmFile::Section32> PpFile32::open( std::fstream *fin, UmFile *parent
 			throw( PPERR_REACHED_FILE_END_UNEXPECTEDLY );
 
 		//store the section
-		result.push_back(section);
+		result.push_back( section );
+
 	}
 	return result;
 }
@@ -576,7 +586,6 @@ __int32 PpFile32::getNextRecordSize( std::fstream * fin, bool bigEndian )
 		swapEndian(size);
 	return size;
 }
-
 
 void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
 {
@@ -595,10 +604,69 @@ bool PpFile32::checkValidFirstWord( __int32 firstWord )
 	return firstWord == 256;
 }
 
-std::vector<UmFile::Section32> PpFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> PpFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
-	std::vector<UmFile::Section32> result;
+	std::vector<UmFile::Section64> result;
+	if(!fin->is_open())
+		throw(PPERR_CANNOT_OPEN_FILE);
+
+	while (1)
+	{
+		__int64 headerSize=getNextRecordSize( fin, bigEndian );
+		if( fin->eof() )
+			break; //no more records
+
+		if( headerSize != 64 * sizeof(__int64) )
+			throw( PPERR_RECORD_WRONG_LENGTH );
+
+		//read the header
+		UmFile::Section64 section;
+		section.setParent( parent );
+		section.readHeader( fin, headerSize );
+
+		//check the size of the header which should follow
+		__int64 size = getNextRecordSize( fin, bigEndian );
+		assert( size == headerSize );
+		if( size != headerSize )
+			throw(PPERR_RECORD_WRONG_LENGTH);
+
+		//get the size of the data that follows and set the size in section
+		section.setDataSize( getNextRecordSize( fin, bigEndian ) );
+		//set the data location 
+		if( fin->tellg() > (std::streampos)std::numeric_limits<__int64>::max() )
+			throw PPERR_64_BIT_FILE_TOO_LARGE;
+		section.setDataStart( (__int64) fin->tellg() );
+
+		//skip the data
+		skipRecord( fin, section.getDataSize(), bigEndian );
+
+		//if we have reached the file end then it meant we didn't have a full record. Throw Error
+		if(fin->eof())
+			throw( PPERR_REACHED_FILE_END_UNEXPECTEDLY );
+
+		//store the section
+		result.push_back(section);
+	}
 	return result;
+}
+
+__int64 PpFile64::getNextRecordSize( std::fstream * fin, bool bigEndian )
+{
+	__int64 size;
+	fin->read((char*)&size,sizeof(size));
+	if(bigEndian)
+		swapEndian(size);
+	return size;
+}
+
+void PpFile64::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	//Skip past the data then read the post data size and check it
+	fin->seekg(fin->tellg()+nBytes);
+	__int64 size = getNextRecordSize( fin, bigEndian );
+	assert(size==nBytes);
+	if(size!=nBytes)
+		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
 bool PpFile64::checkValidFirstWord( __int64 firstWord )
@@ -608,9 +676,9 @@ bool PpFile64::checkValidFirstWord( __int64 firstWord )
 	return firstWord == 512;
 }
 
-std::vector<UmFile::Section32> FieldsFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> FieldsFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
-	std::vector<UmFile::Section32> result;
+	std::vector<UmFile::Section64> result;
 	return result;
 }
 
@@ -622,9 +690,9 @@ bool FieldsFile32::checkValidFirstWord( __int32 firstWord )
 	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
 }
 
-std::vector<UmFile::Section32> FieldsFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> FieldsFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
-	std::vector<UmFile::Section32> result;
+	std::vector<UmFile::Section64> result;
 	return result;
 }
 

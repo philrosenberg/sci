@@ -240,9 +240,9 @@ public:
 		T at(size_t index) const
 		{
 			if(index<45)
-				return ((__int32*)&m_header)[m_parent->m_comparator];
+				return T(((__int32*)&m_header)[m_parent->m_comparator]);
 			else
-				return ((float*)&m_header)[m_parent->m_comparator];
+				return T(((float*)&m_header)[m_parent->m_comparator]);
 		}
 	public:
 		bool operator < (const Section32 & rhs) const
@@ -269,6 +269,12 @@ public:
 		{
 			return m_dataBytes;
 		}
+		Section32()
+		{
+			m_dataStart = 0;
+			m_dataBytes = 0;
+			m_parent = nullptr;
+		}
 
 	};
 	class Section64
@@ -283,9 +289,9 @@ public:
 		T at(size_t index) const
 		{
 			if(index<45)
-				return ((__int32*)&m_header)[m_parent->m_comparator];
+				return T(((__int32*)&m_header)[m_parent->m_comparator]);
 			else
-				return ((float*)&m_header)[m_parent->m_comparator];
+				return T(((float*)&m_header)[m_parent->m_comparator]);
 		}
 	public:
 		bool operator < (const Section64 & rhs) const
@@ -312,15 +318,22 @@ public:
 		{
 			return m_dataBytes;
 		}
-		Section64 &operator=( const Section32 &rhs )
+		Section64( const Section32 &section32 )
 		{
-			m_dataStart = rhs.m_dataStart;
-			m_dataBytes = rhs.m_dataBytes;
+			//*this = section32;
+			m_dataStart = section32.m_dataStart;
+			m_dataBytes = section32.m_dataBytes;
 			m_parent = m_parent;
 			for( size_t i=0; i<45; ++i)
-				*((__int64*)(&m_header) + i ) = rhs.at<__int32>( i );
+				*((__int64*)(&m_header) + i ) = section32.at<__int32>( i );
 			for( size_t i=46; i<64; ++i)
-				*((double*)(&m_header) + i ) = rhs.at<float>( i );
+				*((double*)(&m_header) + i ) = section32.at<float>( i );
+		}
+		Section64()
+		{
+			m_dataStart = 0;
+			m_dataBytes = 0;
+			m_parent = nullptr;
 		}
 
 	};
@@ -345,15 +358,15 @@ public:
 	std::vector<std::vector<std::vector<double>>> getFilteredData();
 
 	//return an array of filtered headers
-	std::vector<PpHeader32> getFilteredHeaders();
-	static void getSectionAxes(const PpHeader32 &header, std::vector<double> &x, std::vector<double> &y);
+	std::vector<PpHeader64> getFilteredHeaders();
+	static void getSectionAxes(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y);
 
 	//return the header for a particular section
-	PpHeader32 getHeader(size_t sectionIndex){return m_sections[sectionIndex].m_header;}
+	PpHeader64 getHeader(size_t sectionIndex){return m_sections[sectionIndex].m_header;}
 	//get the number of sections in the file
 	size_t getNumSections(){return m_sections.size();}
 	//get a list of the stash codes in the file, sorted ascending, no entry will appear more than once
-	std::vector<__int32> getStashCodeList();
+	std::vector<__int64> getStashCodeList();
 	
 	//get the x and y values for a section works for regular x/y grids. throws an error for
 	//spectral grids
@@ -456,12 +469,12 @@ private:
 	std::fstream m_fin;
 	FixedHeader m_fixedHeader;
 	bool m_bigEndian;
-	std::vector<Section32> m_sections;
-	std::vector<Section32> m_filteredSections;
+	std::vector<Section64> m_sections;
+	std::vector<Section64> m_filteredSections;
 	size_t m_comparator;
 
 	//get data for a given section
-	void getData(const Section32 &section, std::vector<std::vector<double>> &result);
+	void getData(const Section64 &section, std::vector<std::vector<double>> &result);
 	__int32 getNextRecordSize();
 	void readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes);
 	void skipRecord(std::basic_istream<char>::pos_type nBytes);
@@ -490,7 +503,7 @@ class UmFileBase
 {
 	friend class UmFile;
 private:
-	virtual std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
+	virtual std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
 	virtual bool checkValidFirstWord( __int32 firstWord )  { return false; }
 	virtual bool checkValidFirstWord( __int64 firstWord ) { return false; }
 	template < class T >
@@ -500,7 +513,7 @@ protected:
 
 class PpFile32 : public UmFileBase
 {
-	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidFirstWord( __int32 firstWord );
 	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
@@ -508,7 +521,7 @@ class PpFile32 : public UmFileBase
 
 class PpFile64 : public UmFileBase
 {
-	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidFirstWord( __int64 firstWord );
 	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
@@ -516,13 +529,13 @@ class PpFile64 : public UmFileBase
 
 class FieldsFile32 : public UmFileBase
 {
-	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidFirstWord( __int32 firstWord );
 };
 
 class FieldsFile64 : public UmFileBase
 {
-	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidFirstWord( __int64 firstWord );
 };
 
