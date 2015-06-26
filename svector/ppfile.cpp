@@ -68,7 +68,7 @@ UmFile::UmFile(std::string name)
 	}
 
 	if( m_umFileBase == nullptr )
-		throw( PPERR_UNKOWN_FILE_FORMAT );
+		throw( PPERR_UNKNOWN_FILE_FORMAT );
 
 	m_sections = m_umFileBase->open( &m_fin, this, m_bigEndian );
 
