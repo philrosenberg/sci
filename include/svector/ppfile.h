@@ -213,19 +213,222 @@ public:
 		double m_mksScalingFactor;
 	};
 
-	struct FixedHeader
+	struct FixedHeader32
 	{
-		__int32 m_formatVersionnumber;
-		__int32 m_subModelIndicator;
-		__int32 m_verticalCoordinateTypeIndicator;
-		__int32 m_horizontalCoordinateTypeIndicator;
-		__int32 m_datasetTypeIndicator;
-		__int32 m_runIdentifier;
-		__int32 m_experimentNumber;
-		__int32 m_calendarIndicator;
-		__int32 m_gridStaggeringIndicator;
-		__int32 m_ancillaryFileTimeIndicator;
-		__int32 m_projectionNumber;
+		__int32 m_formatVersionnumber; //1
+		__int32 m_subModelIndicator; //2
+		__int32 m_verticalCoordinateTypeIndicator; //3
+		__int32 m_horizontalCoordinateTypeIndicator; //4
+		__int32 m_datasetTypeIndicator; //5
+		__int32 m_runIdentifier; //6
+		__int32 m_experimentNumber; //7
+		__int32 m_calendarIndicator; //8
+		__int32 m_gridStaggeringIndicator; //9
+		__int32 m_ancillaryFileTimeIndicator; //10
+		__int32 m_projectionNumber; //11
+		__int32 m_modelVersionNumber; //12
+		__int32 m_undocumented1; //13
+		__int32 m_typeOfObsFile; //14
+		__int32 m_arithmeticOperationType; //15
+		__int32 m_undocumented2; //16
+		__int32 m_undocumented3; //17
+		__int32 m_undocumented4; //18
+		__int32 m_undocumented5; //19
+		__int32 m_undocumented6; //20
+		__int32 m_year1; //21
+		__int32 m_month1; //22
+		__int32 m_dayOfMonth1; //23
+		__int32 m_hour1; //24
+		__int32 m_minute1; //25
+		__int32 m_second1; //26
+		__int32 m_dayNumber1; //27
+		__int32 m_year2; //28
+		__int32 m_month2; //29
+		__int32 m_dayOfMonth2; //30
+		__int32 m_hour2; //31
+		__int32 m_minute2; //32
+		__int32 m_second2; //33
+		__int32 m_dayNumber2; //34
+		__int32 m_year3; //35
+		__int32 m_month3; //36
+		__int32 m_dayOfMonth3; //37
+		__int32 m_hour3; //38
+		__int32 m_minute3; //39
+		__int32 m_second3; //40
+		__int32 m_dayNumber3; //41
+		__int32 m_undocumented7To64[58]; //42-99
+		__int32 m_startIntegerConstants; //100
+		__int32 m_nIntegerConstants; //101
+		__int32 m_undocumented65; //102
+		__int32 m_undocumented66; //103
+		__int32 m_undocumented67; //104
+		__int32 m_startRealConstants; //105
+		__int32 m_nRealConstants; //106
+		__int32 m_undocumented68; //107
+		__int32 m_undocumented69; //108
+		__int32 m_undocumented70; //109
+		__int32 m_startLevelDependantConstants; //110
+		__int32 m_nLevelDependantConstantsFirstDimension; //111
+		__int32 m_nLevelDependantConstantsSecondDimension; //112
+		__int32 m_undocumented71; //113
+		__int32 m_undocumented72; //114
+		__int32 m_startRowDependantConstants; //115
+		__int32 m_nRowDependantConstantsFirstDimension; //116
+		__int32 m_nRowDependantConstantsSecondDimension; //117
+		__int32 m_undocumented73; //118
+		__int32 m_undocumented74; //119
+		__int32 m_startColumnDependantConstants; //120
+		__int32 m_nColumnDependantConstantsFirstDimension; //121
+		__int32 m_nColumnDependantConstantsSecondDimension; //122
+		__int32 m_undocumented75; //123
+		__int32 m_undocumented76; //124
+		__int32 m_startFieldsOfConstants; //125
+		__int32 m_nFieldsOfConstantsFirstDimension; //126
+		__int32 m_nFieldsOfConstantsSecondDimension; //127
+		__int32 m_undocumented77; //128
+		__int32 m_undocumented78; //129
+		__int32 m_startExtraConstants; //130
+		__int32 m_nExtraConstants; //131
+		__int32 m_undocumented79; //132
+		__int32 m_undocumented80; //133
+		__int32 m_undocumented81; //134
+		__int32 m_startTempHistoryfile; //135
+		__int32 m_nTempHistoryfile; //136
+		__int32 m_undocumented82; //137
+		__int32 m_undocumented83; //138
+		__int32 m_undocumented84; //139
+		__int32 m_startCompressedFieldIndex1; //140
+		__int32 m_nCompressedFieldIndex1; //141
+		__int32 m_startCompressedFieldIndex2; //142
+		__int32 m_nCompressedFieldIndex2; //143
+		__int32 m_startCompressedFieldIndex3; //144
+		__int32 m_nCompressedFieldIndex3; //145
+		__int32 m_undocumented85; //146
+		__int32 m_undocumented86; //147
+		__int32 m_undocumented87; //148
+		__int32 m_undocumented88; //149
+		__int32 m_startLookupTable; //150
+		__int32 m_nLookupTableFirstDimension; //151
+		__int32 m_nLookupTableSecondDimentsion; //152
+		__int32 m_nPrognosticFields; //153
+		__int32 m_undocumented89; //154
+		__int32 m_undocumented90; //155
+		__int32 m_undocumented91; //156
+		__int32 m_undocumented92; //157
+		__int32 m_undocumented93; //158
+		__int32 m_undocumented94; //159
+		__int32 m_startOfData; //160
+		__int32 m_dimensionOfData; //161
+		__int32 m_maximumLengthOfAllFields; //162
+	};
+
+	struct FixedHeader64
+	{
+		__int64 m_formatVersionnumber; //1
+		__int64 m_subModelIndicator; //2
+		__int64 m_verticalCoordinateTypeIndicator; //3
+		__int64 m_horizontalCoordinateTypeIndicator; //4
+		__int64 m_datasetTypeIndicator; //5
+		__int64 m_runIdentifier; //6
+		__int64 m_experimentNumber; //7
+		__int64 m_calendarIndicator; //8
+		__int64 m_gridStaggeringIndicator; //9
+		__int64 m_ancillaryFileTimeIndicator; //10
+		__int64 m_projectionNumber; //11
+		__int64 m_modelVersionNumber; //12
+		__int64 m_undocumented1; //13
+		__int64 m_typeOfObsFile; //14
+		__int64 m_arithmeticOperationType; //15
+		__int64 m_undocumented2; //16
+		__int64 m_undocumented3; //17
+		__int64 m_undocumented4; //18
+		__int64 m_undocumented5; //19
+		__int64 m_undocumented6; //20
+		__int64 m_year1; //21
+		__int64 m_month1; //22
+		__int64 m_dayOfMonth1; //23
+		__int64 m_hour1; //24
+		__int64 m_minute1; //25
+		__int64 m_second1; //26
+		__int64 m_dayNumber1; //27
+		__int64 m_year2; //28
+		__int64 m_month2; //29
+		__int64 m_dayOfMonth2; //30
+		__int64 m_hour2; //31
+		__int64 m_minute2; //32
+		__int64 m_second2; //33
+		__int64 m_dayNumber2; //34
+		__int64 m_year3; //35
+		__int64 m_month3; //36
+		__int64 m_dayOfMonth3; //37
+		__int64 m_hour3; //38
+		__int64 m_minute3; //39
+		__int64 m_second3; //40
+		__int64 m_dayNumber3; //41
+		__int64 m_undocumented7To64[58]; //42-99
+		__int64 m_startIntegerConstants; //100
+		__int64 m_nIntegerConstants; //101
+		__int64 m_undocumented65; //102
+		__int64 m_undocumented66; //103
+		__int64 m_undocumented67; //104
+		__int64 m_startRealConstants; //105
+		__int64 m_nRealConstants; //106
+		__int64 m_undocumented68; //107
+		__int64 m_undocumented69; //108
+		__int64 m_undocumented70; //109
+		__int64 m_startLevelDependantConstants; //110
+		__int64 m_nLevelDependantConstantsFirstDimension; //111
+		__int64 m_nLevelDependantConstantsSecondDimension; //112
+		__int64 m_undocumented71; //113
+		__int64 m_undocumented72; //114
+		__int64 m_startRowDependantConstants; //115
+		__int64 m_nRowDependantConstantsFirstDimension; //116
+		__int64 m_nRowDependantConstantsSecondDimension; //117
+		__int64 m_undocumented73; //118
+		__int64 m_undocumented74; //119
+		__int64 m_startColumnDependantConstants; //120
+		__int64 m_nColumnDependantConstantsFirstDimension; //121
+		__int64 m_nColumnDependantConstantsSecondDimension; //122
+		__int64 m_undocumented75; //123
+		__int64 m_undocumented76; //124
+		__int64 m_startFieldsOfConstants; //125
+		__int64 m_nFieldsOfConstantsFirstDimension; //126
+		__int64 m_nFieldsOfConstantsSecondDimension; //127
+		__int64 m_undocumented77; //128
+		__int64 m_undocumented78; //129
+		__int64 m_startExtraConstants; //130
+		__int64 m_nExtraConstants; //131
+		__int64 m_undocumented79; //132
+		__int64 m_undocumented80; //133
+		__int64 m_undocumented81; //134
+		__int64 m_startTempHistoryfile; //135
+		__int64 m_nTempHistoryfile; //136
+		__int64 m_undocumented82; //137
+		__int64 m_undocumented83; //138
+		__int64 m_undocumented84; //139
+		__int64 m_startCompressedFieldIndex1; //140
+		__int64 m_nCompressedFieldIndex1; //141
+		__int64 m_startCompressedFieldIndex2; //142
+		__int64 m_nCompressedFieldIndex2; //143
+		__int64 m_startCompressedFieldIndex3; //144
+		__int64 m_nCompressedFieldIndex3; //145
+		__int64 m_undocumented85; //146
+		__int64 m_undocumented86; //147
+		__int64 m_undocumented87; //148
+		__int64 m_undocumented88; //149
+		__int64 m_startLookupTable; //150
+		__int64 m_nLookupTableFirstDimension; //151
+		__int64 m_nLookupTableSecondDimentsion; //152
+		__int64 m_nPrognosticFields; //153
+		__int64 m_undocumented89; //154
+		__int64 m_undocumented90; //155
+		__int64 m_undocumented91; //156
+		__int64 m_undocumented92; //157
+		__int64 m_undocumented93; //158
+		__int64 m_undocumented94; //159
+		__int64 m_startOfData; //160
+		__int64 m_dimensionOfData; //161
+		__int64 m_maximumLengthOfAllFields; //162
 	};
 	class Section32
 	{
