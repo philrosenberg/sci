@@ -442,7 +442,7 @@ public:
 		template <class T>
 		T at(size_t index) const
 		{
-			return T(((__int32*)&m_header)[index]);
+			return ((T*)&m_header)[index];
 		}
 	public:
 		bool operator < (const Section32 & rhs) const
@@ -488,7 +488,7 @@ public:
 		template <class T>
 		T at(size_t index) const
 		{
-			return T(((__int64*)&m_header)[index]);
+			return ((T*)&m_header)[index];
 		}
 	public:
 		bool operator < (const Section64 & rhs) const
@@ -664,7 +664,7 @@ private:
 	std::vector<UmFileBase*> m_umFileTypes;
 	UmFileBase *m_umFileBase;
 	std::fstream m_fin;
-	FixedHeader m_fixedHeader;
+	FixedHeader64 m_fixedHeader;
 	bool m_bigEndian;
 	std::vector<Section64> m_sections;
 	std::vector<Section64> m_filteredSections;
