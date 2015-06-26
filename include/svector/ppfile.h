@@ -25,7 +25,8 @@ enum PPErr
 	PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE,
 	PPERR_32_BIT_FILE_TOO_LARGE,
 	PPERR_UNKNOWN_FILE_FORMAT,
-	PPERR_FILE_FORMAT_AMBIGUOUS
+	PPERR_FILE_FORMAT_AMBIGUOUS,
+	PPERR_64_BIT_FILE_TOO_LARGE
 };
 
 enum
@@ -229,13 +230,14 @@ public:
 	class Section32
 	{
 		friend class UmFile;
+		friend class Section64;
 	private:
 		PpHeader32 m_header;
 		std::streamoff m_dataStart;
 		size_t m_dataBytes;
 		UmFile *m_parent;
 		template <class T>
-		T at(size_t index)
+		T at(size_t index) const
 		{
 			if(index<45)
 				return ((__int32*)&m_header)[m_parent->m_comparator];
@@ -243,7 +245,7 @@ public:
 				return ((float*)&m_header)[m_parent->m_comparator];
 		}
 	public:
-		bool operator < (const Section32 & rhs)
+		bool operator < (const Section32 & rhs) const
 		{
 			if(m_parent->m_comparator<45)
 				return ((__int32*)&m_header)[m_parent->m_comparator]<((const __int32*)&rhs.m_header)[m_parent->m_comparator];
@@ -266,6 +268,59 @@ public:
 		size_t getDataSize()
 		{
 			return m_dataBytes;
+		}
+
+	};
+	class Section64
+	{
+		friend class UmFile;
+	private:
+		PpHeader64 m_header;
+		std::streamoff m_dataStart;
+		size_t m_dataBytes;
+		UmFile *m_parent;
+		template <class T>
+		T at(size_t index) const
+		{
+			if(index<45)
+				return ((__int32*)&m_header)[m_parent->m_comparator];
+			else
+				return ((float*)&m_header)[m_parent->m_comparator];
+		}
+	public:
+		bool operator < (const Section64 & rhs) const
+		{
+			if(m_parent->m_comparator<45)
+				return ((__int32*)&m_header)[m_parent->m_comparator]<((const __int32*)&rhs.m_header)[m_parent->m_comparator];
+			else
+				return ((float*)&m_header)[m_parent->m_comparator]<((const float*)&rhs.m_header)[m_parent->m_comparator];
+		}
+		void readHeader( std::fstream *fin, size_t nBytes);
+		void setDataStart( __int64 start )
+		{
+			m_dataStart = start;
+		}
+		void setDataSize( __int64 size )
+		{
+			m_dataBytes = size;
+		}
+		void setParent( UmFile *parent )
+		{
+			m_parent = parent;
+		}
+		size_t getDataSize()
+		{
+			return m_dataBytes;
+		}
+		Section64 &operator=( const Section32 &rhs )
+		{
+			m_dataStart = rhs.m_dataStart;
+			m_dataBytes = rhs.m_dataBytes;
+			m_parent = m_parent;
+			for( size_t i=0; i<45; ++i)
+				*((__int64*)(&m_header) + i ) = rhs.at<__int32>( i );
+			for( size_t i=46; i<64; ++i)
+				*((double*)(&m_header) + i ) = rhs.at<float>( i );
 		}
 
 	};
@@ -456,6 +511,8 @@ class PpFile64 : public UmFileBase
 {
 	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidFirstWord( __int64 firstWord );
+	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
+	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
 
 class FieldsFile32 : public UmFileBase
