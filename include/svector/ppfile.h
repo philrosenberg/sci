@@ -22,7 +22,9 @@ enum PPErr
 	PPERR_GRIB_FORMAT_NOT_SUPPORTED,
 	PPERR_ZERO_SIZE,
 	PPERR_PROJECTION_DATA_MEANINGLESS,
-	PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE
+	PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE,
+	PPERR_32_BIT_FILE_TOO_LARGE,
+	PPERR_UNKOWN_FILE_FORMAT
 };
 
 enum
@@ -64,6 +66,12 @@ inline void swapEndian(__int64 *vals, size_t nVals)
 	for(size_t i=0; i<nVals; ++i)
 		swapEndian(vals[i]);
 }
+
+class UmFileBase;
+class PpFile32;
+class PpFile64;
+class FieldFile32;
+class FieldFile64;
 
 class UmFile
 {
@@ -203,7 +211,6 @@ public:
 		double m_mksScalingFactor;
 	};
 
-private:
 	struct FixedHeader
 	{
 		__int32 m_formatVersionnumber;
@@ -218,7 +225,7 @@ private:
 		__int32 m_ancillaryFileTimeIndicator;
 		__int32 m_projectionNumber;
 	};
-	class Section
+	class Section32
 	{
 		friend class UmFile;
 	private:
@@ -235,12 +242,29 @@ private:
 				return ((float*)&m_header)[m_parent->m_comparator];
 		}
 	public:
-		bool operator < (const Section & rhs)
+		bool operator < (const Section32 & rhs)
 		{
 			if(m_parent->m_comparator<45)
 				return ((__int32*)&m_header)[m_parent->m_comparator]<((const __int32*)&rhs.m_header)[m_parent->m_comparator];
 			else
 				return ((float*)&m_header)[m_parent->m_comparator]<((const float*)&rhs.m_header)[m_parent->m_comparator];
+		}
+		void readHeader( std::fstream *fin, size_t nBytes);
+		void setDataStart( _int32 start )
+		{
+			m_dataStart = start;
+		}
+		void setDataSize( _int32 size )
+		{
+			m_dataBytes = size;
+		}
+		void setParent( UmFile *parent )
+		{
+			m_parent = parent;
+		}
+		size_t getDataSize()
+		{
+			return m_dataBytes;
 		}
 
 	};
@@ -372,15 +396,17 @@ public:
 	
 
 private:
+	PpFile32 *m_ppFile32;
+	UmFileBase *m_umFileBase;
 	std::fstream m_fin;
 	FixedHeader m_fixedHeader;
 	bool m_bigEndian;
-	std::vector<Section> m_sections;
-	std::vector<Section> m_filteredSections;
+	std::vector<Section32> m_sections;
+	std::vector<Section32> m_filteredSections;
 	size_t m_comparator;
 
 	//get data for a given section
-	void getData(const Section &section, std::vector<std::vector<double>> &result);
+	void getData(const Section32 &section, std::vector<std::vector<double>> &result);
 	__int32 getNextRecordSize();
 	void readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes);
 	void skipRecord(std::basic_istream<char>::pos_type nBytes);
@@ -395,26 +421,32 @@ private:
 
 class UmFileBase
 {
-public:
-	UmFileBase( std::string filename );
+	friend class UmFile;
 private:
-	virtual void open( std::string fileName );
+	virtual std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
+protected:
 };
 
 class PpFile32 : public UmFileBase
 {
+	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
+	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
 
 class PpFile64 : public UmFileBase
 {
+	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 };
 
 class FieldsFile32 : public UmFileBase
 {
+	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 };
 
 class FieldsFile64 : public UmFileBase
 {
+	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
 };
 
 

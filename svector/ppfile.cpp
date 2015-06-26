@@ -9,45 +9,88 @@
 UmFile::UmFile(std::string name)
 {
 	m_comparator=compForecastPeriod;
-	m_bigEndian=false;
+	m_ppFile32 = nullptr;
+
+	m_ppFile32 = new PpFile32;
+	m_umFileBase = m_ppFile32;
 
 	m_fin.open(name.c_str(), std::ios::in|std::ios::binary);
 	if(!m_fin.is_open())
 		throw(PPERR_CANNOT_OPEN_FILE);
 
-	bool isPp; //Decide whether this is a pp (sequential) or UM (indexed tabled) file
+	//decide if we have a pp file or fields file, 64 bit or 32 bit, need to swap endianness or not
 
-	//read the size of the first record, this should be the 256 word fixed length header for a pp file
-	__int32 headerSize=getNextRecordSize();
-	if(headerSize!=256)
+	bool ppFile=false;
+	bool bit64=true;
+	m_bigEndian=false;
+
+	__int32 first32;
+	__int32 first32Swapped;
+	__int64 first64;
+	__int64 first64Swapped;
+	m_fin.read((char*)(&first32), sizeof(first32) );
+	m_fin.seekg( 0 );
+	m_fin.read((char*)(&first64), sizeof(first64) );
+	m_fin.seekg( 0 );
+	first32Swapped = first32;
+	swapEndian( first32Swapped );
+	first64Swapped = first64;
+	swapEndian( first64Swapped );
+	if( first32 == 256 )
 	{
+		ppFile=true;
+		bit64=false;
+		m_bigEndian=false;
+	}
+	else if( first32Swapped ==256 )
+	{
+		ppFile=true;
+		bit64=false;
 		m_bigEndian=true;
-		swapEndian(headerSize);
-		if(headerSize!=256)
-			isPp=true;
-			//throw(PPERR_CANNOT_DETERMINE_ENDIANNESS);
-		else
-			isPp=false;
+	}
+	else if( first64 == 512 )
+	{
+		ppFile=true;
+		bit64=true;
+		m_bigEndian=false;
+	}
+	else if( first64Swapped == 512 )
+	{
+		ppFile=true;
+		bit64=true;
+		m_bigEndian=true;
+	}
+	else if( first32 == 15 || first32 == -32768 || first32 == 20 )
+	{
+		ppFile=false;
+		bit64=false;
+		m_bigEndian=false;
+	}
+	else if( first32Swapped == 15 || first32Swapped == -32768 || first32Swapped == 20 )
+	{
+		ppFile=false;
+		bit64=false;
+		m_bigEndian=true;
+	}
+	else if( first64 == 15 || first64 == -32768 || first64 == 20 )
+	{
+		ppFile=false;
+		bit64=true;
+		m_bigEndian=false;
+	}
+	else if( first64Swapped == 15 || first64Swapped == -32768 || first64Swapped == 20 )
+	{
+		ppFile=false;
+		bit64=true;
+		m_bigEndian=true;
 	}
 	else
-		isPp = true;
-	while (1)
 	{
-		Section section;
-		readRecord((__int32*)&section.m_header,sizeof(section.m_header));
-		section.m_dataBytes=getNextRecordSize();
-		section.m_dataStart=m_fin.tellg();
-		section.m_parent=this;
-		skipRecord(section.m_dataBytes);
-		if(m_fin.eof())
-			break;
-		m_sections.push_back(section);
-
-		__int32 headerSize=getNextRecordSize();
-
-		if(m_fin.eof())
-			break;
+		throw( PPERR_UNKOWN_FILE_FORMAT );
 	}
+
+	m_sections = m_umFileBase->open( &m_fin, this, m_bigEndian );
+
 	m_filteredSections=m_sections;
 }
 
@@ -200,7 +243,7 @@ std::vector<std::vector<double>> UmFile::getData(size_t sectionIndex)
 }
 
 
-void UmFile::getData(const Section &section, std::vector<std::vector<double>> &result)
+void UmFile::getData(const Section32 &section, std::vector<std::vector<double>> &result)
 {
 	m_fin.clear();
 	m_fin.seekg(section.m_dataStart);
@@ -486,4 +529,80 @@ float UmFile::fromIbmFloat(void *ibmFloat)
 void UmFile::sortHeaders()
 {
 	std::sort(m_filteredSections.begin(),m_filteredSections.end());
+}
+
+void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
+{
+	fin->read((char*)&m_header,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(m_parent->m_bigEndian)
+			swapEndian( (_int32*)&m_header,nBytes/4 );
+}
+
+std::vector<UmFile::Section32> PpFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+{
+	std::vector<UmFile::Section32> result;
+
+	if(!fin->is_open())
+		throw(PPERR_CANNOT_OPEN_FILE);
+
+	while (1)
+	{
+		__int32 headerSize=getNextRecordSize( fin, bigEndian );
+		if( fin->eof() )
+			break; //no more records
+
+		if( headerSize != 64 * sizeof(_int32) )
+			throw( PPERR_RECORD_WRONG_LENGTH );
+
+		//read the header
+		UmFile::Section32 section;
+		section.setParent( parent );
+		section.readHeader( fin, headerSize );
+
+		//check the size of the header which should follow
+		__int32 size = getNextRecordSize( fin, bigEndian );
+		assert( size == headerSize );
+		if( size != headerSize )
+			throw(PPERR_RECORD_WRONG_LENGTH);
+
+		//get the size of the data that follows and set the size in section
+		section.setDataSize( getNextRecordSize( fin, bigEndian ) );
+		//set the data location 
+		if( fin->tellg() > (std::streampos)std::numeric_limits<__int32>::max() )
+			throw PPERR_32_BIT_FILE_TOO_LARGE;
+		section.setDataStart( (__int32) fin->tellg() );
+
+		//skip the data
+		skipRecord( fin, section.getDataSize(), bigEndian );
+
+		//if we have reached the file end then it meant we didn't have a full record. Throw Error
+		if(fin->eof())
+			throw( PPERR_REACHED_FILE_END_UNEXPECTEDLY );
+
+		//store the section
+		result.push_back(section);
+	}
+	return result;
+}
+
+__int32 PpFile32::getNextRecordSize( std::fstream * fin, bool bigEndian )
+{
+	__int32 size;
+	fin->read((char*)&size,sizeof(size));
+	if(bigEndian)
+		swapEndian(size);
+	return size;
+}
+
+
+void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	//Skip past the data then read the post data size and check it
+	fin->seekg(fin->tellg()+nBytes);
+	__int32 size = getNextRecordSize( fin, bigEndian );
+	assert(size==nBytes);
+	if(size!=nBytes)
+		throw(PPERR_RECORD_WRONG_LENGTH);
 }
