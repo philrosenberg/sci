@@ -317,7 +317,7 @@ public:
 			//*this = section32;
 			m_dataStart = section32.m_dataStart;
 			m_dataBytes = section32.m_dataBytes;
-			m_parent = m_parent;
+			m_parent = section32.m_parent;
 			for( size_t i=0; i<45; ++i)
 				*((__int64*)(&m_header) + i ) = section32.at<__int32>( i );
 			for( size_t i=46; i<64; ++i)
