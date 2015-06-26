@@ -324,7 +324,6 @@ public:
 		}
 
 	};
-	friend class Section;
 
 
 public:
