@@ -9,19 +9,18 @@
 UmFile::UmFile(std::string name)
 {
 	m_comparator=compForecastPeriod;
-	m_ppFile32 = nullptr;
-
-	m_ppFile32 = new PpFile32;
-	m_umFileBase = m_ppFile32;
+	m_umFileTypes.resize( 4, nullptr );
+	m_umFileTypes[0]=new PpFile32;
+	m_umFileTypes[1]=new PpFile64;
+	m_umFileTypes[2]=new FieldsFile32;
+	m_umFileTypes[3]=new FieldsFile64;
 
 	m_fin.open(name.c_str(), std::ios::in|std::ios::binary);
 	if(!m_fin.is_open())
 		throw(PPERR_CANNOT_OPEN_FILE);
 
 	//decide if we have a pp file or fields file, 64 bit or 32 bit, need to swap endianness or not
-
-	bool ppFile=false;
-	bool bit64=true;
+	m_umFileBase = nullptr;
 	m_bigEndian=false;
 
 	__int32 first32;
@@ -36,58 +35,40 @@ UmFile::UmFile(std::string name)
 	swapEndian( first32Swapped );
 	first64Swapped = first64;
 	swapEndian( first64Swapped );
-	if( first32 == 256 )
+	for( size_t i=0; i< m_umFileTypes.size(); ++i)
 	{
-		ppFile=true;
-		bit64=false;
-		m_bigEndian=false;
+		if( m_umFileTypes[i]->checkValidFirstWord( first32 ) )
+		{
+			if( m_umFileBase )
+				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
+			m_bigEndian = false;
+			m_umFileBase = m_umFileTypes[i];
+		}
+		if( m_umFileTypes[i]->checkValidFirstWord( first32Swapped ) )
+		{
+			if( m_umFileBase )
+				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
+			m_bigEndian = true;
+			m_umFileBase = m_umFileTypes[i];
+		}
+		if( m_umFileTypes[i]->checkValidFirstWord( first64 ) )
+		{
+			if( m_umFileBase )
+				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
+			m_bigEndian = false;
+			m_umFileBase = m_umFileTypes[i];
+		}
+		if( m_umFileTypes[i]->checkValidFirstWord( first64Swapped ) )
+		{
+			if( m_umFileBase )
+				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
+			m_bigEndian = true;
+			m_umFileBase = m_umFileTypes[i];
+		}
 	}
-	else if( first32Swapped ==256 )
-	{
-		ppFile=true;
-		bit64=false;
-		m_bigEndian=true;
-	}
-	else if( first64 == 512 )
-	{
-		ppFile=true;
-		bit64=true;
-		m_bigEndian=false;
-	}
-	else if( first64Swapped == 512 )
-	{
-		ppFile=true;
-		bit64=true;
-		m_bigEndian=true;
-	}
-	else if( first32 == 15 || first32 == -32768 || first32 == 20 )
-	{
-		ppFile=false;
-		bit64=false;
-		m_bigEndian=false;
-	}
-	else if( first32Swapped == 15 || first32Swapped == -32768 || first32Swapped == 20 )
-	{
-		ppFile=false;
-		bit64=false;
-		m_bigEndian=true;
-	}
-	else if( first64 == 15 || first64 == -32768 || first64 == 20 )
-	{
-		ppFile=false;
-		bit64=true;
-		m_bigEndian=false;
-	}
-	else if( first64Swapped == 15 || first64Swapped == -32768 || first64Swapped == 20 )
-	{
-		ppFile=false;
-		bit64=true;
-		m_bigEndian=true;
-	}
-	else
-	{
+
+	if( m_umFileBase == nullptr )
 		throw( PPERR_UNKOWN_FILE_FORMAT );
-	}
 
 	m_sections = m_umFileBase->open( &m_fin, this, m_bigEndian );
 
@@ -605,4 +586,34 @@ void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type
 	assert(size==nBytes);
 	if(size!=nBytes)
 		throw(PPERR_RECORD_WRONG_LENGTH);
+}
+
+bool PpFile32::checkValidFirstWord( __int32 firstWord )
+{
+	//for a ppFile the first word should be the size in bytes of the
+	//first ppHeader
+	return firstWord == 256;
+}
+
+bool PpFile64::checkValidFirstWord( __int64 firstWord )
+{
+	//for a ppFile the first word should be the size in bytes of the
+	//first ppHeader
+	return firstWord == 512;
+}
+
+bool FieldsFile32::checkValidFirstWord( __int32 firstWord )
+{
+	//For a FIELDSFile the first word should be the first word of
+	//the fixed length header, which currently can be one of the
+	//following values
+	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
+}
+
+bool FieldsFile64::checkValidFirstWord( __int64 firstWord )
+{
+	//For a FIELDSFile the first word should be the first word of
+	//the fixed length header, which currently can be one of the
+	//following values
+	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
 }

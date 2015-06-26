@@ -24,7 +24,8 @@ enum PPErr
 	PPERR_PROJECTION_DATA_MEANINGLESS,
 	PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE,
 	PPERR_32_BIT_FILE_TOO_LARGE,
-	PPERR_UNKOWN_FILE_FORMAT
+	PPERR_UNKOWN_FILE_FORMAT,
+	PPERR_FILE_FORMAT_AMBIGUOUS
 };
 
 enum
@@ -396,7 +397,7 @@ public:
 	
 
 private:
-	PpFile32 *m_ppFile32;
+	std::vector<UmFileBase*> m_umFileTypes;
 	UmFileBase *m_umFileBase;
 	std::fstream m_fin;
 	FixedHeader m_fixedHeader;
@@ -418,18 +419,35 @@ private:
 
 };
 
-
+//UmFileBase
+//This class forms a base class defining the interface for various different UM file types.
+//It provides two pure virtual functions which child classes must overload.
+//The first is open. This must read from the fstream given starting at its current get pointer
+//and parse the pp headers in the file. The pp headers are then returned as a vector. If 
+//bigEndian is true then the endianness of the read words must be reversed. In addition to the 
+//pp file headers, the Sections returned must have the location and size of each pp data section
+//set and it must have the parent set to the parent passed in.
+//The checkValidFirstWord function must check the word passed in and if this is a potentially valid
+//first word the function must return true, otherwise return false. Note that this function should not
+//attempt to swap the endianness of the word passed in. Note that there is a 32 and 64 bit version of
+//this function. Clearly a 32 bit reader should only return true for a 32 bit word so only needs to
+//overload the 32 bit version as the default is to return false.
 class UmFileBase
 {
 	friend class UmFile;
 private:
 	virtual std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
+	virtual bool checkValidFirstWord( __int32 firstWord )  { return false; }
+	virtual bool checkValidFirstWord( __int64 firstWord ) { return false; }
+	template < class T >
+	bool checkValidFirstWord( T ) = delete; //This stops any other types resulting in callin the above versions
 protected:
 };
 
 class PpFile32 : public UmFileBase
 {
 	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	bool checkValidFirstWord( __int32 firstWord );
 	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
@@ -437,16 +455,19 @@ class PpFile32 : public UmFileBase
 class PpFile64 : public UmFileBase
 {
 	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	bool checkValidFirstWord( __int64 firstWord );
 };
 
 class FieldsFile32 : public UmFileBase
 {
 	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	bool checkValidFirstWord( __int32 firstWord );
 };
 
 class FieldsFile64 : public UmFileBase
 {
 	std::vector<UmFile::Section32> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	bool checkValidFirstWord( __int64 firstWord );
 };
 
 
