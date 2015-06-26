@@ -245,9 +245,9 @@ public:
 		bool operator < (const Section32 & rhs) const
 		{
 			if(m_parent->m_comparator<45)
-				return ((__int32*)&m_header)[m_parent->m_comparator]<((const __int32*)&rhs.m_header)[m_parent->m_comparator];
+				return at<__int32>(m_parent->m_comparator) < rhs.at<__int32> (m_parent->m_comparator);
 			else
-				return ((float*)&m_header)[m_parent->m_comparator]<((const float*)&rhs.m_header)[m_parent->m_comparator];
+				return at<float>(m_parent->m_comparator) < rhs.at<float> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
 		void setDataStart( _int32 start )
@@ -291,9 +291,9 @@ public:
 		bool operator < (const Section64 & rhs) const
 		{
 			if(m_parent->m_comparator<45)
-				return ((__int32*)&m_header)[m_parent->m_comparator]<((const __int32*)&rhs.m_header)[m_parent->m_comparator];
+				return at<__int64>(m_parent->m_comparator) < rhs.at<__int64> (m_parent->m_comparator);
 			else
-				return ((float*)&m_header)[m_parent->m_comparator]<((const float*)&rhs.m_header)[m_parent->m_comparator];
+				return at<double>(m_parent->m_comparator) < rhs.at<double> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
 		void setDataStart( __int64 start )
