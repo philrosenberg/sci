@@ -595,11 +595,23 @@ bool PpFile32::checkValidFirstWord( __int32 firstWord )
 	return firstWord == 256;
 }
 
+std::vector<UmFile::Section32> PpFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+{
+	std::vector<UmFile::Section32> result;
+	return result;
+}
+
 bool PpFile64::checkValidFirstWord( __int64 firstWord )
 {
 	//for a ppFile the first word should be the size in bytes of the
 	//first ppHeader
 	return firstWord == 512;
+}
+
+std::vector<UmFile::Section32> FieldsFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+{
+	std::vector<UmFile::Section32> result;
+	return result;
 }
 
 bool FieldsFile32::checkValidFirstWord( __int32 firstWord )
@@ -608,6 +620,12 @@ bool FieldsFile32::checkValidFirstWord( __int32 firstWord )
 	//the fixed length header, which currently can be one of the
 	//following values
 	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
+}
+
+std::vector<UmFile::Section32> FieldsFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+{
+	std::vector<UmFile::Section32> result;
+	return result;
 }
 
 bool FieldsFile64::checkValidFirstWord( __int64 firstWord )
