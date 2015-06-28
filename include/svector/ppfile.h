@@ -70,7 +70,7 @@ inline void swapEndian(__int64 *vals, size_t nVals)
 		swapEndian(vals[i]);
 }
 
-class UmFileBase;
+class UmFileParser;
 class PpFile32;
 class PpFile64;
 class FieldFile32;
@@ -663,7 +663,7 @@ public:
 	
 
 private:
-	std::unique_ptr<UmFileBase> m_umFileBase;
+	std::unique_ptr<UmFileParser> m_umFileParser;
 	std::fstream m_fin;
 	FixedHeader64 m_fixedHeader;
 	bool m_bigEndian;
@@ -684,24 +684,24 @@ private:
 
 };
 
-//UmFileBase
+//UmFileParser
 //This class forms a base class defining the interface for various different UM file types.
-//It provides two pure virtual functions which child classes must overload.
-//The first is open. This must read from the fstream given starting at its current get pointer
+//It provides two virtual functions which child classes must overload.
+//The first is parse. This must read from the fstream given starting at its current get pointer
 //and parse the pp headers in the file. The pp headers are then returned as a vector. If 
 //bigEndian is true then the endianness of the read words must be reversed. In addition to the 
 //pp file headers, the Sections returned must have the location and size of each pp data section
 //set and it must have the parent set to the parent passed in.
-//The checkValidFirstWord function must check the word passed in and if this is a potentially valid
-//first word the function must return true, otherwise return false. Note that this function should not
+//The checkValidWords function must check the words passed in and if these are potentially valid for
+//the file the function must return true, otherwise return false. Note that this function should not
 //attempt to swap the endianness of the word passed in. Note that there is a 32 and 64 bit version of
 //this function. Clearly a 32 bit reader should only return true for a 32 bit word so only needs to
 //overload the 32 bit version as the default is to return false.
-class UmFileBase
+class UmFileParser
 {
 	friend class UmFile;
 private:
-	virtual std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
+	virtual std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
 	virtual bool checkValidWords( __int32 firstWord, __int32 fifthWord )  { return false; }
 	virtual bool checkValidWords( __int64 firstWord, __int64 fifthWord ) { return false; }
 	template < class T >
@@ -709,31 +709,31 @@ private:
 protected:
 };
 
-class PpFile32 : public UmFileBase
+class PpFileParser32 : public UmFileParser
 {
-	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
 
-class PpFile64 : public UmFileBase
+class PpFileParser64 : public UmFileParser
 {
-	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
 
-class FieldsFile32 : public UmFileBase
+class FieldsFileParser32 : public UmFileParser
 {
-	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 };
 
-class FieldsFile64 : public UmFileBase
+class FieldsFileParser64 : public UmFileParser
 {
-	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 };
 

@@ -8,19 +8,19 @@
 
 UmFile::UmFile(std::string name)
 {
-	std::vector<std::unique_ptr<UmFileBase>> umFileTypes;
+	std::vector<std::unique_ptr<UmFileParser>> umFileTypes;
 	m_comparator=compForecastPeriod;
-	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile32));
-	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile64));
-	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile32));
-	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile64));
+	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new PpFileParser32));
+	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new PpFileParser64));
+	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new FieldsFileParser32));
+	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new FieldsFileParser64));
 
 	m_fin.open(name.c_str(), std::ios::in|std::ios::binary);
 	if(!m_fin.is_open())
 		throw(PPERR_CANNOT_OPEN_FILE);
 
 	//decide if we have a pp file or fields file, 64 bit or 32 bit, need to swap endianness or not
-	m_umFileBase = nullptr;
+	m_umFileParser = nullptr;
 	m_bigEndian=false;
 
 	__int32 first32;
@@ -52,38 +52,38 @@ UmFile::UmFile(std::string name)
 	{
 		if( umFileTypes[i]->checkValidWords( first32, fifth32 ) )
 		{
-			if( m_umFileBase )
+			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileBase.swap(umFileTypes[i]);
+			m_umFileParser.swap(umFileTypes[i]);
 		}
 		if( umFileTypes[i]->checkValidWords( first32Swapped, fifth32Swapped ) )
 		{
-			if( m_umFileBase )
+			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileBase.swap(umFileTypes[i]);
+			m_umFileParser.swap(umFileTypes[i]);
 		}
 		if( umFileTypes[i]->checkValidWords( first64, fifth64 ) )
 		{
-			if( m_umFileBase )
+			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileBase.swap(umFileTypes[i]);
+			m_umFileParser.swap(umFileTypes[i]);
 		}
 		if( umFileTypes[i]->checkValidWords( first64Swapped, fifth64Swapped ) )
 		{
-			if( m_umFileBase )
+			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileBase.swap(umFileTypes[i]);
+			m_umFileParser.swap(umFileTypes[i]);
 		}
 	}
 
-	if( m_umFileBase == nullptr )
+	if( m_umFileParser == nullptr )
 		throw( PPERR_UNKNOWN_FILE_FORMAT );
 
-	m_sections = m_umFileBase->open( &m_fin, this, m_bigEndian );
+	m_sections = m_umFileParser->parse( &m_fin, this, m_bigEndian );
 
 	m_filteredSections=m_sections;
 }
@@ -543,7 +543,7 @@ void UmFile::Section64::readHeader( std::fstream *fin, size_t nBytes )
 			swapEndian( (_int64*)&m_header,nBytes/4 );
 }
 
-std::vector<UmFile::Section64> PpFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
 
@@ -591,7 +591,7 @@ std::vector<UmFile::Section64> PpFile32::open( std::fstream *fin, UmFile *parent
 	return result;
 }
 
-__int32 PpFile32::getNextRecordSize( std::fstream * fin, bool bigEndian )
+__int32 PpFileParser32::getNextRecordSize( std::fstream * fin, bool bigEndian )
 {
 	__int32 size;
 	fin->read((char*)&size,sizeof(size));
@@ -600,7 +600,7 @@ __int32 PpFile32::getNextRecordSize( std::fstream * fin, bool bigEndian )
 	return size;
 }
 
-void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void PpFileParser32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
 {
 	//Skip past the data then read the post data size and check it
 	fin->seekg(fin->tellg()+nBytes);
@@ -610,14 +610,14 @@ void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-bool PpFile32::checkValidWords( __int32 firstWord, __int32 fifthWord )
+bool PpFileParser32::checkValidWords( __int32 firstWord, __int32 fifthWord )
 {
 	//for a ppFile the first word should be the size in bytes of the
 	//first ppHeader
 	return firstWord == 256;
 }
 
-std::vector<UmFile::Section64> PpFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> PpFileParser64::parse( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
 	if(!fin->is_open())
@@ -663,7 +663,7 @@ std::vector<UmFile::Section64> PpFile64::open( std::fstream *fin, UmFile *parent
 	return result;
 }
 
-__int64 PpFile64::getNextRecordSize( std::fstream * fin, bool bigEndian )
+__int64 PpFileParser64::getNextRecordSize( std::fstream * fin, bool bigEndian )
 {
 	__int64 size;
 	fin->read((char*)&size,sizeof(size));
@@ -672,7 +672,7 @@ __int64 PpFile64::getNextRecordSize( std::fstream * fin, bool bigEndian )
 	return size;
 }
 
-void PpFile64::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void PpFileParser64::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
 {
 	//Skip past the data then read the post data size and check it
 	fin->seekg(fin->tellg()+nBytes);
@@ -682,14 +682,14 @@ void PpFile64::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-bool PpFile64::checkValidWords( __int64 firstWord, __int64 fifthWord )
+bool PpFileParser64::checkValidWords( __int64 firstWord, __int64 fifthWord )
 {
 	//for a ppFile the first word should be the size in bytes of the
 	//first ppHeader
 	return firstWord == 512;
 }
 
-std::vector<UmFile::Section64> FieldsFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> FieldsFileParser32::parse( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
 	if(!fin->is_open())
@@ -745,7 +745,7 @@ std::vector<UmFile::Section64> FieldsFile32::open( std::fstream *fin, UmFile *pa
 	return result;
 }
 
-bool FieldsFile32::checkValidWords( __int32 firstWord, __int32 fifthWord )
+bool FieldsFileParser32::checkValidWords( __int32 firstWord, __int32 fifthWord )
 {
 	//For a FIELDSFile the first word should be the first word of
 	//the fixed length header, which currently can be one of the
@@ -753,7 +753,7 @@ bool FieldsFile32::checkValidWords( __int32 firstWord, __int32 fifthWord )
 	return (firstWord == 15 || firstWord == -32768 || firstWord == 20) && fifthWord == 3;
 }
 
-std::vector<UmFile::Section64> FieldsFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
+std::vector<UmFile::Section64> FieldsFileParser64::parse( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
 	if(!fin->is_open())
@@ -809,7 +809,7 @@ std::vector<UmFile::Section64> FieldsFile64::open( std::fstream *fin, UmFile *pa
 	return result;
 }
 
-bool FieldsFile64::checkValidWords( __int64 firstWord, __int64 fifthWord )
+bool FieldsFileParser64::checkValidWords( __int64 firstWord, __int64 fifthWord )
 {
 	//For a FIELDSFile the first word should be the first word of
 	//the fixed length header, which currently can be one of the
