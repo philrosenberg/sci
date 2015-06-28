@@ -88,7 +88,7 @@ UmFile::UmFile(std::string name)
 	m_filteredSections=m_sections;
 }
 
-void UmFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes)
+/*void UmFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes)
 {
 	m_fin.read((char*)record,nBytes);
 	if(m_fin.gcount()!=nBytes)
@@ -114,16 +114,16 @@ void UmFile::skipRecord(std::basic_istream<char>::pos_type nBytes)
 	assert(size==nBytes);
 	if(size!=nBytes)
 		throw(PPERR_RECORD_WRONG_LENGTH);
-}
+}*/
 
-__int32 UmFile::getNextRecordSize()
+/*__int32 UmFile::getNextRecordSize()
 {
 	__int32 size;
 	m_fin.read((char*)&size,sizeof(size));
 	if(m_bigEndian)
 		swapEndian(size);
 	return size;
-}
+}*/
 
 void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t outDim1, size_t outDim2)
 {
@@ -244,7 +244,7 @@ void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> 
 	//create space for the data, we add 4 bytes padding to ensure we don't
 	//try to read data that we don't have permission for if decoding wgdos.
 	std::vector<char> rawData(section.m_dataBytes+4);
-	readRecord((__int32*)&rawData[0],section.m_dataBytes);
+	m_umFileParser->readRecord(&rawData[0], &m_fin, section.m_dataBytes, m_bigEndian);
 	//create a vector for the result
 	result.resize(section.m_header.m_nRows);
 	for(size_t i=0; i<result.size(); ++i)
@@ -591,6 +591,22 @@ std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile 
 	return result;
 }
 
+void PpFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	fin->read((char*)record,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(bigEndian)
+		swapEndian((__int32*)record,nBytes/4);
+	__int32 size;
+	fin->read((char*)&size,sizeof(size));
+	if(bigEndian)
+		swapEndian(size);
+	assert(size==nBytes);
+	if(size!=nBytes)
+		throw(PPERR_RECORD_WRONG_LENGTH);
+}
+
 __int32 PpFileParser32::getNextRecordSize( std::fstream * fin, bool bigEndian )
 {
 	__int32 size;
@@ -663,6 +679,22 @@ std::vector<UmFile::Section64> PpFileParser64::parse( std::fstream *fin, UmFile 
 	return result;
 }
 
+void PpFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	fin->read((char*)record,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(bigEndian)
+		swapEndian((__int32*)record,nBytes/4); //even 64 bit files seem to use 32 bit data
+	__int64 size;
+	fin->read((char*)&size,sizeof(size));
+	if(bigEndian)
+		swapEndian(size);
+	assert(size==nBytes);
+	if(size!=nBytes)
+		throw(PPERR_RECORD_WRONG_LENGTH);
+}
+
 __int64 PpFileParser64::getNextRecordSize( std::fstream * fin, bool bigEndian )
 {
 	__int64 size;
@@ -707,7 +739,7 @@ std::vector<UmFile::Section64> FieldsFileParser32::parse( std::fstream *fin, UmF
 		throw( PPERR_RECORD_WRONG_LENGTH );
 
 	//go to the beginning of the ppHeaders
-	fin->seekg( ( fixedHeader.m_startLookupTable - 1 ) * sizeof(__int32) );
+	fin->seekg( fixedHeader.m_startLookupTable * sizeof(__int32) ); //I thought there would be a 1 to 0 index correction here, but it seems not
 
 	//note the length of the header in bytes;
 	__int32 headerSize=fixedHeader.m_nLookupTableFirstDimension * sizeof(__int32);
@@ -743,6 +775,15 @@ std::vector<UmFile::Section64> FieldsFileParser32::parse( std::fstream *fin, UmF
 		result.push_back(section);
 	}
 	return result;
+}
+
+void FieldsFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	fin->read((char*)record,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(bigEndian)
+		swapEndian((__int32*)record,nBytes/4);
 }
 
 bool FieldsFileParser32::checkValidWords( __int32 firstWord, __int32 fifthWord )
@@ -795,7 +836,7 @@ std::vector<UmFile::Section64> FieldsFileParser64::parse( std::fstream *fin, UmF
 		if( ppHeader.m_nRecords > 0 && ppHeader.m_startRecord > 0 )
 		{
 			section.setDataSize( section.getHeader().m_nRecords * sizeof(__int64) );
-			section.setDataStart( ( section.getHeader().m_startRecord - 1 ) * sizeof(__int64) );
+			section.setDataStart( section.getHeader().m_startRecord * sizeof(__int64) ); //I thought there would be a 1 to 0 index correction here, but it seems not
 		}
 		else
 		{
@@ -807,6 +848,15 @@ std::vector<UmFile::Section64> FieldsFileParser64::parse( std::fstream *fin, UmF
 		result.push_back(section);
 	}
 	return result;
+}
+
+void FieldsFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+{
+	fin->read((char*)record,nBytes);
+	if(fin->gcount()!=nBytes)
+		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
+	if(bigEndian)
+		swapEndian((__int32*)record,nBytes/4); //even 64 bit files seem to use 32 bit data
 }
 
 bool FieldsFileParser64::checkValidWords( __int64 firstWord, __int64 fifthWord )
