@@ -5,6 +5,7 @@
 #include<string>
 #include<vector>
 #include"stashcodes.h"
+#include<memory>
 
 enum PPErr
 {
@@ -662,8 +663,8 @@ public:
 	
 
 private:
-	std::vector<UmFileBase*> m_umFileTypes;
-	UmFileBase *m_umFileBase;
+	std::vector<std::unique_ptr<UmFileBase>> m_umFileTypes;
+	std::unique_ptr<UmFileBase> m_umFileBase;
 	std::fstream m_fin;
 	FixedHeader64 m_fixedHeader;
 	bool m_bigEndian;
