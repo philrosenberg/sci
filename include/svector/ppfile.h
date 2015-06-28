@@ -418,7 +418,7 @@ public:
 		__int64 m_undocumented88; //149
 		__int64 m_startLookupTable; //150
 		__int64 m_nLookupTableFirstDimension; //151
-		__int64 m_nLookupTableSecondDimentsion; //152
+		__int64 m_nLookupTableSecondDimension; //152
 		__int64 m_nPrognosticFields; //153
 		__int64 m_undocumented89; //154
 		__int64 m_undocumented90; //155
@@ -475,6 +475,7 @@ public:
 			m_dataBytes = 0;
 			m_parent = nullptr;
 		}
+		PpHeader32 getHeader() {return m_header;}
 
 	};
 	class Section64
@@ -532,7 +533,7 @@ public:
 			m_dataBytes = 0;
 			m_parent = nullptr;
 		}
-
+		PpHeader64 getHeader() {return m_header;}
 	};
 
 
@@ -701,17 +702,17 @@ class UmFileBase
 	friend class UmFile;
 private:
 	virtual std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
-	virtual bool checkValidFirstWord( __int32 firstWord )  { return false; }
-	virtual bool checkValidFirstWord( __int64 firstWord ) { return false; }
+	virtual bool checkValidWords( __int32 firstWord, __int32 fifthWord )  { return false; }
+	virtual bool checkValidWords( __int64 firstWord, __int64 fifthWord ) { return false; }
 	template < class T >
-	bool checkValidFirstWord( T ) = delete; //This stops any other types resulting in callin the above versions
+	bool checkValidWords( T, T ) = delete; //This stops any other types resulting in callin the above versions
 protected:
 };
 
 class PpFile32 : public UmFileBase
 {
 	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
-	bool checkValidFirstWord( __int32 firstWord );
+	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
@@ -719,7 +720,7 @@ class PpFile32 : public UmFileBase
 class PpFile64 : public UmFileBase
 {
 	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
-	bool checkValidFirstWord( __int64 firstWord );
+	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
 };
@@ -727,13 +728,13 @@ class PpFile64 : public UmFileBase
 class FieldsFile32 : public UmFileBase
 {
 	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
-	bool checkValidFirstWord( __int32 firstWord );
+	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 };
 
 class FieldsFile64 : public UmFileBase
 {
 	std::vector<UmFile::Section64> open( std::fstream *fin, UmFile *parent, bool bigEndian );
-	bool checkValidFirstWord( __int64 firstWord );
+	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 };
 
 

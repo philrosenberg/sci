@@ -35,30 +35,43 @@ UmFile::UmFile(std::string name)
 	swapEndian( first32Swapped );
 	first64Swapped = first64;
 	swapEndian( first64Swapped );
+	__int32 fifth32;
+	__int32 fifth32Swapped;
+	__int64 fifth64;
+	__int64 fifth64Swapped;
+	m_fin.seekg( 4 * sizeof( __int32) );
+	m_fin.read((char*)(&fifth32), sizeof(fifth32) );
+	m_fin.seekg( 4 * sizeof( __int64) );
+	m_fin.read((char*)(&fifth64), sizeof(fifth64) );
+	m_fin.seekg( 0 );
+	fifth32Swapped = fifth32;
+	swapEndian( fifth32Swapped );
+	fifth64Swapped = fifth64;
+	swapEndian( fifth64Swapped );
 	for( size_t i=0; i< m_umFileTypes.size(); ++i)
 	{
-		if( m_umFileTypes[i]->checkValidFirstWord( first32 ) )
+		if( m_umFileTypes[i]->checkValidWords( first32, fifth32 ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
 			m_umFileBase = m_umFileTypes[i];
 		}
-		if( m_umFileTypes[i]->checkValidFirstWord( first32Swapped ) )
+		if( m_umFileTypes[i]->checkValidWords( first32Swapped, fifth32Swapped ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
 			m_umFileBase = m_umFileTypes[i];
 		}
-		if( m_umFileTypes[i]->checkValidFirstWord( first64 ) )
+		if( m_umFileTypes[i]->checkValidWords( first64, fifth64 ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
 			m_umFileBase = m_umFileTypes[i];
 		}
-		if( m_umFileTypes[i]->checkValidFirstWord( first64Swapped ) )
+		if( m_umFileTypes[i]->checkValidWords( first64Swapped, fifth64Swapped ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
@@ -597,7 +610,7 @@ void PpFile32::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-bool PpFile32::checkValidFirstWord( __int32 firstWord )
+bool PpFile32::checkValidWords( __int32 firstWord, __int32 fifthWord )
 {
 	//for a ppFile the first word should be the size in bytes of the
 	//first ppHeader
@@ -669,7 +682,7 @@ void PpFile64::skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type
 		throw(PPERR_RECORD_WRONG_LENGTH);
 }
 
-bool PpFile64::checkValidFirstWord( __int64 firstWord )
+bool PpFile64::checkValidWords( __int64 firstWord, __int64 fifthWord )
 {
 	//for a ppFile the first word should be the size in bytes of the
 	//first ppHeader
@@ -679,27 +692,127 @@ bool PpFile64::checkValidFirstWord( __int64 firstWord )
 std::vector<UmFile::Section64> FieldsFile32::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
+	if(!fin->is_open())
+		throw(PPERR_CANNOT_OPEN_FILE);
+
+	//read in the fixed length header
+	UmFile::FixedHeader32 fixedHeader;
+	fin->read( (char*)(&fixedHeader), sizeof(fixedHeader) );
+	if( bigEndian )
+		swapEndian( (__int32*)(&fixedHeader), sizeof( fixedHeader )/sizeof(__int32) );
+
+	//check that the ppHeaders are definitely 64 words - in Obs files it is 128
+	assert( fixedHeader.m_nLookupTableFirstDimension == 64 );
+	if( fixedHeader.m_nLookupTableFirstDimension != 64 )
+		throw( PPERR_RECORD_WRONG_LENGTH );
+
+	//go to the beginning of the ppHeaders
+	fin->seekg( ( fixedHeader.m_startLookupTable - 1 ) * sizeof(__int32) );
+
+	//note the length of the header in bytes;
+	__int32 headerSize=fixedHeader.m_nLookupTableFirstDimension * sizeof(__int32);
+
+	for ( __int32 i=0; i< fixedHeader.m_nLookupTableSecondDimentsion; ++i)
+	{
+		//read the header
+		UmFile::Section32 section;
+		section.setParent( parent );
+		section.readHeader( fin, headerSize );
+
+		//if we have reached the file end then it meant we didn't have a full record. Throw Error
+		if(fin->eof())
+			throw( PPERR_REACHED_FILE_END_UNEXPECTEDLY );
+
+		//get the size and location of the data from the header and set it int the section.
+		//Note that often (always?) the UM produces files that have the max (4096) number of
+		//ppHeaders in the lookup table but then leave unused headers filled with -99. This
+		//makes sense as it is generally not possible to instert in a file - just overwrite.
+		UmFile::PpHeader32 ppHeader = section.getHeader();
+		if( ppHeader.m_nRecords > 0 && ppHeader.m_startRecord > 0 )
+		{
+			section.setDataSize( section.getHeader().m_nRecords * sizeof(__int32) );
+			section.setDataStart( ( section.getHeader().m_startRecord - 1 ) * sizeof(__int32) );
+		}
+		else
+		{
+			section.setDataSize( 0 );
+			section.setDataStart( 0 );
+		}
+
+		//store the section
+		result.push_back(section);
+	}
 	return result;
 }
 
-bool FieldsFile32::checkValidFirstWord( __int32 firstWord )
+bool FieldsFile32::checkValidWords( __int32 firstWord, __int32 fifthWord )
 {
 	//For a FIELDSFile the first word should be the first word of
 	//the fixed length header, which currently can be one of the
 	//following values
-	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
+	return (firstWord == 15 || firstWord == -32768 || firstWord == 20) && fifthWord == 3;
 }
 
 std::vector<UmFile::Section64> FieldsFile64::open( std::fstream *fin, UmFile *parent, bool bigEndian  )
 {
 	std::vector<UmFile::Section64> result;
+	if(!fin->is_open())
+		throw(PPERR_CANNOT_OPEN_FILE);
+
+	//read in the fixed length header
+	UmFile::FixedHeader64 fixedHeader;
+	fin->read( (char*)(&fixedHeader), sizeof(fixedHeader) );
+	if( bigEndian )
+		swapEndian( (__int64*)(&fixedHeader), sizeof( fixedHeader )/sizeof(__int64) );
+
+	//check that the ppHeaders are definitely 64 words - in Obs files it is 128
+	assert( fixedHeader.m_nLookupTableFirstDimension == 64 );
+	if( fixedHeader.m_nLookupTableFirstDimension != 64 )
+		throw( PPERR_RECORD_WRONG_LENGTH );
+
+	//go to the beginning of the ppHeaders
+	fin->seekg( ( fixedHeader.m_startLookupTable - 1 ) * sizeof(__int64) );
+
+	//note the length of the header in bytes;
+	__int64 headerSize=fixedHeader.m_nLookupTableFirstDimension * sizeof(__int64);
+
+	for ( __int64 i=0; i< fixedHeader.m_nLookupTableSecondDimension; ++i)
+	{
+		//read the header
+		UmFile::Section64 section;
+		section.setParent( parent );
+		section.readHeader( fin, headerSize );
+
+		//if we have reached the file end then it meant we didn't have a full record. Throw Error
+		if(fin->eof())
+			throw( PPERR_REACHED_FILE_END_UNEXPECTEDLY );
+
+		//get the size and location of the data from the header and set it int the section.
+		//Note that often (always?) the UM produces files that have the max (4096) number of
+		//ppHeaders in the lookup table but then leave unused headers filled with -99. This
+		//makes sense as it is generally not possible to instert in a file - just overwrite.
+		UmFile::PpHeader64 ppHeader = section.getHeader();
+		if( ppHeader.m_nRecords > 0 && ppHeader.m_startRecord > 0 )
+		{
+			section.setDataSize( section.getHeader().m_nRecords * sizeof(__int64) );
+			section.setDataStart( ( section.getHeader().m_startRecord - 1 ) * sizeof(__int64) );
+		}
+		else
+		{
+			section.setDataSize( 0 );
+			section.setDataStart( 0 );
+		}
+
+		//store the section
+		result.push_back(section);
+	}
 	return result;
 }
 
-bool FieldsFile64::checkValidFirstWord( __int64 firstWord )
+bool FieldsFile64::checkValidWords( __int64 firstWord, __int64 fifthWord )
 {
 	//For a FIELDSFile the first word should be the first word of
 	//the fixed length header, which currently can be one of the
 	//following values
-	return firstWord == 15 || firstWord == -32768 || firstWord == 20;
+	return (firstWord == 15 || firstWord == -32768 || firstWord == 20) && fifthWord == 3;
 }
