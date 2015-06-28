@@ -663,7 +663,6 @@ public:
 	
 
 private:
-	std::vector<std::unique_ptr<UmFileBase>> m_umFileTypes;
 	std::unique_ptr<UmFileBase> m_umFileBase;
 	std::fstream m_fin;
 	FixedHeader64 m_fixedHeader;

@@ -8,11 +8,12 @@
 
 UmFile::UmFile(std::string name)
 {
+	std::vector<std::unique_ptr<UmFileBase>> umFileTypes;
 	m_comparator=compForecastPeriod;
-	m_umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile32));
-	m_umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile64));
-	m_umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile32));
-	m_umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile64));
+	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile32));
+	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new PpFile64));
+	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile32));
+	umFileTypes.push_back(std::unique_ptr<UmFileBase>(new FieldsFile64));
 
 	m_fin.open(name.c_str(), std::ios::in|std::ios::binary);
 	if(!m_fin.is_open())
@@ -47,35 +48,35 @@ UmFile::UmFile(std::string name)
 	swapEndian( fifth32Swapped );
 	fifth64Swapped = fifth64;
 	swapEndian( fifth64Swapped );
-	for( size_t i=0; i< m_umFileTypes.size(); ++i)
+	for( size_t i=0; i< umFileTypes.size(); ++i)
 	{
-		if( m_umFileTypes[i]->checkValidWords( first32, fifth32 ) )
+		if( umFileTypes[i]->checkValidWords( first32, fifth32 ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileBase.swap(m_umFileTypes[i]);
+			m_umFileBase.swap(umFileTypes[i]);
 		}
-		if( m_umFileTypes[i]->checkValidWords( first32Swapped, fifth32Swapped ) )
+		if( umFileTypes[i]->checkValidWords( first32Swapped, fifth32Swapped ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileBase.swap(m_umFileTypes[i]);
+			m_umFileBase.swap(umFileTypes[i]);
 		}
-		if( m_umFileTypes[i]->checkValidWords( first64, fifth64 ) )
+		if( umFileTypes[i]->checkValidWords( first64, fifth64 ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileBase.swap(m_umFileTypes[i]);
+			m_umFileBase.swap(umFileTypes[i]);
 		}
-		if( m_umFileTypes[i]->checkValidWords( first64Swapped, fifth64Swapped ) )
+		if( umFileTypes[i]->checkValidWords( first64Swapped, fifth64Swapped ) )
 		{
 			if( m_umFileBase )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileBase.swap(m_umFileTypes[i]);
+			m_umFileBase.swap(umFileTypes[i]);
 		}
 	}
 
