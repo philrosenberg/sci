@@ -5,7 +5,22 @@ namespace stash
 {
 	const int uCompOfWindAfterTimestep=2;
 	const int vCompOfWindAfterTimestep=3;
+	const int thetaAfterTimestep=4;
 	const int specHumAfterTimestep=10;
+	const int seaIceFractionAfterTimestep=31;
+	const int tracer15HF=75;
+	const int tracer16=76;
+	const int tracer17=77;
+	const int tracer18=78;
+	const int tracer19=79;
+	const int tracer21=81;
+	const int tracer23Dust=83;
+	const int tracer24Oceanic=84;
+	const int tracer25Soot=85;
+	const int tracer26VolcanicAsh=86;
+	const int tracer27H2SO4=87;
+	const int tracer28NH4_2SO2=88;
+	const int tracer29Mineral=89;
 	const int wCompOfWind=150;
 	const int bulkCloudFraction=266;
 	const int bulkCloudFractionInEachLayer=266;
@@ -18,11 +33,22 @@ namespace stash
 	const int dustDivision4MassMixingRatio=434;
 	const int dustDivision5MassMixingRatio=435;
 	const int dustDivision6MassMixingRatio=436;
+	const int incomingSwFluxToa=1207;
+	const int outgoingSwFluxToa=1208;
 	const int directFlux=1230;
 	const int diffuseFlux=1231;
+	const int totalDownwardSurfaceSwFlux=1235;
+	const int netDownwardSurfaceLwFlux=2201;
+	const int outgoingLwFluxToa=2205;
+	const int downwardLwFluxSurface=2207;
+	const int seaIceTemperatureAfterBoundaryLayer=3049;
+	const int surfaceAndBoundaryLayerHeatFlux=3217;
 	const int xCompOfSurfAndBlWindStress_N_per_m2=3219;
 	const int yCompOfSurfAndBlWindStress_N_per_m2=3220;
+	const int surfaceAndBoundaryLayerTotalMoistureFlux=3223;
+	const int surfaceLatentHeatFlux=3234;
 	const int specHumAfterLsPrecip=4010;
+	const int largeScaleRainAmount=4201;
 	const int cloudLiqWatAfterLsPrecip=4205;
 	const int cloudIceWatAfterLsPrecip=4206;
 	const int relHumAfterLsPrecip=4207;
@@ -33,6 +59,7 @@ namespace stash
 	const int yCompOfGravWaveStress=6224;
 	const int tempOnModelLevels_K=16004;
 	const int tempOnThetaLevels_K=16004;
+	const int pressureAtMeanSeaLevel=16222;
 	const int totalDustConc_ug_per_m3=17257;
 
 
