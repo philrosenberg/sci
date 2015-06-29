@@ -8,12 +8,12 @@
 
 UmFile::UmFile(std::string name)
 {
-	std::vector<std::unique_ptr<UmFileParser>> umFileTypes;
+	std::vector<std::shared_ptr<UmFileParser>> umFileTypes;
 	m_comparator=compForecastPeriod;
-	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new PpFileParser32));
-	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new PpFileParser64));
-	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new FieldsFileParser32));
-	umFileTypes.push_back(std::unique_ptr<UmFileParser>(new FieldsFileParser64));
+	umFileTypes.push_back(std::shared_ptr<UmFileParser>(new PpFileParser32));
+	umFileTypes.push_back(std::shared_ptr<UmFileParser>(new PpFileParser64));
+	umFileTypes.push_back(std::shared_ptr<UmFileParser>(new FieldsFileParser32));
+	umFileTypes.push_back(std::shared_ptr<UmFileParser>(new FieldsFileParser64));
 
 	m_fin.open(name.c_str(), std::ios::in|std::ios::binary);
 	if(!m_fin.is_open())
@@ -55,28 +55,28 @@ UmFile::UmFile(std::string name)
 			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileParser.swap(umFileTypes[i]);
+			m_umFileParser = umFileTypes[i];
 		}
 		if( umFileTypes[i]->checkValidWords( first32Swapped, fifth32Swapped ) )
 		{
 			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileParser.swap(umFileTypes[i]);
+			m_umFileParser = umFileTypes[i];
 		}
 		if( umFileTypes[i]->checkValidWords( first64, fifth64 ) )
 		{
 			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = false;
-			m_umFileParser.swap(umFileTypes[i]);
+			m_umFileParser = umFileTypes[i];
 		}
 		if( umFileTypes[i]->checkValidWords( first64Swapped, fifth64Swapped ) )
 		{
 			if( m_umFileParser )
 				throw( PPERR_FILE_FORMAT_AMBIGUOUS );
 			m_bigEndian = true;
-			m_umFileParser.swap(umFileTypes[i]);
+			m_umFileParser = umFileTypes[i];
 		}
 	}
 

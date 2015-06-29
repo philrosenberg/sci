@@ -663,7 +663,7 @@ public:
 	
 
 private:
-	std::unique_ptr<UmFileParser> m_umFileParser;
+	std::shared_ptr<UmFileParser> m_umFileParser;
 	std::fstream m_fin;
 	FixedHeader64 m_fixedHeader;
 	bool m_bigEndian;
