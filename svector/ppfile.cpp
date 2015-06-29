@@ -239,12 +239,6 @@ std::vector<std::vector<double>> UmFile::getData(size_t sectionIndex)
 
 void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> &result)
 {
-	m_fin.clear();
-	m_fin.seekg(section.m_dataStart);
-	//create space for the data, we add 4 bytes padding to ensure we don't
-	//try to read data that we don't have permission for if decoding wgdos.
-	std::vector<char> rawData(section.m_dataBytes+4);
-	m_umFileParser->readRecord(&rawData[0], &m_fin, section.m_dataBytes, m_bigEndian);
 	//create a vector for the result
 	result.resize(section.m_header.m_nRows);
 	for(size_t i=0; i<result.size(); ++i)
@@ -271,14 +265,35 @@ void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> 
 	if(numberFormat==5)
 		throw(PPERR_VAX_FORMAT_NOT_SUPPORTED);
 
+	
+	m_fin.clear();
+	m_fin.seekg(section.m_dataStart);
+	//create space for the data, we add 4 bytes padding to ensure we don't
+	//try to read data that we don't have permission for if decoding wgdos.
+	std::vector<char> rawData(section.m_dataBytes+4);
+	m_umFileParser->readRecord(&rawData[0], &m_fin, section.m_dataBytes, m_bigEndian, packing == 1 ); //wgdos data is always 32 bit so force it so
+
 	if(packing==0)
 	{
-		//The data isn't compressed, but it is a float rather than a double, convert it
-		assert(result.size()*result[0].size()<=rawData.size()/4);
-		float *floatArray=(float*)(&rawData[0]);
-		size_t rowLength=result[0].size();
-		for(size_t i=0; i<result.size(); ++i)
-			result[i/rowLength][i%rowLength]=floatArray[i]-section.m_header.m_datum;
+		std::vector<float> fakeLine(result[0].size());
+
+		if( result.size() * result[0].size() * 8 <= rawData.size() )
+		{
+			//this is 64 bit floating point data
+			for( size_t i=0; i< result.size(); ++i)
+				memcpy( &result[i][0], ((double*)(&rawData[0]))+i*result[0].size(), result[0].size() * sizeof( double ) );
+
+		}
+		else if( result.size() * result[0].size() * 4 <= rawData.size() )
+		{
+			//this is 32 bit floating point data - convert it to doubles
+			float *floatArray=(float*)(&rawData[0]);
+			size_t rowLength=result[0].size();
+			for(size_t i=0; i<result.size(); ++i)
+				result[i/rowLength][i%rowLength]=floatArray[i]-section.m_header.m_datum;
+		}
+		else
+			throw( PPERR_UNCOMPRESSED_DATA_HAS_WRONG_SIZE );
 	}
 	else if(packing==1)
 	{
@@ -659,7 +674,7 @@ std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile 
 	return result;
 }
 
-void PpFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void PpFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit )
 {
 	fin->read((char*)record,nBytes);
 	if(fin->gcount()!=nBytes)
@@ -747,13 +762,19 @@ std::vector<UmFile::Section64> PpFileParser64::parse( std::fstream *fin, UmFile 
 	return result;
 }
 
-void PpFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void PpFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit )
 {
 	fin->read((char*)record,nBytes);
 	if(fin->gcount()!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(bigEndian)
-		swapEndian((__int32*)record,nBytes/4); //even 64 bit files seem to use 32 bit data
+	if(bigEndian)
+	{
+		if( force32Bit )
+			swapEndian((__int32*)record,nBytes/4);
+		else
+			swapEndian((__int64*)record,nBytes/8);
+	}
 	__int64 size;
 	fin->read((char*)&size,sizeof(size));
 	if(bigEndian)
@@ -845,7 +866,7 @@ std::vector<UmFile::Section64> FieldsFileParser32::parse( std::fstream *fin, UmF
 	return result;
 }
 
-void FieldsFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void FieldsFileParser32::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit )
 {
 	fin->read((char*)record,nBytes);
 	if(fin->gcount()!=nBytes)
@@ -918,13 +939,18 @@ std::vector<UmFile::Section64> FieldsFileParser64::parse( std::fstream *fin, UmF
 	return result;
 }
 
-void FieldsFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian )
+void FieldsFileParser64::readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit )
 {
 	fin->read((char*)record,nBytes);
 	if(fin->gcount()!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(bigEndian)
-		swapEndian((__int32*)record,nBytes/4); //even 64 bit files seem to use 32 bit data
+	{
+		if( force32Bit )
+			swapEndian((__int32*)record,nBytes/4);
+		else
+			swapEndian((__int64*)record,nBytes/8);
+	}
 }
 
 bool FieldsFileParser64::checkValidWords( __int64 firstWord, __int64 fifthWord )

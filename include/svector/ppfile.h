@@ -28,7 +28,8 @@ enum PPErr
 	PPERR_32_BIT_FILE_TOO_LARGE,
 	PPERR_UNKNOWN_FILE_FORMAT,
 	PPERR_FILE_FORMAT_AMBIGUOUS,
-	PPERR_64_BIT_FILE_TOO_LARGE
+	PPERR_64_BIT_FILE_TOO_LARGE,
+	PPERR_UNCOMPRESSED_DATA_HAS_WRONG_SIZE
 };
 
 enum
@@ -704,7 +705,7 @@ class UmFileParser
 	friend class UmFile;
 private:
 	virtual std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
-	virtual void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian ) = 0;
+	virtual void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit ) = 0;
 	virtual bool checkValidWords( __int32 firstWord, __int32 fifthWord )  { return false; }
 	virtual bool checkValidWords( __int64 firstWord, __int64 fifthWord ) { return false; }
 	template < class T >
@@ -715,7 +716,7 @@ protected:
 class PpFileParser32 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
@@ -724,7 +725,7 @@ class PpFileParser32 : public UmFileParser
 class PpFileParser64 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
@@ -733,14 +734,14 @@ class PpFileParser64 : public UmFileParser
 class FieldsFileParser32 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 };
 
 class FieldsFileParser64 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 };
 
