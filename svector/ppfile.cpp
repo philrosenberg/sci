@@ -88,43 +88,6 @@ UmFile::UmFile(std::string name)
 	m_filteredSections=m_sections;
 }
 
-/*void UmFile::readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes)
-{
-	m_fin.read((char*)record,nBytes);
-	if(m_fin.gcount()!=nBytes)
-		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
-	if(m_bigEndian)
-		swapEndian(record,nBytes/4);
-	__int32 size;
-	m_fin.read((char*)&size,sizeof(size));
-	if(m_bigEndian)
-		swapEndian(size);
-	assert(size==nBytes);
-	if(size!=nBytes)
-		throw(PPERR_RECORD_WRONG_LENGTH);
-}
-
-void UmFile::skipRecord(std::basic_istream<char>::pos_type nBytes)
-{
-	m_fin.seekg(m_fin.tellg()+nBytes);
-	__int32 size;
-	m_fin.read((char*)&size,sizeof(size));
-	if(m_bigEndian)
-		swapEndian(size);
-	assert(size==nBytes);
-	if(size!=nBytes)
-		throw(PPERR_RECORD_WRONG_LENGTH);
-}*/
-
-/*__int32 UmFile::getNextRecordSize()
-{
-	__int32 size;
-	m_fin.read((char*)&size,sizeof(size));
-	if(m_bigEndian)
-		swapEndian(size);
-	return size;
-}*/
-
 void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t outDim1, size_t outDim2)
 {
 	size_t nread=0;
