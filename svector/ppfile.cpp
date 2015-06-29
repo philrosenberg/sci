@@ -522,6 +522,72 @@ float UmFile::fromIbmFloat(void *ibmFloat)
 
 }
 
+double UmFile::fromIbmDouble(void *ibmFloat)
+{
+	unsigned __int64 fraction;
+	unsigned __int64 exponent;
+	unsigned __int64 sign;
+
+	//copy the data into an int32, ensuring no implicit conversion
+	//by using pointers
+	unsigned __int64 from=*((unsigned __int64*)ibmFloat);
+
+	//grab the sign exponent and fraction, all right aligned
+	sign = (from >> 63);
+	exponent = (from << 1) >> 57;
+	fraction = (from << 8) >> 8;
+
+	//convert exponent from base 16 with offset of 64 to base 2 with offset 127
+	//exp=(exp-64)*4+127; The following is expanded and faster
+	exponent = (exponent<<2)-129;
+
+	//for ieee we need to trim off the leading 1 of the fraction
+	//so shift it up to 3 bits (there shouldn't be more than three
+	//leading zeros in an IBM float) decrementing the exponent by one each time
+	//note we need the zero check to avoid infinite loop.
+	if(fraction!=0)
+	{
+		while(! (0x0100000000000000 & fraction) )
+		{
+			fraction <<= 1;
+			--exponent;
+		}
+	}
+	fraction &= 0x00ffffffffffffff;
+
+	//check the exponent hasn't gone crazy and check we can actually fit
+	//this value into an ieee float
+	//cast it to signed to check easier
+	__int64 signedExponent=exponent;
+	if(signedExponent>255)
+	{
+		if(sign==0)
+			return std::numeric_limits<float>::infinity();
+		else
+			return -std::numeric_limits<float>::infinity();
+	}
+	else if (signedExponent < -24)
+		return 0.0;
+	else if (signedExponent < 0)
+	{
+		//this is a denormal number
+		//so it lies somewhere between 0.0 and the smallest number
+		// that can be represented by val=1.nnn*exp(pow), where 
+		//1.nnn is a binary number
+		//we need to stick out leading 1 back on and turn it into
+		//just a fraction
+		fraction = (fraction |=0x0100000000000000) >> (-signedExponent);
+		exponent=0;
+	}
+
+	//stick it together
+	double result;
+	unsigned __int64 *pResult=(unsigned __int64*)&result;
+	*pResult=(sign << 63) | ( exponent << 55) | (fraction >> 1);
+	return result;
+
+}
+
 void UmFile::sortHeaders()
 {
 	std::sort(m_filteredSections.begin(),m_filteredSections.end());
