@@ -264,10 +264,12 @@ void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> 
 
 	if(numberFormat==1)
 		throw(PPERR_IBM_FORMAT_NOT_SUPPORTED);
-	if(numberFormat==1)
+	if(numberFormat==2)
 		throw(PPERR_CRAY_FORMAT_NOT_SUPPORTED);
-	if(numberFormat==1)
+	if(numberFormat==4)
 		throw(PPERR_GRIB_FORMAT_NOT_SUPPORTED);
+	if(numberFormat==5)
+		throw(PPERR_VAX_FORMAT_NOT_SUPPORTED);
 
 	if(packing==0)
 	{
