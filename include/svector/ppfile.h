@@ -489,6 +489,7 @@ public:
 		std::streamoff m_dataStart;
 		size_t m_dataBytes;
 		UmFile *m_parent;
+		size_t m_index;
 		template <class T>
 		T at(size_t index) const
 		{

@@ -85,6 +85,10 @@ UmFile::UmFile(std::string name)
 
 	m_sections = m_umFileParser->parse( &m_fin, this, m_bigEndian );
 
+	//set all the indices
+	for(size_t i=0; i<m_sections.size(); ++i)
+		m_sections[i].m_index = i;
+
 	m_filteredSections=m_sections;
 }
 
@@ -569,6 +573,14 @@ double UmFile::fromIbmDouble(void *ibmFloat)
 void UmFile::sortHeaders()
 {
 	std::sort(m_filteredSections.begin(),m_filteredSections.end());
+}
+
+std::vector<size_t> UmFile::getFilteredSectionIndices()
+{
+	std::vector<size_t> indices(m_filteredSections.size());
+	for(size_t i=0; i<m_filteredSections.size(); ++i)
+		indices[i]=m_filteredSections[i].m_index;
+	return indices;
 }
 
 void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
