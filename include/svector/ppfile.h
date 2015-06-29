@@ -749,10 +749,21 @@ UmFile& UmFile::operator > ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) > rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) > rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<__int64>(m_comparator) > rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
@@ -763,10 +774,21 @@ UmFile& UmFile::operator >= ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) >= rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) >= rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<__int64>(m_comparator) >= rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
@@ -777,10 +799,21 @@ UmFile& UmFile::operator < ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) < rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) < rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<__int64>(m_comparator) < rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
@@ -791,10 +824,21 @@ UmFile& UmFile::operator <= ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) <= rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) <= rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<_int64>(m_comparator) <= rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
@@ -805,10 +849,21 @@ UmFile& UmFile::operator == ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) == rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) == rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<__int64>(m_comparator) == rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
@@ -819,10 +874,21 @@ UmFile& UmFile::operator != ( T rhs )
 {
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
-		if(!(m_filteredSections[i].at<T>(m_comparator) != rhs))
+		if( m_comparator > 44 )
 		{
-			m_filteredSections.erase(m_filteredSections.begin()+i);
-			--i;
+			if(!(m_filteredSections[i].at<double>(m_comparator) != rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
+		}
+		else
+		{
+			if(!(m_filteredSections[i].at<__int64>(m_comparator) != rhs))
+			{
+				m_filteredSections.erase(m_filteredSections.begin()+i);
+				--i;
+			}
 		}
 	}
 	return *this;
