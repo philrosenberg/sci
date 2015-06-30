@@ -669,7 +669,7 @@ private:
 	std::shared_ptr<UmFileParser> m_umFileParser;
 	std::fstream m_fin;
 	FixedHeader64 m_fixedHeader;
-	bool m_bigEndian;
+	bool m_swapEndian;
 	std::vector<Section64> m_sections;
 	std::vector<Section64> m_filteredSections;
 	size_t m_comparator;
@@ -693,7 +693,7 @@ private:
 //It provides two virtual functions which child classes must overload.
 //The first is parse. This must read from the fstream given starting at its current get pointer
 //and parse the pp headers in the file. The pp headers are then returned as a vector. If 
-//bigEndian is true then the endianness of the read words must be reversed. In addition to the 
+//swapEndian is true then the endianness of the read words must be reversed. In addition to the 
 //pp file headers, the Sections returned must have the location and size of each pp data section
 //set and it must have the parent set to the parent passed in.
 //The checkValidWords function must check the words passed in and if these are potentially valid for
@@ -705,8 +705,8 @@ class UmFileParser
 {
 	friend class UmFile;
 private:
-	virtual std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian ) = 0;
-	virtual void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit ) = 0;
+	virtual std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian ) = 0;
+	virtual void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit ) = 0;
 	virtual bool checkValidWords( __int32 firstWord, __int32 fifthWord )  { return false; }
 	virtual bool checkValidWords( __int64 firstWord, __int64 fifthWord ) { return false; }
 	template < class T >
@@ -716,33 +716,33 @@ protected:
 
 class PpFileParser32 : public UmFileParser
 {
-	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
-	__int32 getNextRecordSize( std::fstream * fin, bool bigEndian );
-	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	__int32 getNextRecordSize( std::fstream * fin, bool swapEndian );
+	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian );
 };
 
 class PpFileParser64 : public UmFileParser
 {
-	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
-	__int64 getNextRecordSize( std::fstream * fin, bool bigEndian );
-	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian );
+	__int64 getNextRecordSize( std::fstream * fin, bool swapEndian );
+	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian );
 };
 
 class FieldsFileParser32 : public UmFileParser
 {
-	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
 	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
 };
 
 class FieldsFileParser64 : public UmFileParser
 {
-	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool bigEndian );
-	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool bigEndian, bool force32Bit );
+	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
+	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
 	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
 };
 
