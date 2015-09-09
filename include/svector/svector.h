@@ -1157,6 +1157,24 @@ namespace sci
 	}
 
 	template<class T>
+	T mean(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
+		T result=0.0;
+		T weight=0.0;
+		const T *vi=&v[0];
+		const T *vilimit=&v[0]+v.size();
+		const T *weighti=&weights[0];
+		for(; vi<vilimit; ++vi,++weighti)
+		{
+			result += *vi * *weighti;
+			weight += *weighti;
+		}
+		return result/weight;
+	}
+
+	template<class T>
 	T meanIgnoreNans(const std::vector<T> &v)
 	{
 		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
@@ -1182,6 +1200,27 @@ namespace sci
 	}
 
 	template<class T>
+	T meanIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
+		T result=0.0;
+		T weight=0.0;
+		const T *vi=&v[0];
+		const T *vilimit=&v[0]+v.size();
+		const T *weighti=&weights[0];
+		for(; vi<vilimit; ++vi,++weighti)
+		{
+			if( *vi == *vi )
+			{
+				result += *vi * *weighti;
+				weight += *weighti;
+			}
+		}
+		return result/weight;
+	}
+
+	template<class T>
 	std::vector<T> mean(const std::vector<std::vector<T>> &v)
 	{
 		if(v.size()==0) return std::vector<T>(0);
@@ -1202,6 +1241,26 @@ namespace sci
 	}
 
 	template<class T>
+	T varianceIgnoreNans(const std::vector<T> &v)
+	{
+		T meanval=sci::meanIgnoreNans(v);
+		T result(0.0);
+		const T *vi = &vi[0];
+		const T *vEnd =vi + v.size();
+		size_t count =0;
+		for(; vi != vEnd; ++vi)
+		{
+			if( *vi == *vi )
+			{
+				result+=(*vi-meanval)*(*vi-meanval);
+				++count;
+			}
+		}
+		//std::accumulate(v.begin(), v.end(),result);
+		return result/decltype( anyBaseVal(v) )( count - 1 );
+	}
+
+	template<class T>
 	T variance(const std::vector<T> &v, const T &mean)
 	{
 		T result(0.0);
@@ -1209,6 +1268,97 @@ namespace sci
 			result+=(*vi-mean)*(*vi-mean);
 		//std::accumulate(v.begin(), v.end(),result);
 		return result/decltype( anyBaseVal(v) )(v.size()-1);
+	}
+
+	template<class T>
+	T varianceIgnoreNans(const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		const T *vi = &vi[0];
+		const T *vEnd =vi + v.size();
+		size_t count =0;
+		for(; vi != vEnd; ++vi)
+		{
+			if( *vi == *vi )
+			{
+				result+=(*vi-mean)*(*vi-mean);
+				++count;
+			}
+		}
+		//std::accumulate(v.begin(), v.end(),result);
+		return result/decltype( anyBaseVal(v) )( count - 1 );
+	}
+
+	template<class T>
+	T variance(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		T meanval=sci::mean( v, weights );
+		T result = 0.0;
+		T weight = 0.0;
+		const T *vi = &v[0];
+		const T *vEnd = vi+v.size();
+		const T *weighti = & weights[0];
+		for(; vi != vEnd; ++vi, ++weighti)
+		{
+			result+=(*vi-meanval)*(*vi-meanval) * *weighti;
+			weight += *weighti;
+		}
+		return result/weight;
+	}
+
+	template<class T>
+	T varianceIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		T meanval=sci::mean( v, weights );
+		T result = 0.0;
+		T weight = 0.0;
+		const T *vi = &v[0];
+		const T *vEnd = vi+v.size();
+		const T *weighti = & weights[0];
+		for(; vi != vEnd; ++vi, ++weighti)
+		{
+			if( *vi == *vi )
+			{
+				result+=(*vi-meanval)*(*vi-meanval) * *weighti;
+				weight += *weighti;
+			}
+		}
+		return result/weight;
+	}
+
+	template<class T>
+	T variance(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
+	{
+		T result = 0.0;
+		T weight = 0.0;
+		const T *vi = &v[0];
+		const T *vEnd = vi+v.size();
+		const T *weighti = & weights[0];
+		for(; vi != vEnd; ++vi, ++weighti)
+		{
+			result+=(*vi-mean)*(*vi-mean) * *weighti;
+			weight += *weighti;
+		}
+		return result/weight;
+	}
+
+	template<class T>
+	T varianceIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
+	{
+		T result = 0.0;
+		T weight = 0.0;
+		const T *vi = &v[0];
+		const T *vEnd = vi+v.size();
+		const T *weighti = & weights[0];
+		for(; vi != vEnd; ++vi, ++weighti)
+		{
+			if( *vi ==*vi )
+			{
+				result+=(*vi-mean)*(*vi-mean) * *weighti;
+				weight += *weighti;
+			}
+		}
+		return result/weight;
 	}
 
 	template<class T>
@@ -1229,9 +1379,48 @@ namespace sci
 	}
 
 	template<class T>
+	T stdevIgnoreNans(const std::vector<T> &v)
+	{
+		T meanval=sci::meanIgnoreNans(v);
+		return sci::stdevIgnoreNans(v, meanval);
+	}
+
+	template<class T>
+	T stdev(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		T meanval=sci::mean(v, weights);
+		return sci::stdev(v, weights, meanval);
+	}
+
+	template<class T>
+	T stdevIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights)
+	{
+		T meanval=sci::meanIgnoreNans(v, weights);
+		return sci::stdevIgnoreNans(v, weights, meanval);
+	}
+
+	template<class T>
 	T stdev(const std::vector<T> &v, const T &mean)
 	{
 		return std::sqrt( variance( v, mean ) );
+	}
+
+	template<class T>
+	T stdevIgnoreNans(const std::vector<T> &v, const T &mean)
+	{
+		return std::sqrt( varianceIgnoreNans( v, mean ) );
+	}
+
+	template<class T>
+	T stdev(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
+	{
+		return std::sqrt( variance( v, weights, mean ) );
+	}
+
+	template<class T>
+	T stdevIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
+	{
+		return std::sqrt( varianceIgnoreNans( v, weights, mean ) );
 	}
 
 	template<class T>
