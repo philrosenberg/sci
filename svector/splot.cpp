@@ -2434,10 +2434,18 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				//pl->errx(m_ys[i].size(),xminuserr,xpluserr,y);
 				for(size_t j=0; j<m_ys[i].size(); ++j)
 				{
-					bool minusokay=xminuserr[j]==xminuserr[j] && -xminuserr[j]!=std::numeric_limits<double>::infinity() && xminuserr[j]!=-std::numeric_limits<double>::infinity();
-					bool plusokay=xpluserr[j]==xpluserr[j] && -xpluserr[j]!=std::numeric_limits<double>::infinity() && xpluserr[j]!=-std::numeric_limits<double>::infinity();
+					double xLowErr = xminuserr[j];
+					double xHighErr = xpluserr[j];
+					if( xLowErr == -std::numeric_limits<double>::infinity() || ( m_xaxis.m_logarithmic && m_xminuserrs[i][j]<=0.0 ) )
+						xLowErr = xmin - (xmax - xmin);
+					if( xHighErr == std::numeric_limits<double>::infinity() )
+						xHighErr = xmax + (xmax - xmin);
+
+					bool minusokay=xLowErr==xLowErr;
+					bool plusokay=xHighErr==xHighErr;
 					bool yokay=y[j]==y[j] && -y[j]!=std::numeric_limits<double>::infinity() && y[j]!=-std::numeric_limits<double>::infinity();
-					if(minusokay&&plusokay&&yokay) pl->errx(1,xminuserr+j,xpluserr+j,y+j);
+					if(minusokay&&plusokay&&yokay)
+						pl->errx(1,&xLowErr,&xHighErr,y+j);
 				}
 
 			}
@@ -2459,10 +2467,16 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				//pl->erry(m_xs[i].size(),x,yminuserr,ypluserr);
 				for(size_t j=0; j<m_xs[i].size(); ++j)
 				{
-					bool minusokay=yminuserr[j]==yminuserr[j] && -yminuserr[j]!=std::numeric_limits<double>::infinity() && yminuserr[j]!=-std::numeric_limits<double>::infinity();
-					bool plusokay=ypluserr[j]==ypluserr[j] && -ypluserr[j]!=std::numeric_limits<double>::infinity() && ypluserr[j]!=-std::numeric_limits<double>::infinity();
+					double yLowErr = yminuserr[j];
+					double yHighErr = ypluserr[j];
+					if( yLowErr == -std::numeric_limits<double>::infinity() || ( m_yaxis.m_logarithmic && m_yminuserrs[i][j]<=0.0 ) )
+						yLowErr = ymin - (ymax - ymin);
+					if( yHighErr == std::numeric_limits<double>::infinity() )
+						yHighErr = ymax + (ymax - ymin);
+					bool minusokay=yLowErr==yLowErr;
+					bool plusokay=yHighErr==yHighErr;
 					bool xokay=x[j]==x[j] && -x[j]!=std::numeric_limits<double>::infinity() && x[j]!=-std::numeric_limits<double>::infinity();
-					if(minusokay&&plusokay&&xokay) pl->erry(1,x+j,yminuserr+j,ypluserr+j);
+					if(minusokay&&plusokay&&xokay) pl->erry(1,x+j,&yLowErr,&yHighErr);
 				}
 			}
 			//points
