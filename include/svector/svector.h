@@ -2220,29 +2220,29 @@ namespace sci
 			T x1=*xi;
 			T y0=*(yi-1);
 			T y1=*yi;
-			if(x1 && x0 < lowlimit)
+			if(x1 && x0 < minx)
 				continue;
-			if(x1 && x0 > highlimit)
+			if(x1 && x0 > maxx)
 				continue;
-			if(x0<lowlimit)
+			if(x0<minx)
 			{
-				y0=sci::linearinterpolate(lowlimit,x0,x1,y0,y1);
-				x0=lowlimit;
+				y0=sci::linearinterpolate(minx,x0,x1,y0,y1);
+				x0=minx;
 			}
-			if(x1<lowlimit)
+			if(x1<minx)
 			{
-				y1=sci::linearinterpolate(lowlimit,x0,x1,y0,y1);
-				x1=lowlimit;
+				y1=sci::linearinterpolate(minx,x0,x1,y0,y1);
+				x1=minx;
 			}
-			if(x0>highlimit)
+			if(x0>maxx)
 			{
-				y0=sci::linearinterpolate(highlimit,x0,x1,y0,y1);
-				x0=highlimit;
+				y0=sci::linearinterpolate(maxx,x0,x1,y0,y1);
+				x0=maxx;
 			}
-			if(x1>highlimit)
+			if(x1>maxx)
 			{
-				y1=sci::linearinterpolate(highlimit,x0,x1,y0,y1);
-				x1=highlimit;
+				y1=sci::linearinterpolate(maxx,x0,x1,y0,y1);
+				x1=maxx;
 			}
 
 			result+=(y0+y1)*(x1-x0);
