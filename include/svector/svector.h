@@ -2188,25 +2188,36 @@ namespace sci
 		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
 		T result=0;
 		std::vector<T>::const_iterator yi=y.begin()+1;
-		T highlimit=std::max(maxx,minx);
-		T lowlimit=std::min(maxx,minx);
+		bool swappedLimits = false;
+		if( maxx < minx )
+		{
+			std::swap( minx, maxx );
+			swappedLimits = true;
+		}
 		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi,++yi)
 		{
 			T x0=*(xi-1);
 			T x1=*xi;
 			T y0=*(yi-1);
 			T y1=*yi;
-			if(x0>x1)
-			{
-				std::swap(x0,x1);
-				std::swap(y0,y1);
-			}
-			if(x1<lowlimit) continue;
-			if(x0>highlimit) continue;
+			if(x1 && x0 < lowlimit)
+				continue;
+			if(x1 && x0 > highlimit)
+				continue;
 			if(x0<lowlimit)
 			{
 				y0=sci::linearinterpolate(lowlimit,x0,x1,y0,y1);
 				x0=lowlimit;
+			}
+			if(x1<lowlimit)
+			{
+				y1=sci::linearinterpolate(lowlimit,x0,x1,y0,y1);
+				x1=lowlimit;
+			}
+			if(x0>highlimit)
+			{
+				y0=sci::linearinterpolate(highlimit,x0,x1,y0,y1);
+				x0=highlimit;
 			}
 			if(x1>highlimit)
 			{
@@ -2217,7 +2228,8 @@ namespace sci
 			result+=(y0+y1)*(x1-x0);
 		}
 		result*=0.5;
-		if(maxx<minx) result*=-1.0;
+		if(swappedLimits)
+			result*=-1.0;
 		return result;
 	}
 
