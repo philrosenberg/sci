@@ -2190,7 +2190,7 @@ namespace sci
 		std::vector<T>::const_iterator yi=y.begin()+1;
 		T highlimit=std::max(maxx,minx);
 		T lowlimit=std::min(maxx,minx);
-		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
+		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi,++yi)
 		{
 			T x0=*(xi-1);
 			T x1=*xi;
@@ -2215,7 +2215,6 @@ namespace sci
 			}
 
 			result+=(y0+y1)*(x1-x0);
-			++yi;
 		}
 		result*=0.5;
 		if(maxx<minx) result*=-1.0;
