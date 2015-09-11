@@ -1232,6 +1232,8 @@ namespace sci
 	template<class T>
 	T variance(const std::vector<T> &v)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T meanval=sci::mean(v);
 		T result(0.0);
 		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
@@ -1243,6 +1245,8 @@ namespace sci
 	template<class T>
 	T varianceIgnoreNans(const std::vector<T> &v)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T meanval=sci::meanIgnoreNans(v);
 		T result(0.0);
 		const T *vi = &vi[0];
@@ -1263,6 +1267,8 @@ namespace sci
 	template<class T>
 	T variance(const std::vector<T> &v, const T &mean)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T result(0.0);
 		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=(*vi-mean)*(*vi-mean);
@@ -1273,6 +1279,8 @@ namespace sci
 	template<class T>
 	T varianceIgnoreNans(const std::vector<T> &v, const T &mean)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T result(0.0);
 		const T *vi = &vi[0];
 		const T *vEnd =vi + v.size();
@@ -1292,6 +1300,8 @@ namespace sci
 	template<class T>
 	T variance(const std::vector<T> &v, const std::vector<T> &weights)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T meanval=sci::mean( v, weights );
 		T result = 0.0;
 		T weight = 0.0;
@@ -1309,6 +1319,8 @@ namespace sci
 	template<class T>
 	T varianceIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T meanval=sci::mean( v, weights );
 		T result = 0.0;
 		T weight = 0.0;
@@ -1329,6 +1341,8 @@ namespace sci
 	template<class T>
 	T variance(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T result = 0.0;
 		T weight = 0.0;
 		const T *vi = &v[0];
@@ -1345,6 +1359,8 @@ namespace sci
 	template<class T>
 	T varianceIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights, const T &mean)
 	{
+		if(v.size()==0) 
+			return std::numeric_limits<T>::quiet_NaN();
 		T result = 0.0;
 		T weight = 0.0;
 		const T *vi = &v[0];
