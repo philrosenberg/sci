@@ -1302,6 +1302,7 @@ namespace sci
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
 		T meanval=sci::mean( v, weights );
 		T result = 0.0;
 		T weight = 0.0;
@@ -1321,6 +1322,7 @@ namespace sci
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
 		T meanval=sci::mean( v, weights );
 		T result = 0.0;
 		T weight = 0.0;
@@ -1343,6 +1345,7 @@ namespace sci
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
 		T result = 0.0;
 		T weight = 0.0;
 		const T *vi = &v[0];
@@ -1361,6 +1364,7 @@ namespace sci
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
+		sci::assertThrow( v.size() == weights.size(), sci::err() );
 		T result = 0.0;
 		T weight = 0.0;
 		const T *vi = &v[0];
