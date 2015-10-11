@@ -116,7 +116,7 @@
     <ClInclude Include="..\include\svector\svi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="plotdata.h">
+    <ClInclude Include="..\include\svector\plotdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -314,11 +314,11 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\dep\math.h" />
     <ClInclude Include="..\include\svector\dep\operators.h" />
+    <ClInclude Include="..\include\svector\plotdata.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
     <ClInclude Include="..\include\svector\svi.h" />
-    <ClInclude Include="plotdata.h" />
     <ClInclude Include="sframe.h" />
     <ClInclude Include="..\include\svector\splot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
