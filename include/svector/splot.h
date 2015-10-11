@@ -302,6 +302,10 @@ private:
 	unsigned int m_maxndigits; //maximum number of digits before going to exponents, set to zero for auto
 };
 
+//have to #include this down here as classes in here need some of the declarations from
+//above, but they don't get included because of the #ifdef protection
+#include"plotdata.h"
+
 class splot
 {
 	friend class splotwindow;
@@ -456,6 +460,9 @@ public:
 	//grid plot with 2d x and y
 	void addShadedGrid(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, splotTransformer *transformer=NULL);
 	
+	//add a DrawableItem
+	void addData( std::shared_ptr<DrawableItem> drawableItem );
+
 	void addmap(std::string map="globe", wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, std::string linestyle="", splotTransformer *transformer=NULL);
 	void addImage(std::string picture, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0=0, int cropY0=0, int cropWidth=-1, int cropHeight=-1, double brightnessCorrection=0.0, double contrastCorrection=0.0);
 	void addText(std::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const std::string &font="", uint32_t style=0, wxColour colour=wxColour(0,0,0));
@@ -496,6 +503,8 @@ private:
 	std::vector<std::string> m_textFont;
 	std::vector<PLUNICODE> m_textFci;
 	std::vector<double> m_textSize;
+	//DrawableItems
+	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
 
 
 	void incrementdatasize();

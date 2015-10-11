@@ -1467,6 +1467,17 @@ void splot2d::addmap(std::string map, wxColour linecolour, double linewidth, std
 	m_haschanged=true;
 }
 
+
+//add a DrawableItem
+void splot2d::addData( std::shared_ptr<DrawableItem> drawableItem )
+{
+	//increase the size of all data
+	incrementdatasize();
+	m_drawableItems.back() = drawableItem;
+	calculateautolimits();
+	m_haschanged=true;
+}
+
 void splot2d::addImage(std::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
 {
 	incrementdatasize();
@@ -1830,6 +1841,9 @@ void splot2d::incrementdatasize()
 	m_xerrthickness.push_back(1);
 	m_yerrthickness.push_back(1);
 
+	//the DrawableItems
+	m_drawableItems.push_back( nullptr );
+
 	//now do the splot variables
 	splot::incrementdatasize();
 }
@@ -2165,8 +2179,13 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		//add the user provided transform
 		PlTempTransformer tempTransformer( pl, (m_transformers[i] ? splotTransform : NULL) , (void*)(m_transformers[i].get()) );
 
+		//drawableItems
+		if( m_drawableItems[i] )
+		{
+			m_drawableItems[i]->draw( pl );
+		}
 		//vectors/arrows
-		if(m_us[i].size()>0 && m_vs[i].size()>0)
+		else if(m_us[i].size()>0 && m_vs[i].size()>0)
 		{
 			pl->scol0(1,m_linecolour[i].Red(),m_linecolour[i].Green(),m_linecolour[i].Blue());
 			pl->col0(1);
