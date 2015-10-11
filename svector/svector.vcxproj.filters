@@ -69,6 +69,9 @@
     <ClCompile Include="memorymap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="plotdata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\svector\dep\math.h">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\svi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plotdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
