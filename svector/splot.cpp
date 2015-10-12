@@ -1850,13 +1850,70 @@ void splot2d::incrementdatasize()
 
 void splot2d::calculateautolimits()
 {
+	//first get the limits from m_drawableItems
+	double xMin = std::numeric_limits<double>::infinity();
+	double yMin = std::numeric_limits<double>::infinity();
+	double xMax = -std::numeric_limits<double>::infinity();
+	double yMax = -std::numeric_limits<double>::infinity();
+	for( size_t i=0; i< m_drawableItems.size(); ++i)
+	{
+		if( m_drawableItems[i] )
+		{
+			double xMinLocal, xMaxLocal, yMinLocal, yMaxLocal;
+			double xMinLogLocal, xMaxLogLocal, yMinLogLocal, yMaxLogLocal;
+			m_drawableItems[i]->getLimits(xMinLocal, xMaxLocal, yMinLocal, yMaxLocal );
+			m_drawableItems[i]->getLogLimits(xMinLogLocal, xMaxLogLocal, yMinLogLocal, yMaxLogLocal );
+			if( m_xaxis.m_logarithmic )
+			{
+				if( xMin > xMinLogLocal )
+					xMin = xMinLogLocal;
+				if( xMax < xMaxLogLocal )
+					xMax = xMaxLogLocal;
+			}
+			else
+			{
+				if( xMin > xMinLocal )
+					xMin = xMinLocal;
+				if( xMax < xMaxLocal )
+					xMax = xMaxLocal;
+			}
+			if( m_yaxis.m_logarithmic )
+			{
+				if( yMin > yMinLogLocal )
+					yMin = yMinLogLocal;
+				if( yMax < yMaxLogLocal )
+					yMax = yMaxLogLocal;
+			}
+			else
+			{
+				if( yMin > yMinLocal )
+					yMin = yMinLocal;
+				if( yMax < yMaxLocal )
+					yMax = yMaxLocal;
+			}
+		}
+	}
+	
+	//unlog the limits if needed
+	if( m_xaxis.m_logarithmic )
+	{
+		xMin = std::pow( 10.0, xMin );
+		xMax = std::pow( 10.0, xMax );
+	}
+	//unlog the limits if needed
+	if( m_yaxis.m_logarithmic )
+	{
+		yMin = std::pow( 10.0, yMin );
+		yMax = std::pow( 10.0, yMax );
+	}
+
 	if(m_xautolimits)
 	{
 		std::vector<double> intersectpoints;
 		if(!m_yautointersect) intersectpoints.push_back(m_yaxis.m_intersect);
 		bool addpadding=true;
 		for(size_t i=0; i<m_structzs.size(); ++i) addpadding=addpadding&&(m_structzs[i].size()==0);
-		splot::calculateautolimits(m_xaxis,m_xs,m_xpluserrs,m_xminuserrs,m_xs2d,addpadding,intersectpoints);
+		splot::calculateautolimits(m_xaxis,m_xs,m_xpluserrs,m_xminuserrs,m_xs2d,addpadding,intersectpoints, xMin, xMax);
 	}
 	if(m_yautolimits)
 	{
@@ -1864,7 +1921,7 @@ void splot2d::calculateautolimits()
 		if(!m_xautointersect) intersectpoints.push_back(m_xaxis.m_intersect);
 		bool addpadding=true;
 		for(size_t i=0; i<m_structzs.size(); ++i) addpadding=addpadding&&(m_structzs[i].size()==0);
-		splot::calculateautolimits(m_yaxis,m_ys,m_ypluserrs,m_yminuserrs,m_ys2d,addpadding,intersectpoints);
+		splot::calculateautolimits(m_yaxis,m_ys,m_ypluserrs,m_yminuserrs,m_ys2d,addpadding,intersectpoints, yMin, yMax);
 	}
 	if(m_xautointersect) m_xaxis.m_intersect=m_yaxis.m_min;
 	if(m_yautointersect) m_yaxis.m_intersect=m_xaxis.m_min;
@@ -1931,7 +1988,7 @@ void splot2d::calculateautolimits()
 	}
 }
 
-void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints)
+void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints, double existingMin, double existingMax)
 {
 	//check there is some data to search for
 	if(data1d.size()==0 &&data2d.size()==0)
@@ -1972,6 +2029,13 @@ void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<d
 			axis.m_min-=extra;
 		}
 	}
+
+	//apply the existing limit passed in
+	if( axis.m_max < existingMax )
+		axis.m_max = existingMax;
+	if( axis.m_min > existingMin )
+		axis.m_min = existingMin;
+
 	
 	for(size_t i=0; i<intersectpoints.size(); ++i)
 	{
