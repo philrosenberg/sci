@@ -179,12 +179,28 @@ void PlotData1d::getLimits(  const std::vector<double> xs, const std::vector<dou
 
 void PlotData1d::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
 {
-	getLimits( m_xData, m_yData, xMin, xMax, yMin, yMax, m_padLimitsAmount );
+	if( ! m_calculatedLimits )
+	{
+		getLimits( m_xData, m_yData, m_xMin, m_xMax, m_yMin, m_yMax, m_padLimitsAmount );
+		m_calculatedLimits = true;
+	}
+	xMin = m_xMin;
+	xMax = m_xMax;
+	yMin = m_yMin;
+	yMax = m_yMax;
 }
 
 void PlotData1d::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
 {
-	getLimits( m_xDataLogged, m_yDataLogged, xMin, xMax, yMin, yMax, m_padLimitsAmount );
+	if( !m_calculatedLogLimits )
+	{
+		getLimits( m_xDataLogged, m_yDataLogged, xMin, xMax, yMin, yMax, m_padLimitsAmount );
+		m_calculatedLogLimits = true;
+	}
+	xMin = m_xMinLogged;
+	xMax = m_xMaxLogged;
+	yMin = m_yMinLogged;
+	yMax = m_yMaxLogged;
 }
 
 PlotData1d::PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
@@ -196,6 +212,8 @@ PlotData1d::PlotData1d( const std::vector<double> &xs, const std::vector<double>
 	m_xDataLogged = sci::log10( xs );
 	m_yDataLogged = sci::log10( ys );
 	m_padLimitsAmount = autoLimitsPadAmount;
+	m_calculatedLimits = false;
+	m_calculatedLogLimits = false;
 }
 
 PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )

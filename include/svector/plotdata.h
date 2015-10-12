@@ -55,6 +55,16 @@ protected:
 private:
 	double m_padLimitsAmount;
 	static void getLimits( const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount );
+	mutable double m_xMin;
+	mutable double m_xMax;
+	mutable double m_yMin;
+	mutable double m_yMax;
+	mutable double m_xMinLogged;
+	mutable double m_xMaxLogged;
+	mutable double m_yMinLogged;
+	mutable double m_yMaxLogged;
+	mutable bool m_calculatedLimits;
+	mutable bool m_calculatedLogLimits;
 };
 
 class PlotData2dStructured : public PlotData1d
