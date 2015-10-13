@@ -24,6 +24,22 @@ private:
 	std::vector<PLINT> m_spaces;
 };
 
+class Symbol
+{
+public:
+	Symbol ( std::string symbol = sym::filledCircle, double size = 1.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	std::string getSymbol() const;
+	double getSize() const;
+	rgbcolour getColour() const;
+	PLUNICODE getFci() const;
+	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
+private:
+	std::string m_symbol;
+	double m_size;
+	rgbcolour m_colour;
+	PLUNICODE m_fci;
+};
+
 
 class DrawableItem
 {
@@ -80,6 +96,15 @@ public:
 	LineData( const std::vector<double> &x, const std::vector<double> &y, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	LineStyle m_lineStyle;
+	void plotData( plstream *pl, bool xLog, bool yLog );
+};
+
+class PointData : public PlotData1d
+{
+public:
+	PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
+private:
+	Symbol m_symbol;
 	void plotData( plstream *pl, bool xLog, bool yLog );
 };
 

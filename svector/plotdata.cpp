@@ -122,6 +122,36 @@ void LineStyle::parseLineStyle(const std::string &pattern, std::vector<PLINT> &m
 	}
 }
 
+Symbol::Symbol( std::string symbol, double size, rgbcolour colour )
+{
+	m_symbol = symbol;
+	m_size = size;
+	m_colour = colour;
+}
+
+void Symbol::setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const
+{
+	pl->sfci( m_fci );
+	//pl->sfontf(m_pointfont[i].mb_str());
+	pl->schr( m_size, 1.0 );
+	pl->scol0a( colourIndex, m_colour.r(), m_colour.g(), m_colour.b(), m_colour.a() );
+	pl->col0( colourIndex );
+}
+
+
+std::string Symbol::getSymbol() const
+{
+	return m_symbol;
+}
+double Symbol::getSize() const
+{
+	return m_size;
+}
+rgbcolour Symbol::getColour() const
+{
+	return m_colour;
+}
+
 DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )
 	:m_transformer( transformer )
 {
@@ -231,9 +261,6 @@ PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const
 LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
 	: PlotData1d( xs, ys, transformer ), m_lineStyle( lineStyle )
 {
-	m_xData = xs;
-	m_yData = ys;
-	m_transformer = transformer;
 }
 void LineData::plotData( plstream *pl, bool xLog, bool yLog )
 {
@@ -243,4 +270,18 @@ void LineData::plotData( plstream *pl, bool xLog, bool yLog )
 	
 	pl->line( m_xData.size(), x, y );
 	m_lineStyle.resetLineStyle( pl, 1 );
+}
+
+PointData::PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
+	: PlotData1d( x, y, transformer ), m_symbol( symbol )
+{
+}
+void PointData::plotData( plstream *pl, bool xLog, bool yLog )
+{
+	std::string symbol = m_symbol.getSymbol();
+	double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	if( symbol.length() > 0)
+		//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
+		pl->string(m_xData.size(),x,y,symbol.c_str());
 }
