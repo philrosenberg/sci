@@ -2031,9 +2031,9 @@ void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<d
 	}
 
 	//apply the existing limit passed in
-	if( axis.m_max < existingMax )
+	if( axis.m_max < existingMax || axis.m_max != axis.m_max )
 		axis.m_max = existingMax;
-	if( axis.m_min > existingMin )
+	if( axis.m_min > existingMin || axis.m_min != axis.m_min )
 		axis.m_min = existingMin;
 
 	

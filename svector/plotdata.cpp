@@ -127,18 +127,18 @@ DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )
 {
 }
 
-void DrawableItem::draw( plstream *pl )
+void DrawableItem::draw( plstream *pl, bool xLog, bool yLog )
 {
 	pl->stransform( (m_transformer ? splotTransform : NULL) , (void*)( m_transformer.get() ) );
-	plotData( pl );
+	plotData( pl, xLog, yLog );
 }
 
 void PlotData1d::getLimits(  const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
 {
 	xMin = std::numeric_limits<double>::max();
 	yMin = std::numeric_limits<double>::max();
-	xMax = -xMax;
-	yMax = -yMax;
+	xMax = -xMin;
+	yMax = -yMin;
 	
 	if( xs.size() > 0 )
 	{
@@ -194,7 +194,7 @@ void PlotData1d::getLogLimits( double &xMin, double &xMax, double &yMin, double 
 {
 	if( !m_calculatedLogLimits )
 	{
-		getLimits( m_xDataLogged, m_yDataLogged, xMin, xMax, yMin, yMax, m_padLimitsAmount );
+		getLimits( m_xDataLogged, m_yDataLogged, m_xMinLogged, m_xMaxLogged, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount );
 		m_calculatedLogLimits = true;
 	}
 	xMin = m_xMinLogged;
