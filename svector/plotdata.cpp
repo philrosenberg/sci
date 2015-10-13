@@ -235,9 +235,12 @@ LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys
 	m_yData = ys;
 	m_transformer = transformer;
 }
-void LineData::plotData( plstream *pl )
+void LineData::plotData( plstream *pl, bool xLog, bool yLog )
 {
 	m_lineStyle.setupLineStyle( pl, 1, m_scale );
-	pl->line( m_xData.size(), &m_xData[0], &m_yData[0] );
+	double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	
+	pl->line( m_xData.size(), x, y );
 	m_lineStyle.resetLineStyle( pl, 1 );
 }

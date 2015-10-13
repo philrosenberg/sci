@@ -2246,7 +2246,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		//drawableItems
 		if( m_drawableItems[i] )
 		{
-			m_drawableItems[i]->draw( pl );
+			m_drawableItems[i]->draw( pl, m_xaxis.m_logarithmic, m_yaxis.m_logarithmic );
 		}
 		//vectors/arrows
 		else if(m_us[i].size()>0 && m_vs[i].size()>0)

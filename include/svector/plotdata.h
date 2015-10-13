@@ -29,7 +29,7 @@ class DrawableItem
 {
 public:
 	DrawableItem ( std::shared_ptr<splotTransformer> transformer );
-	void draw( plstream *pl );
+	void draw( plstream *pl, bool xLog, bool yLog );
 	void setScale( double scale );
 	//virtual void plot( splot3d *targetPlot ) = 0;
 	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const = 0;
@@ -38,7 +38,7 @@ protected:
 	std::shared_ptr<splotTransformer> m_transformer;
 	double m_scale;
 private:
-	virtual void plotData( plstream *pl ) = 0;
+	virtual void plotData( plstream *pl, bool xLog, bool yLog ) = 0;
 };
 
 class PlotData1d : public DrawableItem
@@ -80,7 +80,7 @@ public:
 	LineData( const std::vector<double> &x, const std::vector<double> &y, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	LineStyle m_lineStyle;
-	void plotData( plstream *pl );
+	void plotData( plstream *pl, bool xLog, bool yLog );
 };
 
 
