@@ -47,7 +47,7 @@ void LineStyle::setupLineStyle( plstream *pl, PLINT colourIndex, double scale )
 void LineStyle::resetLineStyle( plstream *pl, PLINT colourIndex )
 {
 	pl->scol0a( colourIndex, 0, 0, 0, 1.0 );
-	pl->styl(0,NULL, NULL);
+	pl->styl( 0, NULL, NULL );
 }
 
 //Converts a series of characters into dots/dashes and spaces for use with Plplot. Plplot works with micrometres.
