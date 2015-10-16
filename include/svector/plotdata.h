@@ -101,6 +101,20 @@ private:
 	splotsizescale m_sizeScale;
 };
 
+class FillStyle
+{
+public:
+	FillStyle( rgbcolour colour );
+	FillStyle( rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), LineStyle lineStyle = LineStyle(), double lineSpacing = 0.0 );
+	void setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const;
+	rgbcolour getColour() const;
+
+private:
+	rgbcolour m_colour;
+	LineStyle m_lineStyle;
+	double m_lineSpacing;
+};
+
 
 class DrawableItem
 {
@@ -121,8 +135,8 @@ private:
 class PlotData1d : public DrawableItem
 {
 public:
-	void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
-	void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+	virtual void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
 protected:
 	PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
 	std::vector<double> m_xData;
@@ -246,7 +260,20 @@ private:
 	LineStyle m_style;
 };
 
-
+class VerticalBars : public PlotData2dLinear
+{
+public:
+	VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+	virtual void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+private:
+	FillStyle m_fillStyle;
+	LineStyle m_lineStyle;
+	double m_zeroLine;
+	double m_zeroLineLogged;
+	double m_padLimitsAmount;
+};
 
 
 #endif

@@ -541,3 +541,98 @@ void VerticalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 	pl->erry( m_xData.size(), x, yMinusErrors, yPlusErrors );
 	m_style.resetLineStyle( pl, 1 );
 }
+
+VerticalBars::VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+	:PlotData2dLinear( xs - 0.5 * widths, ys, xs  + 0.5 * widths, transformer, autoLimitsPadAmount )
+{
+	m_lineStyle = lineStyle;
+	m_fillStyle = fillStyle;
+	m_zeroLine = zeroLine;
+	m_zeroLineLogged = zeroLine > 0.0 ? std::log( m_zeroLine ) : std::numeric_limits<double>::quiet_NaN();
+	m_padLimitsAmount = m_padLimitsAmount;
+}
+void VerticalBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+{
+	double x[4];
+	double y[4];
+	for(size_t i=0; i<m_xData.size(); ++i)
+	{
+		if( xLog )
+		{
+			x[0] = x[1] = m_xDataLogged[i];
+			x[2] = x[3] = m_zDataLogged[i];
+		}
+		else
+		{
+			x[0] = x[1] = m_xData[i];
+			x[2] = x[3] = m_zData[i];
+		}
+		if( yLog )
+		{
+			y[0] = y[3] = m_zeroLineLogged;
+			y[1] = y[2] = m_yDataLogged[i];
+		}
+		else
+		{
+			y[0] = y[3] = m_zeroLine;
+			y[1] = y[2] = m_yData[i];
+		}
+		
+
+		//do fill first
+		m_fillStyle.setupFillStyle( pl, 1, 1.0 );
+		pl->fill(4,&x[0],&y[0]);
+		
+		m_lineStyle.setupLineStyle( pl, 1, 1.0 );
+		pl->line( 4, x, y );
+	}
+}
+
+void VerticalBars::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
+{
+	xMin = sci::min<double>( m_xData );
+	xMax = sci::max<double>( m_zData );
+	yMin = sci::min<double>( m_yData );
+	yMax = sci::max<double>( m_yData );
+
+	double xRange = xMax - xMin;
+	xMin -= xRange * m_padLimitsAmount;
+	xMax += xRange * m_padLimitsAmount;
+
+	if( yMin >= m_zeroLine )
+	{
+		yMin = m_zeroLine;
+		double yRange = yMax - yMin;
+		yMax += yRange * m_padLimitsAmount;
+	}
+	else
+	{
+		double yRange = yMax - yMin;
+		yMin -= yRange * m_padLimitsAmount;
+		yMax += yRange * m_padLimitsAmount;
+	}
+}
+void VerticalBars::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
+{
+	xMin = sci::min<double>( m_xDataLogged );
+	xMax = sci::max<double>( m_zDataLogged );
+	yMin = sci::min<double>( m_yDataLogged );
+	yMax = sci::max<double>( m_yDataLogged );
+
+	double xRange = xMax - xMin;
+	xMin -= xRange * m_padLimitsAmount;
+	xMax += xRange * m_padLimitsAmount;
+
+	if( yMin >= m_zeroLineLogged )
+	{
+		yMin = m_zeroLineLogged;
+		double yRange = yMax - yMin;
+		yMax += yRange * m_padLimitsAmount;
+	}
+	else
+	{
+		double yRange = yMax - yMin;
+		yMin -= yRange * m_padLimitsAmount;
+		yMax += yRange * m_padLimitsAmount;
+	}
+}
