@@ -64,6 +64,17 @@ private:
 	splotcolourscale m_colourScale;
 };
 
+class SizeVaryingSymbol : public VaryingSymbol
+{
+public:
+	SizeVaryingSymbol ( std::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), splotsizescale sizeScale = splotsizescale() );
+	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
+	bool isLogScaled() const;
+private:
+	rgbcolour m_colour;
+	splotsizescale m_sizeScale;
+};
+
 
 class DrawableItem
 {
@@ -153,6 +164,16 @@ public:
 private:
 	ColourVaryingSymbol m_symbol;
 	bool m_autoscaleColour;
+};
+
+class PointDataSizeVarying : public PlotData2dLinear
+{
+public:
+	PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const SizeVaryingSymbol &symbol, bool autoscaleSize = false, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+private:
+	SizeVaryingSymbol m_symbol;
+	bool m_autoscaleSize;
 };
 
 

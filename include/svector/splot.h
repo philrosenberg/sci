@@ -154,9 +154,12 @@ class splotsizescale
 public:
 	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false);
 	~splotsizescale(){};
-	double getsize(double value);
+	double getsize(double value) const;
+	double getSizeNormalisedScale(double value) const;
+	bool isLogarithmic() const { return m_logarithmic; }
 private:
 	std::vector<double> m_value;
+	std::vector<double> m_valueNormalised;
 	std::vector<double> m_size;
 	bool m_logarithmic;
 };

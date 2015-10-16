@@ -594,28 +594,57 @@ hlscolour splotcolourscale::getHlsOffscaleTop()
 
 splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic)
 {
+	
+	//check the sizes and values are the same length
+	sci::assertThrow( value.size() == size.size(), sci::err());
+
 	//assign values as are
 	m_value=value;
-	m_size=size;
 	m_logarithmic=logarithmic;
-	//check there is at least one value in m_value
-	if(m_value.size()==0) m_value.resize(1,0.0);
-	//check values are ascending
-	for(size_t i=1; i<m_value.size(); ++i)
+	if( m_logarithmic )
+		m_value = sci::log10( m_value );
+
+	//make sure the data is ascending and check for nans
+	bool ascending = true;
+	bool descending = true;
+	for( size_t i=1; i< value.size(); ++i)
 	{
-		if(m_value[i]<=m_value[i-1])m_value.resize(i);
+		ascending &= m_value[i] >= m_value[i-1];
+		descending &= m_value[i] <= m_value[i-1];
 	}
-	//check the sizes and values are the same length
-	m_size.resize(m_value.size(),0.0);
+	sci::assertThrow( ascending || descending, sci::err() );
+	if( descending )
+	{
+		m_value = sci::reverse( m_value );
+		m_size = sci::reverse( m_size );
+	}
+	else
+		m_size=size;
+
+	double min = sci::min<double>( m_value );
+	double range = sci::max<double>( m_value ) - min;
+	m_valueNormalised = (m_value - min ) / range;
 }
 
-double splotsizescale::getsize(double value)
+double splotsizescale::getsize(double value) const
 {
 	if(value<=m_value[0]) return m_size[0];
 	if(value>=m_value.back()) return m_size.back();
 	size_t lowerindex=0;
 	while(value<m_value[lowerindex])++lowerindex;
 	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
+}
+
+double splotsizescale::getSizeNormalisedScale(double value) const
+{
+	if(value<=m_valueNormalised[0])
+		return m_size[0];
+	if(value>=m_valueNormalised.back())
+		return m_size.back();
+	size_t lowerindex=0;
+	while(value<m_valueNormalised[lowerindex])
+		++lowerindex;
+	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_valueNormalised[lowerindex]-m_valueNormalised[lowerindex+1])*(value-m_valueNormalised[lowerindex])+m_size[lowerindex];
 }
 
 

@@ -190,6 +190,28 @@ bool ColourVaryingSymbol::isLogScaled() const
 	return m_colourScale.isLogarithmic();
 }
 
+SizeVaryingSymbol::SizeVaryingSymbol ( std::string symbol, rgbcolour colour, splotsizescale sizeScale )
+	:VaryingSymbol( symbol )
+{
+	m_sizeScale = sizeScale;
+	m_colour = colour;
+}
+
+void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const
+{
+	pl->sfci( getFci() );
+	//pl->sfontf(m_pointfont[i].mb_str());
+	double size = useNormalisedScale ? m_sizeScale.getSizeNormalisedScale( parameter ) : m_sizeScale.getsize( parameter );
+	pl->schr( size, 1.0 );
+	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
+	pl->col0( colourIndex );
+}
+
+bool SizeVaryingSymbol::isLogScaled() const
+{
+	return m_sizeScale.isLogarithmic();
+}
+
 DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )
 	:m_transformer( transformer )
 {
@@ -362,6 +384,36 @@ void PointDataColourVarying::plotData( plstream *pl, bool xLog, bool yLog ) cons
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
 			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleColour, 1.0 );
+			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
+			pl->string(1,xi,yi,symbol.c_str());
+		}
+	}
+}
+
+PointDataSizeVarying::PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const SizeVaryingSymbol &symbol, bool autoscaleSize, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+	:PlotData2dLinear( xs, ys, zs, transformer, autoLimitsPadAmount )
+{
+	m_symbol = symbol;
+	m_autoscaleSize = autoscaleSize;
+}
+
+void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
+{
+	std::string symbol = m_symbol.getSymbol();
+	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *z = m_symbol.isLogScaled() ? 
+		( m_autoscaleSize ? &m_zDataLoggedNormalised[0] : &m_zDataLogged[0] )
+		: ( m_autoscaleSize ? &m_zDataNormalised[0] : &m_zData[0] );
+	if( symbol.length() > 0)
+	{
+		const double *xi = x;
+		const double *yi = y;
+		const double *zi = z;
+		const double *xEnd = x + m_xData.size();
+		for( ; xi != xEnd; ++xi, ++yi, ++zi )
+		{
+			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleSize, 1.0 );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			pl->string(1,xi,yi,symbol.c_str());
 		}
