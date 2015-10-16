@@ -228,6 +228,25 @@ private:
 	bool m_autoscaleSize;
 };
 
+class HorizontalErrorBars : public PlotData3dLinear
+{
+public:
+	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style );
+	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+private:
+	LineStyle m_style;
+};
+
+class VerticalErrorBars : public PlotData3dLinear
+{
+public:
+	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style );
+	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+private:
+	LineStyle m_style;
+};
+
+
 
 
 #endif

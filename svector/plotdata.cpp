@@ -504,3 +504,37 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog
 		}
 	}
 }
+
+HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style )
+	:PlotData3dLinear(xs, ys, xs+plusErrors, xs-minusErrors)
+{
+	m_style = style;
+}
+void HorizontalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+{
+	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *xMinusErrors = xLog ? &m_zDataLogged1[0] : &m_zData1[0];
+	const double *xPlusErrors = xLog ? &m_zDataLogged2[0] : &m_zData2[0];
+
+	m_style.setupLineStyle( pl, 1, m_scale );	
+	pl->errx( m_xData.size(),xMinusErrors, xPlusErrors, y );
+	m_style.resetLineStyle( pl, 1 );
+}
+
+VerticalErrorBars::VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style )
+	:PlotData3dLinear(xs, ys, ys+plusErrors, ys-minusErrors)
+{
+	m_style = style;
+}
+void VerticalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+{
+	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *yMinusErrors = yLog ? &m_zDataLogged1[0] : &m_zData1[0];
+	const double *yPlusErrors = yLog ? &m_zDataLogged2[0] : &m_zData2[0];
+
+	m_style.setupLineStyle( pl, 1, m_scale );	
+	pl->erry( m_xData.size(), x, yMinusErrors, yPlusErrors );
+	m_style.resetLineStyle( pl, 1 );
+}
