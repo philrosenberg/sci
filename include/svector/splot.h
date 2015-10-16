@@ -128,6 +128,7 @@ public:
 	hlscolour getHlsOffscaleBottom();
 	hlscolour getHlsOffscaleTop();
 	splotcolourscale& operator=(const splotcolourscale& s);
+	bool isLogarithmic() const { return m_logarithmic;}
 	~splotcolourscale(){};
 private:
 	void setupdefault();
