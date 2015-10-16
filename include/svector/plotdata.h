@@ -24,33 +24,47 @@ private:
 	std::vector<PLINT> m_spaces;
 };
 
-class Symbol
+class SymbolBase
 {
 public:
-	Symbol ( std::string symbol = sym::filledCircle, double size = 4.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	SymbolBase( std::string symbol, PLUNICODE fci );
 	std::string getSymbol() const;
-	double getSize() const;
-	rgbcolour getColour() const;
 	PLUNICODE getFci() const;
-	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
 private:
 	std::string m_symbol;
-	double m_size;
-	rgbcolour m_colour;
 	PLUNICODE m_fci;
 };
 
-class VaryingSymbol
+class Symbol : public SymbolBase
+{
+public:
+	Symbol ( std::string symbol = sym::filledCircle, double size = 4.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	double getSize() const;
+	rgbcolour getColour() const;
+	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
+private:
+	double m_size;
+	rgbcolour m_colour;
+};
+
+class VaryingSymbol : public SymbolBase
 {
 public:
 	VaryingSymbol ( std::string symbol = sym::filledCircle );
-	std::string getSymbol() const;
-	PLUNICODE getFci() const;
 	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const = 0;
 	virtual bool isLogScaled() const = 0;
 private:
-	std::string m_symbol;
-	PLUNICODE m_fci;
+};
+
+class VaryingSymbolTwoParam : public SymbolBase
+{
+public:
+	VaryingSymbolTwoParam ( std::string symbol = sym::filledCircle );
+	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale1, bool useNormalisedScale2, double scale ) const = 0;
+	virtual bool isLogScaled1() const = 0;
+	virtual bool isLogScaled2() const = 0;
+
+private:
 };
 
 class ColourVaryingSymbol : public VaryingSymbol
@@ -72,6 +86,18 @@ public:
 	bool isLogScaled() const;
 private:
 	rgbcolour m_colour;
+	splotsizescale m_sizeScale;
+};
+
+class ColourAndSizeVaryingSymbol : public SymbolBase
+{
+public:
+	ColourAndSizeVaryingSymbol ( std::string symbol = sym::filledCircle, splotcolourscale colourScale = splotcolourscale(), splotsizescale sizeScale = splotsizescale() );
+	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const;
+	bool isColourLogScaled() const;
+	bool isSizeLogScaled() const;
+private:
+	splotcolourscale m_colourScale;
 	splotsizescale m_sizeScale;
 };
 
@@ -129,6 +155,21 @@ protected:
 	std::vector<double> m_zDataLoggedNormalised;
 };
 
+class PlotData3dLinear : public PlotData1d
+{
+public:
+	PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+protected:
+	std::vector<double> m_zData1;
+	std::vector<double> m_zDataLogged1;
+	std::vector<double> m_zDataNormalised1;
+	std::vector<double> m_zDataLoggedNormalised1;
+	std::vector<double> m_zData2;
+	std::vector<double> m_zDataLogged2;
+	std::vector<double> m_zDataNormalised2;
+	std::vector<double> m_zDataLoggedNormalised2;
+};
+
 class PlotData2dStructured : public PlotData1d
 {
 	PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
@@ -173,6 +214,17 @@ public:
 	void plotData( plstream *pl, bool xLog, bool yLog ) const;
 private:
 	SizeVaryingSymbol m_symbol;
+	bool m_autoscaleSize;
+};
+
+class PointDataColourAndSizeVarying : public PlotData3dLinear
+{
+public:
+	PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, const ColourAndSizeVaryingSymbol &symbol, bool autoscaleColour = false, bool autoscaleSize = false, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+private:
+	ColourAndSizeVaryingSymbol m_symbol;
+	bool m_autoscaleColour;
 	bool m_autoscaleSize;
 };
 

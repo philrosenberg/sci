@@ -122,27 +122,39 @@ void LineStyle::parseLineStyle(const std::string &pattern, std::vector<PLINT> &m
 	}
 }
 
-Symbol::Symbol( std::string symbol, double size, rgbcolour colour )
+SymbolBase::SymbolBase( std::string symbol, PLUNICODE fci )
 {
 	m_symbol = symbol;
+	m_fci = fci;
+}
+
+std::string SymbolBase::getSymbol() const
+{
+	return m_symbol;
+}
+
+PLUNICODE SymbolBase::getFci() const
+{
+	return m_fci;
+}
+
+
+Symbol::Symbol( std::string symbol, double size, rgbcolour colour )
+	: SymbolBase( symbol, 0 )
+{
 	m_size = size;
 	m_colour = colour;
-	m_fci = 0;
 }
 
 void Symbol::setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const
 {
-	pl->sfci( m_fci );
+	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
 	pl->schr( m_size, 1.0 );
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
 }
 
-std::string Symbol::getSymbol() const
-{
-	return m_symbol;
-}
 double Symbol::getSize() const
 {
 	return m_size;
@@ -154,18 +166,8 @@ rgbcolour Symbol::getColour() const
 }
 
 VaryingSymbol::VaryingSymbol ( std::string symbol )
+	: SymbolBase( symbol, 0 )
 {
-	m_symbol = symbol;
-	m_fci = 0;
-}
-
-std::string VaryingSymbol::getSymbol() const
-{
-	return m_symbol;
-}
-PLUNICODE VaryingSymbol::getFci() const
-{
-	return m_fci;
 }
 
 ColourVaryingSymbol::ColourVaryingSymbol ( std::string symbol, double size, splotcolourscale colourScale )
@@ -208,6 +210,32 @@ void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double par
 }
 
 bool SizeVaryingSymbol::isLogScaled() const
+{
+	return m_sizeScale.isLogarithmic();
+}
+
+ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::string symbol, splotcolourscale colourScale, splotsizescale sizeScale )
+	:SymbolBase( symbol, 0 )
+{
+	m_colourScale = colourScale;
+	m_sizeScale = sizeScale;
+}
+
+void ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const
+{
+	pl->sfci( getFci() );
+	//pl->sfontf(m_pointfont[i].mb_str());
+	double size = useNormalisedSizeScale ? m_sizeScale.getSizeNormalisedScale( sizeParameter ) : m_sizeScale.getsize( sizeParameter );
+	pl->schr( size, 1.0 );
+	rgbcolour colour = useNormalisedColourScale ? m_colourScale.getRgbNormalisedScale( colourParameter ) : m_colourScale.getRgbOriginalScale( colourParameter );
+	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
+	pl->col0( colourIndex );
+}
+bool ColourAndSizeVaryingSymbol::isColourLogScaled() const
+{
+	return m_colourScale.isLogarithmic();
+}
+bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 {
 	return m_sizeScale.isLogarithmic();
 }
@@ -319,6 +347,29 @@ PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::ve
 	m_zDataLoggedNormalised = ( m_zDataLogged - zMinLogged ) / zRangeLogged;
 }
 
+PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
+{
+	m_zData1 = zs1;
+	m_zDataLogged1 = sci::log10( m_zData1 );
+	double zMin1 = sci::min<double>( m_zData1 );
+	double zRange1 = sci::max<double>( m_zData1 ) - zMin1;
+	m_zDataNormalised1 = ( m_zData1 - zMin1 ) / zRange1;
+	double zMinLogged1 = sci::min<double>( m_zDataLogged1 );
+	double zRangeLogged1 = sci::max<double>( m_zDataLogged1 ) - zMinLogged1;
+	m_zDataLoggedNormalised1 = ( m_zDataLogged1 - zMinLogged1 ) / zRangeLogged1;
+	
+	m_zData2 = zs2;
+	m_zDataLogged2 = sci::log10( m_zData2 );
+	double zMin2 = sci::min<double>( m_zData2 );
+	double zRange2 = sci::max<double>( m_zData2 ) - zMin2;
+	m_zDataNormalised2 = ( m_zData2 - zMin2 ) / zRange2;
+	double zMinLogged2 = sci::min<double>( m_zDataLogged2 );
+	double zRangeLogged2 = sci::max<double>( m_zDataLogged2 ) - zMinLogged2;
+	m_zDataLoggedNormalised2 = ( m_zDataLogged2 - zMinLogged2 ) / zRangeLogged2;
+
+}
+
 PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
 {
@@ -414,6 +465,40 @@ void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
 			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleSize, 1.0 );
+			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
+			pl->string(1,xi,yi,symbol.c_str());
+		}
+	}
+}
+
+PointDataColourAndSizeVarying::PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, const ColourAndSizeVaryingSymbol &symbol, bool autoscaleColour, bool autoscaleSize, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+	:PlotData3dLinear( xs, ys, zsColour, zsSize, transformer, autoLimitsPadAmount )
+{
+	m_symbol = symbol;
+	m_autoscaleColour = autoscaleColour;
+	m_autoscaleSize = autoscaleSize;
+}
+void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
+{
+	std::string symbol = m_symbol.getSymbol();
+	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *zColour = m_symbol.isColourLogScaled() ? 
+		( m_autoscaleSize ? &m_zDataLoggedNormalised1[0] : &m_zDataLogged1[0] )
+		: ( m_autoscaleSize ? &m_zDataNormalised1[0] : &m_zData1[0] );
+	const double *zSize = m_symbol.isSizeLogScaled() ? 
+		( m_autoscaleSize ? &m_zDataLoggedNormalised2[0] : &m_zDataLogged2[0] )
+		: ( m_autoscaleSize ? &m_zDataNormalised2[0] : &m_zData2[0] );
+	if( symbol.length() > 0)
+	{
+		const double *xi = x;
+		const double *yi = y;
+		const double *zColouri = zColour;
+		const double *zSizei = zSize;
+		const double *xEnd = x + m_xData.size();
+		for( ; xi != xEnd; ++xi, ++yi, ++zColouri, ++zSizei )
+		{
+			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, m_autoscaleColour, m_autoscaleSize, 1.0 );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			pl->string(1,xi,yi,symbol.c_str());
 		}
