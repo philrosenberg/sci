@@ -153,8 +153,6 @@ public:
 private:
 	ColourVaryingSymbol m_symbol;
 	bool m_autoscaleColour;
-	double m_zMin;
-	double m_zRange;
 };
 
 

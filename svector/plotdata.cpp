@@ -343,11 +343,6 @@ PointDataColourVarying::PointDataColourVarying( const std::vector<double> &xs, c
 {
 	m_symbol = symbol;
 	m_autoscaleColour = autoscaleColour;
-	if( m_autoscaleColour )
-	{
-		m_zMin = sci::min<double>( zs );
-		m_zRange = sci::max<double> (zs ) - m_zMin;
-	}
 }
 
 void PointDataColourVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
