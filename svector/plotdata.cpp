@@ -337,6 +337,7 @@ PlotData1d::PlotData1d( const std::vector<double> &xs, const std::vector<double>
 PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
 {
+	sci::assertThrow( zs.size() == xs.size(), sci::err() );
 	m_zData = zs;
 	m_zDataLogged = sci::log10( m_zData );
 	double zMin = sci::min<double>( m_zData );
@@ -350,6 +351,8 @@ PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::ve
 PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
 {
+	sci::assertThrow( zs1.size() == xs.size(), sci::err() );
+	sci::assertThrow( zs2.size() == xs.size(), sci::err() );
 	m_zData1 = zs1;
 	m_zDataLogged1 = sci::log10( m_zData1 );
 	double zMin1 = sci::min<double>( m_zData1 );
