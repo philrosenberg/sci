@@ -446,17 +446,24 @@ sci::csv_err sci::writecsvrows(std::string filename, std::string header, const s
 	}
 	else
 	{
-		std::vector<size_t>sizes(data.size());
-		for(size_t i=0; i<data.size(); ++i)sizes[i]=data[i].size();
-		size_t maxsize=sci::max<size_t>(sizes);
-		for(size_t i=0; i<data[0].size(); ++i)
+		size_t maxSize = 0;
+		if( pad )
+		{
+			std::vector<size_t>sizes(data.size());
+			for(size_t i=0; i<data.size(); ++i)
+				sizes[i]=data[i].size();
+			maxsize=sci::max<size_t>(sizes);
+		}
+		for(size_t i=0; i<data.size(); ++i)
 		{
 			fout <<data[i][0];
-			for(size_t j=1; j<data[i].size(); j++) fout << "," << data[i][j];
+			for(size_t j=1; j<data[i].size(); j++)
+				fout << "," << data[i][j];
 			if(maxsize>data[i].size())
 			{
 				size_t extras=maxsize-data[i].size();
-				for(size_t j=1; j<data[i].size(); j++) fout << ",";
+				for(size_t j=1; j<extras; j++)
+					fout << ",";
 			}
 			fout << "\n";
 		}
