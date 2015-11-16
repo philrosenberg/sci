@@ -21,7 +21,7 @@ void LineStyle::getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &space
 	marks = m_marks;
 	spaces = m_spaces;
 }
-rgbcolour LineStyle::getColour()
+rgbcolour LineStyle::getColour() const
 {
 	return m_colour;
 }
@@ -120,6 +120,56 @@ void LineStyle::parseLineStyle(const std::string &pattern, std::vector<PLINT> &m
 		marks[0] += marks.back();
 		marks.resize( marks.size() - 1 );
 	}
+}
+
+FillStyle::FillStyle( const rgbcolour &colour )
+{
+	m_colour = colour;
+	m_lineSpacingMicrons[0] = 0;
+	m_angleDeg[0] = 0;
+	m_lineSpacingMicrons[1] = 0;
+	m_angleDeg[1] = 0;
+}
+
+FillStyle::FillStyle( const LineStyle &lineStyle, double lineSpacingMicrons, double angleDeg )
+{
+	m_lineStyle = lineStyle;
+	m_lineSpacingMicrons[0] = (PLINT)sci::round( lineSpacingMicrons );
+	m_angleDeg[0] = (PLINT)sci::round( angleDeg * 10.0 );
+	m_lineSpacingMicrons[1] = 0;
+	m_angleDeg[1] = 0;
+}
+
+FillStyle::FillStyle( const LineStyle &lineStyle, double lineSpacing1Microns, double angle1Deg, double lineSpacing2Microns, double angle2Deg )
+{
+	m_lineStyle = lineStyle;
+	m_lineSpacingMicrons[0] = (PLINT)sci::round( lineSpacing1Microns );
+	m_angleDeg[0] = (PLINT)sci::round( angle1Deg * 10.0 );
+	m_lineSpacingMicrons[1] = (PLINT)sci::round( lineSpacing2Microns );
+	m_angleDeg[1] = (PLINT)sci::round( angle2Deg * 10.0 );
+}
+
+void FillStyle::setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const
+{
+	if( m_lineSpacingMicrons[0] > 0 )
+	{
+		PLINT nSets = m_lineSpacingMicrons[1] > 0 ? 2 : 1;
+		m_lineStyle.setupLineStyle( pl, colourIndex, scale );
+		pl->pat( nSets, m_angleDeg, m_lineSpacingMicrons );
+	}
+	else
+	{
+		pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
+		pl->col0( colourIndex );
+		pl->psty( 0 );
+	}
+}
+
+rgbcolour FillStyle::getColour() const
+{
+	if( m_lineSpacingMicrons[0] > 0 )
+		return m_lineStyle.getColour();
+	return m_colour;
 }
 
 SymbolBase::SymbolBase( std::string symbol, PLUNICODE fci )

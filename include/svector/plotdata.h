@@ -13,7 +13,7 @@ public:
 	LineStyle( double width, const rgbcolour &colour, std::string pattern );
 	double getWidth();
 	void getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
-	rgbcolour getColour();
+	rgbcolour getColour() const;
 	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;
 	static void parseLineStyle( const std::string &pattern, std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
@@ -104,15 +104,17 @@ private:
 class FillStyle
 {
 public:
-	FillStyle( rgbcolour colour );
-	FillStyle( rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), LineStyle lineStyle = LineStyle(), double lineSpacing = 0.0 );
+	FillStyle( const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0 ) );
+	FillStyle( const LineStyle &lineStyle, double lineSpacingMicrons, double angleDeg );
+	FillStyle( const LineStyle &lineStyle, double lineSpacing1Microns, double angle1Deg, double lineSpacing2Microns, double angle2Deg );
 	void setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	rgbcolour getColour() const;
 
 private:
 	rgbcolour m_colour;
 	LineStyle m_lineStyle;
-	double m_lineSpacing;
+	PLINT m_lineSpacingMicrons[2];
+	PLINT m_angleDeg[2];
 };
 
 
