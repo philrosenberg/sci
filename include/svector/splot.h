@@ -16,6 +16,7 @@
 //pre declarations
 class splot;
 class splot2d;
+class DrawableItem;
 
 //emptyvector
 static const std::vector<double> empty1d;
@@ -127,6 +128,7 @@ public:
 	hlscolour getHlsOffscaleBottom();
 	hlscolour getHlsOffscaleTop();
 	splotcolourscale& operator=(const splotcolourscale& s);
+	bool isLogarithmic() const { return m_logarithmic;}
 	~splotcolourscale(){};
 private:
 	void setupdefault();
@@ -152,9 +154,12 @@ class splotsizescale
 public:
 	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false);
 	~splotsizescale(){};
-	double getsize(double value);
+	double getsize(double value) const;
+	double getSizeNormalisedScale(double value) const;
+	bool isLogarithmic() const { return m_logarithmic; }
 private:
 	std::vector<double> m_value;
+	std::vector<double> m_valueNormalised;
 	std::vector<double> m_size;
 	bool m_logarithmic;
 };
@@ -239,8 +244,8 @@ public:
 
 private:
 	//private constructor so only friends can create splotaxis objects
-	splotaxis(double min=-1.0, double max=1.0, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=1.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=0.8, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
-	splotaxis(double min, double max, double majorinterval, double nsubticks, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=1.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=0.8, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
+	splotaxis(double min=-1.0, double max=1.0, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
+	splotaxis(double min, double max, double majorinterval, double nsubticks, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
 	
 	//keep track of if the axis has changed
 	bool m_haschanged;
@@ -301,6 +306,10 @@ private:
 
 	unsigned int m_maxndigits; //maximum number of digits before going to exponents, set to zero for auto
 };
+
+//have to #include this down here as classes in here need some of the declarations from
+//above, but they don't get included because of the #ifdef protection
+#include"plotdata.h"
 
 class splot
 {
@@ -410,7 +419,7 @@ private:
 	void (*m_transfunc1dxy)(double xindex, double yindex, const std::vector<double> &x, const std::vector<double> &y, double &xout, double &yout);
 	void (*m_transfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&);
 	virtual void calculateautolimits()=0;
-	static void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints);
+	static void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints, double existingMin, double existingMax);
 
 	wxString createploptstring(const splotaxis &axis);
 	void adddatasetproperties(wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, wxString linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::string map, const std::vector<double> &arrowstyle);
@@ -456,6 +465,9 @@ public:
 	//grid plot with 2d x and y
 	void addShadedGrid(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, splotTransformer *transformer=NULL);
 	
+	//add a DrawableItem
+	void addData( std::shared_ptr<DrawableItem> drawableItem );
+
 	void addmap(std::string map="globe", wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, std::string linestyle="", splotTransformer *transformer=NULL);
 	void addImage(std::string picture, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0=0, int cropY0=0, int cropWidth=-1, int cropHeight=-1, double brightnessCorrection=0.0, double contrastCorrection=0.0);
 	void addText(std::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const std::string &font="", uint32_t style=0, wxColour colour=wxColour(0,0,0));
@@ -496,6 +508,8 @@ private:
 	std::vector<std::string> m_textFont;
 	std::vector<PLUNICODE> m_textFci;
 	std::vector<double> m_textSize;
+	//DrawableItems
+	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
 
 
 	void incrementdatasize();
@@ -507,12 +521,12 @@ class splotlegend : public splot
 {
 	friend class splotwindow;
 public:
-	void addentry(std::string text, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1, std::string linestyle="");
-	void addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
-	void addentry(std::string text, const splotsizescale &sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=0.8, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), std::string pointsymbol="A", size_t nlines=5);
+	void addentry(std::string text, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1, std::string linestyle="");
+	void addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
+	void addentry(std::string text, const splotsizescale &sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), std::string pointsymbol="A", size_t nlines=5);
 private:
 	//private constructor so only friends can create a legend
-	splotlegend(std::string title="", double titlesize=1.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
+	splotlegend(std::string title="", double titlesize=12.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
 	wxColour m_outlinecolour;
 	int m_outlinethickness;
 	double m_titlespacing;
@@ -543,10 +557,10 @@ public:
 	~splotwindow();
 	void setfixedsize(int width, int height);
 	void setautofitplots();
-	splot2d* addplot(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false,std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
-	splot2d* addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx=false, bool logy=false, std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
-	splot2d* addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
-	splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title="", double titlesize=1.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
+	splot2d* addplot(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false,std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
+	splot2d* addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
+	splot2d* addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
+	splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title="", double titlesize=12, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
 	splot2d* addcanvas(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false);
 	bool writetofile(wxString filename, double sizemultiplier, bool preferInkscape);
 	bool writetofile(wxString filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
@@ -599,9 +613,9 @@ public:
 	splotframe(wxWindow* parent, bool antialiasing, wxWindowID id=wxID_ANY, const wxString& title=wxT("Apex++ plot"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_FRAME_STYLE, const wxString& name = wxT("Sci++ Plot"));
 	~splotframe(){};
 	inline splot2d* addplot(double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false,std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
-	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
-	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, xintersect, yintersect, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
-	inline splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title, double titlesize=1.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, title, titlesize, titledistance,titlespacing, titlefont, titlestyle, titlecolour, outlinecolour, outlinewidth);};
+	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
+	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, xintersect, yintersect, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
+	inline splotlegend* addlegend(double xpos, double ypos, double width, double height, std::string title, double titlesize=12, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, title, titlesize, titledistance,titlespacing, titlefont, titlestyle, titlecolour, outlinecolour, outlinewidth);};
 	splotlegend* addlegend(double xpos, double ypos, double width, double height, wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, "", 0.2, 2.0, 0.2, "", 0, wxColour(0,0,0), outlinecolour, outlinewidth);};
 	splot2d* addcanvas(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false){return m_plotwind->addcanvas(xpos,ypos,width,height,logx,logy);}
 	bool writetofile(std::string filename, int sizemultiplier=1, bool preferInkscape=false){return m_plotwind->writetofile(wxString(filename.c_str(),wxConvUTF8),sizemultiplier, preferInkscape);};

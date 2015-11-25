@@ -295,6 +295,7 @@
     <ClCompile Include="idlClient.cpp" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="operators.cpp" />
+    <ClCompile Include="plotdata.cpp" />
     <ClCompile Include="ppfile.cpp" />
     <ClCompile Include="sdialog.cpp" />
     <ClCompile Include="serr.cpp" />
@@ -313,6 +314,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\dep\math.h" />
     <ClInclude Include="..\include\svector\dep\operators.h" />
+    <ClInclude Include="..\include\svector\plotdata.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />

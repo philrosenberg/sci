@@ -594,28 +594,57 @@ hlscolour splotcolourscale::getHlsOffscaleTop()
 
 splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic)
 {
+	
+	//check the sizes and values are the same length
+	sci::assertThrow( value.size() == size.size(), sci::err());
+
 	//assign values as are
 	m_value=value;
-	m_size=size;
 	m_logarithmic=logarithmic;
-	//check there is at least one value in m_value
-	if(m_value.size()==0) m_value.resize(1,0.0);
-	//check values are ascending
-	for(size_t i=1; i<m_value.size(); ++i)
+	if( m_logarithmic )
+		m_value = sci::log10( m_value );
+
+	//make sure the data is ascending and check for nans
+	bool ascending = true;
+	bool descending = true;
+	for( size_t i=1; i< value.size(); ++i)
 	{
-		if(m_value[i]<=m_value[i-1])m_value.resize(i);
+		ascending &= m_value[i] >= m_value[i-1];
+		descending &= m_value[i] <= m_value[i-1];
 	}
-	//check the sizes and values are the same length
-	m_size.resize(m_value.size(),0.0);
+	sci::assertThrow( ascending || descending, sci::err() );
+	if( descending )
+	{
+		m_value = sci::reverse( m_value );
+		m_size = sci::reverse( m_size );
+	}
+	else
+		m_size=size;
+
+	double min = sci::min<double>( m_value );
+	double range = sci::max<double>( m_value ) - min;
+	m_valueNormalised = (m_value - min ) / range;
 }
 
-double splotsizescale::getsize(double value)
+double splotsizescale::getsize(double value) const
 {
 	if(value<=m_value[0]) return m_size[0];
 	if(value>=m_value.back()) return m_size.back();
 	size_t lowerindex=0;
 	while(value<m_value[lowerindex])++lowerindex;
 	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
+}
+
+double splotsizescale::getSizeNormalisedScale(double value) const
+{
+	if(value<=m_valueNormalised[0])
+		return m_size[0];
+	if(value>=m_valueNormalised.back())
+		return m_size.back();
+	size_t lowerindex=0;
+	while(value<m_valueNormalised[lowerindex])
+		++lowerindex;
+	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_valueNormalised[lowerindex]-m_valueNormalised[lowerindex+1])*(value-m_valueNormalised[lowerindex])+m_size[lowerindex];
 }
 
 
@@ -1467,6 +1496,17 @@ void splot2d::addmap(std::string map, wxColour linecolour, double linewidth, std
 	m_haschanged=true;
 }
 
+
+//add a DrawableItem
+void splot2d::addData( std::shared_ptr<DrawableItem> drawableItem )
+{
+	//increase the size of all data
+	incrementdatasize();
+	m_drawableItems.back() = drawableItem;
+	calculateautolimits();
+	m_haschanged=true;
+}
+
 void splot2d::addImage(std::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
 {
 	incrementdatasize();
@@ -1830,19 +1870,79 @@ void splot2d::incrementdatasize()
 	m_xerrthickness.push_back(1);
 	m_yerrthickness.push_back(1);
 
+	//the DrawableItems
+	m_drawableItems.push_back( nullptr );
+
 	//now do the splot variables
 	splot::incrementdatasize();
 }
 
 void splot2d::calculateautolimits()
 {
+	//first get the limits from m_drawableItems
+	double xMin = std::numeric_limits<double>::infinity();
+	double yMin = std::numeric_limits<double>::infinity();
+	double xMax = -std::numeric_limits<double>::infinity();
+	double yMax = -std::numeric_limits<double>::infinity();
+	for( size_t i=0; i< m_drawableItems.size(); ++i)
+	{
+		if( m_drawableItems[i] )
+		{
+			double xMinLocal, xMaxLocal, yMinLocal, yMaxLocal;
+			double xMinLogLocal, xMaxLogLocal, yMinLogLocal, yMaxLogLocal;
+			m_drawableItems[i]->getLimits(xMinLocal, xMaxLocal, yMinLocal, yMaxLocal );
+			m_drawableItems[i]->getLogLimits(xMinLogLocal, xMaxLogLocal, yMinLogLocal, yMaxLogLocal );
+			if( m_xaxis.m_logarithmic )
+			{
+				if( xMin > xMinLogLocal )
+					xMin = xMinLogLocal;
+				if( xMax < xMaxLogLocal )
+					xMax = xMaxLogLocal;
+			}
+			else
+			{
+				if( xMin > xMinLocal )
+					xMin = xMinLocal;
+				if( xMax < xMaxLocal )
+					xMax = xMaxLocal;
+			}
+			if( m_yaxis.m_logarithmic )
+			{
+				if( yMin > yMinLogLocal )
+					yMin = yMinLogLocal;
+				if( yMax < yMaxLogLocal )
+					yMax = yMaxLogLocal;
+			}
+			else
+			{
+				if( yMin > yMinLocal )
+					yMin = yMinLocal;
+				if( yMax < yMaxLocal )
+					yMax = yMaxLocal;
+			}
+		}
+	}
+	
+	//unlog the limits if needed
+	if( m_xaxis.m_logarithmic )
+	{
+		xMin = std::pow( 10.0, xMin );
+		xMax = std::pow( 10.0, xMax );
+	}
+	//unlog the limits if needed
+	if( m_yaxis.m_logarithmic )
+	{
+		yMin = std::pow( 10.0, yMin );
+		yMax = std::pow( 10.0, yMax );
+	}
+
 	if(m_xautolimits)
 	{
 		std::vector<double> intersectpoints;
 		if(!m_yautointersect) intersectpoints.push_back(m_yaxis.m_intersect);
 		bool addpadding=true;
 		for(size_t i=0; i<m_structzs.size(); ++i) addpadding=addpadding&&(m_structzs[i].size()==0);
-		splot::calculateautolimits(m_xaxis,m_xs,m_xpluserrs,m_xminuserrs,m_xs2d,addpadding,intersectpoints);
+		splot::calculateautolimits(m_xaxis,m_xs,m_xpluserrs,m_xminuserrs,m_xs2d,addpadding,intersectpoints, xMin, xMax);
 	}
 	if(m_yautolimits)
 	{
@@ -1850,7 +1950,7 @@ void splot2d::calculateautolimits()
 		if(!m_xautointersect) intersectpoints.push_back(m_xaxis.m_intersect);
 		bool addpadding=true;
 		for(size_t i=0; i<m_structzs.size(); ++i) addpadding=addpadding&&(m_structzs[i].size()==0);
-		splot::calculateautolimits(m_yaxis,m_ys,m_ypluserrs,m_yminuserrs,m_ys2d,addpadding,intersectpoints);
+		splot::calculateautolimits(m_yaxis,m_ys,m_ypluserrs,m_yminuserrs,m_ys2d,addpadding,intersectpoints, yMin, yMax);
 	}
 	if(m_xautointersect) m_xaxis.m_intersect=m_yaxis.m_min;
 	if(m_yautointersect) m_yaxis.m_intersect=m_xaxis.m_min;
@@ -1917,7 +2017,7 @@ void splot2d::calculateautolimits()
 	}
 }
 
-void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints)
+void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints, double existingMin, double existingMax)
 {
 	//check there is some data to search for
 	if(data1d.size()==0 &&data2d.size()==0)
@@ -1958,6 +2058,13 @@ void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<d
 			axis.m_min-=extra;
 		}
 	}
+
+	//apply the existing limit passed in
+	if( axis.m_max < existingMax || axis.m_max != axis.m_max )
+		axis.m_max = existingMax;
+	if( axis.m_min > existingMin || axis.m_min != axis.m_min )
+		axis.m_min = existingMin;
+
 	
 	for(size_t i=0; i<intersectpoints.size(); ++i)
 	{
@@ -2165,8 +2272,13 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		//add the user provided transform
 		PlTempTransformer tempTransformer( pl, (m_transformers[i] ? splotTransform : NULL) , (void*)(m_transformers[i].get()) );
 
+		//drawableItems
+		if( m_drawableItems[i] )
+		{
+			m_drawableItems[i]->draw( pl, m_xaxis.m_logarithmic, m_yaxis.m_logarithmic );
+		}
 		//vectors/arrows
-		if(m_us[i].size()>0 && m_vs[i].size()>0)
+		else if(m_us[i].size()>0 && m_vs[i].size()>0)
 		{
 			pl->scol0(1,m_linecolour[i].Red(),m_linecolour[i].Green(),m_linecolour[i].Blue());
 			pl->col0(1);
@@ -2329,7 +2441,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		{
 			//pl->sfontf(m_textFont[i].c_str());
 			pl->sfci(m_textFci[i]);
-			pl->schr(0.0,m_textSize[i]);
+			pl->schr(1.0,m_textSize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			a=m_pointcolour[i].Alpha()/255.0;
 			r=m_pointcolour[i].Red();
 			g=m_pointcolour[i].Green();
@@ -2485,7 +2597,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				pl->sfci(m_pointfci[i]);
 				pl->sfci(0);
 				//pl->sfontf(m_pointfont[i].mb_str());
-				pl->schr(0.0,m_pointsize[i]);
+				pl->schr(1.0,m_pointsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 				r=m_pointcolour[i].Red();
 				g=m_pointcolour[i].Green();
 				b=m_pointcolour[i].Blue();
@@ -2512,7 +2624,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 							rgb=m_colourscale[i].getRgbOriginalScale( val );
 						pl->scol0a( 1, sci::round( rgb.r() * 255.0), sci::round( rgb.g() * 255.0), sci::round( rgb.b() * 255.0), rgb.a() );
 						pl->col0(1);
-						plschr(0.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]));
+						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
 						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
 					}
 				}
@@ -2521,7 +2633,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 					//draw points with changing size
 					for(size_t j=0; j<m_xs[i].size(); ++j)
 					{
-						plschr(0.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]));
+						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
 						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
 					}
 				}
@@ -2735,10 +2847,10 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//set the font for the labels
 	pl->sfci(m_xaxis.m_labelfci);
 	//pl->sfontf(m_xaxis.m_labelfont.mb_str());
-	pl->schr(0.0,m_xaxis.m_labelsize);
+	pl->schr(1.0,m_xaxis.m_labelsize * linewidthmultiplier / 72.0 * 25.4 );
 	//set the tick lengths
-	pl->smin(0.0,m_xaxis.m_minorticklength);
-	pl->smaj(0.0,m_xaxis.m_majorticklength);
+	pl->smin(1.0,m_xaxis.m_minorticklength * linewidthmultiplier);
+	pl->smaj(1.0,m_xaxis.m_majorticklength * linewidthmultiplier);
 	//set the label dp and length
 	pl->sxax(m_xaxis.m_maxndigits,0);
 	if(m_xaxis.m_autodecimalplaces)pl->prec(0,0);
@@ -2762,7 +2874,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//set the font for the labels
 	pl->sfci(m_yaxis.m_labelfci);
 	//pl->sfontf(m_yaxis.m_labelfont.mb_str());
-	pl->schr(0.0,m_yaxis.m_labelsize);
+	pl->schr(1.0,m_yaxis.m_labelsize * linewidthmultiplier/ 72.0 * 25.4 );
 	//set the tick lengths
 	pl->smin(0.0,m_yaxis.m_minorticklength);
 	pl->smaj(0.0,m_yaxis.m_majorticklength);
@@ -2778,7 +2890,6 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//draw the y axis
 	//to do: allow the labels to have different colour to the axis
 	pl->box("",0.0,0,yopt.mb_str(),ymajint,ynsub);
-	//pl->box("",0.0,0,yopt.mb_str(),100,1);
 	
 	
 	
@@ -2787,7 +2898,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//first the x axis
 	pl->sfci(m_xaxis.m_titlefci);
 	//pl->sfontf(m_xaxis.m_titlefont.mb_str());
-	pl->schr(0.0,m_xaxis.m_titlesize);
+	pl->schr(1.0,m_xaxis.m_titlesize * linewidthmultiplier/ 72.0 * 25.4 );
 	r=m_xaxis.m_titlecolour.Red();
 	g=m_xaxis.m_titlecolour.Green();
 	b=m_xaxis.m_titlecolour.Blue();
@@ -2798,7 +2909,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//then the y axis
 	pl->sfci(m_yaxis.m_titlefci);
 	//pl->sfontf(m_yaxis.m_titlefont.mb_str());
-	pl->schr(0.0,m_yaxis.m_titlesize);
+	pl->schr(1.0,m_yaxis.m_titlesize * linewidthmultiplier/ 72.0 * 25.4 );
 	r=m_yaxis.m_titlecolour.Red();
 	g=m_yaxis.m_titlecolour.Green();
 	b=m_yaxis.m_titlecolour.Blue();
@@ -2829,7 +2940,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//draw the title
 	pl->sfci(m_titlefci);
 	//pl->sfontf(m_titlefont.mb_str());
-	pl->schr(0.0,m_titlesize);
+	pl->schr(1.0,m_titlesize * linewidthmultiplier / 72.0 * 25.4 );
 	r=m_titlecolour.Red();
 	g=m_titlecolour.Green();
 	b=m_titlecolour.Blue();
@@ -3510,7 +3621,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	//get character with scaled height 1.0 size in mm
 	double defchrmm;
 	double scaledcharheightmm;
-	pl->schr(0.0,1.0);
+	pl->schr(1.0,1.0 * linewidthmultiplier / 72.0 * 25.4 );
 	pl->gchr(defchrmm,scaledcharheightmm);
 	double scaledcharheightworld=scaledcharheightmm/vporheightmm*(ymax-ymin);
 
@@ -3530,7 +3641,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	//draw the title
 	//pl->sfontf(m_titlefont.mb_str(wxConvUTF8));
 	pl->sfci(m_titlefci);
-	pl->schr(0.0,m_titlesize);
+	pl->schr(1.0,m_titlesize * linewidthmultiplier / 72.0 * 25.4 );
 	r=m_titlecolour.Red();
 	g=m_titlecolour.Green();
 	b=m_titlecolour.Blue();
@@ -3556,7 +3667,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 		pl->col0(1);
 		//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 		pl->sfci(m_textfci[i]);
-		pl->schr(0.0,m_textsize[i]);
+		pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 
 		if(m_sizescale[i].m_value.size()>1 || m_colourlevels[i].size()>0)
 		{
@@ -3576,7 +3687,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
 			pl->width(m_linethickness[i]*linewidthmultiplier);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			//set the line style
 			std::vector<PLINT>marks;
 			std::vector<PLINT>spaces;
@@ -3605,7 +3716,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
-			pl->schr(0.0,m_pointsize[i]);
+			pl->schr(1.0,m_pointsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
 			//pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8))
@@ -3618,7 +3729,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 
 			double positionstep=std::max(positionstep,m_pointsize[i]*(0.5*1.6+m_textspacing[i]));
 		}
@@ -3642,7 +3753,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
 			position+=positionstep+0.5*std::max(sizes[0],m_textsize[i]*1.6);//here the 1.6 is only applied to text as symbols don't have tall or dangly bits;
-			pl->schr(0.0,sizes[0]);
+			pl->schr(1.0,sizes[0] * linewidthmultiplier / 72.0 * 25.4 );
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
 			pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
@@ -3655,7 +3766,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			wxString value;
 			value << m_sizescale[i].m_value[0];
 			pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,value.mb_str(wxConvUTF8));
@@ -3673,7 +3784,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				//position+=std::max(sizes[j-1]*0.5+m_textspacing[i]*m_textsize[i],m_textsize[i]*(0.5*1.6+m_textspacing[i]));
 				position+=std::max(sizes[j-1]+m_textspacing[i]*m_textsize[i],m_textsize[i]*(1.6+m_textspacing[i]));
 				position+=0.5*std::max(sizes[j],m_textsize[i]*1.6)*2.0;
-				pl->schr(0.0,sizes[j]);
+				pl->schr(1.0,sizes[j] * linewidthmultiplier / 72.0 * 25.4 );
 				double x=m_textoffset[i]*0.5;
 				double y=1.0-position*scaledcharheightworld;
 				pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
@@ -3685,7 +3796,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				pl->col0(1);
 				//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 				pl->sfci(m_textfci[i]);
-				pl->schr(0.0,m_textsize[i]);
+				pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 				value.clear();
 				value << m_sizescale[i].m_value[0]+(m_sizescale[i].m_value.back()-m_sizescale[i].m_value[0])*(double)j/(double)(m_nlines[i]+1);
 				pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,value.mb_str(wxConvUTF8));
@@ -3699,7 +3810,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 		}
 
 		//and finally a colour scale
@@ -3721,7 +3832,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				std::swap( x, y );
 				z=sci::transpose( z );
 			}
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			//reset the viewport up where we want it
 			double xmin=vporxminnorm+0.1*m_textoffset[i]*(vporxmaxnorm-vporxminnorm);
 			double xmax=vporxminnorm+0.9*m_textoffset[i]*(vporxmaxnorm-vporxminnorm);
@@ -3780,7 +3891,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			//draw a bounding box
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			pl->width(1.0*linewidthmultiplier);
 			pl->scol0(1,0,0,0);
 			pl->col0(1);
