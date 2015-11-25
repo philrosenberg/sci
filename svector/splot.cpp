@@ -2441,7 +2441,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 		{
 			//pl->sfontf(m_textFont[i].c_str());
 			pl->sfci(m_textFci[i]);
-			pl->schr(0.0,m_textSize[i]);
+			pl->schr(1.0,m_textSize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			a=m_pointcolour[i].Alpha()/255.0;
 			r=m_pointcolour[i].Red();
 			g=m_pointcolour[i].Green();
@@ -2597,7 +2597,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				pl->sfci(m_pointfci[i]);
 				pl->sfci(0);
 				//pl->sfontf(m_pointfont[i].mb_str());
-				pl->schr(0.0,m_pointsize[i]);
+				pl->schr(1.0,m_pointsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 				r=m_pointcolour[i].Red();
 				g=m_pointcolour[i].Green();
 				b=m_pointcolour[i].Blue();
@@ -2624,7 +2624,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 							rgb=m_colourscale[i].getRgbOriginalScale( val );
 						pl->scol0a( 1, sci::round( rgb.r() * 255.0), sci::round( rgb.g() * 255.0), sci::round( rgb.b() * 255.0), rgb.a() );
 						pl->col0(1);
-						plschr(0.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]));
+						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
 						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
 					}
 				}
@@ -2633,7 +2633,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 					//draw points with changing size
 					for(size_t j=0; j<m_xs[i].size(); ++j)
 					{
-						plschr(0.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]));
+						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
 						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
 					}
 				}
@@ -2847,10 +2847,10 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//set the font for the labels
 	pl->sfci(m_xaxis.m_labelfci);
 	//pl->sfontf(m_xaxis.m_labelfont.mb_str());
-	pl->schr(0.0,m_xaxis.m_labelsize);
+	pl->schr(1.0,m_xaxis.m_labelsize * linewidthmultiplier / 72.0 * 25.4 );
 	//set the tick lengths
-	pl->smin(0.0,m_xaxis.m_minorticklength);
-	pl->smaj(0.0,m_xaxis.m_majorticklength);
+	pl->smin(1.0,m_xaxis.m_minorticklength * linewidthmultiplier);
+	pl->smaj(1.0,m_xaxis.m_majorticklength * linewidthmultiplier);
 	//set the label dp and length
 	pl->sxax(m_xaxis.m_maxndigits,0);
 	if(m_xaxis.m_autodecimalplaces)pl->prec(0,0);
@@ -2874,7 +2874,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//set the font for the labels
 	pl->sfci(m_yaxis.m_labelfci);
 	//pl->sfontf(m_yaxis.m_labelfont.mb_str());
-	pl->schr(0.0,m_yaxis.m_labelsize);
+	pl->schr(1.0,m_yaxis.m_labelsize * linewidthmultiplier/ 72.0 * 25.4 );
 	//set the tick lengths
 	pl->smin(0.0,m_yaxis.m_minorticklength);
 	pl->smaj(0.0,m_yaxis.m_majorticklength);
@@ -2890,7 +2890,6 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//draw the y axis
 	//to do: allow the labels to have different colour to the axis
 	pl->box("",0.0,0,yopt.mb_str(),ymajint,ynsub);
-	//pl->box("",0.0,0,yopt.mb_str(),100,1);
 	
 	
 	
@@ -2899,7 +2898,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//first the x axis
 	pl->sfci(m_xaxis.m_titlefci);
 	//pl->sfontf(m_xaxis.m_titlefont.mb_str());
-	pl->schr(0.0,m_xaxis.m_titlesize);
+	pl->schr(1.0,m_xaxis.m_titlesize * linewidthmultiplier/ 72.0 * 25.4 );
 	r=m_xaxis.m_titlecolour.Red();
 	g=m_xaxis.m_titlecolour.Green();
 	b=m_xaxis.m_titlecolour.Blue();
@@ -2910,7 +2909,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//then the y axis
 	pl->sfci(m_yaxis.m_titlefci);
 	//pl->sfontf(m_yaxis.m_titlefont.mb_str());
-	pl->schr(0.0,m_yaxis.m_titlesize);
+	pl->schr(1.0,m_yaxis.m_titlesize * linewidthmultiplier/ 72.0 * 25.4 );
 	r=m_yaxis.m_titlecolour.Red();
 	g=m_yaxis.m_titlecolour.Green();
 	b=m_yaxis.m_titlecolour.Blue();
@@ -2941,7 +2940,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//draw the title
 	pl->sfci(m_titlefci);
 	//pl->sfontf(m_titlefont.mb_str());
-	pl->schr(0.0,m_titlesize);
+	pl->schr(1.0,m_titlesize * linewidthmultiplier / 72.0 * 25.4 );
 	r=m_titlecolour.Red();
 	g=m_titlecolour.Green();
 	b=m_titlecolour.Blue();
@@ -3622,7 +3621,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	//get character with scaled height 1.0 size in mm
 	double defchrmm;
 	double scaledcharheightmm;
-	pl->schr(0.0,1.0);
+	pl->schr(1.0,1.0 * linewidthmultiplier / 72.0 * 25.4 );
 	pl->gchr(defchrmm,scaledcharheightmm);
 	double scaledcharheightworld=scaledcharheightmm/vporheightmm*(ymax-ymin);
 
@@ -3642,7 +3641,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	//draw the title
 	//pl->sfontf(m_titlefont.mb_str(wxConvUTF8));
 	pl->sfci(m_titlefci);
-	pl->schr(0.0,m_titlesize);
+	pl->schr(1.0,m_titlesize * linewidthmultiplier / 72.0 * 25.4 );
 	r=m_titlecolour.Red();
 	g=m_titlecolour.Green();
 	b=m_titlecolour.Blue();
@@ -3668,7 +3667,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 		pl->col0(1);
 		//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 		pl->sfci(m_textfci[i]);
-		pl->schr(0.0,m_textsize[i]);
+		pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 
 		if(m_sizescale[i].m_value.size()>1 || m_colourlevels[i].size()>0)
 		{
@@ -3688,7 +3687,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->scol0(1,r,g,b);
 			pl->col0(1);
 			pl->width(m_linethickness[i]*linewidthmultiplier);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			//set the line style
 			std::vector<PLINT>marks;
 			std::vector<PLINT>spaces;
@@ -3717,7 +3716,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
-			pl->schr(0.0,m_pointsize[i]);
+			pl->schr(1.0,m_pointsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
 			//pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8))
@@ -3730,7 +3729,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 
 			double positionstep=std::max(positionstep,m_pointsize[i]*(0.5*1.6+m_textspacing[i]));
 		}
@@ -3754,7 +3753,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			//pl->sfontf(m_pointfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_pointfci[i]);
 			position+=positionstep+0.5*std::max(sizes[0],m_textsize[i]*1.6);//here the 1.6 is only applied to text as symbols don't have tall or dangly bits;
-			pl->schr(0.0,sizes[0]);
+			pl->schr(1.0,sizes[0] * linewidthmultiplier / 72.0 * 25.4 );
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
 			pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
@@ -3767,7 +3766,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			wxString value;
 			value << m_sizescale[i].m_value[0];
 			pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,value.mb_str(wxConvUTF8));
@@ -3785,7 +3784,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				//position+=std::max(sizes[j-1]*0.5+m_textspacing[i]*m_textsize[i],m_textsize[i]*(0.5*1.6+m_textspacing[i]));
 				position+=std::max(sizes[j-1]+m_textspacing[i]*m_textsize[i],m_textsize[i]*(1.6+m_textspacing[i]));
 				position+=0.5*std::max(sizes[j],m_textsize[i]*1.6)*2.0;
-				pl->schr(0.0,sizes[j]);
+				pl->schr(1.0,sizes[j] * linewidthmultiplier / 72.0 * 25.4 );
 				double x=m_textoffset[i]*0.5;
 				double y=1.0-position*scaledcharheightworld;
 				pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
@@ -3797,7 +3796,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				pl->col0(1);
 				//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 				pl->sfci(m_textfci[i]);
-				pl->schr(0.0,m_textsize[i]);
+				pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 				value.clear();
 				value << m_sizescale[i].m_value[0]+(m_sizescale[i].m_value.back()-m_sizescale[i].m_value[0])*(double)j/(double)(m_nlines[i]+1);
 				pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,value.mb_str(wxConvUTF8));
@@ -3811,7 +3810,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->col0(1);
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 		}
 
 		//and finally a colour scale
@@ -3833,7 +3832,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				std::swap( x, y );
 				z=sci::transpose( z );
 			}
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			//reset the viewport up where we want it
 			double xmin=vporxminnorm+0.1*m_textoffset[i]*(vporxmaxnorm-vporxminnorm);
 			double xmax=vporxminnorm+0.9*m_textoffset[i]*(vporxmaxnorm-vporxminnorm);
@@ -3892,7 +3891,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			//draw a bounding box
 			//pl->sfontf(m_textfont[i].mb_str(wxConvUTF8));
 			pl->sfci(m_textfci[i]);
-			pl->schr(0.0,m_textsize[i]);
+			pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 			pl->width(1.0*linewidthmultiplier);
 			pl->scol0(1,0,0,0);
 			pl->col0(1);
