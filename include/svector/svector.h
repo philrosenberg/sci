@@ -23,7 +23,7 @@
 #include<type_traits>
 #include"dep/operators.h"
 #include"dep/math.h"
-#include"svector/serr.h"
+//#include"svector/serr.h"
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>

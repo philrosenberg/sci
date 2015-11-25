@@ -1,7 +1,8 @@
+
+#include"../include/svector/serr.h"
 #include "../include/svector/svector.h"
 #include"../include/svector/svi.h"
 #include"../include/svector/sstring.h"
-#include"../include/svector/serr.h"
 #include<libresample.h>
 #include <alg/ap.h>
 #include <alg/alglibinternal.h>
