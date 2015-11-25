@@ -25,6 +25,7 @@
 #include"dep/math.h"
 //#include"svector/serr.h"
 
+#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -34,6 +35,7 @@
 #define new DBG_NEW   
 #endif
 #endif  // _DEBUG
+#endif
 
 
 #include <alg/ap.h>
