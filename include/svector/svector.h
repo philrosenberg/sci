@@ -69,6 +69,8 @@ namespace sci
 namespace sci
 {
 	size_t randInt(size_t maxVal);
+	double round(double n);
+	double linearinterpolate(double x, double x1, double x2, double y1, double y2);
 	
 	//enumeration of base types
 	enum basetype
@@ -2593,9 +2595,6 @@ sublength*=*shapei;
 		}
 	}
 
-	double round(double n);
-
-	double linearinterpolate(double x, double x1, double x2, double y1, double y2);
 
 	template<class T>
 	void erase(std::vector<T> &v, size_t index)
