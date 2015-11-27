@@ -214,7 +214,7 @@ namespace sci
 		std::sort(m_vector.begin(),m_vector.end());
 	}
 
-	//okay top
+
 	
 	//********************************************************
 	//**********Functions*************************************
@@ -302,7 +302,7 @@ namespace sci
 		}
 		return true;
 	}
-	//okay top
+
 
 	//creates a vector from a c style array
 	template<class T>
@@ -480,7 +480,6 @@ namespace sci
 		return result;
 	}
 	
-	//okay bottom
 	//create a subvector from a vector of values and a vector of chars which indicates if the value should be used
 	//a char value of 0 indicates not included anything else indicates included. This is hoped to be faster than
 	//the bool implimentation but uses more memory
@@ -807,7 +806,7 @@ sublength*=*shapei;
 	{
 		return std::vector<size_t>(1,v.size());
 	}
-	//okay bottom
+
 	//return the base type of a multi dimensional vector
 	template<class T>
 	inline sci::basetype getbasetype(const std::vector< std::vector< T > > &v)
@@ -899,7 +898,7 @@ sublength*=*shapei;
 	{
 		return sci::SBASE_STRING;
 	}
-	//okay bottom
+
 	//recast one vector type to another. The destination vector will be resized
 	//to the same size as source if needed
 	template<class T, class U>
@@ -956,7 +955,7 @@ sublength*=*shapei;
 			std::swap(pi,pj);
 		}
 	}
-	//okay bottom
+
 			
 	//********************************************************
 	//**********Functions giving information******************
@@ -1058,7 +1057,7 @@ sublength*=*shapei;
 		}
 		return result/weight;
 	}
-	//okay
+
 	template<class T>
 	T meanIgnoreNans(const std::vector<T> &v)
 	{
