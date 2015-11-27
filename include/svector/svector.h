@@ -1017,7 +1017,7 @@ sublength*=*shapei;
 	auto anyBaseVal(const std::vector<std::vector<T>> &v) -> decltype( anyBaseVal(T(0)) )
 	{
 		if(v.size()>0)
-			return anyBaseVal(T[0]);
+			return anyBaseVal(T(0));
 		else
 			return anyBaseVal(T(0));
 	}
