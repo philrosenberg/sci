@@ -63,6 +63,13 @@
 
 namespace sci
 {
+}
+
+
+namespace sci
+{
+	size_t randInt(size_t maxVal);
+	
 	//enumeration of base types
 	enum basetype
 	{
@@ -83,12 +90,6 @@ namespace sci
 		SBASE_COMPLEX=15,
 		SBASE_STRING=16
 	};
-}
-
-
-namespace sci
-{
-	size_t randInt(size_t maxVal);
 
 	//quick iterator
 	template<class T>
