@@ -64,12 +64,14 @@ namespace sci_internal
 	template<class T, class U, class V>
 	inline V unaryminus( T &a, U &){return -a;}
 
+	//Note the s_ here to avoid name clashes with C operators
+	//which can use names for a certain ISO
 	template<class T, class U, class V>
-	inline V and(T &a, U &b){return a&&b;}
+	inline V s_and(T &a, U &b){return a&&b;}
 	template<class T, class U, class V>
-	inline V or(T &a, U &b){return a||b;}
+	inline V s_or(T &a, U &b){return a||b;}
 	template<class T, class U, class V>
-	inline V not(T &a, U &){return !a;}
+	inline V s_not(T &a, U &){return !a;}
 	
 	template<class T, class U, class V>
 	inline V bitwiseand(T &a, U &b){return a&b;}
@@ -300,13 +302,13 @@ OPPREFIXSINGLE--VECFUNC( predecrement, , T )
 OPPREFIXSINGLE--VECINTFUNC( postdecrement, T )
 OPPREFIXSINGLE-VECFUNC( unaryminus, const, T )
 
-OPPREFIX&&VECVECFUNC(and, const, SBOOL)
-OPPREFIX||VECVECFUNC(or, const, SBOOL)
-OPPREFIX&&VECSCALFUNC(and, const, SBOOL)
-OPPREFIX||VECSCALFUNC(or, const, SBOOL)
-OPPREFIX&&SCALVECFUNC(and, SBOOL)
-OPPREFIX||SCALVECFUNC(or, SBOOL)
-OPPREFIX!VECFUNC(not, const, SBOOL)
+OPPREFIX&&VECVECFUNC(s_and, const, SBOOL)
+OPPREFIX||VECVECFUNC(s_or, const, SBOOL)
+OPPREFIX&&VECSCALFUNC(s_and, const, SBOOL)
+OPPREFIX||VECSCALFUNC(s_or, const, SBOOL)
+OPPREFIX&&SCALVECFUNC(s_and, SBOOL)
+OPPREFIX||SCALVECFUNC(s_or, SBOOL)
+OPPREFIX!VECFUNC(s_not, const, SBOOL)
 
 OPPREFIX&VECVECFUNC(bitwiseand, const, decltype(T()&U()))
 OPPREFIX|VECVECFUNC(bitwiseor, const, decltype(T()|U()))
