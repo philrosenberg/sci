@@ -376,7 +376,7 @@ namespace sci
 	template <class T>
 	size_t maxsize(const std::vector< std::vector<T> > &v)
 	{
-		if v.size()==0 return 0;
+		if (v.size()==0) return 0;
 		size_t maxsize=v[0].size();
 		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
@@ -402,7 +402,7 @@ namespace sci
 	template <class T>
 	size_t minsize(const std::vector< std::vector<T> > &v)
 	{
-		if v.size()==0 return 0;
+		if (v.size()==0) return 0;
 		size_t minsize=v[0].size();
 		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
