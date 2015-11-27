@@ -1000,7 +1000,7 @@ sublength*=*shapei;
 	template<class T>
 	std::vector<T> product(const std::vector<std::vector<T>> &v)
 	{
-		if(v.size()==0) return return std::vector<T>(0);
+		if(v.size()==0) return std::vector<T>(0);
 		std::vector<T> result(v[0].size(), 1.0);
 		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
 		//std::accumulate(v.begin(), v.end(),result);
