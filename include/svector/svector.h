@@ -325,23 +325,9 @@ namespace sci
 		if(v.capacity()==0) v.reserve(2);
 		else if((v.size())==v.capacity()) 
 		{
-			try	
-			{
-				v.reserve(std::min(v.capacity()*2,v.max_size()));
-			}
-			catch(...)
-			{
-				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const T &val)");
-			}
+			v.reserve(std::min(v.capacity()*2,v.max_size()));
 		}
-		try
-		{
-			v.push_back(val);
-		}
-		catch(...)
-		{
-			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const T &val). The element has not been added.");
-		}
+		v.push_back(val);
 	}
 
 	//as above but adds multiple copies
@@ -351,23 +337,9 @@ namespace sci
 		if(v.capacity()==0) v.reserve(n_copies*2);
 		else if((v.size()+n_copies)>=v.capacity()) 
 		{
-			try	
-			{
-				v.reserve(std::min(v.capacity()*2,v.max_size()));
-			}
-			catch(...)
-			{
-				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const T &val, size_t n_copies)");
-			}
+			v.reserve(std::min(v.capacity()*2,v.max_size()));
 		}
-		try
-		{
-			v.insert(v.end(),n_copies,val);
-		}
-		catch(...)
-		{
-			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const T &val, size_t n_copies). The elements have not been added.");
-		}
+		v.insert(v.end(),n_copies,val);
 	}
 
 	//as above push pushes back a whole vector
@@ -377,22 +349,9 @@ namespace sci
 		if(v.capacity()==0) v.reserve(val.size()*2);
 		else if((v.size()+val.size())>=v.capacity()) 
 		{
-			try	
-			{
-				v.reserve(std::min(v.capacity()*2,v.max_size()));
-			}
-			catch(...)
-			{
-				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val");
-			}
+			v.reserve(std::min(v.capacity()*2,v.max_size()));
 		}
-		try
-		{
-			v.insert(v.end(),val.begin(),val.end());
-		}
-		catch(...)
-		{
-			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val. The elements have not been added.");
+		v.insert(v.end(),val.begin(),val.end());
 		}
 	}
 
@@ -403,31 +362,17 @@ namespace sci
 		if(v.capacity()==0) v.reserve(n_elements*2);
 		else if ((v.size()+n_elements)>=v.capacity())
 		{
-			try	
-			{
-				v.reserve(std::min(v.capacity()*2,v.max_size()));
-			}
-			catch(...)
-			{
-				sci::outputerr("Could not allocate reserved memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements)");
-			}
+			v.reserve(std::min(v.capacity()*2,v.max_size()));
 		}
-		try
+		if(begin>val.size()) v.insert(v.end(),n_elements,T());
+		else if((begin+n_elements)>val.size())
 		{
-			if(begin>val.size()) v.insert(v.end(),n_elements,T());
-			else if((begin+n_elements)>val.size())
-			{
-				v.insert(v.end(),val.begin()+begin,val.end());
-				v.insert(v.end(),n_elements-(val.end()-(val.begin()+begin)),T());
-			}
-			else v.insert(v.end(),val.begin()+begin,val.begin()+begin+n_elements);
+			v.insert(v.end(),val.begin()+begin,val.end());
+			v.insert(v.end(),n_elements-(val.end()-(val.begin()+begin)),T());
 		}
-		catch(...)
-		{
-			sci::outputerr("Could not allocate any extra memory in reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements). The elements have not been added.");
-		}
-
+		else v.insert(v.end(),val.begin()+begin,val.begin()+begin+n_elements);
 	}
+
 	template <class T>
 	size_t maxsize(const std::vector< std::vector<T> > &v)
 	{
