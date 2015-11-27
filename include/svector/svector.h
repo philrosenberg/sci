@@ -2335,12 +2335,12 @@ sublength*=*shapei;
 		w.resize( nNodes );
 		alglib::ae_int_t algresult;
 		alglib::gqgenerategausslaguerre( nNodes, 0.0, algresult, x, w );
-		if( result != 1 )
-			sci::assertThrow( algresult == 1, sci::error() );
+		sci::assertThrow( algresult == 1, sci::err() );
 
 		double result = 0.0;
-		for(size_t i=0; i<x.length(); +=i)
+		for(size_t i=0; i<x.length(); ++i)
 			result += functionToIntegrate( x[i] ) * w[i] * std::exp( x[i] );
+		return result;
 	}
 	template< class T >
 	void integrateAdaptiveCallback( double x, double, double, double &y, void *ptr )
