@@ -411,6 +411,26 @@ namespace sci
 		return minsize;
 	}
 	
+
+	//return the number of dimensions in a scalar
+	template<class T>
+	inline size_t ndims(const T &v)
+	{
+		return 0;
+	}
+	//return the number of dimensions in a vector v
+	template<class T>
+	inline size_t ndims(const std::vector< T > &v)
+	{
+		return 1;
+	}
+	//return the number of dimensions in a multi dimension vector v
+	template<class T>
+	size_t ndims(const std::vector< std::vector< T > > &v)
+	{
+		return (v.size()>0?ndims(v[0]):ndims(std::vector<T>()))+1;
+	}
+	
 	//create a 2 d vector with dimensions as given
 	template <class T>
 	std::vector <std::vector <T> > makevector(T fillvalue, size_t dim1, size_t dim2)
@@ -837,25 +857,6 @@ sublength*=*shapei;
 		: sameNDims<decltype(T()), decltype(U())>
 	{
 	};
-
-	//return the number of dimensions in a multi dimension vector v
-	template<class T>
-	size_t ndims(const std::vector< std::vector< T > > &v)
-	{
-		return (v.size()>0?ndims(v[0]):ndims(std::vector<T>()))+1;
-	}
-	//return the number of dimensions in a vector v
-	template<class T>
-	inline size_t ndims(const std::vector< T > &v)
-	{
-		return 1;
-	}
-	//return the number of dimensions in a scalar
-	template<class T>
-	inline size_t ndims(const T &v)
-	{
-		return 0;
-	}
 
 	//return the shape of a multi dimension vector v
 	template<class T>
