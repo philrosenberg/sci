@@ -17,7 +17,7 @@ namespace sci
 
 	void reporterr(std::string error);
 	void reporterr(errcategory category, size_t code, std::string usefulinfo);
-	void assertThrow(bool test, sci::err &err);
+	void assertThrow(bool test, const sci::err &err);
 }
 
 

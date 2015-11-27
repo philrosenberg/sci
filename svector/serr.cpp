@@ -8,7 +8,7 @@ void sci::reporterr(sci::errcategory category, size_t code, std::string usefulin
 {
 }
 
-void sci::assertThrow(bool test, sci::err &err)
+void sci::assertThrow(bool test, const sci::err &err)
 {
 	assert(test);
 	if(!test)
