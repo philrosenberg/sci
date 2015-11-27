@@ -1115,6 +1115,24 @@ sublength*=*shapei;
 	}
 
 	template<class T>
+	T centralmoment(int moment, const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=std::pow((*vi-mean), moment);
+		return result/decltype( anyBaseVal(v) )(v.size()-1);
+	}
+
+	template<class T>
+	T centralmomentnobessel(int moment, const std::vector<T> &v, const T &mean)
+	{
+		T result(0.0);
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			result+=std::pow((*vi-mean), moment);
+		return result/decltype( anyBaseVal(v) )(v.size());
+	}
+
+	template<class T>
 	T variance(const std::vector<T> &v)
 	{
 		if(v.size()==0) 
@@ -1380,24 +1398,6 @@ sublength*=*shapei;
 	{
 		T mean = sci::mean(v);
 		return centralmoment(moment, v, mean);
-	}
-
-	template<class T>
-	T centralmoment(int moment, const std::vector<T> &v, const T &mean)
-	{
-		T result(0.0);
-		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
-			result+=std::pow((*vi-mean), moment);
-		return result/decltype( anyBaseVal(v) )(v.size()-1);
-	}
-
-	template<class T>
-	T centralmomentnobessel(int moment, const std::vector<T> &v, const T &mean)
-	{
-		T result(0.0);
-		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
-			result+=std::pow((*vi-mean), moment);
-		return result/decltype( anyBaseVal(v) )(v.size());
 	}
 
 	template<class T>
