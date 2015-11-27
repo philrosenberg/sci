@@ -179,9 +179,9 @@ namespace sci
 	sortablevector<T>::sortablevector(const std::vector<T> &origv)
 	{
 		m_vector.resize(origv.size());
-		std::vector< sortableelement<T> >::iterator vbegin=m_vector.begin();
-		std::vector<T>::const_iterator origvi=origv.begin();
-		for(std::vector< sortableelement<T> >::iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
+		typename std::vector< sortableelement<T> >::iterator vbegin=m_vector.begin();
+		typename std::vector<T>::const_iterator origvi=origv.begin();
+		for(typename std::vector< sortableelement<T> >::iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
 		{
 			vi->setoriginallocation(vi-vbegin);
 			vi->setval(*origvi);
@@ -194,9 +194,9 @@ namespace sci
 	{
 		vect.resize(m_vector.size());
 		origpositions.resize(m_vector.size());
-		std::vector<T>::iterator vecti=vect.begin();
-		std::vector<size_t>::iterator origi=origpositions.begin();
-		for(std::vector< sortableelement<T> >::const_iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
+		typename std::vector<T>::iterator vecti=vect.begin();
+		typename std::vector<size_t>::iterator origi=origpositions.begin();
+		for(typename std::vector< sortableelement<T> >::const_iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
 		{
 			*vecti=vi->getval();
 			*origi=vi->getoriginallocation();
@@ -266,9 +266,11 @@ namespace sci
 	{
 		std::vector< std::vector<T> > result;
 		size_t d1=0;
-		for(std::vector<std::vector <T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) d1=std::max(d1,vi->size());
+		for(typename std::vector<std::vector <T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+			d1=std::max(d1,vi->size());
 		result.resize(d1);
-		for(std::vector<std::vector <T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)resulti->resize(v.size(),std::numeric_limits<T>::quiet_NaN());
+		for(typename std::vector<std::vector <T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+			resulti->resize(v.size(),std::numeric_limits<T>::quiet_NaN());
 		for(size_t i=0; i<v.size(); ++i)
 		{
 			for(size_t j=0; j<v[i].size(); j++)result[j][i]=v[i][j];
@@ -280,7 +282,7 @@ namespace sci
 	{
 		if (v.size()==0) return true;
 		size_t size=v[0].size();
-		for(std::vector<std::vector<T> >::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		for(typename std::vector<std::vector<T> >::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
 			if(vi->size()!=size) return false;
 		}
@@ -291,7 +293,7 @@ namespace sci
 	{
 		if (v.size()==0) return true;
 		size_t size=v.size();
-		for(std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi)
+		for(typename std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi)
 		{
 			if(vi->size()!=size) return false;
 		}
@@ -431,7 +433,7 @@ namespace sci
 	{
 		if v.size()==0 return 0;
 		size_t maxsize=v[0].size();
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
 			maxsize=max(maxsize,vi->size());
 		}
@@ -443,13 +445,13 @@ namespace sci
 	inline void setallvalues(std::vector<T> &v, const U &val)
 	{
 		if(v.size()==0) return;
-		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) *vi=val;
+		for(typename std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) *vi=val;
 	}
 	template <class T, class U>
 	inline void setallvalues(std::vector< std::vector<T> > &v, const U &val)
 	{
 		if(v.size()==0) return;
-		for(std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi) setallvalues(*vi,val);
+		for(typename std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi) setallvalues(*vi,val);
 	}
 
 	template <class T>
@@ -457,7 +459,7 @@ namespace sci
 	{
 		if v.size()==0 return 0;
 		size_t minsize=v[0].size();
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
 			minsize=min(minsize,vi->size());
 		}
@@ -469,7 +471,8 @@ namespace sci
 	std::vector <std::vector <T> > makevector(T fillvalue, size_t dim1, size_t dim2)
 	{
 		std::vector <std::vector <T> > result(dim1);
-		for(std::vector<std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) resulti->resize(dim2,fillvalue);
+		for(typename std::vector<std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) 
+			resulti->resize(dim2,fillvalue);
 		return result;
 	}
 
@@ -478,8 +481,8 @@ namespace sci
 	std::vector <T>  subvector(const std::vector<T> &src, size_t first_elem, size_t length)
 	{
 		if(first_elem>=src.size()) return std::vector<T>(0);
-		std::vector<T>::const_iterator first=src.begin()+first_elem;
-		std::vector<T>::const_iterator last;
+		typename std::vector<T>::const_iterator first=src.begin()+first_elem;
+		typename std::vector<T>::const_iterator last;
 
 		if(first_elem+length>src.size()) last=src.end();
 		else last=src.begin()+first_elem+length;
@@ -502,14 +505,14 @@ namespace sci
 	{
 		if(src.size()!=included.size()) return std::vector<T>(0);
 		size_t count=0;
-		for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
+		for(typename std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
 		{
 			if(*inci) ++count;
 		}
 		std::vector<T> result(count);
-		std::vector<bool>::const_iterator includedi=included.begin();
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator srci=src.begin(); srci!=src.end(); ++srci) 
+		typename std::vector<bool>::const_iterator includedi=included.begin();
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator srci=src.begin(); srci!=src.end(); ++srci) 
 		{
 			if(*includedi)
 			{
@@ -527,14 +530,14 @@ namespace sci
 	{
 		if(src.size()!=included.size()) return std::vector<T>(0);
 		size_t count=0;
-		for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
+		for(typename std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
 		{
 			if(*inci) ++count;
 		}
 		std::vector<T> result=src;
 		/*result.reserve(count);*/
 		
-		/*std::vector<bool>::const_iterator includedi=included.begin();
+		/*typename std::vector<bool>::const_iterator includedi=included.begin();
 		std::vector<T>::const_iterator srci=src.begin();
 		while(includedi!=included.end())
 		{
@@ -674,16 +677,16 @@ namespace sci
 		{
 			if(src.size()!=included.size()) return std::vector<std::vector<T>>(0);
 			size_t count=0;
-			for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
+			for(typename std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
 			{
 				if(*inci) ++count;
 			}
 
 			std::vector<std::vector<T>> result(count);
-			std::vector<std::vector<T>>::iterator resulti=result.begin();
-			std::vector<std::vector<T>>::const_iterator srci=src.begin();
+			typename std::vector<std::vector<T>>::iterator resulti=result.begin();
+			typename std::vector<std::vector<T>>::const_iterator srci=src.begin();
 
-			for(std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
+			for(typename std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci)
 			{
 				if(*inci) 
 				{
@@ -719,7 +722,7 @@ namespace sci
 	{
 		std::vector<T>result(size);
 		size_t val=0;
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
 			*resulti=(T)val;
 			++val;
@@ -738,7 +741,8 @@ namespace sci
 	std::vector< std::vector<T> > vector2d(size_t size1, size_t size2, const T &value)
 	{
 		std::vector< std::vector<T> >result(size1);
-		for(std::vector< std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) resulti->resize(size2,value);
+		for(typename std::vector< std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) 
+			resulti->resize(size2,value);
 		return result;
 	}
 	
@@ -749,13 +753,15 @@ namespace sci
 	{
 		
 		size_t expectedlength=1;
-		for(std::vector<size_t>::const_iterator shapei=shape.begin(); shapei!=shape.end(); ++shapei) expectedlength*=*shapei;
+		for(typename std::vector<size_t>::const_iterator shapei=shape.begin(); shapei!=shape.end(); ++shapei) 
+			expectedlength*=*shapei;
 		if(expectedlength!=v.size())
 		{
 			return false;
 		}
 		size_t sublength=1;
-		for(std::vector<size_t>::const_iterator shapei=shape.begin()+1; shapei!=shape.end(); ++shapei) sublength*=*shapei;
+		for(typename std::vector<size_t>::const_iterator shapei=shape.begin()+1; shapei!=shape.end(); ++shapei) 
+sublength*=*shapei;
 		std::vector<size_t> nextshape(shape.begin()+1,shape.end());
 		result.resize(shape[0]);
 		for(size_t i=0; i<shape[0]; ++i) 
@@ -785,7 +791,7 @@ namespace sci
 	size_t nelements(const std::vector<std::vector<T> > &v)
 	{
 		size_t result=0;
-		for(std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=nelements(*vi);
+		for(typename std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=nelements(*vi);
 		return result;
 	}
 
@@ -857,7 +863,7 @@ namespace sci
 	{
 		v.resize(*firstindex);
 		if(*firstindex==0) return;
-		for(std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi)resize(*vi,firstindex+1);
+		for(typename std::vector< std::vector<T> >::iterator vi=v.begin(); vi!=v.end(); ++vi)resize(*vi,firstindex+1);
 
 	}
 	template<class T>
@@ -1024,8 +1030,8 @@ namespace sci
 		destination.resize(source.size());
 		if(destination.size()>0)
 		{
-			std::vector<T>::iterator di=destination.begin();
-			std::vector<U>::const_iterator si=source.begin();
+			typename std::vector<T>::iterator di=destination.begin();
+			typename std::vector<U>::const_iterator si=source.begin();
 			for(si; si!=source.end(); ++si)
 			{
 				*di=static_cast<T>(*si);
@@ -1042,8 +1048,8 @@ namespace sci
 		destination.resize(source.size());
 		if(destination.size()>0)
 		{
-			std::vector< std::vector<T> >::iterator di=destination.begin();
-			std::vector< std::vector<U> >::const_iterator si=source.begin();
+			typename std::vector< std::vector<T> >::iterator di=destination.begin();
+			typename std::vector< std::vector<U> >::const_iterator si=source.begin();
 			for(si; si!=source.end(); ++si)
 			{
 				convert(*di,*si);
@@ -1088,7 +1094,7 @@ namespace sci
 	{
 		if(v.size()==0) return T(0.0); //this handilly returns the value zero or if T is a vector a zero size vector
 		T result=v[0];
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) result+=*vi;
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) result+=*vi;
 		//std::accumulate(v.begin(), v.end(),result);
 		return result;
 	}
@@ -1098,7 +1104,7 @@ namespace sci
 	{
 		if(v.size()==0) return std::vector<T>(0);
 		std::vector<T> result(v[0].size(),0.0);
-		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
 		//std::accumulate(v.begin(), v.end(),result);
 		return result;
 	}
@@ -1108,7 +1114,7 @@ namespace sci
 	{
 		if(v.size()==0) return 0;
 		T result=T(1.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
 		//std::accumulate(v.begin(), v.end(),result);
 		return result;
 	}
@@ -1118,7 +1124,7 @@ namespace sci
 	{
 		if(v.size()==0) return return std::vector<T>(0);
 		std::vector<T> result(v[0].size(), 1.0);
-		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
+		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result*=*vi;
 		//std::accumulate(v.begin(), v.end(),result);
 		return result;
 	}
@@ -1226,7 +1232,7 @@ namespace sci
 	{
 		if(v.size()==0) return std::vector<T>(0);
 		std::vector<T> result(v[0].size(), 0.0);
-		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
+		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) result+=*vi;
 		return result/decltype( anyBaseVal(v) )(v.size());
 	}
 
@@ -1237,7 +1243,7 @@ namespace sci
 			return std::numeric_limits<T>::quiet_NaN();
 		T meanval=sci::mean(v);
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=(*vi-meanval)*(*vi-meanval);
 		//std::accumulate(v.begin(), v.end(),result);
 		return result/decltype( anyBaseVal(v) )(v.size()-1);
@@ -1271,7 +1277,7 @@ namespace sci
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=(*vi-mean)*(*vi-mean);
 		//std::accumulate(v.begin(), v.end(),result);
 		return result/decltype( anyBaseVal(v) )(v.size()-1);
@@ -1386,7 +1392,7 @@ namespace sci
 	T variancenobessel(const std::vector<T> &v, const T &mean)
 	{
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=(*vi-mean)*(*vi-mean);
 		//std::accumulate(v.begin(), v.end(),result);
 		return result/decltype( anyBaseVal(v) )(v.size());
@@ -1502,7 +1508,7 @@ namespace sci
 	T centralmoment(int moment, const std::vector<T> &v, const T &mean)
 	{
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=std::pow((*vi-mean), moment);
 		return result/decltype( anyBaseVal(v) )(v.size()-1);
 	}
@@ -1511,7 +1517,7 @@ namespace sci
 	T centralmomentnobessel(int moment, const std::vector<T> &v, const T &mean)
 	{
 		T result(0.0);
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=std::pow((*vi-mean), moment);
 		return result/decltype( anyBaseVal(v) )(v.size());
 	}
@@ -1553,7 +1559,7 @@ namespace sci
 	{
 		if(v.size()==0) return std::vector<T>(0);
 		std::vector<T> result(v[0].size(), 0.0);
-		for(std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 			result+=*vi**vi;
 		return sci::sqrt(result)/decltype( anyBaseVal(v) )(v.size());
 	}
@@ -1564,8 +1570,8 @@ namespace sci
 		if(v.size()==0) return std::vector<T>(0);
 		std::vector<T> result(v.size());
 		result[0]=v[0];
-		std::vector<T>::iterator resulti=result.begin()+1;
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin()+1;
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi) 
 		{
 			*resulti=(*vi+*(resulti-1));
 			++resulti;
@@ -1584,7 +1590,7 @@ namespace sci
 	inline U min(const std::vector<T>& v)
 	{
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		U result = min<U>(*vi);
 		++vi;
 		while(result!=result && vi!=v.end())
@@ -1607,7 +1613,7 @@ namespace sci
 		//this will only be called by 1d vectors as we have a 2d specialisation
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end() && !(*vi>limit))
 		{
 			++vi;
@@ -1625,7 +1631,7 @@ namespace sci
 		//this is the 2d specialisation
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		typename std::vector< std::vector<T> >::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end())
 		{
 			result=mingtlimit(*vi,limit);
@@ -1648,7 +1654,7 @@ namespace sci
 		//this will only be called by 1d vectors as we have a 2d specialisation
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end() &&!(*vi>=limit))
 		{
 			++vi;
@@ -1666,7 +1672,7 @@ namespace sci
 		//this is the 2d specialisation
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		typename std::vector< std::vector<T> >::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end())
 		{
 			result=mingtelimit(*vi,limit);
@@ -1690,7 +1696,7 @@ namespace sci
 		//this will only be called by 1d vectors as we have a 2d specialisation
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end() && !(*vi<limit))
 		{
 			++vi;
@@ -1708,7 +1714,7 @@ namespace sci
 		//this is the 2d specialisation
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		typename std::vector< std::vector<T> >::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end())
 		{
 			result=maxltlimit(*vi,limit);
@@ -1731,7 +1737,7 @@ namespace sci
 		//this will only be called by 1d vectors as we have a 2d specialisation
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end() && !(*vi<=limit))
 		{
 			++vi;
@@ -1750,7 +1756,7 @@ namespace sci
 		//this is the 2d specialisation
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector< std::vector<T> >::const_iterator vi=v.begin();
+		typename std::vector< std::vector<T> >::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end())
 		{
 			result=maxgtelimit(*vi,limit);
@@ -1777,7 +1783,7 @@ namespace sci
 	U max(const std::vector<T> &v)
 	{
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		U result = max<U>(*vi);
 		++vi;
 		while(result!=result && vi!=v.end())
@@ -1798,7 +1804,7 @@ namespace sci
 	{
 		if(v.size()==0) return std::numeric_limits<size_t>::quiet_NaN();
 		size_t result=0;
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		T currentmax = *vi;
 		++vi;
 		while(currentmax!=currentmax && vi!=v.end())
@@ -1823,7 +1829,7 @@ namespace sci
 	{
 		if(v.size()==0) return std::numeric_limits<size_t>::quiet_NaN();
 		size_t result=0;
-		std::vector<T>::const_iterator vi=v.begin();
+		typename std::vector<T>::const_iterator vi=v.begin();
 		T currentmin = *vi;
 		++vi;
 		while(currentmin!=currentmin && vi!=v.end())
@@ -1848,9 +1854,9 @@ namespace sci
 	{
 		std::vector<T> result(std::min(v1.size(),v2.size()));
 		if(result.size()==0) return result;
-		std::vector<T>::const_iterator v1i=v1.begin();
-		std::vector<T>::const_iterator v2i=v2.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator v1i=v1.begin();
+		typename std::vector<T>::const_iterator v2i=v2.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
 			*resulti=std::max(*v1i,*v2i);
 			++v1i;
@@ -1864,9 +1870,9 @@ namespace sci
 	{
 		std::vector<T> result(std::min(v1.size(),v2.size()));
 		if(result.size()==0) return result;
-		std::vector<T>::const_iterator v1i=v1.begin();
-		std::vector<T>::const_iterator v2i=v2.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator v1i=v1.begin();
+		typename std::vector<T>::const_iterator v2i=v2.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
 			*resulti=std::min(*v1i,*v2i);
 			++v1i;
@@ -1888,7 +1894,7 @@ namespace sci
 	{
 		if(v.size()==0)
 			return;
-		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replacenans(*vi,replacement);
+		for(typename std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replacenans(*vi,replacement);
 	}
 	
 	template<class T>
@@ -1901,7 +1907,7 @@ namespace sci
 	{
 		if(v.size()==0)
 			return;
-		for(std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replaceinfs(*vi,replacement);
+		for(typename std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replaceinfs(*vi,replacement);
 	}
 	
 	template<class T>
@@ -1961,10 +1967,10 @@ namespace sci
 	{
 		if(v.size()<period) return std::vector<double>(0);
 		std::vector<T> result((v.size()-period)/step+1,0);
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
 			*resulti/=(T)period;
 			vsubbegin+=step;;
 		}
@@ -1980,15 +1986,15 @@ namespace sci
 			return std::vector<T>(0);
 		if(v.size()<period) return std::vector<double>(0);
 		std::vector<T> result((v.size()-period)/step+1,0);
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		std::vector<T>::const_iterator weightsubbegin=weight.begin();
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		typename std::vector<T>::const_iterator weightsubbegin=weight.begin();
 		T totalweight;
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
 			totalweight=0;
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) 
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) 
 			{
-				std::vector<T>::const_iterator weighti=weightsubbegin;
+				typename std::vector<T>::const_iterator weighti=weightsubbegin;
 				*resulti+=*vi**weighti;
 				totalweight+=*weighti;
 				++weighti;
@@ -2006,10 +2012,10 @@ namespace sci
 	std::vector<T> boxcaraverage(const std::vector<T> &v, size_t period)
 	{
 		std::vector<T> result(v.size()/period,0); //integer division so no need to round down
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
 			*resulti/=(T)period;
 			vsubbegin+=period;
 		}
@@ -2036,10 +2042,10 @@ namespace sci
 			oldsizeest+=lastaddition;
 		}
 		std::vector<T> result(size,0); //integer division so no need to round down
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
 			*resulti/=(T)period;
 			vsubbegin+=period;
 			period*=base;
@@ -2053,10 +2059,10 @@ namespace sci
 	std::vector<T> boxcarsum(const std::vector<T> &v, size_t period)
 	{
 		std::vector<T> result(v.size()/period,0); //integer division so no need to round down
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
 			vsubbegin+=period;
 		}
 		return result;
@@ -2083,10 +2089,10 @@ namespace sci
 			oldsizeest+=lastaddition;
 		}
 		std::vector<T> result(size,0); //integer division so no need to round down
-		std::vector<T>::const_iterator vsubbegin=v.begin();
-		for(std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
+		typename std::vector<T>::const_iterator vsubbegin=v.begin();
+		for(typename std::vector<T>::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
 		{
-			for(std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
+			for(typename std::vector<T>::const_iterator vi=vsubbegin; vi!=vsubbegin+period; ++vi) *resulti+=*vi;
 			vsubbegin+=period;
 			period*=base;
 		}
@@ -2098,7 +2104,7 @@ namespace sci
 	bool ascending(const std::vector<T> &v)
 	{
 		if (v.size()==0) return true;
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
 			if(*vi<=*(vi-1)) return false;
 		}
@@ -2109,7 +2115,7 @@ namespace sci
 	bool descending(const std::vector<T> &v)
 	{
 		if (v.size()==0) return true;
-		for(std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
 		{
 			if(*vi>=*(vi-1)) return false;
 		}
@@ -2193,8 +2199,8 @@ namespace sci
 		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
 		if(x.size()==0) return 0;
 		T result=0;
-		std::vector<T>::const_iterator yi=y.begin()+1;
-		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
+		typename std::vector<T>::const_iterator yi=y.begin()+1;
+		for(typename std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
 		{
 			result+=(*yi+*(yi-1))*(*xi-*(xi-1));
 			++yi;
@@ -2208,14 +2214,14 @@ namespace sci
 	{
 		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
 		T result=0;
-		std::vector<T>::const_iterator yi=y.begin()+1;
+		typename std::vector<T>::const_iterator yi=y.begin()+1;
 		bool swappedLimits = false;
 		if( maxx < minx )
 		{
 			std::swap( minx, maxx );
 			swappedLimits = true;
 		}
-		for(std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi,++yi)
+		for(typename std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi,++yi)
 		{
 			T x0=*(xi-1);
 			T x1=*xi;
@@ -2278,7 +2284,7 @@ namespace sci
 	T integrate(const std::vector<T> &data, T interval)
 	{
 		T result=0;
-		for(std::vector<T>::const_iterator datai=data.begin()+1; datai!=data.end(); ++datai) result+=(*datai+*(datai-1));
+		for(typename std::vector<T>::const_iterator datai=data.begin()+1; datai!=data.end(); ++datai) result+=(*datai+*(datai-1));
 		result*=interval*0.5;
 		return result;
 	}
@@ -2480,13 +2486,13 @@ namespace sci
 		std::vector<size_t>::iterator count0=counts.begin();
 		if(roundup)
 		{
-			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			for(typename std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
 			{
 				if(*datai<limits[0]) ++*count0;
 				else if(*datai>=limits.back()) ++*(count0+nbins-1);
 				else
 				{
-					for(std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
+					for(typename std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
 					{
 						if(*datai>=*(limiti-1) && *datai <*limiti)
 						{
@@ -2499,13 +2505,13 @@ namespace sci
 		}
 		else
 		{
-			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			for(typename std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
 			{
 				if(*datai<=limits[0]) ++*count0;
 				else if(*datai>limits.back()) ++*(count0+nbins-1);
 				else
 				{
-					for(std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
+					for(typename std::vector<T>::const_iterator limiti=limits.begin()+1; limiti!=limits.end(); ++limiti)
 					{
 						if(*datai>*(limiti-1) && *datai <=*limiti)
 						{
@@ -2536,11 +2542,11 @@ namespace sci
 		
 		sci::setallvalues(counts,0);
 		counts.resize(nlimits+1);
-		std::vector<size_t>::iterator count0=counts.begin();
+		typename std::vector<size_t>::iterator count0=counts.begin();
 		T limittop=limitstart+(T)(nlimits-1)*limitspacing;
 		if(roundup)
 		{
-			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			for(typename std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
 			{
 				if(*datai<limitstart) ++*count0;
 				else if(*datai>=limittop) ++*(count0+nlimits);
@@ -2553,7 +2559,7 @@ namespace sci
 		}
 		else
 		{
-			for(std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
+			for(typename std::vector<T>::const_iterator datai=data.begin(); datai!=data.end(); ++datai)
 			{
 				if(*datai<=limitstart) ++*count0;
 				else if(*datai>limittop) ++*(count0+nlimits);

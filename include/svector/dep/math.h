@@ -25,8 +25,8 @@ namespace sci{
 	std::vector<T> stdfuncv(const std::vector<T> &v, T(*stdfunc)(U))
 	{
 		std::vector<T> result(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfunc(*vi);
 			++resulti;
@@ -37,8 +37,8 @@ namespace sci{
 	void stdfuncv(const std::vector<T> &v, std::vector<T> &result, T(*stdfunc)(U))
 	{
 		result.resize(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfunc(*vi);
 			++resulti;
@@ -52,8 +52,8 @@ namespace sci{
 	std::vector< std::vector<T> > stdfuncv(const std::vector< std::vector<T> > &v,  T(*stdfunc)(U))
 	{
 		std::vector< std::vector<T> > result(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			stdfuncv(*vi,*resulti,stdfunc);
 			++resulti;
@@ -64,8 +64,8 @@ namespace sci{
 	void stdfuncv(const std::vector< std::vector<T> > &v, std::vector< std::vector<T> > &result,  T(*stdfunc)(U))
 	{
 		result.resize(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfuncv(*vi,stdfunc);
 			++resulti;
@@ -79,8 +79,8 @@ namespace sci{
 	std::vector<T> stdfuncv(const std::vector<T> &v, const U & d, T(*stdfunc)(V,U))
 	{
 		std::vector<T> result(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfunc(*vi,d);
 			++resulti;
@@ -91,8 +91,8 @@ namespace sci{
 	void stdfuncv(const std::vector<T> &v, const U & d, std::vector<T> &result, T(*stdfunc)(V,U))
 	{
 		result.resize(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfunc(*vi,d);
 			++resulti;
@@ -107,8 +107,8 @@ namespace sci{
 	std::vector< std::vector<T> > stdfuncv(const std::vector< std::vector<T> > &v, const U & d,  T(*stdfunc)(V,U))
 	{
 		std::vector< std::vector<T> > result(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			stdfuncv(*vi,d,*resulti,stdfunc);
 			++resulti;
@@ -119,8 +119,8 @@ namespace sci{
 	void stdfuncv(const std::vector< std::vector<T> > &v, const U & d, std::vector< std::vector<T> > &result,  T(*stdfunc)(V,U))
 	{
 		result.resize(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=stdfuncv(*vi,d,stdfunc);
 			++resulti;
@@ -465,8 +465,8 @@ namespace sci{
 	inline std::vector<T> pow(const std::vector<T> &v, const U &power)
 	{
 		std::vector<T> result(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=std::pow(*vi,power);
 			++resulti;
@@ -479,9 +479,9 @@ namespace sci{
 	inline std::vector<T> pow(const std::vector<T> &v, const std::vector<U> &power)
 	{
 		std::vector<T> result(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		std::vector<T>::const_iterator poweri=power.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		typename std::vector<T>::const_iterator poweri=power.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=std::pow(*vi,*poweri);
 			++resulti;
@@ -495,8 +495,8 @@ namespace sci{
 	inline void pow(const std::vector<T> &v, const U &power, std::vector<T> &result)
 	{
 		result.resize(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=std::pow(*vi,power);
 			++resulti;
@@ -508,9 +508,9 @@ namespace sci{
 	inline void pow(const std::vector<T> &v, const std::vector<U> &power, std::vector<T> &result)
 	{
 		result.resize(v.size());
-		std::vector<T>::iterator resulti=result.begin();
-		std::vector<T>::const_iterator poweri=power.begin();
-		for(std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		typename std::vector<T>::const_iterator poweri=power.begin();
+		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			*resulti=std::pow(*vi,*poweri);
 			++resulti;
@@ -523,8 +523,8 @@ namespace sci{
 	inline std::vector< std::vector<T> > pow(const std::vector< std::vector<T> > &v, const U &power)
 	{
 		std::vector< std::vector<T> > result(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			pow(*vi,power,*resulti);
 			++resulti;
@@ -537,8 +537,8 @@ namespace sci{
 	inline void pow(const std::vector< std::vector<T> > &v, const U &power, std::vector< std::vector<T> > &result)
 	{
 		result.resize(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			pow(*vi,power,*resulti);
 			++resulti;
@@ -550,9 +550,9 @@ namespace sci{
 	inline std::vector< std::vector<T> > pow(const std::vector< std::vector<T> > &v, const std::vector< std::vector<U> > &power)
 	{
 		std::vector< std::vector<T> > result(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		std::vector< std::vector<T> >::const_iterator poweri=power.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		typename std::vector< std::vector<T> >::const_iterator poweri=power.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			pow(*vi,*poweri,*resulti);
 			++resulti;
@@ -566,9 +566,9 @@ namespace sci{
 	inline void pow(const std::vector< std::vector<T> > &v, const std::vector< std::vector<U> > &power, std::vector< std::vector<T> > &result)
 	{
 		result.resize(v.size());
-		std::vector< std::vector<T> >::iterator resulti=result.begin();
-		std::vector< std::vector<T> >::const_iterator poweri=power.begin();
-		for(std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
+		typename std::vector< std::vector<T> >::iterator resulti=result.begin();
+		typename std::vector< std::vector<T> >::const_iterator poweri=power.begin();
+		for(typename std::vector< std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
 		{
 			pow(*vi,*poweri,*resulti);
 			++resulti;
@@ -581,8 +581,8 @@ namespace sci{
 	inline std::vector<T> pow(const T &base, const std::vector<T> &power)
 	{
 		std::vector<T> result(power.size());
-		std::vector<T>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
+		typename std::vector<T>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
 		{
 			*resulti=std::pow(base,*poweri);
 			++resulti;
@@ -594,8 +594,8 @@ namespace sci{
 	template<class T, class U, class V>
 	inline void pow(const U &base, const std::vector<T> &power, const std::vector<V> &result)
 	{
-		std::vector<V>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
+		typename std::vector<V>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
 		{
 			*resulti=std::pow(base,*poweri);
 			++resulti;
@@ -608,8 +608,8 @@ namespace sci{
 	inline std::vector< std::vector<U> > pow(const U &base, const std::vector< std::vector<T> > &power)
 	{
 		std::vector< std::vector<U> > result(power.size());
-		std::vector<U>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
+		typename std::vector<U>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
 		{
 			sci::pow(base,*poweri,*resulti);
 			++resulti;
@@ -621,8 +621,8 @@ namespace sci{
 	template<class T, class U, class V>
 	inline void pow(const U &base, const std::vector< std::vector<T> > &power, std::vector< std::vector<V> > result)
 	{
-		std::vector<V>::iterator resulti=result.begin();
-		for(std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
+		typename std::vector<V>::iterator resulti=result.begin();
+		for(typename std::vector<T>::const_iterator poweri=power.begin(); poweri!=power.end(); ++poweri) 
 		{
 			sci::pow(base,*poweri,*resulti);
 			++resulti;
