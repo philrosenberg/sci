@@ -1581,14 +1581,13 @@ sublength*=*shapei;
 		while (result!=result && vi!=v.end())
 		{
 			result=mingtlimit(*vi,limit);
-			if(!(result>=limit)) result=std::numeric_limits<U>::quiet_NaN();
 			++vi;
 		}
 		//search the remaining numbers
 		for(vi; vi!=v.end(); ++vi) 
 		{
 			U newmin=mingtlimit(*vi,limit);
-			result=newmin<result && newmin>limit ? newmin : result;
+			result=newmin<result ? newmin : result;
 		}
 		return result;
 	}
@@ -1622,14 +1621,13 @@ sublength*=*shapei;
 		while (result!=result && vi!=v.end())
 		{
 			result=mingtelimit(*vi,limit);
-			if(!(result>=limit)) result=std::numeric_limits<U>::quiet_NaN()
 			++vi;
 		}
 		//search the remaining numbers
 		for(vi; vi!=v.end(); ++vi) 
 		{
 			U newmin=mingtelimit(*vi,limit);
-			result=newmin<result && newmin>=limit ? newmin : result;
+			result=newmin<result ? newmin : result;
 		}
 		return result;
 	}
@@ -1664,14 +1662,13 @@ sublength*=*shapei;
 		while (result!=result && vi!=v.end())
 		{
 			result=maxltlimit(*vi,limit);
-			if(!(result<limit)) result=std::numeric_limits<U>::quiet_NaN();
 			++vi;
 		}
 		//search the remaining numbers
 		for(vi; vi!=v.end(); ++vi) 
 		{
 			U newmax=maxltlimit(*vi,limit);
-			result=newmax>result && newmax<limit ? newmax : result;
+			result=newmax>result ? newmax : result;
 		}
 		return result;
 	}
@@ -1705,15 +1702,14 @@ sublength*=*shapei;
 		typename std::vector< std::vector<T> >::const_iterator vi=v.begin();
 		while (result!=result && vi!=v.end())
 		{
-			result=maxgtelimit(*vi,limit);
-			if(!result<=limit) result=std::numeric_limits<U>::quiet_NaN();
+			result=maxltelimit(*vi,limit);
 			++vi;
 		}
 		//search the remaining numbers
 		for(vi; vi!=v.end(); ++vi) 
 		{
-			U newmax=maxgtelimit(*vi,limit);
-			result=newmax>result && newmax<=limit ? newmax : result;
+			U newmax=maxltelimit(*vi,limit);
+			result=newmax>result ? newmax : result;
 		}
 		return result;
 	}
