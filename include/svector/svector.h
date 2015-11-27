@@ -61,11 +61,8 @@
 #define SBOOL char
 #endif
 
-
-
 namespace sci
 {
-
 	//enumeration of base types
 	enum basetype
 	{
@@ -86,6 +83,12 @@ namespace sci
 		SBASE_COMPLEX=15,
 		SBASE_STRING=16
 	};
+}
+
+
+namespace sci
+{
+
 
 	//quick iterator
 	template<class T>
@@ -211,8 +214,8 @@ namespace sci
 		std::sort(m_vector.begin(),m_vector.end());
 	}
 
-
-
+	//okay top
+	
 	//********************************************************
 	//**********Functions*************************************
 	//********************************************************
@@ -299,7 +302,7 @@ namespace sci
 		}
 		return true;
 	}
-	
+	//okay top
 
 	//creates a vector from a c style array
 	template<class T>
@@ -352,9 +355,8 @@ namespace sci
 			v.reserve(std::min(v.capacity()*2,v.max_size()));
 		}
 		v.insert(v.end(),val.begin(),val.end());
-		}
 	}
-
+	
 	//as above push pushes back a subvector
 	template<class T>
 	void reservedpush_back(std::vector<T> &v, const std::vector<T> &val, size_t begin, size_t n_elements)
@@ -465,31 +467,6 @@ namespace sci
 	}
 
 	//create a subvector from a vector of values and a vector of bools which indicates if the value should be used
-/*	template <class T>
-	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<bool> &included)
-	{
-		if(src.size()!=included.size()) return std::vector<T>(0);
-		size_t count=0;
-		for(typename std::vector<bool>::const_iterator inci=included.begin(); inci!=included.end(); ++inci )
-		{
-			if(*inci) ++count;
-		}
-		std::vector<T> result(count);
-		typename std::vector<bool>::const_iterator includedi=included.begin();
-		typename std::vector<T>::iterator resulti=result.begin();
-		for(typename std::vector<T>::const_iterator srci=src.begin(); srci!=src.end(); ++srci) 
-		{
-			if(*includedi)
-			{
-				*resulti=*srci;
-				++resulti;
-			}
-			++includedi;
-		}
-		return result;
-	}*/
-
-	//create a subvector from a vector of values and a vector of bools which indicates if the value should be used
 	template <class T>
 	std::vector <T>  subvector(const std::vector<T> &src, const std::vector<bool> &included)
 	{
@@ -500,32 +477,10 @@ namespace sci
 			if(*inci) ++count;
 		}
 		std::vector<T> result=src;
-		/*result.reserve(count);*/
-		
-		/*typename std::vector<bool>::const_iterator includedi=included.begin();
-		std::vector<T>::const_iterator srci=src.begin();
-		while(includedi!=included.end())
-		{
-			bool copying=*includedi;
-			while(!copying&&includedi!=included.end()) 
-			{
-				++srci;
-				++includedi;
-				copying=*includedi;
-			}
-			std::vector<T>::const_iterator sectbegin=srci;
-			while(copying&&includedi!=included.end()) 
-			{
-				++srci;
-				++includedi;
-				copying=*includedi;
-			}
-			std::vector<T>::const_iterator sectend=srci;
-			result.insert(result.end(),sectbegin,sectend);
-		}*/
 		return result;
-	}	
+	}
 	
+	//okay bottom
 	//create a subvector from a vector of values and a vector of chars which indicates if the value should be used
 	//a char value of 0 indicates not included anything else indicates included. This is hoped to be faster than
 	//the bool implimentation but uses more memory
@@ -597,28 +552,6 @@ namespace sci
 			}
 		}
 		
-		
-		/*std::vector<bool>::const_iterator includedi=included.begin();
-		std::vector<T>::const_iterator srci=src.begin();
-		while(includedi!=included.end())
-		{
-			bool copying=*includedi;
-			while(!copying&&includedi!=included.end()) 
-			{
-				++srci;
-				++includedi;
-				copying=*includedi;
-			}
-			std::vector<T>::const_iterator sectbegin=srci;
-			while(copying&&includedi!=included.end()) 
-			{
-				++srci;
-				++includedi;
-				copying=*includedi;
-			}
-			std::vector<T>::const_iterator sectend=srci;
-			result.insert(result.end(),sectbegin,sectend);
-		}*/
 		return result;
 	}
 
@@ -874,10 +807,10 @@ sublength*=*shapei;
 	{
 		return std::vector<size_t>(1,v.size());
 	}
-
+	//okay bottom
 	//return the base type of a multi dimensional vector
 	template<class T>
-	inline basetype getbasetype(const std::vector< std::vector< T > > &v)
+	inline sci::basetype getbasetype(const std::vector< std::vector< T > > &v)
 	{
 		if(v.size()>0 && v[0].size()>0) return getbasetype(v[0]);//use the zeroth element and get the basetype of that
 		//note we don't use v[0][0] as this might mean we miss calling the 1d vector version
@@ -886,88 +819,87 @@ sublength*=*shapei;
 	//return the base type of a vector, if this function gets called and not a specialisation then
 	//we have an unknown type, return 0;
 	template<class T>
-	inline basetype getbasetype(const std::vector< T > &v)
+	inline sci::basetype getbasetype(const std::vector< T > &v)
 	{
-		return SBASE_UNKNOWN;
+		return sci::SBASE_UNKNOWN;
 	}
 	//specialisations of the 1d version 
 	//template<class T>
-	inline basetype getbasetype(const std::vector< double > &v)
+	inline sci::basetype getbasetype(const std::vector< double > &v)
 	{
-		return SBASE_DOUBLE;
-		
+		return sci::SBASE_DOUBLE;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< float > &v)
+	inline sci::basetype getbasetype(const std::vector< float > &v)
 	{
-		return SBASE_FLOAT;
+		return sci::SBASE_FLOAT;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< long double > &v)
+	inline sci::basetype getbasetype(const std::vector< long double > &v)
 	{
-		return SBASE_LONGDOUBLE;
+		return sci::SBASE_LONGDOUBLE;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< bool > &v)
+	inline sci::basetype getbasetype(const std::vector< bool > &v)
 	{
-		return SBASE_BOOL;
+		return sci::SBASE_BOOL;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< signed char > &v)
+	inline sci::basetype getbasetype(const std::vector< signed char > &v)
 	{
-		return SBASE_SIGNEDCHAR;
+		return sci::SBASE_SIGNEDCHAR;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< unsigned char > &v)
+	inline sci::basetype getbasetype(const std::vector< unsigned char > &v)
 	{
-		return SBASE_UNSIGNEDCHAR;
+		return sci::SBASE_UNSIGNEDCHAR;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< wchar_t > &v)
+	inline sci::basetype getbasetype(const std::vector< wchar_t > &v)
 	{
-		return SBASE_WCHAR;
+		return sci::SBASE_WCHAR;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< signed short > &v)
+	inline sci::basetype getbasetype(const std::vector< signed short > &v)
 	{
-		return SBASE_SIGNEDSHORT;
+		return sci::SBASE_SIGNEDSHORT;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< unsigned short > &v)
+	inline sci::basetype getbasetype(const std::vector< unsigned short > &v)
 	{
-		return SBASE_UNSIGNEDSHORT;
+		return sci::SBASE_UNSIGNEDSHORT;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< signed int > &v)
+	inline sci::basetype getbasetype(const std::vector< signed int > &v)
 	{
-		return SBASE_SIGNEDINT;
+		return sci::SBASE_SIGNEDINT;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< unsigned int > &v)
+	inline sci::basetype getbasetype(const std::vector< unsigned int > &v)
 	{
-		return SBASE_UNSIGNEDINT;
+		return sci::SBASE_UNSIGNEDINT;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< signed long > &v)
+	inline sci::basetype getbasetype(const std::vector< signed long > &v)
 	{
-		return SBASE_SIGNEDLONG;
+		return sci::SBASE_SIGNEDLONG;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< unsigned long > &v)
+	inline sci::basetype getbasetype(const std::vector< unsigned long > &v)
 	{
-		return SBASE_UNSIGNEDLONG;
+		return sci::SBASE_UNSIGNEDLONG;
 	}
 	template<class T>
-	inline basetype getbasetype(const std::vector< std::complex<T> > &v)
+	inline sci::basetype getbasetype(const std::vector< std::complex<T> > &v)
 	{
-		return SBASE_COMPLEX;
+		return sci::SBASE_COMPLEX;
 	}
 	//template<class T>
-	inline basetype getbasetype(const std::vector< std::string > &v)
+	inline sci::basetype getbasetype(const std::vector< std::string > &v)
 	{
-		return SBASE_STRING;
+		return sci::SBASE_STRING;
 	}
-
+	//okay bottom
 	//recast one vector type to another. The destination vector will be resized
 	//to the same size as source if needed
 	template<class T, class U>
@@ -1024,7 +956,7 @@ sublength*=*shapei;
 			std::swap(pi,pj);
 		}
 	}
-
+	//okay bottom
 			
 	//********************************************************
 	//**********Functions giving information******************
@@ -1126,7 +1058,7 @@ sublength*=*shapei;
 		}
 		return result/weight;
 	}
-
+	//okay
 	template<class T>
 	T meanIgnoreNans(const std::vector<T> &v)
 	{
@@ -2718,8 +2650,8 @@ sublength*=*shapei;
 		if(a.size()!=b.size()) return std::numeric_limits<T>::quiet_NaN();
 		if(a.size()==0) return T(0);
 		//create quick iterators to vectors
-		qic<T> ai(a);
-		qic<T> bi(b);
+		T* ai = &a[0];
+		T* bi = &a[0];
 		//do the sum
 		T sum=0.0;
 		for(size_t i=0; i<a.size(); ++i)
@@ -2752,9 +2684,9 @@ sublength*=*shapei;
 		//create the result
 		std::vector<T> result(3);
 		//create quick iterators to vectors
-		qic<T> ai(a);
-		qic<T> bi(b);
-		qi<T> resulti(result);
+		T* ai = &a[0];
+		T* bi = &a[0];
+		T* resulti = &result[0];
 
 		//set the values of result
 		resulti[0]=ai[1]*bi[2]-ai[2]*bi[1];
@@ -2793,7 +2725,7 @@ sublength*=*shapei;
 		std::vector< std::vector<T> > result(b.size());
 		size_t dim1=a.size();
 		size_t dim2=b[0].size();
-		qi< std::vector<T> > resulti(result);
+		qic< std::vector<T> > resulti(result);
 		qic< std::vector<T> > ai(a);
 		qic< std::vector<T> > bi(b);
 		for(size_t i=0; i<dim1; ++i)
@@ -2824,7 +2756,7 @@ sublength*=*shapei;
 		std::vector<T> result(a.size(),0.0);
 		size_t dim1=a.size();
 		size_t dim2=a[0].size();
-		qi<T> resulti(result);
+		qic<T> resulti(result);
 		qic< std::vector<T> > ai(a);
 		qic<T> bi(b);
 		for(size_t i=0; i<dim1; ++i)
@@ -2853,7 +2785,7 @@ sublength*=*shapei;
 		std::vector<T> result(b[0].size(),0.0);
 		size_t dim1=b.size();
 		size_t dim2=b[0].size();
-		qi<T> resulti(result);
+		qic<T> resulti(result);
 		qic<T> ai(a);
 		qic< std::vector<T> > bi(b);
 		for(size_t i=0; i<dim2; ++i)
@@ -2872,19 +2804,7 @@ sublength*=*shapei;
 	template <class T>
 	T matrixmult(const std::vector<T> &a, const std::vector<T> &b)
 	{
-		//check validity
-		if(a.size()!=b.size()) return std::numeric_limits<T>::quiet_NaN();
-		if(a.size()==0) return T(0);
-		//create quick iterators to vectors
-		qic<T> ai(a);
-		qic<T> bi(b);
-		//do the sum
-		T sum=0.0;
-		for(size_t i=0; i<a.size(); ++i)
-		{
-			sum+=ai[i]*bi[i];
-		}
-		return sum;
+		return sci::dot( a, b );
 	}
 
 	std::vector< std::vector<double> > inverse(const std::vector< std::vector<double> > &mat);
