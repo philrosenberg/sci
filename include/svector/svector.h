@@ -1390,7 +1390,7 @@ sublength*=*shapei;
 	{
 		variance = sci::variancenobessel( v, mean );
 		T fourthMoment = centralmomentnobessel(4, v, mean);
-		varianceofthevariancenobessel = sci::varianceofthevariance( fourthmoment, variance, mean, (T)v.size() );
+		varianceofthevariancenobessel = sci::varianceofthevariance( fourthMoment, variance, mean, (T)v.size() );
 	}
 
 	template<class T>
