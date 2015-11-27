@@ -927,7 +927,7 @@ void sci::intersect(double xline1point1, double yline1point1, double xline1point
 		return;
 	}
 	intersectx=(yline2point1-yline1point1-m1*xline1point1+m2*xline2point1)/(m1+m2);
-	intersecty=intersecty=m1*(intersectx-xline1point1)+yline1point1;
+	intersecty=m1*(intersectx-xline1point1)+yline1point1;
 }
 
 struct IntegrableData
