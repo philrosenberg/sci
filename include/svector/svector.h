@@ -88,7 +88,7 @@ namespace sci
 
 namespace sci
 {
-
+	size_t randInt(size_t maxVal);
 
 	//quick iterator
 	template<class T>
@@ -2949,8 +2949,6 @@ sublength*=*shapei;
 	{
 		return lhs.get()==rhs.get();
 	}
-
-	size_t randInt(size_t maxVal=SIZE_MAX);
 	
 	namespace distribution
 	{
