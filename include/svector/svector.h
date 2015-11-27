@@ -39,7 +39,6 @@
 
 
 #include <alg/ap.h>
-#include <alg/alglibinternal.h>
 #include <alg/fasttransforms.h>
 #include <alg/interpolation.h>
 
