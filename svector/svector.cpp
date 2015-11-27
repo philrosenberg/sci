@@ -106,7 +106,6 @@ void sci::logspace(double xstart, double xinterval, std::vector<double> y, doubl
 	newxinterval/=xinterval; //convert new x interval to number of points from x units.
 	std::vector<double>x=sci::indexvector<double>(y.size())*xinterval+xstart;
 	//work out how many points we'll have in our new vectors
-	double maxx=(double)(y.size()-1)*xinterval+xstart;
 	size_t newsize=0;
 	size_t oldsizeest=(size_t)newxinterval;
 	double lastaddition=newxinterval;

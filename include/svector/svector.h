@@ -1689,7 +1689,7 @@ sublength*=*shapei;
 			++vi;
 			++result;
 		}
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			if(*vi>currentmax)
 			{
@@ -1714,7 +1714,7 @@ sublength*=*shapei;
 			++vi;
 			++result;
 		}
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			if(*vi<currentmin)
 			{
