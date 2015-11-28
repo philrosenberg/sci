@@ -1,15 +1,14 @@
 #ifndef sreadwrite_H
 #define sreadwrite_H
 
-#include"svector.h"
-#include"sstring.h"
+
 #include<string>
+#ifdef _WIN32
 #include<nc/netcdfcpp.h>
-#include"serr.h"
+#endif
 #include<limits>
 #include<fstream>
 #include<sstream>
-#include"ppfile.h"
 
 namespace sci
 {
@@ -99,7 +98,7 @@ namespace sci
 		std::vector<T> tempvar;
 		return readncvariable(filename,varname,var,tempvar);
 	}	
-	
+#ifdef _WIN32	
 	//looks in the netcdf for variables with names that consist of varnamestart followed
 	//by a non-negative integer number. These are all read into vars, with varsn being put into the nth element
 	//of vars. vars must have one more demension than the variables. Any variables that are
@@ -677,8 +676,7 @@ namespace sci
 	std::string getContainingDirectoryPath( std::string fullPath );
 	std::string concatPath( std::string part1, std::string part2);
 	
+#endif
 }
-
-
 
 #endif

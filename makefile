@@ -3,8 +3,8 @@ INSTALL_DIR = /usr/local/
 
 all: build/svector.so
 
-build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o
+build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o
+	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o
 
 build:
 	mkdir build
@@ -40,7 +40,7 @@ build/sminimiser.o: build svector/sminimiser.cpp
 	 g++ $(COMPILE_FLAGS) -o build/sminimiser.o svector/sminimiser.cpp
 
 build/splot.o: build svector/splot.cpp
-	 g++ $(COMPILE_FLAGS) -o build/splot.o svector/splot.cpp
+	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/splot.o svector/splot.cpp
 
 build/sreadwrite.o: build svector/sreadwrite.cpp
 	 g++ $(COMPILE_FLAGS) -o build/sreadwrite.o svector/sreadwrite.cpp

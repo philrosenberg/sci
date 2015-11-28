@@ -20,13 +20,14 @@
 #include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
                        // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
                        //not sure why.
-#include"../include/svector/splot.h"
+#include"../include/svector/serr.h"
 #include"../include/svector/svector.h"
 #include"../include/svector/sstring.h"
+#include"../include/svector/ppfile.h"
 #include"../include/svector/sreadwrite.h"
+#include"../include/svector/splot.h"
 #include<cmath>
 #include<algorithm>
-#include"../include/svector/serr.h"
 
 BEGIN_EVENT_TABLE( splotwindow, wxPanel )
 	EVT_PAINT( splotwindow::OnPaint )
