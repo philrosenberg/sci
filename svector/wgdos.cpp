@@ -2,24 +2,24 @@
 #include"../include/svector/ppfile.h"
 #include<assert.h>
 
-WgdosExtractor::WgdosExtractor(char *compressedData, __int16 bitsPerPoint)
-:m_data((unsigned __int32*)compressedData)
+WgdosExtractor::WgdosExtractor(char *compressedData, int16_t bitsPerPoint)
+:m_data((uint32_t*)compressedData)
 {
 	assert (bitsPerPoint<=32);
 	if(bitsPerPoint>32)
 		throw(PPERR_WGDOSCOMPRESSION_BPP_TOO_HIGH);
 
 	m_stepsInCycle=0;
-	__int16 bytepos=0;
+	int16_t bytepos=0;
 	size_t step=0;
 	do
 	{
 		m_dataMasks1[step]=0;
-		for(__int32 i=0; i<std::min(bitsPerPoint,__int16(32-bytepos)); ++i)
-			m_dataMasks1[step] |= (unsigned __int32(0x80000000) >> (i+bytepos));
+		for(__int32 i=0; i<std::min(bitsPerPoint,int16_t(32-bytepos)); ++i)
+			m_dataMasks1[step] |= (uint32_t(0x80000000) >> (i+bytepos));
 		m_dataMasks2[step]=0;
 		for(__int32 i=0; i<bitsPerPoint+bytepos-32; ++i)
-			m_dataMasks2[step] |= (unsigned __int32(0x80000000) >> i);
+			m_dataMasks2[step] |= (uint32_t(0x80000000) >> i);
 		m_bytePositions[step]=bytepos;
 
 		++step;
@@ -41,7 +41,7 @@ WgdosExtractor::WgdosExtractor(char *compressedData, __int16 bitsPerPoint)
 
 }
 
-unsigned __int32 WgdosExtractor::getNextDataPoint()
+uint32_t WgdosExtractor::getNextDataPoint()
 {
 	//note this assumes the compressed data is unsigned.
 	
@@ -51,8 +51,8 @@ unsigned __int32 WgdosExtractor::getNextDataPoint()
 	m_extractingData=true;
 	m_extractingBitmaps=false;
 
-	__int16 rightShiftAmount=32-(m_bytePositions[m_currentDataMask]+m_bitsPerPoint);
-	unsigned __int32 result;
+	int16_t rightShiftAmount=32-(m_bytePositions[m_currentDataMask]+m_bitsPerPoint);
+	uint32_t result;
 	if(rightShiftAmount>0)
 		result=((*m_data)&(m_dataMasks1[m_currentDataMask])) >> rightShiftAmount;
 	else
