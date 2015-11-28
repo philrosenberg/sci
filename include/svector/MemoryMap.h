@@ -4,8 +4,6 @@
 #include<string>
 #include<vector>
 
-#include<svector\dep\windows.h>
-
 namespace sci
 {
 	class MemoryMap

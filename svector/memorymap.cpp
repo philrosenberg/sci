@@ -1,5 +1,9 @@
-#include<svector\MemoryMap.h>
-#include<svector\serr.h>
+#ifdef _WIN32
+#include"../include/svector/dep/windows.h"
+#endif
+#ifdef _WIN32
+#include"../include/svector/MemoryMap.h"
+#include"../include/svector/serr.h"
 
 sci::MemoryMap::Handle::Handle(size_t nBytes, std::string name)
 {
@@ -98,3 +102,4 @@ void *sci::MemoryMap::getVoidBuffer(size_t offsetBytes, size_t nBytes)
 	m_memoryMapBuffers.push_back(MemoryMap::Buffer(m_memoryMapHandle,offsetBytes,nBytes));
 	return m_memoryMapBuffers.back().getBuffer();
 }
+#endif
