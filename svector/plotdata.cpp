@@ -1,5 +1,5 @@
-#include "../include/svector/plotdata.h"
 #include "../include/svector/serr.h"
+#include "../include/svector/plotdata.h"
 
 LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )
 	: m_width( 1.0 ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
