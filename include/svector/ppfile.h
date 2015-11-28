@@ -684,7 +684,7 @@ private:
 	//a void * to avoid acidentally doing implicit conversions e.g. if the bit are 
 	//actually held in a int32_t
 	float fromIbmFloat(void *ibmFloat);
-	double UmFile::fromIbmDouble(void *ibmFloat);
+	double fromIbmDouble(void *ibmFloat);
 
 };
 

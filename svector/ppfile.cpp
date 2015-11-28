@@ -5,6 +5,7 @@
 #include<limits>
 #include"../include/svector/wgdos.h"
 #include<algorithm>
+#include<cstring>
 
 UmFile::UmFile(std::string name)
 {
@@ -97,7 +98,7 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 	size_t nread=0;
 	char *pos=dataIn;
 
-	int32_t packedLength=*((int32_t*)pos);
+	//int32_t packedLength=*((int32_t*)pos); //unused - commented out to avoid warnings
 	pos+=sizeof(int32_t);
 	nread+=sizeof(int32_t);
 
@@ -114,7 +115,7 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 	pos+=sizeof(int16_t);
 	nread+=sizeof(int16_t);
 
-	if(nRows!=outDim1 || nPointsInRow!=outDim2)
+	if(size_t(nRows)!=outDim1 || size_t(nPointsInRow)!=outDim2)
 		throw(PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE);
 	std::vector<char> missingMask(nPointsInRow,0);
 	std::vector<char> minimumMask(nPointsInRow,0);
@@ -217,7 +218,7 @@ void UmFile::getData(const Section64 &section, std::vector<std::vector<double>> 
 
 	int packing=section.m_header.m_packingMethod%10;
 	int compressionFlag=(section.m_header.m_packingMethod%100)/10;
-	int compressionInfo=(section.m_header.m_packingMethod%1000)/100;
+	//int compressionInfo=(section.m_header.m_packingMethod%1000)/100; -unused, commented out to avoid warnings
 	int numberFormat=(section.m_header.m_packingMethod%10000)/1000;
 
 	if(compressionFlag!=0)
@@ -492,7 +493,7 @@ float UmFile::fromIbmFloat(void *ibmFloat)
 		//1.nnn is a binary number
 		//we need to stick out leading 1 back on and turn it into
 		//just a fraction
-		fraction = (fraction |=0x01000000) >> (-signedExponent);
+		fraction = (fraction |=0x01000000) >> uint32_t(-signedExponent);
 		exponent=0;
 	}
 
@@ -558,7 +559,7 @@ double UmFile::fromIbmDouble(void *ibmFloat)
 		//1.nnn is a binary number
 		//we need to stick out leading 1 back on and turn it into
 		//just a fraction
-		fraction = (fraction |=0x0100000000000000) >> (-signedExponent);
+		fraction = (fraction |=0x0100000000000000) >> uint64_t(-signedExponent);
 		exponent=0;
 	}
 
@@ -586,7 +587,7 @@ std::vector<size_t> UmFile::getFilteredSectionIndices()
 void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
 {
 	fin->read((char*)&m_header,nBytes);
-	if(fin->gcount()!=nBytes)
+	if(size_t(fin->gcount())!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(m_parent->m_swapEndian)
 			swapEndian( (int32_t*)&m_header,nBytes/4 );
@@ -595,7 +596,7 @@ void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
 void UmFile::Section64::readHeader( std::fstream *fin, size_t nBytes )
 {
 	fin->read((char*)&m_header,nBytes);
-	if(fin->gcount()!=nBytes)
+	if(size_t(fin->gcount())!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(m_parent->m_swapEndian)
 			swapEndian( (int64_t*)&m_header,nBytes/4 );
