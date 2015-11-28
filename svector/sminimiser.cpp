@@ -1,9 +1,10 @@
 #include"../include/svector/serr.h"
-#include"../include/svector/sminimiser.h"
 #include"../include/svector/svi.h"
 #include"../include/svector/svector.h"
 #include"../include/svector/dep/operators.h"
 #include <alg/interpolation.h>
+#include"../include/svector/sminimiser.h"
+
 
 void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &result, void *ptr)
 {
@@ -39,7 +40,7 @@ void sci::Minimiser::minimise()
 	alglib::mincgsetcond(state, 0, 0, 0, 0);
 
 	//do the minimising
-	alglib::mincgoptimize(state, &minimisablefunction2d,NULL,this);
+	alglib::mincgoptimize(state, &minimiserFunction,NULL,this);
 
 	//get the results
 	alglib::mincgreport report;
