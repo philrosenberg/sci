@@ -44,20 +44,20 @@ enum
 	projCrossSection
 };
 
-inline void swapEndian(__int32 &val)
+inline void swapEndian(int32_t &val)
 {
 	char* arrVal=(char*)&val;
 	std::swap(arrVal[0],arrVal[3]);
 	std::swap(arrVal[1],arrVal[2]);
 }
 
-inline void swapEndian(__int32 *vals, size_t nVals)
+inline void swapEndian(int32_t *vals, size_t nVals)
 {
 	for(size_t i=0; i<nVals; ++i)
 		swapEndian(vals[i]);
 }
 
-inline void swapEndian(__int64 &val)
+inline void swapEndian(int64_t &val)
 {
 	char* arrVal=(char*)&val;
 	std::swap(arrVal[0],arrVal[7]);
@@ -66,7 +66,7 @@ inline void swapEndian(__int64 &val)
 	std::swap(arrVal[3],arrVal[4]);
 }
 
-inline void swapEndian(__int64 *vals, size_t nVals)
+inline void swapEndian(int64_t *vals, size_t nVals)
 {
 	for(size_t i=0; i<nVals; ++i)
 		swapEndian(vals[i]);
@@ -83,51 +83,51 @@ class UmFile
 public:
 	struct PpHeader32
 	{
-		__int32 m_validYear;
-		__int32 m_validMonth;
-		__int32 m_validDayOfMonth;
-		__int32 m_validHour;
-		__int32 m_validMinute;
-		__int32 m_validDayNumberOrSeconds;
-		__int32 m_dataYear;
-		__int32 m_dataMonth;
-		__int32 m_dataDayOfMonth;
-		__int32 m_dataHour;
-		__int32 m_dataMinute;
-		__int32 m_dataDayNumberOrSeconds;
-		__int32 m_timeIndicator;
-		__int32 m_forecastPeriod;
-		__int32 m_dataLength;
-		__int32 m_gridCode;
-		__int32 m_hemisphereIndicator;
-		__int32 m_nRows;
-		__int32 m_nPointsPerRow;
-		__int32 m_extraDataLength;
-		__int32 m_packingMethod;
-		__int32 m_releaseNumber;
-		__int32 m_fieldCode;
-		__int32 m_secondFieldCode;
-		__int32 m_processingCode;
-		__int32 m_verticalCoordinateType;
-		__int32 m_verticalCoordinateTypeForReferenceLevel;
-		__int32 m_experimentNumber;
-		__int32 m_startRecord;
-		__int32 m_nRecords;
-		__int32 m_projectionNumber;
-		__int32 m_fieldType;
-		__int32 m_levelCode;
-		__int32 m_reserved1;
-		__int32 m_reserved2;
-		__int32 m_reserved3;
-		__int32 m_ensembleMemberNumber;
-		__int32 m_source;
-		__int32 m_dataType;
-		__int32 m_startAddressInData;
-		__int32 m_rimWidthHaloSizes;
-		__int32 m_ItemCode;
-		__int32 m_pseudoLevel;
-		__int32 m_userDefined;
-		__int32 m_modelCode;
+		int32_t m_validYear;
+		int32_t m_validMonth;
+		int32_t m_validDayOfMonth;
+		int32_t m_validHour;
+		int32_t m_validMinute;
+		int32_t m_validDayNumberOrSeconds;
+		int32_t m_dataYear;
+		int32_t m_dataMonth;
+		int32_t m_dataDayOfMonth;
+		int32_t m_dataHour;
+		int32_t m_dataMinute;
+		int32_t m_dataDayNumberOrSeconds;
+		int32_t m_timeIndicator;
+		int32_t m_forecastPeriod;
+		int32_t m_dataLength;
+		int32_t m_gridCode;
+		int32_t m_hemisphereIndicator;
+		int32_t m_nRows;
+		int32_t m_nPointsPerRow;
+		int32_t m_extraDataLength;
+		int32_t m_packingMethod;
+		int32_t m_releaseNumber;
+		int32_t m_fieldCode;
+		int32_t m_secondFieldCode;
+		int32_t m_processingCode;
+		int32_t m_verticalCoordinateType;
+		int32_t m_verticalCoordinateTypeForReferenceLevel;
+		int32_t m_experimentNumber;
+		int32_t m_startRecord;
+		int32_t m_nRecords;
+		int32_t m_projectionNumber;
+		int32_t m_fieldType;
+		int32_t m_levelCode;
+		int32_t m_reserved1;
+		int32_t m_reserved2;
+		int32_t m_reserved3;
+		int32_t m_ensembleMemberNumber;
+		int32_t m_source;
+		int32_t m_dataType;
+		int32_t m_startAddressInData;
+		int32_t m_rimWidthHaloSizes;
+		int32_t m_ItemCode;
+		int32_t m_pseudoLevel;
+		int32_t m_userDefined;
+		int32_t m_modelCode;
 		float m_upperLayerBoundary1;
 		float m_upperLayerBoundary2;
 		float m_reserved4;
@@ -150,51 +150,51 @@ public:
 	};
 	struct PpHeader64
 	{
-		__int64 m_validYear;
-		__int64 m_validMonth;
-		__int64 m_validDayOfMonth;
-		__int64 m_validHour;
-		__int64 m_validMinute;
-		__int64 m_validDayNumberOrSeconds;
-		__int64 m_dataYear;
-		__int64 m_dataMonth;
-		__int64 m_dataDayOfMonth;
-		__int64 m_dataHour;
-		__int64 m_dataMinute;
-		__int64 m_dataDayNumberOrSeconds;
-		__int64 m_timeIndicator;
-		__int64 m_forecastPeriod;
-		__int64 m_dataLength;
-		__int64 m_gridCode;
-		__int64 m_hemisphereIndicator;
-		__int64 m_nRows;
-		__int64 m_nPointsPerRow;
-		__int64 m_extraDataLength;
-		__int64 m_packingMethod;
-		__int64 m_releaseNumber;
-		__int64 m_fieldCode;
-		__int64 m_secondFieldCode;
-		__int64 m_processingCode;
-		__int64 m_verticalCoordinateType;
-		__int64 m_verticalCoordinateTypeForReferenceLevel;
-		__int64 m_experimentNumber;
-		__int64 m_startRecord;
-		__int64 m_nRecords;
-		__int64 m_projectionNumber;
-		__int64 m_fieldType;
-		__int64 m_levelCode;
-		__int64 m_reserved1;
-		__int64 m_reserved2;
-		__int64 m_reserved3;
-		__int64 m_ensembleMemberNumber;
-		__int64 m_source;
-		__int64 m_dataType;
-		__int64 m_startAddressInData;
-		__int64 m_rimWidthHaloSizes;
-		__int64 m_ItemCode;
-		__int64 m_pseudoLevel;
-		__int64 m_userDefined;
-		__int64 m_modelCode;
+		int64_t m_validYear;
+		int64_t m_validMonth;
+		int64_t m_validDayOfMonth;
+		int64_t m_validHour;
+		int64_t m_validMinute;
+		int64_t m_validDayNumberOrSeconds;
+		int64_t m_dataYear;
+		int64_t m_dataMonth;
+		int64_t m_dataDayOfMonth;
+		int64_t m_dataHour;
+		int64_t m_dataMinute;
+		int64_t m_dataDayNumberOrSeconds;
+		int64_t m_timeIndicator;
+		int64_t m_forecastPeriod;
+		int64_t m_dataLength;
+		int64_t m_gridCode;
+		int64_t m_hemisphereIndicator;
+		int64_t m_nRows;
+		int64_t m_nPointsPerRow;
+		int64_t m_extraDataLength;
+		int64_t m_packingMethod;
+		int64_t m_releaseNumber;
+		int64_t m_fieldCode;
+		int64_t m_secondFieldCode;
+		int64_t m_processingCode;
+		int64_t m_verticalCoordinateType;
+		int64_t m_verticalCoordinateTypeForReferenceLevel;
+		int64_t m_experimentNumber;
+		int64_t m_startRecord;
+		int64_t m_nRecords;
+		int64_t m_projectionNumber;
+		int64_t m_fieldType;
+		int64_t m_levelCode;
+		int64_t m_reserved1;
+		int64_t m_reserved2;
+		int64_t m_reserved3;
+		int64_t m_ensembleMemberNumber;
+		int64_t m_source;
+		int64_t m_dataType;
+		int64_t m_startAddressInData;
+		int64_t m_rimWidthHaloSizes;
+		int64_t m_ItemCode;
+		int64_t m_pseudoLevel;
+		int64_t m_userDefined;
+		int64_t m_modelCode;
 		double m_upperLayerBoundary1;
 		double m_upperLayerBoundary2;
 		double m_reserved4;
@@ -218,220 +218,220 @@ public:
 
 	struct FixedHeader32
 	{
-		__int32 m_formatVersionnumber; //1
-		__int32 m_subModelIndicator; //2
-		__int32 m_verticalCoordinateTypeIndicator; //3
-		__int32 m_horizontalCoordinateTypeIndicator; //4
-		__int32 m_datasetTypeIndicator; //5
-		__int32 m_runIdentifier; //6
-		__int32 m_experimentNumber; //7
-		__int32 m_calendarIndicator; //8
-		__int32 m_gridStaggeringIndicator; //9
-		__int32 m_ancillaryFileTimeIndicator; //10
-		__int32 m_projectionNumber; //11
-		__int32 m_modelVersionNumber; //12
-		__int32 m_undocumented1; //13
-		__int32 m_typeOfObsFile; //14
-		__int32 m_arithmeticOperationType; //15
-		__int32 m_undocumented2; //16
-		__int32 m_undocumented3; //17
-		__int32 m_undocumented4; //18
-		__int32 m_undocumented5; //19
-		__int32 m_undocumented6; //20
-		__int32 m_year1; //21
-		__int32 m_month1; //22
-		__int32 m_dayOfMonth1; //23
-		__int32 m_hour1; //24
-		__int32 m_minute1; //25
-		__int32 m_second1; //26
-		__int32 m_dayNumber1; //27
-		__int32 m_year2; //28
-		__int32 m_month2; //29
-		__int32 m_dayOfMonth2; //30
-		__int32 m_hour2; //31
-		__int32 m_minute2; //32
-		__int32 m_second2; //33
-		__int32 m_dayNumber2; //34
-		__int32 m_year3; //35
-		__int32 m_month3; //36
-		__int32 m_dayOfMonth3; //37
-		__int32 m_hour3; //38
-		__int32 m_minute3; //39
-		__int32 m_second3; //40
-		__int32 m_dayNumber3; //41
-		__int32 m_undocumented7To64[58]; //42-99
-		__int32 m_startIntegerConstants; //100
-		__int32 m_nIntegerConstants; //101
-		__int32 m_undocumented65; //102
-		__int32 m_undocumented66; //103
-		__int32 m_undocumented67; //104
-		__int32 m_startRealConstants; //105
-		__int32 m_nRealConstants; //106
-		__int32 m_undocumented68; //107
-		__int32 m_undocumented69; //108
-		__int32 m_undocumented70; //109
-		__int32 m_startLevelDependantConstants; //110
-		__int32 m_nLevelDependantConstantsFirstDimension; //111
-		__int32 m_nLevelDependantConstantsSecondDimension; //112
-		__int32 m_undocumented71; //113
-		__int32 m_undocumented72; //114
-		__int32 m_startRowDependantConstants; //115
-		__int32 m_nRowDependantConstantsFirstDimension; //116
-		__int32 m_nRowDependantConstantsSecondDimension; //117
-		__int32 m_undocumented73; //118
-		__int32 m_undocumented74; //119
-		__int32 m_startColumnDependantConstants; //120
-		__int32 m_nColumnDependantConstantsFirstDimension; //121
-		__int32 m_nColumnDependantConstantsSecondDimension; //122
-		__int32 m_undocumented75; //123
-		__int32 m_undocumented76; //124
-		__int32 m_startFieldsOfConstants; //125
-		__int32 m_nFieldsOfConstantsFirstDimension; //126
-		__int32 m_nFieldsOfConstantsSecondDimension; //127
-		__int32 m_undocumented77; //128
-		__int32 m_undocumented78; //129
-		__int32 m_startExtraConstants; //130
-		__int32 m_nExtraConstants; //131
-		__int32 m_undocumented79; //132
-		__int32 m_undocumented80; //133
-		__int32 m_undocumented81; //134
-		__int32 m_startTempHistoryfile; //135
-		__int32 m_nTempHistoryfile; //136
-		__int32 m_undocumented82; //137
-		__int32 m_undocumented83; //138
-		__int32 m_undocumented84; //139
-		__int32 m_startCompressedFieldIndex1; //140
-		__int32 m_nCompressedFieldIndex1; //141
-		__int32 m_startCompressedFieldIndex2; //142
-		__int32 m_nCompressedFieldIndex2; //143
-		__int32 m_startCompressedFieldIndex3; //144
-		__int32 m_nCompressedFieldIndex3; //145
-		__int32 m_undocumented85; //146
-		__int32 m_undocumented86; //147
-		__int32 m_undocumented87; //148
-		__int32 m_undocumented88; //149
-		__int32 m_startLookupTable; //150
-		__int32 m_nLookupTableFirstDimension; //151
-		__int32 m_nLookupTableSecondDimentsion; //152
-		__int32 m_nPrognosticFields; //153
-		__int32 m_undocumented89; //154
-		__int32 m_undocumented90; //155
-		__int32 m_undocumented91; //156
-		__int32 m_undocumented92; //157
-		__int32 m_undocumented93; //158
-		__int32 m_undocumented94; //159
-		__int32 m_startOfData; //160
-		__int32 m_dimensionOfData; //161
-		__int32 m_maximumLengthOfAllFields; //162
+		int32_t m_formatVersionnumber; //1
+		int32_t m_subModelIndicator; //2
+		int32_t m_verticalCoordinateTypeIndicator; //3
+		int32_t m_horizontalCoordinateTypeIndicator; //4
+		int32_t m_datasetTypeIndicator; //5
+		int32_t m_runIdentifier; //6
+		int32_t m_experimentNumber; //7
+		int32_t m_calendarIndicator; //8
+		int32_t m_gridStaggeringIndicator; //9
+		int32_t m_ancillaryFileTimeIndicator; //10
+		int32_t m_projectionNumber; //11
+		int32_t m_modelVersionNumber; //12
+		int32_t m_undocumented1; //13
+		int32_t m_typeOfObsFile; //14
+		int32_t m_arithmeticOperationType; //15
+		int32_t m_undocumented2; //16
+		int32_t m_undocumented3; //17
+		int32_t m_undocumented4; //18
+		int32_t m_undocumented5; //19
+		int32_t m_undocumented6; //20
+		int32_t m_year1; //21
+		int32_t m_month1; //22
+		int32_t m_dayOfMonth1; //23
+		int32_t m_hour1; //24
+		int32_t m_minute1; //25
+		int32_t m_second1; //26
+		int32_t m_dayNumber1; //27
+		int32_t m_year2; //28
+		int32_t m_month2; //29
+		int32_t m_dayOfMonth2; //30
+		int32_t m_hour2; //31
+		int32_t m_minute2; //32
+		int32_t m_second2; //33
+		int32_t m_dayNumber2; //34
+		int32_t m_year3; //35
+		int32_t m_month3; //36
+		int32_t m_dayOfMonth3; //37
+		int32_t m_hour3; //38
+		int32_t m_minute3; //39
+		int32_t m_second3; //40
+		int32_t m_dayNumber3; //41
+		int32_t m_undocumented7To64[58]; //42-99
+		int32_t m_startIntegerConstants; //100
+		int32_t m_nIntegerConstants; //101
+		int32_t m_undocumented65; //102
+		int32_t m_undocumented66; //103
+		int32_t m_undocumented67; //104
+		int32_t m_startRealConstants; //105
+		int32_t m_nRealConstants; //106
+		int32_t m_undocumented68; //107
+		int32_t m_undocumented69; //108
+		int32_t m_undocumented70; //109
+		int32_t m_startLevelDependantConstants; //110
+		int32_t m_nLevelDependantConstantsFirstDimension; //111
+		int32_t m_nLevelDependantConstantsSecondDimension; //112
+		int32_t m_undocumented71; //113
+		int32_t m_undocumented72; //114
+		int32_t m_startRowDependantConstants; //115
+		int32_t m_nRowDependantConstantsFirstDimension; //116
+		int32_t m_nRowDependantConstantsSecondDimension; //117
+		int32_t m_undocumented73; //118
+		int32_t m_undocumented74; //119
+		int32_t m_startColumnDependantConstants; //120
+		int32_t m_nColumnDependantConstantsFirstDimension; //121
+		int32_t m_nColumnDependantConstantsSecondDimension; //122
+		int32_t m_undocumented75; //123
+		int32_t m_undocumented76; //124
+		int32_t m_startFieldsOfConstants; //125
+		int32_t m_nFieldsOfConstantsFirstDimension; //126
+		int32_t m_nFieldsOfConstantsSecondDimension; //127
+		int32_t m_undocumented77; //128
+		int32_t m_undocumented78; //129
+		int32_t m_startExtraConstants; //130
+		int32_t m_nExtraConstants; //131
+		int32_t m_undocumented79; //132
+		int32_t m_undocumented80; //133
+		int32_t m_undocumented81; //134
+		int32_t m_startTempHistoryfile; //135
+		int32_t m_nTempHistoryfile; //136
+		int32_t m_undocumented82; //137
+		int32_t m_undocumented83; //138
+		int32_t m_undocumented84; //139
+		int32_t m_startCompressedFieldIndex1; //140
+		int32_t m_nCompressedFieldIndex1; //141
+		int32_t m_startCompressedFieldIndex2; //142
+		int32_t m_nCompressedFieldIndex2; //143
+		int32_t m_startCompressedFieldIndex3; //144
+		int32_t m_nCompressedFieldIndex3; //145
+		int32_t m_undocumented85; //146
+		int32_t m_undocumented86; //147
+		int32_t m_undocumented87; //148
+		int32_t m_undocumented88; //149
+		int32_t m_startLookupTable; //150
+		int32_t m_nLookupTableFirstDimension; //151
+		int32_t m_nLookupTableSecondDimentsion; //152
+		int32_t m_nPrognosticFields; //153
+		int32_t m_undocumented89; //154
+		int32_t m_undocumented90; //155
+		int32_t m_undocumented91; //156
+		int32_t m_undocumented92; //157
+		int32_t m_undocumented93; //158
+		int32_t m_undocumented94; //159
+		int32_t m_startOfData; //160
+		int32_t m_dimensionOfData; //161
+		int32_t m_maximumLengthOfAllFields; //162
 	};
 
 	struct FixedHeader64
 	{
-		__int64 m_formatVersionnumber; //1
-		__int64 m_subModelIndicator; //2
-		__int64 m_verticalCoordinateTypeIndicator; //3
-		__int64 m_horizontalCoordinateTypeIndicator; //4
-		__int64 m_datasetTypeIndicator; //5
-		__int64 m_runIdentifier; //6
-		__int64 m_experimentNumber; //7
-		__int64 m_calendarIndicator; //8
-		__int64 m_gridStaggeringIndicator; //9
-		__int64 m_ancillaryFileTimeIndicator; //10
-		__int64 m_projectionNumber; //11
-		__int64 m_modelVersionNumber; //12
-		__int64 m_undocumented1; //13
-		__int64 m_typeOfObsFile; //14
-		__int64 m_arithmeticOperationType; //15
-		__int64 m_undocumented2; //16
-		__int64 m_undocumented3; //17
-		__int64 m_undocumented4; //18
-		__int64 m_undocumented5; //19
-		__int64 m_undocumented6; //20
-		__int64 m_year1; //21
-		__int64 m_month1; //22
-		__int64 m_dayOfMonth1; //23
-		__int64 m_hour1; //24
-		__int64 m_minute1; //25
-		__int64 m_second1; //26
-		__int64 m_dayNumber1; //27
-		__int64 m_year2; //28
-		__int64 m_month2; //29
-		__int64 m_dayOfMonth2; //30
-		__int64 m_hour2; //31
-		__int64 m_minute2; //32
-		__int64 m_second2; //33
-		__int64 m_dayNumber2; //34
-		__int64 m_year3; //35
-		__int64 m_month3; //36
-		__int64 m_dayOfMonth3; //37
-		__int64 m_hour3; //38
-		__int64 m_minute3; //39
-		__int64 m_second3; //40
-		__int64 m_dayNumber3; //41
-		__int64 m_undocumented7To64[58]; //42-99
-		__int64 m_startIntegerConstants; //100
-		__int64 m_nIntegerConstants; //101
-		__int64 m_undocumented65; //102
-		__int64 m_undocumented66; //103
-		__int64 m_undocumented67; //104
-		__int64 m_startRealConstants; //105
-		__int64 m_nRealConstants; //106
-		__int64 m_undocumented68; //107
-		__int64 m_undocumented69; //108
-		__int64 m_undocumented70; //109
-		__int64 m_startLevelDependantConstants; //110
-		__int64 m_nLevelDependantConstantsFirstDimension; //111
-		__int64 m_nLevelDependantConstantsSecondDimension; //112
-		__int64 m_undocumented71; //113
-		__int64 m_undocumented72; //114
-		__int64 m_startRowDependantConstants; //115
-		__int64 m_nRowDependantConstantsFirstDimension; //116
-		__int64 m_nRowDependantConstantsSecondDimension; //117
-		__int64 m_undocumented73; //118
-		__int64 m_undocumented74; //119
-		__int64 m_startColumnDependantConstants; //120
-		__int64 m_nColumnDependantConstantsFirstDimension; //121
-		__int64 m_nColumnDependantConstantsSecondDimension; //122
-		__int64 m_undocumented75; //123
-		__int64 m_undocumented76; //124
-		__int64 m_startFieldsOfConstants; //125
-		__int64 m_nFieldsOfConstantsFirstDimension; //126
-		__int64 m_nFieldsOfConstantsSecondDimension; //127
-		__int64 m_undocumented77; //128
-		__int64 m_undocumented78; //129
-		__int64 m_startExtraConstants; //130
-		__int64 m_nExtraConstants; //131
-		__int64 m_undocumented79; //132
-		__int64 m_undocumented80; //133
-		__int64 m_undocumented81; //134
-		__int64 m_startTempHistoryfile; //135
-		__int64 m_nTempHistoryfile; //136
-		__int64 m_undocumented82; //137
-		__int64 m_undocumented83; //138
-		__int64 m_undocumented84; //139
-		__int64 m_startCompressedFieldIndex1; //140
-		__int64 m_nCompressedFieldIndex1; //141
-		__int64 m_startCompressedFieldIndex2; //142
-		__int64 m_nCompressedFieldIndex2; //143
-		__int64 m_startCompressedFieldIndex3; //144
-		__int64 m_nCompressedFieldIndex3; //145
-		__int64 m_undocumented85; //146
-		__int64 m_undocumented86; //147
-		__int64 m_undocumented87; //148
-		__int64 m_undocumented88; //149
-		__int64 m_startLookupTable; //150
-		__int64 m_nLookupTableFirstDimension; //151
-		__int64 m_nLookupTableSecondDimension; //152
-		__int64 m_nPrognosticFields; //153
-		__int64 m_undocumented89; //154
-		__int64 m_undocumented90; //155
-		__int64 m_undocumented91; //156
-		__int64 m_undocumented92; //157
-		__int64 m_undocumented93; //158
-		__int64 m_undocumented94; //159
-		__int64 m_startOfData; //160
-		__int64 m_dimensionOfData; //161
-		__int64 m_maximumLengthOfAllFields; //162
+		int64_t m_formatVersionnumber; //1
+		int64_t m_subModelIndicator; //2
+		int64_t m_verticalCoordinateTypeIndicator; //3
+		int64_t m_horizontalCoordinateTypeIndicator; //4
+		int64_t m_datasetTypeIndicator; //5
+		int64_t m_runIdentifier; //6
+		int64_t m_experimentNumber; //7
+		int64_t m_calendarIndicator; //8
+		int64_t m_gridStaggeringIndicator; //9
+		int64_t m_ancillaryFileTimeIndicator; //10
+		int64_t m_projectionNumber; //11
+		int64_t m_modelVersionNumber; //12
+		int64_t m_undocumented1; //13
+		int64_t m_typeOfObsFile; //14
+		int64_t m_arithmeticOperationType; //15
+		int64_t m_undocumented2; //16
+		int64_t m_undocumented3; //17
+		int64_t m_undocumented4; //18
+		int64_t m_undocumented5; //19
+		int64_t m_undocumented6; //20
+		int64_t m_year1; //21
+		int64_t m_month1; //22
+		int64_t m_dayOfMonth1; //23
+		int64_t m_hour1; //24
+		int64_t m_minute1; //25
+		int64_t m_second1; //26
+		int64_t m_dayNumber1; //27
+		int64_t m_year2; //28
+		int64_t m_month2; //29
+		int64_t m_dayOfMonth2; //30
+		int64_t m_hour2; //31
+		int64_t m_minute2; //32
+		int64_t m_second2; //33
+		int64_t m_dayNumber2; //34
+		int64_t m_year3; //35
+		int64_t m_month3; //36
+		int64_t m_dayOfMonth3; //37
+		int64_t m_hour3; //38
+		int64_t m_minute3; //39
+		int64_t m_second3; //40
+		int64_t m_dayNumber3; //41
+		int64_t m_undocumented7To64[58]; //42-99
+		int64_t m_startIntegerConstants; //100
+		int64_t m_nIntegerConstants; //101
+		int64_t m_undocumented65; //102
+		int64_t m_undocumented66; //103
+		int64_t m_undocumented67; //104
+		int64_t m_startRealConstants; //105
+		int64_t m_nRealConstants; //106
+		int64_t m_undocumented68; //107
+		int64_t m_undocumented69; //108
+		int64_t m_undocumented70; //109
+		int64_t m_startLevelDependantConstants; //110
+		int64_t m_nLevelDependantConstantsFirstDimension; //111
+		int64_t m_nLevelDependantConstantsSecondDimension; //112
+		int64_t m_undocumented71; //113
+		int64_t m_undocumented72; //114
+		int64_t m_startRowDependantConstants; //115
+		int64_t m_nRowDependantConstantsFirstDimension; //116
+		int64_t m_nRowDependantConstantsSecondDimension; //117
+		int64_t m_undocumented73; //118
+		int64_t m_undocumented74; //119
+		int64_t m_startColumnDependantConstants; //120
+		int64_t m_nColumnDependantConstantsFirstDimension; //121
+		int64_t m_nColumnDependantConstantsSecondDimension; //122
+		int64_t m_undocumented75; //123
+		int64_t m_undocumented76; //124
+		int64_t m_startFieldsOfConstants; //125
+		int64_t m_nFieldsOfConstantsFirstDimension; //126
+		int64_t m_nFieldsOfConstantsSecondDimension; //127
+		int64_t m_undocumented77; //128
+		int64_t m_undocumented78; //129
+		int64_t m_startExtraConstants; //130
+		int64_t m_nExtraConstants; //131
+		int64_t m_undocumented79; //132
+		int64_t m_undocumented80; //133
+		int64_t m_undocumented81; //134
+		int64_t m_startTempHistoryfile; //135
+		int64_t m_nTempHistoryfile; //136
+		int64_t m_undocumented82; //137
+		int64_t m_undocumented83; //138
+		int64_t m_undocumented84; //139
+		int64_t m_startCompressedFieldIndex1; //140
+		int64_t m_nCompressedFieldIndex1; //141
+		int64_t m_startCompressedFieldIndex2; //142
+		int64_t m_nCompressedFieldIndex2; //143
+		int64_t m_startCompressedFieldIndex3; //144
+		int64_t m_nCompressedFieldIndex3; //145
+		int64_t m_undocumented85; //146
+		int64_t m_undocumented86; //147
+		int64_t m_undocumented87; //148
+		int64_t m_undocumented88; //149
+		int64_t m_startLookupTable; //150
+		int64_t m_nLookupTableFirstDimension; //151
+		int64_t m_nLookupTableSecondDimension; //152
+		int64_t m_nPrognosticFields; //153
+		int64_t m_undocumented89; //154
+		int64_t m_undocumented90; //155
+		int64_t m_undocumented91; //156
+		int64_t m_undocumented92; //157
+		int64_t m_undocumented93; //158
+		int64_t m_undocumented94; //159
+		int64_t m_startOfData; //160
+		int64_t m_dimensionOfData; //161
+		int64_t m_maximumLengthOfAllFields; //162
 	};
 	class Section32
 	{
@@ -451,7 +451,7 @@ public:
 		bool operator < (const Section32 & rhs) const
 		{
 			if(m_parent->m_comparator<45)
-				return at<__int32>(m_parent->m_comparator) < rhs.at<__int32> (m_parent->m_comparator);
+				return at<int32_t>(m_parent->m_comparator) < rhs.at<int32_t> (m_parent->m_comparator);
 			else
 				return at<float>(m_parent->m_comparator) < rhs.at<float> (m_parent->m_comparator);
 		}
@@ -499,16 +499,16 @@ public:
 		bool operator < (const Section64 & rhs) const
 		{
 			if(m_parent->m_comparator<45)
-				return at<__int64>(m_parent->m_comparator) < rhs.at<__int64> (m_parent->m_comparator);
+				return at<int64_t>(m_parent->m_comparator) < rhs.at<int64_t> (m_parent->m_comparator);
 			else
 				return at<double>(m_parent->m_comparator) < rhs.at<double> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
-		void setDataStart( __int64 start )
+		void setDataStart( int64_t start )
 		{
 			m_dataStart = start;
 		}
-		void setDataSize( __int64 size )
+		void setDataSize( int64_t size )
 		{
 			m_dataBytes = size;
 		}
@@ -527,7 +527,7 @@ public:
 			m_dataBytes = section32.m_dataBytes;
 			m_parent = section32.m_parent;
 			for( size_t i=0; i<45; ++i)
-				*((__int64*)(&m_header) + i ) = section32.at<__int32>( i );
+				*((int64_t*)(&m_header) + i ) = section32.at<int32_t>( i );
 			for( size_t i=46; i<64; ++i)
 				*((double*)(&m_header) + i ) = section32.at<float>( i );
 		}
@@ -568,7 +568,7 @@ public:
 	//get the number of sections in the file
 	size_t getNumSections(){return m_sections.size();}
 	//get a list of the stash codes in the file, sorted ascending, no entry will appear more than once
-	std::vector<__int64> getStashCodeList();
+	std::vector<int64_t> getStashCodeList();
 	
 	//get the x and y values for a section works for regular x/y grids. throws an error for
 	//spectral grids
@@ -676,13 +676,13 @@ private:
 
 	//get data for a given section
 	void getData(const Section64 &section, std::vector<std::vector<double>> &result);
-	//__int32 getNextRecordSize();
-	//void readRecord(__int32* record, std::basic_istream<char>::pos_type nBytes);
+	//int32_t getNextRecordSize();
+	//void readRecord(int32_t* record, std::basic_istream<char>::pos_type nBytes);
 	//void skipRecord(std::basic_istream<char>::pos_type nBytes);
 	void decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t outDim1, size_t outDim2);
 	//convert an IBM float to an IEEE float. Note we pass a pointer to the float as
 	//a void * to avoid acidentally doing implicit conversions e.g. if the bit are 
-	//actually held in a __int32
+	//actually held in a int32_t
 	float fromIbmFloat(void *ibmFloat);
 	double UmFile::fromIbmDouble(void *ibmFloat);
 
@@ -707,8 +707,8 @@ class UmFileParser
 private:
 	virtual std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian ) = 0;
 	virtual void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit ) = 0;
-	virtual bool checkValidWords( __int32 firstWord, __int32 fifthWord )  { return false; }
-	virtual bool checkValidWords( __int64 firstWord, __int64 fifthWord ) { return false; }
+	virtual bool checkValidWords( int32_t firstWord, int32_t fifthWord )  { return false; }
+	virtual bool checkValidWords( int64_t firstWord, int64_t fifthWord ) { return false; }
 	template < class T >
 	bool checkValidWords( T, T ) = delete; //This stops any other types resulting in callin the above versions
 protected:
@@ -718,8 +718,8 @@ class PpFileParser32 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
 	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
-	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
-	__int32 getNextRecordSize( std::fstream * fin, bool swapEndian );
+	bool checkValidWords( int32_t firstWord, int32_t fifthWord );
+	int32_t getNextRecordSize( std::fstream * fin, bool swapEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian );
 };
 
@@ -727,8 +727,8 @@ class PpFileParser64 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
 	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
-	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
-	__int64 getNextRecordSize( std::fstream * fin, bool swapEndian );
+	bool checkValidWords( int64_t firstWord, int64_t fifthWord );
+	int64_t getNextRecordSize( std::fstream * fin, bool swapEndian );
 	void skipRecord( std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian );
 };
 
@@ -736,14 +736,14 @@ class FieldsFileParser32 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
 	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
-	bool checkValidWords( __int32 firstWord, __int32 fifthWord );
+	bool checkValidWords( int32_t firstWord, int32_t fifthWord );
 };
 
 class FieldsFileParser64 : public UmFileParser
 {
 	std::vector<UmFile::Section64> parse( std::fstream *fin, UmFile *parent, bool swapEndian );
 	void readRecord( void * record, std::fstream *fin, std::basic_istream<char>::pos_type nBytes, bool swapEndian, bool force32Bit );
-	bool checkValidWords( __int64 firstWord, __int64 fifthWord );
+	bool checkValidWords( int64_t firstWord, int64_t fifthWord );
 };
 
 
@@ -763,7 +763,7 @@ UmFile& UmFile::operator > ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<__int64>(m_comparator) > rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) > rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
@@ -788,7 +788,7 @@ UmFile& UmFile::operator >= ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<__int64>(m_comparator) >= rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) >= rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
@@ -813,7 +813,7 @@ UmFile& UmFile::operator < ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<__int64>(m_comparator) < rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) < rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
@@ -863,7 +863,7 @@ UmFile& UmFile::operator == ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<__int64>(m_comparator) == rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) == rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
@@ -888,7 +888,7 @@ UmFile& UmFile::operator != ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<__int64>(m_comparator) != rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) != rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
