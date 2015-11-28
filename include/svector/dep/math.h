@@ -4,7 +4,105 @@
 #include"../svector.h"
 #include<cmath>
 #include<vector>
+#include<utility>
 #include"operators.h"
+
+namespace sci_internal
+{
+	//a class which holds a pair of iterators for use when you wish to use two vectors
+	//within a std::for_each, e.g. to give a source and a destination. Note that T
+	//and U are iterator types, not value types.
+	//It is a bit of a cheat of an iterator, because the dereference operator doesn't
+	//actually dereference anything, it just returns a reference to the iterator. The
+	//user must dereference the result of first() or second() instead. However this
+	//model allows IteratorPair to be used with std::for_each - in this case the functor
+	//must have a reference to the IteratorPair as its argument.
+	template< class T, class U>
+	class IteratorPair
+	{
+	public:
+		IteratorPair( T iter1, U iter2 ) : m_pair( iter1, iter2 ){}
+		T &first() { return m_pair.first; }
+		U &second() { return m_pair.second; }
+		T &first() const { return m_pair.first; }
+		U &second() const { return m_pair.second; }
+		IteratorPair<T,U>& operator++ (){ ++m_pair.first; ++m_pair.second; return *this; }
+		IteratorPair<T,U> operator++ (int){ IteratorPair<T,U> reult(*this); ++m_pair.first; ++m_pair.second; return result; }
+		IteratorPair<T,U>& operator*(){ return *this; }
+		bool operator!=( const IteratorPair<T,U>& other ){ return m_pair != other.m_pair; }
+		bool operator==( const IteratorPair<T,U>& other ){ return m_pair == other.m_pair; }
+
+		//define these things to allow iterator_traits to work with this iterator
+		typedef std::forward_iterator_tag iterator_category;
+		typedef IteratorPair<T&,U&> value_type;
+		typedef size_t difference_type;
+		typedef IteratorPair<T,U> pointer;
+		typedef IteratorPair<T,U>& reference;
+	private:
+		std::pair<T, U> m_pair;
+	};
+	template< class T, class U>
+	IteratorPair<T*,U*> getBeginRawPair(std::vector<T> &first, std::vector<U> &second)
+	{
+		sci::assertThrow( first.size() > 0, sci::err() );
+		sci::assertThrow( second.size() > 0, sci::err() );
+		return IteratorPair<T*,U*>(&first[0], &second[0] );
+	}
+	template< class T, class U>
+	IteratorPair<const T*,U*> getBeginRawPair(const std::vector<T> &first, std::vector<U> &second)
+	{
+		sci::assertThrow( first.size() > 0, sci::err() );
+		sci::assertThrow( second.size() > 0, sci::err() );
+		return IteratorPair<const T*,U*>(&first[0], &second[0] );
+	}
+	template< class T, class U>
+	IteratorPair<T*,const U*> getBeginRawPair(std::vector<T> &first, const std::vector<U> &second)
+	{
+		sci::assertThrow( first.size() > 0, sci::err() );
+		sci::assertThrow( second.size() > 0, sci::err() );
+		return IteratorPair<T*,U*>(&first[0], &second[0] );
+	}
+	template< class T, class U>
+	IteratorPair<const T*,const U*> getBeginRawPair(const std::vector<T> &first, const std::vector<U> &second)
+	{
+		sci::assertThrow( first.size() > 0, sci::err() );
+		sci::assertThrow( second.size() > 0, sci::err() );
+		return IteratorPair<T*,U*>(&first[0], &second[0] );
+	}
+	template< class T, class U>
+	IteratorPair<T*,U*> getEndRawPair(std::vector<T> &first, std::vector<U> &second)
+	{
+		size_t len = first.size()
+		sci::assertThrow( len > 0, sci::err() );
+		sci::assertThrow( second.size() == len, sci::err() );
+		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
+	}
+	template< class T, class U>
+	IteratorPair<const T*,U*> getEndRawPair(const std::vector<T> &first, std::vector<U> &second)
+	{
+		size_t len = first.size();
+		sci::assertThrow( len > 0, sci::err() );
+		sci::assertThrow( second.size() == len, sci::err() );
+		return IteratorPair<const T*,U*>(&first[0]+len, &second[0]+len );
+	}
+	template< class T, class U>
+	IteratorPair<T*,const U*> getEndRawPair(std::vector<T> &first, const std::vector<U> &second)
+	{
+		size_t len = first.size()
+		sci::assertThrow( len > 0, sci::err() );
+		sci::assertThrow( second.size() == len, sci::err() );
+		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
+	}
+	template< class T, class U>
+	IteratorPair<const T*,const U*> getEndRawPair(const std::vector<T> &first, const std::vector<U> &second)
+	{
+		size_t len = first.size()
+		sci::assertThrow( len > 0, sci::err() );
+		sci::assertThrow( second.size() == len, sci::err() );
+		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
+	}
+}
+
 namespace sci{
 
 	//********************************************************
@@ -19,20 +117,6 @@ namespace sci{
 	//******* element of a 1 or multi d vector ***************
 	//********************************************************
 
-	//template for calling a stdfunction on every element of a 1dvector
-	//one version returns a new vector the other modifies a provided vector;
-	template<class T, class U>
-	std::vector<T> stdfuncv(const std::vector<T> &v, T(*stdfunc)(U))
-	{
-		std::vector<T> result(v.size());
-		typename std::vector<T>::iterator resulti=result.begin();
-		for(typename std::vector<T>::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
-		{
-			*resulti=stdfunc(*vi);
-			++resulti;
-		}
-		return result;
-	}
 	template<class T, class U>
 	void stdfuncv(const std::vector<T> &v, std::vector<T> &result, T(*stdfunc)(U))
 	{
@@ -134,58 +218,40 @@ namespace sci{
 	//****these will work for multi d using ****
 	//****the templates above*******************
 	//******************************************
+#define SCIFUNCWRAP( SCINAME, STDNAME)\
+	template<class T>\
+	inline std::vector<T> SCINAME(const std::vector<T> &v)\
+	{\
+		std::vector<T> result(v.size());\
+		std::for_each( sci_internal::getBeginRawPair(v,result), \
+			sci_internal::getEndRawPair(v, result), \
+			[](sci_internal::IteratorPair< const T*, T*> &iter){ *iter.second() = sci::SCINAME(*iter.first()); } );\
+		return result;\
+	}\
+	template<class T>\
+	inline T SCINAME(const T &v)\
+	{\
+		return STDNAME(v);\
+	}\
 
-
-	//compute exponent of each vector element
-	template<class T>
-	inline std::vector<T> exp(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::exp);
-	}
-	template<class T>
-	inline void exp(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::exp);
-	}
-	template<class T>
-	inline T exp(const T &v)
-	{
-		return std::exp(v);
-	}
-
-	//compute natural logarithm of each vector element
-	template<class T>
-	inline std::vector<T> ln(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::log);
-	}
-	template<class T>
-	inline void ln(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::log);
-	}
-	template<class T>
-	inline T ln(const T &v)
-	{
-		return std::log(v);
-	}
-	
-	//compute base 10 logarithm of each vector element
-	template<class T>
-	inline std::vector<T> log10(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::log10);
-	}
-	template<class T>
-	inline void log10(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::log10);
-	}
-	template<class T>
-	inline T log10(const T &v)
-	{
-		return std::log10(v);
-	}
+	SCIFUNCWRAP( exp, std::exp )
+	SCIFUNCWRAP( ln, std::log )
+	SCIFUNCWRAP( log10, std::log10 )
+	SCIFUNCWRAP( abs, std::abs )
+	SCIFUNCWRAP( sqrt, std::sqrt )
+	SCIFUNCWRAP( sin, std::sin )
+	SCIFUNCWRAP( cos, std::cos )
+	SCIFUNCWRAP( tan, std::tan )
+	SCIFUNCWRAP( asin, std::asin )
+	SCIFUNCWRAP( acos, std::acos )
+	SCIFUNCWRAP( atan, std::atan )
+	SCIFUNCWRAP( sinh, std::sinh )
+	SCIFUNCWRAP( cosh, std::cosh )
+	SCIFUNCWRAP( tanh, std::tanh )
+	SCIFUNCWRAP( asinh, std::asinh )
+	SCIFUNCWRAP( acosh, std::acosh )
+	SCIFUNCWRAP( atanh, std::atanh )
+	SCIFUNCWRAP( erf, sci::erf )
 	
 	//compute any base logarithm of each vector element
 	template<class T>
@@ -205,156 +271,6 @@ namespace sci{
 	{
 		if(base==10.0) return std::log10(input);
 		return std::log10(input)/std::log10(base);
-	}
-	
-	//compute absolute value of each vector element
-	template<class T>
-	inline std::vector<T> abs(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::abs);
-	}
-	template<class T>
-	inline void abs(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::abs);
-	}
-	template<class T>
-	inline T abs(const T &v)
-	{
-		return std::abs(v);
-	}
-	
-	//compute absolute value of each vector element
-	template<class T>
-	inline std::vector<T> sqrt(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::sqrt);
-	}
-	template<class T>
-	inline void sqrt(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::sqrt);
-	}
-	template<class T>
-	inline T sqrt(const T &v)
-	{
-		return std::sqrt(v);
-	}
-
-
-	//compute sin of each vector element
-	template<class T>
-	inline std::vector<T> sin(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::sin);
-	}
-	template<class T>
-	inline void sin(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::sin);
-	}
-	template<class T>
-	inline T sin(const T &v)
-	{
-		return std::sin(v);
-	}
-
-	//compute cos of each vector element
-	template<class T>
-	inline std::vector<T> cos(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::cos);
-	}
-	template<class T>
-	inline void cos(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::cos);
-	}
-	template<class T>
-	inline T cos(const T &v)
-	{
-		return std::cos(v);
-	}
-
-	//compute tan of each vector element
-	template<class T>
-	inline std::vector<T> tan(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::tan);
-	}
-	template<class T>
-	inline void tan(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::tan);
-	}
-	template<class T>
-	inline T tan(const T &v)
-	{
-		return std::tan(v);
-	}
-
-
-	//compute asin of each vector element
-	template<class T>
-	inline std::vector<T> asin(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::asin);
-	}
-	template<class T>
-	inline void asin(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::asin);
-	}
-	template<class T>
-	inline T asin(const T &v)
-	{
-		return std::asin(v);
-	}
-
-	//compute acos of each vector element
-	template<class T>
-	inline std::vector<T> acos(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::acos);
-	}
-	template<class T>
-	inline void acos(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::acos);
-	}
-	template<class T>
-	inline T acos(const T &v)
-	{
-		return std::acos(v);
-	}
-
-	//compute atan of each vector element
-	template<class T>
-	inline std::vector<T> atan(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::atan);
-	}
-	template<class T>
-	inline void atan(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::atan);
-	}
-	template<class T>
-	inline T atan(const T &v)
-	{
-		return std::atan(v);
-	}
-
-	//compute erf of each vector element
-	template<class T>
-	inline std::vector<T> erf(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&sci::erf);
-	}
-	template<class T>
-	inline void erf(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&sci::erf);
 	}
 
 	//compute atan of each vector element given the x and y components, this overcomes the sign ambiguity
@@ -630,129 +546,7 @@ namespace sci{
 		return result;
 	}
 
-	//compute sinh of each vector element
-	template<class T>
-	inline std::vector<T> sinh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::sinh);
-	}
-	template<class T>
-	inline void sinh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::sinh);
-	}
-	template<class T>
-	inline T sinh(const T &v)
-	{
-		return std::sinh(v);
-	}
-
-	//compute cosh of each vector element
-	template<class T>
-	inline std::vector<T> cosh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::cosh);
-	}
-	template<class T>
-	inline void cosh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::cosh);
-	}
-	template<class T>
-	inline T cosh(const T &v)
-	{
-		return std::cosh(v);
-	}
-
-	//compute tanh of each vector element
-	template<class T>
-	inline std::vector<T> tanh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&std::tanh);
-	}
-	template<class T>
-	inline void tanh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&std::tanh);
-	}
-	template<class T>
-	inline T tanh(const T &v)
-	{
-		return std::tanh(v);
-	}
-
-	//inverse hyperbolic functions - not implemented until C++11
-	inline double asinh(double x)
-	{
-		return std::log(x+std::sqrt(x*x+1.0));
-	}
-	inline float asinh(float x)
-	{
-		return std::log(x+std::sqrt(x*x+1.0f));
-	}
-	inline long double asinh(long double x)
-	{
-		return std::log(x+std::sqrt(x*x+1.0L));
-	}
-	inline double acosh(double x)
-	{
-		return std::log(x+std::sqrt(x+1.0)*std::sqrt(x-1.0));
-	}
-	inline float acosh(float x)
-	{
-		return std::log(x+std::sqrt(x+1.0f)*std::sqrt(x-1.0f));
-	}
-	inline long double acosh(long double x)
-	{
-		return std::log(x+std::sqrt(x+1.0L)*std::sqrt(x-1.0L));
-	}
-	inline double atanh(double x)
-	{
-		return 0.5*std::log((1.0+x)/(1.0-x));
-	}
-	inline float atanh(float x)
-	{
-		return 0.5f*std::log((1.0f+x)/(1.0f-x));
-	}
-	inline long double atanh(long double x)
-	{
-		return 0.5L*std::log((1.0L+x)/(1.0L-x));
-	}
-	//compute asinh of each vector element
-	template<class T>
-	inline std::vector<T> asinh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&sci::asinh);
-	}
-	template<class T>
-	inline void asinh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&sci::asinh);
-	}
-
-	//compute acosh of each vector element
-	template<class T>
-	inline std::vector<T> acosh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&sci::acosh);
-	}
-	template<class T>
-	inline void acosh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&sci::acosh);
-	}
-
-	//compute atanh of each vector element
-	template<class T>
-	inline std::vector<T> atanh(const std::vector<T> &v)
-	{
-		return stdfuncv(v,&sci::atanh);
-	}
-	template<class T>
-	inline void atanh(const std::vector<T> &input, std::vector<T> &output)
-	{
-		stdfuncv(input,output,&sci::atanh);
-	}
+	
 
 	double erf(double x);
 
