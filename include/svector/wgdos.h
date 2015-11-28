@@ -9,7 +9,7 @@ public:
 	//pass a pointer to the data you wish to decompress and number of bits per point
 	//in theory the data must have an extra 3bytes padding at the end to avoid possible
 	//illegal reads.
-	WgdosExtractor(char *compressedData, __int16 bitsPerPoint);
+	WgdosExtractor(char *compressedData, int16_t bitsPerPoint);
 	uint32_t getNextDataPoint();
 	bool getNextBitmapMask();
 private:

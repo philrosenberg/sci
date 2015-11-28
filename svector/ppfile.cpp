@@ -106,13 +106,13 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 	pos+=sizeof(int32_t);
 	nread+=sizeof(int32_t);
 	
-	__int16 nRows=*((__int16*)pos);
-	pos+=sizeof(__int16);
-	nread+=sizeof(__int16);
+	int16_t nRows=*((int16_t*)pos);
+	pos+=sizeof(int16_t);
+	nread+=sizeof(int16_t);
 	
-	__int16 nPointsInRow=*((__int16*)pos);
-	pos+=sizeof(__int16);
-	nread+=sizeof(__int16);
+	int16_t nPointsInRow=*((int16_t*)pos);
+	pos+=sizeof(int16_t);
+	nread+=sizeof(int16_t);
 
 	if(nRows!=outDim1 || nPointsInRow!=outDim2)
 		throw(PPERR_COMPRESSED_DATA_HAS_WRONG_SIZE);
@@ -120,32 +120,32 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 	std::vector<char> minimumMask(nPointsInRow,0);
 	std::vector<char> zeroMask(nPointsInRow,0);
 
-	for(__int16 i=0; i<nRows; ++i)
+	for(int16_t i=0; i<nRows; ++i)
 	{
 		float baseValue=fromIbmFloat(pos);
 		pos+=sizeof(float);
 		nread+=sizeof(float);
 
-		__int16 nWords=*((__int16*)pos);
-		pos+=sizeof(__int16);
-		nread+=sizeof(__int16);
+		int16_t nWords=*((int16_t*)pos);
+		pos+=sizeof(int16_t);
+		nread+=sizeof(int16_t);
 
-		__int16 nBitsWithFlags=*((__int16*)pos);
-		pos+=sizeof(__int16);
-		nread+=sizeof(__int16);
+		int16_t nBitsWithFlags=*((int16_t*)pos);
+		pos+=sizeof(int16_t);
+		nread+=sizeof(int16_t);
 
 		//split the nbits int
 		bool hasMissingMask=(nBitsWithFlags & 0x0020)!=0;
 		bool hasMinimumMask=(nBitsWithFlags & 0x0040)!=0;
 		bool hasZeroMask=(nBitsWithFlags & 0x0080)!=0;
-		__int16 nBits=nBitsWithFlags & 0x001f;
+		int16_t nBits=nBitsWithFlags & 0x001f;
 
 
 
 		//check for empty rows, and fill with nans
 		if(nWords==0 && !hasMissingMask && !hasMinimumMask && !hasZeroMask)
 		{
-			for(__int16 j=0; j<nPointsInRow; ++j)
+			for(int16_t j=0; j<nPointsInRow; ++j)
 				dataOut[i][j]=std::numeric_limits<double>::quiet_NaN();
 		}
 		else
@@ -153,26 +153,26 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 			WgdosExtractor wgdosExtractor(pos,nBits);
 
 			if(hasMissingMask)
-				for(__int16 j=0; j<nPointsInRow; ++j)
+				for(int16_t j=0; j<nPointsInRow; ++j)
 					missingMask[j]=wgdosExtractor.getNextBitmapMask();
 			else
 				missingMask.assign(nPointsInRow,0);
 
 			if(hasMinimumMask)
-				for(__int16 j=0; j<nPointsInRow; ++j)
+				for(int16_t j=0; j<nPointsInRow; ++j)
 					minimumMask[j]=wgdosExtractor.getNextBitmapMask();
 			else
 				minimumMask.assign(nPointsInRow,0);
 
 			if(hasZeroMask)
-				for(__int16 j=0; j<nPointsInRow; ++j)
+				for(int16_t j=0; j<nPointsInRow; ++j)
 					zeroMask[j]=wgdosExtractor.getNextBitmapMask();
 			else
 				zeroMask.assign(nPointsInRow,0);
 
 			if(hasMissingMask || hasMinimumMask || hasZeroMask)
 			{
-				for(__int16 j=0; j<nPointsInRow; ++j)
+				for(int16_t j=0; j<nPointsInRow; ++j)
 				{
 					if(missingMask[j]!=0)
 						dataOut[i][j]=std::numeric_limits<double>::quiet_NaN();
@@ -185,7 +185,7 @@ void UmFile::decompressWgdos(char *dataIn, size_t nIn, double** dataOut, size_t 
 				}
 			}
 			else
-				for(__int16 j=0; j<nPointsInRow; ++j)
+				for(int16_t j=0; j<nPointsInRow; ++j)
 					dataOut[i][j]=(double)wgdosExtractor.getNextDataPoint()*precision+baseValue;
 		}
 		
