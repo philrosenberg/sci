@@ -3,8 +3,8 @@ INSTALL_DIR = /usr/local/
 
 all: build/svector.so
 
-build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o
+build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o
+	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o
 
 build:
 	mkdir build
@@ -19,13 +19,13 @@ build/operators.o: build svector/operators.cpp
 	 g++ $(COMPILE_FLAGS) -o build/operators.o svector/operators.cpp
 
 build/plotdata.o: build svector/plotdata.cpp
-	 g++ -Wno-deprecated -Wno-deprecated-declarations $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/plotdata.o svector/plotdata.cpp
+	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/plotdata.o svector/plotdata.cpp
 
 build/ppfile.o: build svector/ppfile.cpp
 	 g++ $(COMPILE_FLAGS) -o build/ppfile.o svector/ppfile.cpp
 
 build/sdialog.o: build svector/sdialog.cpp
-	 g++ $(COMPILE_FLAGS) -o build/sdialog.o svector/sdialog.cpp
+	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sdialog.o svector/sdialog.cpp
 
 build/serr.o: build svector/serr.cpp
 	 g++ $(COMPILE_FLAGS) -o build/serr.o svector/serr.cpp
