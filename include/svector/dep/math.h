@@ -27,7 +27,7 @@ namespace sci_internal
 		T &first() const { return m_pair.first; }
 		U &second() const { return m_pair.second; }
 		IteratorPair<T,U>& operator++ (){ ++m_pair.first; ++m_pair.second; return *this; }
-		IteratorPair<T,U> operator++ (int){ IteratorPair<T,U> reult(*this); ++m_pair.first; ++m_pair.second; return result; }
+		IteratorPair<T,U> operator++ (int){ IteratorPair<T,U> result(*this); ++m_pair.first; ++m_pair.second; return result; }
 		IteratorPair<T,U>& operator*(){ return *this; }
 		bool operator!=( const IteratorPair<T,U>& other ){ return m_pair != other.m_pair; }
 		bool operator==( const IteratorPair<T,U>& other ){ return m_pair == other.m_pair; }
@@ -72,7 +72,7 @@ namespace sci_internal
 	template< class T, class U>
 	IteratorPair<T*,U*> getEndRawPair(std::vector<T> &first, std::vector<U> &second)
 	{
-		size_t len = first.size()
+		size_t len = first.size();
 		sci::assertThrow( len > 0, sci::err() );
 		sci::assertThrow( second.size() == len, sci::err() );
 		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
@@ -88,7 +88,7 @@ namespace sci_internal
 	template< class T, class U>
 	IteratorPair<T*,const U*> getEndRawPair(std::vector<T> &first, const std::vector<U> &second)
 	{
-		size_t len = first.size()
+		size_t len = first.size();
 		sci::assertThrow( len > 0, sci::err() );
 		sci::assertThrow( second.size() == len, sci::err() );
 		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
@@ -96,7 +96,7 @@ namespace sci_internal
 	template< class T, class U>
 	IteratorPair<const T*,const U*> getEndRawPair(const std::vector<T> &first, const std::vector<U> &second)
 	{
-		size_t len = first.size()
+		size_t len = first.size();
 		sci::assertThrow( len > 0, sci::err() );
 		sci::assertThrow( second.size() == len, sci::err() );
 		return IteratorPair<T*,U*>(&first[0]+len, &second[0]+len );
