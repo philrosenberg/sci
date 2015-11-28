@@ -28,6 +28,7 @@
 #include"../include/svector/splot.h"
 #include<cmath>
 #include<algorithm>
+#include<float.h>
 
 BEGIN_EVENT_TABLE( splotwindow, wxPanel )
 	EVT_PAINT( splotwindow::OnPaint )
@@ -182,10 +183,12 @@ std::string loglonghand(double axisvalue)
 
 void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,PLPointer function)
 {
+	if( length == 0 )
+		return;
 	customlabeler userfunction=( customlabeler )function;
 	std::string stdlabel=userfunction(value);
-	if(stdlabel.length()>(unsigned int)length) stdlabel.erase(length);
-	strcpy_s(label,length,stdlabel.c_str());
+	if(stdlabel.length()>(unsigned int)length) stdlabel.erase(length-1);
+	strcpy(label,stdlabel.c_str());
 }
 
 hlscolour::hlscolour(double hue, double lightness, double saturation, double alpha)
@@ -2860,7 +2863,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	wxString xopt=createploptstring(m_xaxis);
 	//set up axes time formats - has no impact if not using time format
 	pl->timefmt(m_xaxis.m_timeformat.mb_str());
-	pl->slabelfunc(&customlabelinterpreter,m_xaxis.m_customlabelcreator);
+	pl->slabelfunc(&customlabelinterpreter,(PLPointer)m_xaxis.m_customlabelcreator);
 	//draw the x axis
 	pl->box(xopt.mb_str(),xmajint,xnsub,"",0.0,0.0);
 
@@ -2887,7 +2890,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	wxString yopt=createploptstring(m_yaxis);
 	//set up axes time formats - has no impact if not using time format
 	pl->timefmt(m_yaxis.m_timeformat.mb_str());
-	pl->slabelfunc(&customlabelinterpreter,m_yaxis.m_customlabelcreator);
+	pl->slabelfunc(&customlabelinterpreter,(PLPointer)m_yaxis.m_customlabelcreator);
 	//draw the y axis
 	//to do: allow the labels to have different colour to the axis
 	pl->box("",0.0,0,yopt.mb_str(),ymajint,ynsub);
