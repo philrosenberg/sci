@@ -3,8 +3,8 @@ INSTALL_DIR = /usr/local/
 
 all: build/svector.so
 
-build/svector.so: build build/svector.o build/memorymap.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o
+build/svector.so: build build/svector.o build/memorymap.o build/operators.o
+	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o
 
 build:
 	mkdir build

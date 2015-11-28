@@ -2,6 +2,7 @@
 #define svectoroperators_h
 
 #include<vector>
+#include<stddef.h>
 
 //operators for operation on vectors in an elementwise fashion.
 //currently works for 2 vectors of the same number of dimensions
