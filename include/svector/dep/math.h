@@ -220,6 +220,11 @@ namespace sci{
 	//******************************************
 #define SCIFUNCWRAP( SCINAME, STDNAME)\
 	template<class T>\
+	inline T SCINAME(const T &v)\
+	{\
+		return STDNAME(v);\
+	}\
+	template<class T>\
 	inline std::vector<T> SCINAME(const std::vector<T> &v)\
 	{\
 		std::vector<T> result(v.size());\
@@ -228,11 +233,6 @@ namespace sci{
 		std::transform( &v[0], &v[0] + v.size(), &result[0],\
 			[](const T &in){ return sci::SCINAME(in); } );\
 		return result;\
-	}\
-	template<class T>\
-	inline T SCINAME(const T &v)\
-	{\
-		return STDNAME(v);\
 	}\
 
 	/*template<class T>
