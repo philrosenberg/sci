@@ -12,6 +12,6 @@ ipch
 **.res
 **Thumbs.db
 **~$*
-
+build/*
 umdp_F3-UMDPF3.pdf
 svector.opensdf
