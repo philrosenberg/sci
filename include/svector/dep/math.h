@@ -1,11 +1,9 @@
 #ifndef svectormath_h
 #define svectormath_h
 
-#include"../svector.h"
 #include<cmath>
 #include<vector>
 #include<utility>
-#include"operators.h"
 
 namespace sci_internal
 {
