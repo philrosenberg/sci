@@ -223,9 +223,10 @@ namespace sci{
 	inline std::vector<T> SCINAME(const std::vector<T> &v)\
 	{\
 		std::vector<T> result(v.size());\
-		std::for_each( sci_internal::getBeginRawPair(v,result), \
-			sci_internal::getEndRawPair(v, result), \
-			[](sci_internal::IteratorPair< const T*, T*> &iter){ *iter.second() = sci::SCINAME(*iter.first()); } );\
+		if( v.size() == 0 )\
+			return result;\
+		std::transform( &v[0], &v[0] + v.size(), &result[0],\
+			[](const T &in){ return sci::SCINAME(in); } );\
 		return result;\
 	}\
 	template<class T>\
@@ -233,6 +234,22 @@ namespace sci{
 	{\
 		return STDNAME(v);\
 	}\
+
+	/*template<class T>
+	inline std::vector<T> log10(const std::vector<T> &v)
+	{
+		std::vector<T> result(v.size());
+		if( v.size() == 0 )
+			return result;
+		std::transform( &v[0], &v[0] + v.size(), &result[0],
+			[](const T &in){ return sci::log10(in); } );
+		return result;
+	}
+	template<class T>
+	inline T log10(const T &v)
+	{
+		return log10(v);
+	}*/
 
 	SCIFUNCWRAP( exp, std::exp )
 	SCIFUNCWRAP( ln, std::log )
