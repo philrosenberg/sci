@@ -64,6 +64,7 @@ void splotTransform(double oldX, double oldY, double *newX, double *newY, void* 
 class splotTransformer
 {
 public:
+	virtual ~splotTransformer(){}
 	//receives the x/y index as a float - may be between indices
 	//outputs the x and y values at the given indices
 	virtual void transform( double oldx, double oldy, double& newx, double& newy )const = 0;

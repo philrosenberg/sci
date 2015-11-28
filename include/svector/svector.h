@@ -1478,7 +1478,7 @@ sublength*=*shapei;
 			result = min<U>(*vi);
 			++vi;
 		}
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmin=min<U>(*vi);
 			result=newmin<result ? newmin : result;
@@ -1501,7 +1501,7 @@ sublength*=*shapei;
 		if(vi==v.end()) return result;
 		result=*vi;
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>limit ? (*vi) : result;
+		for(; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>limit ? (*vi) : result;
 		return result;
 	}
 	//return the minimum value from a vector greater than a given limit
@@ -1667,7 +1667,7 @@ sublength*=*shapei;
 			result = max<U>(*vi);
 			++vi;
 		}
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmax=max<U>(*vi);
 			result=newmax>result ? newmax : result;

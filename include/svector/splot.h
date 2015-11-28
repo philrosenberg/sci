@@ -434,7 +434,6 @@ private:
 class splot2d : public splot
 {
 	friend class splotwindow;
-	friend class splot2d;
 public:
 
 	void setlogxaxis(bool log);

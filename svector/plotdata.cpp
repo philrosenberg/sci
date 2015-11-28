@@ -565,7 +565,6 @@ HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const s
 }
 void HorizontalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
 	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *xMinusErrors = xLog ? &m_zDataLogged1[0] : &m_zData1[0];
 	const double *xPlusErrors = xLog ? &m_zDataLogged2[0] : &m_zData2[0];
@@ -583,7 +582,6 @@ VerticalErrorBars::VerticalErrorBars( const std::vector<double> &xs, const std::
 void VerticalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *yMinusErrors = yLog ? &m_zDataLogged1[0] : &m_zData1[0];
 	const double *yPlusErrors = yLog ? &m_zDataLogged2[0] : &m_zData2[0];
 
