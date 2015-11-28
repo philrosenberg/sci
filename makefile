@@ -3,8 +3,8 @@ INSTALL_DIR = /usr/local/
 
 all: build/svector.so
 
-build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o
+build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o
+	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o
 
 build:
 	mkdir build
@@ -29,6 +29,24 @@ build/sdialog.o: build svector/sdialog.cpp
 
 build/serr.o: build svector/serr.cpp
 	 g++ $(COMPILE_FLAGS) -o build/serr.o svector/serr.cpp
+
+build/sframe.o: build svector/sframe.cpp
+	 g++ $(COMPILE_FLAGS) -o build/sframe.o svector/sframe.cpp
+
+build/smath.o: build svector/smath.cpp
+	 g++ $(COMPILE_FLAGS) -o build/smath.o svector/smath.cpp
+
+build/sminimiser.o: build svector/sminimiser.cpp
+	 g++ $(COMPILE_FLAGS) -o build/sminimiser.o svector/sminimiser.cpp
+
+build/splot.o: build svector/splot.cpp
+	 g++ $(COMPILE_FLAGS) -o build/splot.o svector/splot.cpp
+
+build/sreadwrite.o: build svector/sreadwrite.cpp
+	 g++ $(COMPILE_FLAGS) -o build/sreadwrite.o svector/sreadwrite.cpp
+
+build/sstring.o: build svector/sstring.cpp
+	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
 
      
 clean:
