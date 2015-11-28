@@ -493,7 +493,8 @@ float UmFile::fromIbmFloat(void *ibmFloat)
 		//1.nnn is a binary number
 		//we need to stick out leading 1 back on and turn it into
 		//just a fraction
-		fraction = (fraction |=0x01000000) >> uint32_t(-signedExponent);
+		fraction |=0x01000000;
+		fraction >>= -signedExponent;
 		exponent=0;
 	}
 
@@ -557,9 +558,10 @@ double UmFile::fromIbmDouble(void *ibmFloat)
 		//so it lies somewhere between 0.0 and the smallest number
 		// that can be represented by val=1.nnn*exp(pow), where 
 		//1.nnn is a binary number
-		//we need to stick out leading 1 back on and turn it into
+		//we need to stick our leading 1 back on and turn it into
 		//just a fraction
-		fraction = (fraction |=0x0100000000000000) >> uint64_t(-signedExponent);
+		(fraction |=0x0100000000000000);
+		fraction >>= -signedExponent;
 		exponent=0;
 	}
 
