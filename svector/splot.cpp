@@ -3308,6 +3308,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
 			psdc.EndDoc();
 		}
+#ifdef _WIN32
 		else if(extension=="emf")
 		{
 			//here we redraw the plot like OnPaint but using a wxMetafile DC.
@@ -3324,6 +3325,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			int maxy=metadc.MaxY();
 			//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
 		}
+#endif
 		else if (extension=="svg")
 		{
 			wxSVGFileDC dc(filename, width, height, 72);
