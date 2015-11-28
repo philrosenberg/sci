@@ -589,7 +589,7 @@ void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
 	if(fin->gcount()!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(m_parent->m_swapEndian)
-			swapEndian( (_int32*)&m_header,nBytes/4 );
+			swapEndian( (int32_t*)&m_header,nBytes/4 );
 }
 
 void UmFile::Section64::readHeader( std::fstream *fin, size_t nBytes )
@@ -598,7 +598,7 @@ void UmFile::Section64::readHeader( std::fstream *fin, size_t nBytes )
 	if(fin->gcount()!=nBytes)
 		throw(PPERR_REACHED_FILE_END_UNEXPECTEDLY);
 	if(m_parent->m_swapEndian)
-			swapEndian( (_int64*)&m_header,nBytes/4 );
+			swapEndian( (int64_t*)&m_header,nBytes/4 );
 }
 
 std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile *parent, bool swapEndian  )
@@ -614,7 +614,7 @@ std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile 
 		if( fin->eof() )
 			break; //no more records
 
-		if( headerSize != 64 * sizeof(_int32) )
+		if( headerSize != 64 * sizeof(int32_t) )
 			throw( PPERR_RECORD_WRONG_LENGTH );
 
 		//read the header

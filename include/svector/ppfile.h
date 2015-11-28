@@ -456,11 +456,11 @@ public:
 				return at<float>(m_parent->m_comparator) < rhs.at<float> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
-		void setDataStart( _int32 start )
+		void setDataStart( int32_t start )
 		{
 			m_dataStart = start;
 		}
-		void setDataSize( _int32 size )
+		void setDataSize( int32_t size )
 		{
 			m_dataBytes = size;
 		}
@@ -838,7 +838,7 @@ UmFile& UmFile::operator <= ( T rhs )
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<_int64>(m_comparator) <= rhs))
+			if(!(m_filteredSections[i].at<int64_t>(m_comparator) <= rhs))
 			{
 				m_filteredSections.erase(m_filteredSections.begin()+i);
 				--i;
