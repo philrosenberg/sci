@@ -1,4 +1,6 @@
-#include "../include/svector/svi.h"
+#include"../include/svector/serr.h"
+#include"../include/svector/svector.h"
+#include"../include/svector/svi.h"
 
 void svi::vectortoalg(const std::vector<double> &src, alglib::real_1d_array &dst)
 {

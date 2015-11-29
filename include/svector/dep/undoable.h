@@ -1,6 +1,5 @@
 #ifndef UNDOABLE
 #define UNDOABLE
-#include"../svector.h"
 #include<vector>
 
 /*class UndoManager;

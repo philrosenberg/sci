@@ -2,7 +2,6 @@
 #ifndef svi_h
 #define svi_h
 
-#include"svector.h"
 #include<vector>
 #include<alg/ap.h>
 #include<complex>
