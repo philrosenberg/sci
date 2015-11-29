@@ -227,7 +227,6 @@ void sci::Fitter1dXYErrors::setData(const std::vector<double> &xs, const std::ve
 double sci::Fitter1dXYErrors::getSolutionProbability()
 {
 	//here we have to resort to a Bayesian method - it is pretty tricky to do this
-	double sum=0.0;
 	double *xi=&m_xs[0];
 	double *xEnd=xi+m_xs.size();
 	double *yi=&m_ys[0];

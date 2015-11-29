@@ -3997,7 +3997,6 @@ bool splotPrintout::OnPrintPage(int pageNum)
         std::cout << "DC is not Ok, interrupting printing" << std::endl;
         return false;
     }
-    wxDC& dc = *ptr;
 
 	m_window->DrawPlots( ptr,m_coord_system_width, m_coord_system_height, 1.0);
  
