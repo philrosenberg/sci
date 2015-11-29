@@ -1,4 +1,5 @@
 #include"../include/svector/transforms.h"
+#include "../include/svector/dep/math.h"
 
 const double PI=3.14159265359;
 

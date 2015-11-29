@@ -2,8 +2,7 @@
 #define TRANSFORMS_H
 
 #include <plplot/plstream.h>
-#include "svector.h"
-#include "sstring.h"
+#include <vector>
 
 void splotmapform(void *userp, int npoints, double *x, double *y);
 
