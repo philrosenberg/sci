@@ -1,7 +1,7 @@
 #ifndef sstring_h
 #define sstring_h
 
-#include"svector.h"
+//#include"svector.h"
 #include<string>
 #include<sstream>
 
