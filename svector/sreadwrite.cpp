@@ -803,7 +803,7 @@ bool isDirectorySeparator( char character )
 #ifdef _WIN32
 	return character == '/' || character == '\\';
 #else
-	return character == '/'
+	return character == '/';
 #endif
 }
 
@@ -812,7 +812,7 @@ std::string getDirectorySeparator()
 #ifdef _WIN32
 	return "\\";
 #else
-	return "/"
+	return "/";
 #endif
 }
 
