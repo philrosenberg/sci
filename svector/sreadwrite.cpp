@@ -527,7 +527,7 @@ double sci::atofcustom(const std::string &numstr)
 		else if(issign(c))
 		{
 			pastinitialwhitespace=true;
-			if(pastsign=false)
+			if(!pastsign)
 			{
 				sign=getsign(c);
 				pastsign=true;
