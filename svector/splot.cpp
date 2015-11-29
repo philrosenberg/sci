@@ -81,10 +81,6 @@ void lineartransform(double xindex, double yindex, const std::vector<double> &x,
 }
 void lineartransform2d(double xindex, double yindex, const std::vector< std::vector< double > > &x, const std::vector< std::vector< double > > &y, double &xout, double &yout)
 {
-	if(yindex>1000.0)
-	{
-		int myint=5;
-	}
 	if(xindex!=xindex || yindex!=yindex)
 	{
 		xout=std::numeric_limits<double>::quiet_NaN();
@@ -2705,18 +2701,6 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				miny=sci::min<double>(m_ys2d[i]);
 				maxy=sci::max<double>(m_ys2d[i]);
 			}
-			double minz;
-			double maxz;
-			if(m_colourscale[i].m_logarithmic)
-			{
-				minz=m_minstructzl[i];
-				maxz=m_maxstructzl[i];
-			}
-			else
-			{
-				minz=m_minstructz[i];
-				maxz=m_maxstructz[i];
-			}
 			//shading first
 			if(m_colourlevels[i].size()>0)
 			{
@@ -3849,7 +3833,6 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			pl->wind( x[0], x.back(), y[0], y.back() );
 			//create a contourable object for plotting
 			splot2dmatrix matrix(&z);
-			bool rectilinear=true;
 			splotindextransformer1d transformer(&x,&y,splot_REGULAR1DXY);
 
 

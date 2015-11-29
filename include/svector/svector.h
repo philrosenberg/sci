@@ -1518,7 +1518,7 @@ sublength*=*shapei;
 			++vi;
 		}
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmin=mingtlimit(*vi,limit);
 			result=newmin<result ? newmin : result;
@@ -1541,7 +1541,7 @@ sublength*=*shapei;
 		if(vi==v.end()) return result;
 		result=*vi;
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>=limit ? (*vi) : result;
+		for(; vi!=v.end(); ++vi) result=(*vi)<result && (*vi)>=limit ? (*vi) : result;
 		return result;
 	}
 	//return the minimum value from a vector greater than or equal to a given limit
@@ -1558,7 +1558,7 @@ sublength*=*shapei;
 			++vi;
 		}
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmin=mingtelimit(*vi,limit);
 			result=newmin<result ? newmin : result;
@@ -1582,7 +1582,7 @@ sublength*=*shapei;
 		if(vi==v.end()) return result;
 		result=*vi;
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<limit ? (*vi) : result;
+		for(; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<limit ? (*vi) : result;
 		return result;
 	}
 	//return the maximum value from a vector less than a given limit
@@ -1599,7 +1599,7 @@ sublength*=*shapei;
 			++vi;
 		}
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmax=maxltlimit(*vi,limit);
 			result=newmax>result ? newmax : result;
@@ -1622,7 +1622,7 @@ sublength*=*shapei;
 		if(vi==v.end()) return result;
 		result=*vi;
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<=limit ? result : (*vi);
+		for(; vi!=v.end(); ++vi) result=(*vi)>result && (*vi)<=limit ? result : (*vi);
 		return result;
 	}
 
@@ -1640,7 +1640,7 @@ sublength*=*shapei;
 			++vi;
 		}
 		//search the remaining numbers
-		for(vi; vi!=v.end(); ++vi) 
+		for(; vi!=v.end(); ++vi) 
 		{
 			U newmax=maxltelimit(*vi,limit);
 			result=newmax>result ? newmax : result;
@@ -2004,7 +2004,7 @@ sublength*=*shapei;
 		if(v.size()==0) return;
 		T* vi=&v[0];
 		T* vend=vi+v.size();
-		for(vi; vi<vend; ++vi) *vi=val;
+		for(; vi<vend; ++vi) *vi=val;
 	}
 
 	template <class T>
@@ -2015,7 +2015,7 @@ sublength*=*shapei;
 		T* vi=&v[0];
 		T* vend=vi+v.size();
 		SBOOL *loci=&locations[0];
-		for(vi; vi<vend; ++vi) 
+		for(; vi<vend; ++vi) 
 		{
 			if(*loci) *vi=val;
 			++loci;

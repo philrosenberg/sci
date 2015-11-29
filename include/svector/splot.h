@@ -317,7 +317,7 @@ class splot
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	~splot(){}
+	virtual ~splot(){}
 	inline void setxautolimits(bool autolimit){m_xautolimits=autolimit; calculateautolimits(); m_haschanged=true;};
 	inline void setyautolimits(bool autolimit){m_yautolimits=autolimit; calculateautolimits(); m_haschanged=true;};
 	inline void setxautointersect(bool autointersect){m_xautointersect=autointersect; calculateautolimits(); m_haschanged=true;};
@@ -435,6 +435,7 @@ class splot2d : public splot
 {
 	friend class splotwindow;
 public:
+	virtual ~splot2d(){}
 
 	void setlogxaxis(bool log);
 	void setlogyaxis(bool log);
@@ -523,6 +524,7 @@ public:
 	void addentry(std::string text, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1, std::string linestyle="");
 	void addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
 	void addentry(std::string text, const splotsizescale &sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), std::string pointsymbol="A", size_t nlines=5);
+	virtual ~splotlegend(){}
 private:
 	//private constructor so only friends can create a legend
 	splotlegend(std::string title="", double titlesize=12.0, double titledistance=2.0, double titlespacing=0.2, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
@@ -553,7 +555,7 @@ class splotwindow : public wxScrolledWindow
 	friend class splotPrintout;
 public:
 	splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize=false, wxWindowID winid=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize, long style=wxHSCROLL | wxVSCROLL, const wxString& name = wxT("sci++ plot"));
-	~splotwindow();
+	virtual ~splotwindow();
 	void setfixedsize(int width, int height);
 	void setautofitplots();
 	splot2d* addplot(double xpos, double ypos, double width, double height, bool logx=false, bool logy=false,std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0));
@@ -610,7 +612,7 @@ class splotframe : public wxFrame
 {
 public:
 	splotframe(wxWindow* parent, bool antialiasing, wxWindowID id=wxID_ANY, const wxString& title=wxT("Apex++ plot"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_FRAME_STYLE, const wxString& name = wxT("Sci++ Plot"));
-	~splotframe(){};
+	virtual ~splotframe(){};
 	inline splot2d* addplot(double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false,std::string title="", double titlesize=1.2, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
 	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
 	inline splot2d* addplot(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, double xpos=0.1, double ypos=0.1, double width=0.8, double height=0.8, bool logx=false, bool logy=false, std::string title="", double titlesize=14.4, double titledistance=2.0, std::string titlefont="", int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0)){return m_plotwind->addplot(xpos, ypos, width, height, minx, maxx, miny, maxy, xintersect, yintersect, logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour);};
