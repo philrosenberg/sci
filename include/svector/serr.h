@@ -1,8 +1,6 @@
 #ifndef serr_H
 #define serr_H
 
-#include<string>
-#include<assert.h>
 namespace sci
 {
 	enum errcategory
@@ -15,8 +13,8 @@ namespace sci
 	};
 		
 
-	void reporterr(std::string error);
-	void reporterr(errcategory category, size_t code, std::string usefulinfo);
+	//void reporterr(std::string error);
+	//void reporterr(errcategory category, size_t code, std::string usefulinfo);
 	void assertThrow(bool test, const sci::err &err);
 }
 

@@ -1,13 +1,13 @@
-
-#include"../include/svector/serr.h"
-#include "../include/svector/svector.h"
-#include"../include/svector/svi.h"
-#include"../include/svector/sstring.h"
+#include"svector_internal.h"
 #include<libresample.h>
 #include <alg/ap.h>
 #include <alg/fasttransforms.h>
 #include <alg/interpolation.h>
 #include<time.h>
+#include"svi_internal.h"
+#include"operators_internal.h"
+#include"math_internal.h"
+#include"sstring_internal.h"
 
 void sci::resample(const std::vector<double> &input, double factor, std::vector<double> &output)
 {

@@ -1,16 +1,6 @@
 #define _USE_MATH_DEFINES
 #define _CRT_SECURE_NO_WARNINGS
 
-
-//#include<vector>
-//#include<wx/colour.h>
-//#include<plplot/plstream.h>
-//#include<wx/scrolwin.h>
-//#include<limits>
-//#include<wx/print.h>
-//#include<wx/printdlg.h>
-
-#include<wx/wx.h>
 #include<wx/wx.h>
 #include<wx/filename.h>
 #include<wx/dcps.h>
@@ -20,12 +10,11 @@
 #include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
                        // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
                        //not sure why.
-#include"../include/svector/serr.h"
-#include"../include/svector/svector.h"
-#include"../include/svector/sstring.h"
-#include"../include/svector/ppfile.h"
-#include"../include/svector/sreadwrite.h"
-#include"../include/svector/splot.h"
+#include"splot_internal.h"
+#include"serr_internal.h"
+#include"svector_internal.h"
+#include"sstring_internal.h"
+#include"sreadwrite_internal.h"
 #include<cmath>
 #include<algorithm>
 #include<float.h>

@@ -1,5 +1,4 @@
-#include"../include/svector/serr.h"
-#include"../include/svector/dep/math.h"
+#include"math_internal.h"
 #include<alg/specialfunctions.h>
 
 double sci::erf(double value)

@@ -2,10 +2,10 @@
 #define APEX_MAINFRAME_H
 
 #include "app.h"
-#include<svector/svector.h>
-#include<svector/splot.h>
-#include<svector/sreadwrite.h>
-#include<svector/sstring.h>
+#include"../svector/svector_internal.h"
+#include"../svector/splot_internal.h"
+#include"../svector/sreadwrite_internal.h"
+#include"../svector/sstring_internal.h"
 #include<faam/faam.h>
 
 class mainFrame : public wxFrame

@@ -1,9 +1,9 @@
-#include"../include/svector/serr.h"
-#include"../include/svector/svector.h"
-#include"../include/svector/dep/operators.h"
-#include"../include/svector/svi.h"
+#include"sminimiser_internal.h"
+#include"serr_internal.h"
+#include"svector_internal.h"
+#include"operators_internal.h"
+#include"svi_internal.h"
 #include <alg/interpolation.h>
-#include"../include/svector/sminimiser.h"
 
 
 void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &result, void *ptr)

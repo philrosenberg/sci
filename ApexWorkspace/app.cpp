@@ -103,7 +103,7 @@ RPC_STATUS CALLBACK SecurityCallback(RPC_IF_HANDLE /*hInterface*/, void* /*pBind
 
 
 wxThread::ExitCode ServerThread::Entry()
-{
+{/*
    RPC_STATUS status;
 
    // Uses the protocol combined with the endpoint for receiving
@@ -167,7 +167,7 @@ wxThread::ExitCode ServerThread::Entry()
 
    if (status)
       exit(status);
-
+	  */
    return 0;
 }
 

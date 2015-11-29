@@ -1,4 +1,4 @@
-#include"../include/svector/sdialog.h"
+#include"sdialog_internal.h"
 
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path, const wxString &default_filename, const wxString &wildcard, int flags, wxWindow *parent, int x,int y)

@@ -60,12 +60,6 @@
     <ClCompile Include="sminimiser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="idlClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\idl\idl_c.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="memorymap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -117,6 +111,45 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\plotdata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svector_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svi_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="operators_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plotdata_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdialog_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sminimiser_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="splot_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sstring_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="transforms_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="serr_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sreadwrite_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memorymap_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

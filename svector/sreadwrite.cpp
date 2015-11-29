@@ -1,8 +1,8 @@
-#include"../include/svector/serr.h"
-#include"../include/svector/svector.h"
-#include"../include/svector/sstring.h"
+#include"sreadwrite_internal.h"
+#include"serr_internal.h"
+#include"svector_internal.h"
+#include"sstring_internal.h"
 #include"../include/svector/ppfile.h"
-#include"../include/svector/sreadwrite.h"
 #include<wx/filefn.h>
 #include<wx/dir.h>
 

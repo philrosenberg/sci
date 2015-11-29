@@ -291,8 +291,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\idl\idl_c.c" />
-    <ClCompile Include="idlClient.cpp" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="operators.cpp" />
     <ClCompile Include="plotdata.cpp" />
@@ -319,14 +317,27 @@
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
     <ClInclude Include="..\include\svector\svi.h" />
+    <ClInclude Include="math_internal.h" />
+    <ClInclude Include="memorymap_internal.h" />
+    <ClInclude Include="operators_internal.h" />
+    <ClInclude Include="plotdata_internal.h" />
+    <ClInclude Include="sdialog_internal.h" />
+    <ClInclude Include="serr_internal.h" />
     <ClInclude Include="sframe.h" />
     <ClInclude Include="..\include\svector\splot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
+    <ClInclude Include="sminimiser_internal.h" />
+    <ClInclude Include="splot_internal.h" />
+    <ClInclude Include="sreadwrite_internal.h" />
     <ClInclude Include="sstdwrappers.h" />
     <ClInclude Include="..\include\svector\sstring.h" />
     <ClInclude Include="..\include\svector\svector.h" />
     <ClInclude Include="..\include\svector\transforms.h" />
     <ClInclude Include="..\include\svector\dep\undoable.h" />
+    <ClInclude Include="sstring_internal.h" />
+    <ClInclude Include="svector_internal.h" />
+    <ClInclude Include="svi_internal.h" />
+    <ClInclude Include="transforms_internal.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

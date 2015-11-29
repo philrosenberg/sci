@@ -1,5 +1,4 @@
-#include"../include/svector/dep/operators.h"
-#include<vector>
+#include"operators_internal.h"
 #include<limits>
 	
 std::vector<SBOOL> operator||(const std::vector<SBOOL> &a, const std::vector<SBOOL> &b)

@@ -4,7 +4,7 @@
 #include<vector>
 #include<string>
 #include<memory>
-#include"splot.h"
+
 
 class LineStyle
 {

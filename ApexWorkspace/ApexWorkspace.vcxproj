@@ -161,7 +161,6 @@
     <ClInclude Include="mainFrame.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\idl\idl_s.c" />
     <ClCompile Include="app.cpp" />
     <ClCompile Include="mainFrame.cpp" />
   </ItemGroup>

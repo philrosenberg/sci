@@ -1,4 +1,4 @@
-#include "../include/svector/sstring.h"
+#include "sstring_internal.h"
 #include <algorithm>
 
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)

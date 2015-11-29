@@ -1,14 +1,12 @@
 #ifndef splot_h
 #define splot_h
 
-#include"svector.h"
 #include<vector>
 #include<wx/colour.h>
 #include<plplot/plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>
-#include"transforms.h"
 #include<wx/print.h>
 #include<wx/printdlg.h>
 
