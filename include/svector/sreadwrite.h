@@ -87,6 +87,7 @@ namespace sci
 	inline double getsign (char c) {return c=='+'? 1.0:-1.0;} //must only be called when issign returns true on the character
 	double getnumber (char c);
 	
+#ifdef _WIN32
 	//reads variable called varname from netcdf file filename and puts it in vector var.
 	//var must be a vector and must have the correct number of dimensions to hold the variable.
 	//If the file cannot be opened var will be emptied and the function will return false
@@ -97,8 +98,7 @@ namespace sci
 	{
 		std::vector<T> tempvar;
 		return readncvariable(filename,varname,var,tempvar);
-	}	
-#ifdef _WIN32	
+	}		
 	//looks in the netcdf for variables with names that consist of varnamestart followed
 	//by a non-negative integer number. These are all read into vars, with varsn being put into the nth element
 	//of vars. vars must have one more demension than the variables. Any variables that are
@@ -665,6 +665,7 @@ namespace sci
 		return writencvariable(filename,variablename,linkeddimensions,flatdata,datashape);
 	}
 
+#endif
 	
 	void splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators, std::vector<std::string> &splitstring);
 	std::vector<std::string> splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators);
@@ -676,7 +677,6 @@ namespace sci
 	std::string getContainingDirectoryPath( std::string fullPath );
 	std::string concatPath( std::string part1, std::string part2);
 	
-#endif
 }
 
 #endif

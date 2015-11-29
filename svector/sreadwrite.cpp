@@ -612,6 +612,7 @@ double sci::getnumber (char c)
 	return 0.0;
 }
 
+#ifdef _WIN32
 bool sci::createncfile(const std::string &filename, const std::vector<std::string> &limiteddimensions, const std::vector<size_t> &limiteddimensionsizes, const std::string &unlimiteddimension)
 {
 	if(limiteddimensions.size()!=limiteddimensionsizes.size()) return false;
@@ -704,6 +705,7 @@ bool sci::writencvariableattribute(const std::string &filename, const std::strin
 	file.close();
 	return result;
 }
+#endif
 
 
 void sci::splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators, std::vector<std::string> &splitstring)
