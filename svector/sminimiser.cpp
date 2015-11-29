@@ -1,7 +1,7 @@
 #include"../include/svector/serr.h"
-#include"../include/svector/svi.h"
 #include"../include/svector/svector.h"
 #include"../include/svector/dep/operators.h"
+#include"../include/svector/svi.h"
 #include <alg/interpolation.h>
 #include"../include/svector/sminimiser.h"
 
