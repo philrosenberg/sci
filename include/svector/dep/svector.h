@@ -170,7 +170,7 @@ namespace sci
 	template<class T>
 	class sortablevector
 	{
-		friend void sci::sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
+		friend void sci::sort<T>(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
 	private:
 		sortablevector(const std::vector<T> &origv);
 		void getvectors(std::vector<T> &vect, std::vector<size_t> &origpositions) const;
