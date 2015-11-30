@@ -218,6 +218,10 @@ namespace sci{
 	//****these will work for multi d using ****
 	//****the templates above*******************
 	//******************************************
+
+
+
+
 #define SCIFUNCWRAP( SCINAME, STDNAME)\
 	template<class T>\
 	inline T SCINAME(const T &v)\
@@ -230,7 +234,7 @@ namespace sci{
 		std::vector<T> result(v.size());\
 		if( v.size() == 0 )\
 			return result;\
-		std::transform( &v[0], &v[0] + v.size(), &result[0],\
+		sci::transform( &v[0], &v[0] + v.size(), &result[0],\
 			[](const T &in){ return sci::SCINAME(in); } );\
 		return result;\
 	}\

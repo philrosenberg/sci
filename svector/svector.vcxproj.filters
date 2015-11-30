@@ -212,6 +212,18 @@
     <ClInclude Include="..\include\svector\dep\windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="algorithm_internal.h">
+      <Filter>Header Files\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\algorithm.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\math.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

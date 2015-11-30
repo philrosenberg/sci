@@ -310,6 +310,8 @@
     <ClCompile Include="wgdos.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\svector\algorithm.h" />
+    <ClInclude Include="..\include\svector\dep\algorithm.h" />
     <ClInclude Include="..\include\svector\dep\apexWorkspace.h" />
     <ClInclude Include="..\include\svector\dep\math.h" />
     <ClInclude Include="..\include\svector\dep\MemoryMap.h" />
@@ -332,10 +334,12 @@
     <ClInclude Include="..\include\svector\dep\transforms.h" />
     <ClInclude Include="..\include\svector\dep\wgdos.h" />
     <ClInclude Include="..\include\svector\dep\windows.h" />
+    <ClInclude Include="..\include\svector\math.h" />
     <ClInclude Include="..\include\svector\plotdata.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
+    <ClInclude Include="algorithm_internal.h" />
     <ClInclude Include="math_internal.h" />
     <ClInclude Include="memorymap_internal.h" />
     <ClInclude Include="operators_internal.h" />
