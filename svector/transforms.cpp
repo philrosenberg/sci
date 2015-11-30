@@ -1,4 +1,6 @@
 #include"transforms_internal.h"
+#include<limits>
+#include<cmath>
 
 const double PI=3.14159265359;
 

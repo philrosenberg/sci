@@ -3,6 +3,7 @@
 #define SMINIMISER_H
 
 #include<vector>
+#include<stddef.h>
 namespace alglib
 {
 	class real_1d_array;

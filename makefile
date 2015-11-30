@@ -3,8 +3,8 @@ INSTALL_DIR = /usr/local/
 
 all: build/svector.so
 
-build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o
+build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
+	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
 
 build:
 	mkdir build
@@ -43,11 +43,22 @@ build/splot.o: build svector/splot.cpp
 	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/splot.o svector/splot.cpp
 
 build/sreadwrite.o: build svector/sreadwrite.cpp
-	 g++ $(COMPILE_FLAGS) -o build/sreadwrite.o svector/sreadwrite.cpp
+	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sreadwrite.o svector/sreadwrite.cpp
 
 build/sstring.o: build svector/sstring.cpp
 	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
 
+build/transforms.o: build svector/transforms.cpp
+	 g++ $(COMPILE_FLAGS) -o build/transforms.o svector/transforms.cpp
+
+build/svi.o: build svector/svi.cpp
+	 g++ $(COMPILE_FLAGS) -o build/svi.o svector/svi.cpp
+
+build/undoable.o: build svector/undoable.cpp
+	 g++ $(COMPILE_FLAGS) -o build/undoable.o svector/undoable.cpp
+
+build/wgdos.o: build svector/wgdos.cpp
+	 g++ $(COMPILE_FLAGS) -o build/wgdos.o svector/wgdos.cpp
      
 clean:
 	 rm -r build
