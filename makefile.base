@@ -1,5 +1,4 @@
 COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
-INSTALL_DIR = /usr/local/
 
 all: build/libsvector.so
 

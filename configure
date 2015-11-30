@@ -1,0 +1,22 @@
+if [ -z "$1" ]; then
+   echo "INSTALL_DIR = /usr/local/" > makefile
+   cat makefile.base >> makefile
+elif [ -n "$2" ]; then
+   echo "Error - this basic configure script only understands --prefix"
+else
+   
+   #split p1
+   IFS== #make the split variable =
+   P1=($1)
+   if [ "${P1[0]}" == "--prefix" ]; then
+      if [ -z "${P1[3]}" ]; then
+         echo "INSTALL_DIR = ${P1[1]}/" > makefile
+         cat makefile.base >> makefile
+      else
+         echo "Error - bad file name or more than one option, this basic configure script only understands --prefix"
+      fi
+   else
+      echo "Error - this basic configure script only understands --prefix"
+   fi
+fi
+
