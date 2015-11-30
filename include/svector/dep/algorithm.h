@@ -18,7 +18,7 @@ namespace sci
 	template<class InputIt, class OutputIt, class UnaryOperation>
 	OutputIt transform( InputIt first1, InputIt last1, OutputIt destFirst, UnaryOperation unaryOp )
 	{
-		std::transform( first1, last1, destFirst, unaryOp );
+		return std::transform( first1, last1, destFirst, unaryOp );
 	}
 #endif
 }
