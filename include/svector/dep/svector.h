@@ -544,7 +544,9 @@ namespace sci
 				}
 				size_t sectlen=includedi-includedsectbegin;
 				const T *sectend=srci+sectlen;
+#ifdef _MSV_VER
 #pragma warning( suppress : 4996 )
+#endif
 				std::copy(sectbegin,sectend,insertpoint);
 				insertpoint+=sectlen;
 				srci+=sectlen;
