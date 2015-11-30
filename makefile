@@ -1,10 +1,10 @@
 COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
 INSTALL_DIR = /usr/local/
 
-all: build/svector.so
+all: build/libsvector.so
 
-build/svector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
-	 gcc -shared -o build/svector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
+build/libsvector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
+	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o
 
 build:
 	mkdir build
@@ -61,4 +61,16 @@ build/wgdos.o: build svector/wgdos.cpp
 	 g++ $(COMPILE_FLAGS) -o build/wgdos.o svector/wgdos.cpp
      
 clean:
-	 rm -r build
+	 rm -r build $(INSTALL_DIR)lib/libsvector.so $(INSTALL_DIR)include/svector
+
+install: build/libsvector.so $(INSTALL_DIR)lib $(INSTALL_DIR)lib/libsvector.so installheaders
+	 @echo "Installation complete"
+
+$(INSTALL_DIR)lib:
+	 mkdir -p $(INSTALL_DIR)lib
+
+$(INSTALL_DIR)lib/libsvector.so:
+	cp build/libsvector.so $(INSTALL_DIR)lib/libsvector.so
+
+installheaders:
+	cp -r include/ $(INSTALL_DIR)
