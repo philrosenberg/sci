@@ -2,7 +2,7 @@
 #include"serr_internal.h"
 #include"svector_internal.h"
 #include"sstring_internal.h"
-#include"../include/svector/ppfile.h"
+#include"../include/svector/dep/ppfile.h"
 #include<wx/filefn.h>
 #include<wx/dir.h>
 

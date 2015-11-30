@@ -1,9 +1,9 @@
-#include "../include/svector/ppfile.h"
+#include "../include/svector/dep/ppfile.h"
 #include<assert.h>
 #include<vector>
 #include<cmath>
 #include<limits>
-#include"../include/svector/wgdos.h"
+#include"../include/svector/dep/wgdos.h"
 #include<algorithm>
 #include<cstring>
 

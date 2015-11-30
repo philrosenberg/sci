@@ -3,5 +3,5 @@
 #ifdef _WIN32
 #include"../include/svector/dep/windows.h"
 #endif
-#include "../include/svector/memorymap.h"
+#include "../include/svector/dep/memorymap.h"
 #endif
