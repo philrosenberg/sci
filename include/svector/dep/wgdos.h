@@ -2,6 +2,7 @@
 #define WGDOS_H
 #include<vector>
 #include<stdint.h>
+#include<stddef.h>
 
 class WgdosExtractor
 {

@@ -15,10 +15,10 @@ WgdosExtractor::WgdosExtractor(char *compressedData, int16_t bitsPerPoint)
 	do
 	{
 		m_dataMasks1[step]=0;
-		for(__int32 i=0; i<std::min(bitsPerPoint,int16_t(32-bytepos)); ++i)
+		for(int32_t i=0; i<std::min(bitsPerPoint,int16_t(32-bytepos)); ++i)
 			m_dataMasks1[step] |= (uint32_t(0x80000000) >> (i+bytepos));
 		m_dataMasks2[step]=0;
-		for(__int32 i=0; i<bitsPerPoint+bytepos-32; ++i)
+		for(int32_t i=0; i<bitsPerPoint+bytepos-32; ++i)
 			m_dataMasks2[step] |= (uint32_t(0x80000000) >> i);
 		m_bytePositions[step]=bytepos;
 
@@ -68,7 +68,7 @@ uint32_t WgdosExtractor::getNextDataPoint()
 	if(m_bytePositions[m_currentDataMask]+m_bitsPerPoint > 31)
 		m_data+=1;
 
-	if(m_currentDataMask==m_stepsInCycle-1)
+	if(m_currentDataMask==(size_t)m_stepsInCycle-1)
 		m_currentDataMask=0;
 	else
 		++m_currentDataMask;
