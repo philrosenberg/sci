@@ -2,7 +2,7 @@ COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
 
 all: build/libsvector.so
 
-build/libsvector.so: build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
+build/libsvector.so: makefile build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
 	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
 
 build:
@@ -68,7 +68,7 @@ install: build/libsvector.so $(INSTALL_DIR)lib $(INSTALL_DIR)lib/libsvector.so i
 $(INSTALL_DIR)lib:
 	 mkdir -p $(INSTALL_DIR)lib
 
-$(INSTALL_DIR)lib/libsvector.so:
+$(INSTALL_DIR)lib/libsvector.so: build/libsvector.so
 	cp build/libsvector.so $(INSTALL_DIR)lib/libsvector.so
 
 installheaders:
