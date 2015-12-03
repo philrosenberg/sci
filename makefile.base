@@ -65,7 +65,7 @@ clean:
 install: build/libsvector.so $(INSTALL_DIR)lib $(INSTALL_DIR)lib/libsvector.so installheaders
 	 @echo "Installation complete"
 
-$(INSTALL_DIR)lib:
+$(INSTALL_DIR)lib: build/libsvector.so
 	 mkdir -p $(INSTALL_DIR)lib
 
 $(INSTALL_DIR)lib/libsvector.so: build/libsvector.so
