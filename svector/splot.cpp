@@ -2965,7 +2965,10 @@ splotwindow::splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize, wx
 	m_plotsupdated=true;
 	m_bitmapwidth=size.GetWidth();
 	m_bitmapheight=size.GetHeight();
-	m_bitmap=new wxBitmap(size.GetWidth(),size.GetWidth());
+	if( m_bitmapwidth > 0 && m_bitmapheight > 0 )
+		m_bitmap = new wxBitmap(size.GetWidth(),size.GetWidth());
+	else
+		m_bitmap = nullptr;
 	m_antialiasing=antialiasing;
 }
 
@@ -3109,14 +3112,19 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 		//create a new bitmap that is the correct size and link it to the memory dc
 		if(width!=m_bitmapwidth||height!=m_bitmapheight)
 		{
-			delete m_bitmap;
-			m_bitmap = new wxBitmap(width,height,32);
-			memdc.SelectObject(*m_bitmap);
-			//fill the bitmap with white giving a white background for plplot
-			//or to show blank if there are no plots
-			memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
+			if( m_bitmap )
+				delete m_bitmap;
+			m_bitmap = nullptr;
+			if( width > 0 && height >0 )
+			{
+				m_bitmap = new wxBitmap(width,height,32);
+				memdc.SelectObject(*m_bitmap);
+				//fill the bitmap with white giving a white background for plplot
+				//or to show blank if there are no plots
+				memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
+			}
 		}
-		else
+		else if ( m_bitmap )
 		{
 			memdc.SelectObject(*m_bitmap);
 		}
@@ -3131,31 +3139,36 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 		//DrawPlots(&memdc,0,false); //testing dc
 		//DrawPlots(&memdc,1,false); //testing agg no freetype
 		//DrawPlots(&memdc,1,true); //testing agg with freetype
-
-		//select the backend
-		//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
-		//if(m_antialiasing) DrawPlots(&memdc,2,false);
-		if(m_antialiasing) 
+		if ( m_bitmap )
 		{
-			wxGCDC gcdc(memdc);
-			DrawPlots(&gcdc,width,height);
-		}
-		else 
-		{
-			DrawPlots(&memdc,width,height);
+			//select the backend
+			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
+			//if(m_antialiasing) DrawPlots(&memdc,2,false);
+			if(m_antialiasing) 
+			{
+				wxGCDC gcdc(memdc);
+				DrawPlots(&gcdc,width,height);
+			}
+			else 
+			{
+				DrawPlots(&memdc,width,height);
+			}
 		}
 	}
-	else
+	else if ( m_bitmap );
 	{
 		//The plots haven't changed so just select the bitmap as it already exists if we haven't resized
 		memdc.SelectObject(*m_bitmap);
 	}
 
-	//copy the memorydc bitmap to the panel
-	//pagedc.Blit(0,0,width,height,&memdc,0,0);
-	//reselect null bitmap for the memdc
-	pagedc.Blit(0,0,width,height,&memdc,0,0);
-	memdc.SelectObject(wxNullBitmap);
+	if( m_bitmap )
+	{
+		//copy the memorydc bitmap to the panel
+		//pagedc.Blit(0,0,width,height,&memdc,0,0);
+		//reselect null bitmap for the memdc
+		pagedc.Blit(0,0,width,height,&memdc,0,0);
+		memdc.SelectObject(wxNullBitmap);
+	}
 
 	wxEndBusyCursor();
 }
