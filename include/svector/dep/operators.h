@@ -206,6 +206,24 @@ namespace sci_internal
 			*resulti=FUNC(*ai,b);
 		return result;
 	}
+
+	//functions to return the right type for comparison etc
+	template<class T, class U>
+	SBOOL comp( T t, U u )
+	{
+	}
+	template<class T, class U>
+	std::vector<SBOOL> comp( std::vector<T> t, U u ){}
+	template<class T, class U>
+	std::vector<SBOOL> comp( T t, std::vector<U> u ){}
+	template<class T, class U>
+	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[i],u))>{}
+	template<class T, class U>
+	auto comp( T t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t,u[i]))>{}
+	template<class T, class U>
+	auto comp( std::vector<std::vector<T>> t, std::vector<U> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
+	template<class T, class U>
+	auto comp( std::vector<T> t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
 }
 
 //The prefix used when declaring an operator for a vector which takes
@@ -321,7 +339,7 @@ OPPREFIX&&VECSCALFUNC(s_and, const, SBOOL)
 OPPREFIX||VECSCALFUNC(s_or, const, SBOOL)
 OPPREFIX&&SCALVECFUNC(s_and, SBOOL)
 OPPREFIX||SCALVECFUNC(s_or, SBOOL)
-OPPREFIXSINGLE!VECFUNC(s_not, const, SBOOL)
+OPPREFIXSINGLE!VECFUNC(s_not, const, decltype( sci_internal::comp(T(), U()) ) )
 
 OPPREFIX&VECVECFUNC(bitwiseand, const, decltype(T()&U()))
 OPPREFIX|VECVECFUNC(bitwiseor, const, decltype(T()|U()))
