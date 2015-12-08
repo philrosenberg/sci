@@ -1,6 +1,7 @@
 #include"../include/svector/dep/wgdos.h"
 #include"../include/svector/dep/ppfile.h"
 #include<assert.h>
+#include<algorithm>
 
 WgdosExtractor::WgdosExtractor(char *compressedData, int16_t bitsPerPoint)
 :m_data((uint32_t*)compressedData)

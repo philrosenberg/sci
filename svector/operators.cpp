@@ -1,5 +1,6 @@
 #include"operators_internal.h"
 #include<limits>
+#include<algorithm>
 	
 std::vector<SBOOL> operator||(const std::vector<SBOOL> &a, const std::vector<SBOOL> &b)
 {
