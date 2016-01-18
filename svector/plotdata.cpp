@@ -2,12 +2,12 @@
 #include "serr_internal.h"
 
 LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )
-	: m_width( 1.0 ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
+	: m_width( width ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
 {
 	sci::assertThrow(m_marks.size() == m_spaces.size(), sci::err() );
 }
 LineStyle::LineStyle( double width, const rgbcolour &colour, std::string pattern )
-	: m_width( 1.0 ), m_colour( colour )
+	: m_width( width ), m_colour( colour )
 {
 	parseLineStyle( pattern, m_marks, m_spaces);
 }
