@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\dep">
+      <UniqueIdentifier>{c6da6d55-1189-4e3a-8233-3e2d9cd2e41e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\external">
+      <UniqueIdentifier>{1541c6a2-fdf9-4430-9a0f-67767375b962}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\internal">
+      <UniqueIdentifier>{8817e841-f236-46fe-a2da-aa2ed806ac74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -69,5 +78,169 @@
     <ClCompile Include="..\svector\wgdos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\svector\algorithm_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\math_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\memorymap_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\operators_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\plotdata_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\sdialog_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\serr_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\sframe.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\sminimiser_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\splot_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\sreadwrite_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\sstring_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\svector_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\svi_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\svector\transforms_internal.h">
+      <Filter>Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\algorithm.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\math.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\memorymap.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\operators.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\plotdata.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\sdialog.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\serr.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\sminimiser.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\splot.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\sreadwrite.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\sstring.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\svector.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\transforms.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\algorithm.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\apexWorkspace.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\math.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\MemoryMap.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\operators.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plotdata.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\ppfile.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sdialog.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\serr.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sminimiser.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\splot.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\splottest.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sreadwrite.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sstdwrappers.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sstring.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\stable.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\stashcodes.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\sterminal.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\svector.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\svi.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\transforms.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\undoable.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\wgdos.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\windows.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\nc.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
