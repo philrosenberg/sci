@@ -293,6 +293,7 @@ bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )
 	:m_transformer( transformer )
 {
+	m_scale = 1.0;
 }
 
 void DrawableItem::draw( plstream *pl, bool xLog, bool yLog )
