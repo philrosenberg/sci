@@ -262,41 +262,61 @@ namespace sci
 		return result;
 	}
 
-	//transposes a 2D vector. If the original vector is not rectangualar the new
-	//vector will be made rectangular by padding with NaNs
+	//transposes a 2D vector.
 	template <class T>
 	std::vector< std::vector<T> > transpose(const std::vector< std::vector<T> > &v)
 	{
+		if (v.size() == 0)
+			return std::vector<std::vector<T>>(0);
+		sci::assertThrow(sci::rectangular(v), sci::err());
+		
+
 		std::vector< std::vector<T> > result;
-		size_t d1=0;
-		for(typename std::vector<std::vector <T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi) 
-			d1=std::max(d1,vi->size());
-		result.resize(d1);
-		for(typename std::vector<std::vector <T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti)
-			resulti->resize(v.size(),std::numeric_limits<T>::quiet_NaN());
-		for(size_t i=0; i<v.size(); ++i)
+		std::vector<const T*> transposed(v.size());
+
+		const std::vector <T> *vEnd = &v[0]+v.size();
+		const T **transposedi = &transposed[0];
+		for (const std::vector <T> *vi = &v[0]; vi != vEnd; ++vi, ++transposedi)
 		{
-			for(size_t j=0; j<v[i].size(); j++)result[j][i]=v[i][j];
+			*transposedi = &((*vi)[0]);
+		}
+		result = sci::makevector<T>(0.0, v[0].size(), v.size());
+
+		std ::vector <T> *resultEnd = &result[0]+result.size();
+		for(std::vector <T> *resulti = &result[0]; resulti != resultEnd; ++resulti)
+		{
+			const T **transposedi = &transposed[0];
+			T *resultiEnd = &((*resulti)[0])+resulti->size();
+			for (T *resultij = &((*resulti)[0]); resultij != resultiEnd; ++transposedi, ++resultij)
+			{
+				*resultij = **transposedi;
+				++*transposedi;
+			}
 		}
 		return result;
 	}
+
 	template <class T>
 	bool rectangular(const std::vector< std::vector<T> > &v)
 	{
 		if (v.size()==0) return true;
 		size_t size=v[0].size();
-		for(typename std::vector<std::vector<T> >::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
+		const std::vector<T> *vEnd = &v[0] + v.size();
+		for(const std::vector<T> *vi=&v[1]; vi!=vEnd; ++vi)
 		{
-			if(vi->size()!=size) return false;
+			if(vi->size()!=size)
+				return false;
 		}
 		return true;
 	}
+
 	template <class T>
 	bool square(const std::vector< std::vector<T> > &v)
 	{
 		if (v.size()==0) return true;
 		size_t size=v.size();
-		for(typename std::vector<std::vector<T> >::const_iterator vi=v.begin(); vi!=v.end(); ++vi)
+		const std::vector<T> *vEnd = &v[0] + v.size();
+		for(const std::vector<T> *vi = &v[0]; vi != vEnd; ++vi)
 		{
 			if(vi->size()!=size) return false;
 		}
@@ -438,7 +458,11 @@ namespace sci
 	std::vector <std::vector <T> > makevector(T fillvalue, size_t dim1, size_t dim2)
 	{
 		std::vector <std::vector <T> > result(dim1);
-		for(typename std::vector<std::vector<T> >::iterator resulti=result.begin(); resulti!=result.end(); ++resulti) 
+		if (dim1 == 0)
+			return result;
+
+		std::vector<T> *resultEnd = &result[0] + result.size();
+		for(std::vector<T> *resulti=&result[0]; resulti!=resultEnd; ++resulti) 
 			resulti->resize(dim2,fillvalue);
 		return result;
 	}
@@ -907,11 +931,13 @@ sublength*=*shapei;
 	inline void convert(std::vector<T> &destination, const std::vector<U> &source)
 	{
 		destination.resize(source.size());
+		if (source.size() == 0)
+			return;
 		if(destination.size()>0)
 		{
-			typename std::vector<T>::iterator di=destination.begin();
-			typename std::vector<U>::const_iterator si=source.begin();
-			for(si; si!=source.end(); ++si)
+			T * di = &destination[0];
+			const  U  *sEnd = &source[0]+source.size();
+			for(const  U  *si = &source[0]; si!=sEnd; ++si)
 			{
 				*di=static_cast<T>(*si);
 				++di;
@@ -925,11 +951,13 @@ sublength*=*shapei;
 	inline void convert(std::vector< std::vector<T> > &destination, const std::vector< std::vector<U> > &source)
 	{
 		destination.resize(source.size());
+		if (source.size() == 0)
+			return;
 		if(destination.size()>0)
 		{
-			typename std::vector< std::vector<T> >::iterator di=destination.begin();
-			typename std::vector< std::vector<U> >::const_iterator si=source.begin();
-			for(si; si!=source.end(); ++si)
+			std::vector<T> * di=&destination[0];
+			const std::vector<U> *sEnd=&source[0]+source.size();
+			for(const std::vector<U> *si=&source[0]; si!=sEnd; ++si)
 			{
 				convert(*di,*si);
 				++di;

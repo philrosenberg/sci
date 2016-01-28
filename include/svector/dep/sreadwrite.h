@@ -4,7 +4,8 @@
 
 #include<string>
 #ifdef _WIN32
-#include<nc/netcdfcpp.h>
+//#include<nc/netcdfcpp.h>
+#include<nc/netcdf.h>
 #endif
 #include<limits>
 #include<fstream>
@@ -88,6 +89,8 @@ namespace sci
 	inline double getsign (char c) {return c=='+'? 1.0:-1.0;} //must only be called when issign returns true on the character
 	double getnumber (char c);
 	
+	
+
 #ifdef _WIN32
 	//reads variable called varname from netcdf file filename and puts it in vector var.
 	//var must be a vector and must have the correct number of dimensions to hold the variable.
@@ -112,72 +115,6 @@ namespace sci
 	bool readpostnumberedncvariables(std::string filename, std::string varnamestart, std::vector< std::vector<T> >& vars)
 	{
 		return readnumberedncvariables(filename,varnamestart,"",vars);
-		/*
-		//try to open the file
-		NcFile *nc=new NcFile(filename.c_str(),NcFile::ReadOnly);
-		if(!nc->is_valid())
-		{
-			delete nc;
-			vars.resize(0);
-			return false;
-		}
-
-		std::vector<std::string> varlist;
-		std::vector<size_t> indices;
-		unsigned long nvars=nc->num_vars();
-		for(unsigned long i=0; i<nvars; i++)varlist.push_back(nc->get_var(i)->name());
-		for(unsigned long i=0; i<varlist.size(); i++)
-		{
-			if(varlist[i].compare(0,varnamestart.length(),varnamestart)==0) //check if the string starts with varnamestart
-			{
-				size_t index;
-				std::istringstream stream(varlist[i].substr(varnamestart.length()));
-				try
-				{
-					stream >> index;
-					//Check details in case we're not using exceptions
-					//note we also check if the whole string has been read as we can successfully read a number
-					//and leave remaining text, which we don't want
-					if (stream.fail()||stream.bad()||((unsigned long)stream.tellg())!=(unsigned long)(varlist[i].length()-varnamestart.length()))
-					{
-						varlist.erase(varlist.begin()+i);
-						--i;
-					}
-					else
-					{
-						//check the remainder of the string is empty
-						indices.push_back(index);
-					}
-				}
-				catch(...)
-				{
-					//if we failed then remove this item from the varlist
-					varlist.erase(varlist.begin()+i);
-					--i;
-				}
-			}
-			else
-			{
-				//remove this item from the varlist
-				varlist.erase(varlist.begin()+i);
-				--i;
-			}
-		}
-		delete nc;
-
-		//we now have a list of indices and a list of variable names to get
-		//simply grab each one in turn
-
-		//resize our output to hold the correct number of variables
-		vars.resize(sci::max<size_t>(indices+size_t(1)));
-		//grab the variables
-		bool succeeded=false;
-		for(size_t i=0; i<varlist.size(); ++i) 
-		{
-			bool thissucceeded=sci::readncvariable(filename,varlist[i],vars[indices[i]]);
-			succeeded=succeeded||thissucceeded;
-		}
-		return succeeded;*/
 	}
 
 	//looks in the netcdf for variables with names that consist of varnamestart followed
@@ -191,97 +128,95 @@ namespace sci
 	template<class T>
 	bool readnumberedncvariables(std::string filename, std::string varnamestart, std::string varnameend, std::vector< std::vector<T> >& vars,size_t minnumber=0, size_t maxnumber=std::numeric_limits<size_t>::max())
 	{
-		//try to open the file
-		NcFile *nc=new NcFile(filename.c_str(),NcFile::ReadOnly);
-		if(!nc->is_valid())
+		try
 		{
-			delete nc;
-			vars.resize(0);
-			return false;
-		}
+			//try to open the file
+			sci::InputNcFile file(filename);
+			std::vector<std::string> varlist = file.getVariableNames();
 
-		std::vector<std::string> varlist;
-		std::vector<size_t> indices;
-		unsigned long nvars=nc->num_vars();
-		for(unsigned long i=0; i<nvars; i++)varlist.push_back(nc->get_var(i)->name());
-		for(unsigned long i=0; i<varlist.size(); i++)
-		{
-			if(varlist[i].compare(0,varnamestart.length(),varnamestart)==0) //check if the string starts with varnamestart
+			std::vector<size_t> indices;
+			for (unsigned long i = 0; i < varlist.size(); i++)
 			{
-				size_t index;
-				std::istringstream stream(varlist[i].substr(varnamestart.length()),std::istringstream::binary);
-				try
+				if (varlist[i].compare(0, varnamestart.length(), varnamestart) == 0) //check if the string starts with varnamestart
 				{
-					stream >> index;
-					//Check details in case we're not using exceptions
-					//note we also check if the whole string has been read as we can successfully read a number
-					//and leave remaining text, which we don't want
-					if (stream.fail()||stream.bad())
+					size_t index;
+					std::istringstream stream(varlist[i].substr(varnamestart.length()), std::istringstream::binary);
+					try
 					{
-						//not a match - remove from list
-						varlist.erase(varlist.begin()+i);
-						--i;
-					}
-					else if(index<minnumber || index > maxnumber)
-					{
-						//not a match - remove from list
-						varlist.erase(varlist.begin()+i);
-						--i;
-					}
-					
-					else
-					{
-						//we know we have varnamestart, followed by a number. Now check the remainder
-						//is equal to varnameend
-						bool hasFailed=stream.fail();
-						bool end=stream.eof();
-						std::string remainder=stream.eof() ? "" : varlist[i].substr((unsigned long)stream.tellg()+(unsigned long)varnamestart.length());
-						size_t get=(unsigned long)stream.tellg();
-						size_t startlen=varnamestart.length();
-						if(varnameend.compare(remainder)==0)
-						{
-							//*****************************************
-							//we have found a match, remember its index
-							//*****************************************
-							indices.push_back(index-minnumber);
-						}
-						else
+						stream >> index;
+						//Check details in case we're not using exceptions
+						//note we also check if the whole string has been read as we can successfully read a number
+						//and leave remaining text, which we don't want
+						if (stream.fail() || stream.bad())
 						{
 							//not a match - remove from list
-							varlist.erase(varlist.begin()+i);
+							varlist.erase(varlist.begin() + i);
 							--i;
 						}
+						else if (index<minnumber || index > maxnumber)
+						{
+							//not a match - remove from list
+							varlist.erase(varlist.begin() + i);
+							--i;
+						}
+
+						else
+						{
+							//we know we have varnamestart, followed by a number. Now check the remainder
+							//is equal to varnameend
+							bool hasFailed = stream.fail();
+							bool end = stream.eof();
+							std::string remainder = stream.eof() ? "" : varlist[i].substr((unsigned long)stream.tellg() + (unsigned long)varnamestart.length());
+							size_t get = (unsigned long)stream.tellg();
+							size_t startlen = varnamestart.length();
+							if (varnameend.compare(remainder) == 0)
+							{
+								//*****************************************
+								//we have found a match, remember its index
+								//*****************************************
+								indices.push_back(index - minnumber);
+							}
+							else
+							{
+								//not a match - remove from list
+								varlist.erase(varlist.begin() + i);
+								--i;
+							}
+						}
+					}
+					catch (...)
+					{
+						//not a match - remove from list
+						varlist.erase(varlist.begin() + i);
+						--i;
 					}
 				}
-				catch(...)
+				else
 				{
 					//not a match - remove from list
-					varlist.erase(varlist.begin()+i);
+					varlist.erase(varlist.begin() + i);
 					--i;
 				}
 			}
-			else
+
+			//we now have a list of indices and a list of variable names to get
+			//simply grab each one in turn
+
+			//resize our output to hold the correct number of variables
+			vars.resize(sci::max<size_t>(indices + size_t(1)));
+			//grab the variables
+			bool succeeded = false;
+			for (size_t i = 0; i < varlist.size(); ++i)
 			{
-				//not a match - remove from list
-				varlist.erase(varlist.begin()+i);
-				--i;
+				bool thissucceeded = sci::readncvariable(filename, varlist[i], vars[indices[i]]);
+				succeeded = succeeded || thissucceeded;
 			}
 		}
-		delete nc;
-
-		//we now have a list of indices and a list of variable names to get
-		//simply grab each one in turn
-
-		//resize our output to hold the correct number of variables
-		vars.resize(sci::max<size_t>(indices+size_t(1)));
-		//grab the variables
-		bool succeeded=false;
-		for(size_t i=0; i<varlist.size(); ++i) 
+		catch (...)
 		{
-			bool thissucceeded=sci::readncvariable(filename,varlist[i],vars[indices[i]]);
-			succeeded=succeeded||thissucceeded;
+			return false;
 		}
-		return succeeded;
+		return true;
 	}
 
 	//internal function
@@ -300,93 +235,40 @@ namespace sci
 	template<class T, class A>
 	bool readncvariable(std::string filename, std::string varname, std::vector<T>& var, std::vector<A> &tempvar)
 	{
-		//to do: replace ifs with a chack that A is the right size
-		
 		//empty the var and shape vectors
 		var.clear();
 		tempvar.clear();
-
-		//create an ncError object. This will catch any errors allowing us to check what they are
-		//and will stop the default behavour of simply quiting the program
-		NcError ncerr(NcError::silent_nonfatal);
-
-		//try to open the file
-		NcFile *nc=new NcFile(filename.c_str(),NcFile::ReadOnly);
-		if(!nc->is_valid())
+		try
 		{
-			delete nc;
-			sci::reporterr(SERR_NC,ncerr.get_err(),filename);
-			return false;
-		}
-
-		//read the variable from the file into an NcVar and delete our NcFile
-		NcVar *ncvar = nc->get_var(varname.c_str());
-
-		//check that the variable was read correctly
-		if(ncvar==NULL)
-		{
-			//report error and return false
-			sci::reporterr(SERR_NC,ncerr.get_err(),varname);
-			return false;
-		}
-		//get the number of elements and the shape
-
-		//check the type and read in the data
-		NcType type=ncvar->type();
-		bool succeeded=true;
-
-		//get the size and shape of the variable
-		size_t npoints=ncvar->num_vals();
-		int ndims=ncvar->num_dims();
-		long* pshape=ncvar->edges();
-		std::vector<size_t> shape(ndims);
-		for(int i=0; i<ndims; ++i)shape[i]=pshape[i];
-
-		std::vector<A> *readvar=&tempvar;
-		if(sci::ndims(var)==1) readvar=(std::vector<A> *)&var;
-
-		NcBool gotvar;
-		if( npoints > 0 )
-		{
-			if(ndims>0)
+			InputNcFile file(filename);
+			if (sci::ndims(var) == 1)
 			{
-				readvar->resize(sci::product(shape),std::numeric_limits<A>::quiet_NaN()); //create a temporary vector to initially read the data into a 1D array
-				//although get claims to want a long*, it casts this to a size_t*, which stuffs up on 64 bit builds
-				//where long and size_t are different sizes - pass it a size_t* to fix this.
-				gotvar=ncvar->get(&((*readvar)[0]),(long*)&shape[0]); //read the elements into the temp vector
+				//the elaborate and hacky pointer play below is so that 
+				//even when var is multi dimensional and this code isn't called
+				//it will still compile
+				std::vector<A> *varPtr = (std::vector<A> *)((void*)&var); 
+				*varPtr = file.getVariable<A>(varname);
 			}
 			else
 			{
-				readvar->resize(1,std::numeric_limits<A>::quiet_NaN());
-				gotvar=ncvar->get(&((*readvar)[0]),1);
+				std::vector<size_t> shape;
+				tempvar = file.getVariable<A>(varname, shape);
+				sci::assertThrow(shape.size() == sci::ndims(var), sci::err());
+				sci::reshape(var, tempvar, shape);
 			}
-
-			if(gotvar==false || ncerr.get_err()!=0) //check if the read failed
-			{
-				sci::reporterr(SERR_NC,ncerr.get_err(),varname);
-				succeeded=false;
-			}
-
-			//sometimes this fails for some reason, but still returns true. Check if the vector has been filled and if not then read in
-			//each value individually - this is probably a lot slower than above
-			if(readvar->at(0)!=readvar->at(0))
-			{
-				//to do check if this is still needed
-				//this is a warning for me to check what's going on
-				//wxMessageBox(wxT("netcdf reported correct reading but the first element is still a qnan for variable ")+varname+wxT(" and file ")+filename);
-				NcValues *ncvalues=ncvar->values();
-				for(size_t i=0; i<npoints; i++) *(readvar->begin()+i)=(A)ncvalues->as_double((long)i);
-				//delete[] ncvalues;
-			}
-			//copy the elements from the temp vector to the final double vector
-			if(sci::ndims(var)!=1)sci::reshape(var,tempvar,shape);
 		}
-
-		delete[] pshape;
-		delete nc;
-		return succeeded;
+		catch (...)
+		{
+			return false;
+		}
+		
+		return true;
 	}
-
+	inline bool readncvariableattribute(const std::string &filename, const std::string &variablename, const std::string &attributename, std::string &attributevalue)
+	{
+		return false;
+	}
+	/*
 	bool readncglobalattribute(const std::string &filename, const std::string &attributename, std::string &attributevalue);
 	bool readncglobalattribute(const std::string &filename, const std::string &attributename, std::vector<std::string> &attributevalues);
 
@@ -556,7 +438,7 @@ namespace sci
 		return result;
 	}
 
-
+	
 	//big fat warning - shape should be an array of longs according to the netcdf headers, but in the
 	//source it gets cast to a size_t*. In 32 bit builds this still worked okay, but for 64 bit
 	//it breaks. So we pass in an array of size_ts, cast as a long *, then this gets cast back to a
@@ -657,15 +539,9 @@ namespace sci
 		sci::flatten(flatdata,data);
 		if(flatdata.size()==0) return false;
 		std::vector<size_t> datashape=sci::shape(data);
-		/*std::vector<long> datashapelong(datashape.size());
-		for(size_t i=0; i<datashape.size(); ++i) 
-		{
-			if(datashape[i]>size_t(std::numeric_limits<long>::max())) return false;
-			datashapelong[i]=(long)datashape[i];
-		}*/
 		return writencvariable(filename,variablename,linkeddimensions,flatdata,datashape);
 	}
-
+	*/
 #endif
 	
 	void splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators, std::vector<std::string> &splitstring);

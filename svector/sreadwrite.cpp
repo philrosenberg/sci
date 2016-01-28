@@ -3,8 +3,10 @@
 #include"svector_internal.h"
 #include"sstring_internal.h"
 #include"../include/svector/dep/ppfile.h"
+#include"../include/svector/dep/nc.h"
 #include<wx/filefn.h>
 #include<wx/dir.h>
+
 
 sci::csv_err sci::readcsvcolumns(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
 {
@@ -611,7 +613,7 @@ double sci::getnumber (char c)
 	if(c=='9') return 9.0;
 	return 0.0;
 }
-
+/*
 #ifdef _WIN32
 bool sci::createncfile(const std::string &filename, const std::vector<std::string> &limiteddimensions, const std::vector<size_t> &limiteddimensionsizes, const std::string &unlimiteddimension)
 {
@@ -706,7 +708,7 @@ bool sci::writencvariableattribute(const std::string &filename, const std::strin
 	return result;
 }
 #endif
-
+*/
 
 void sci::splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators, std::vector<std::string> &splitstring)
 {
