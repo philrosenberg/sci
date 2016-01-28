@@ -177,8 +177,8 @@ sci::NcAttribute& sci::NcAttribute::operator=(const sci::NcAttribute &attribute)
 		m_nValues = attribute.m_nValues;
 		m_nBytes = attribute.m_nBytes;
 		if (m_values)
-			delete[] m_values;
-		m_values = new char[m_nBytes];
+			free(m_values);
+		m_values = malloc(m_nBytes);
 		memcpy(m_values, attribute.m_values, m_nBytes);
 	}
 	return *this;
