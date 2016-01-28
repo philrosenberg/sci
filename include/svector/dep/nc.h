@@ -102,7 +102,10 @@ namespace sci
 		NcAttribute(const std::string& name, std::vector<T> values, const WRITETYPE &);
 		~NcAttribute()
 		{
-			if (m_values) delete[] m_values;
+			if (m_values)
+			{
+				free (m_values);
+			}
 		}
 	private:
 
@@ -120,7 +123,7 @@ namespace sci
 		m_nValues = 1;
 		m_writeType = sci_internal::NcTraits<T>::ncType;
 		m_nBytes = m_nValues * sizeof(T);
-		T *v = new T[1];
+		T *v = malloc(m_nBytes);
 		v[0] = value;
 		m_values = v;
 	}
@@ -133,7 +136,7 @@ namespace sci
 		m_nValues = 1;
 		m_writeType = sci_internal::NcTraits<WRITETYPE>::ncType;
 		m_nBytes = m_nValues * sizeof(WRITETYPE);
-		WRITETYPE *v = new WRITETYPE[1];
+		WRITETYPE *v = malloc(m_nBytes);
 		v[0] = (WRITETYPE)value;
 		m_values = v;
 	}
@@ -149,7 +152,7 @@ namespace sci
 			m_values = nullptr;
 		else
 		{
-			m_values = new T[m_nValues];
+			m_values = malloc(m_nBytes);
 			memcpy(m_values, &values[0], m_nBytes);
 		}
 	}
@@ -166,7 +169,7 @@ namespace sci
 			m_values = nullptr;
 		else
 		{
-			WRITETYPE *v = new WRITETYPE[m_nValues];
+			WRITETYPE *v = malloc(m_nBytes);
 			WRITETYPE *vEnd = v + m_nValues;
 			T *v2i = &values[0];
 			for (WRITETYPE *vi = v; vi != vEnd; ++vi, ++v2i)
