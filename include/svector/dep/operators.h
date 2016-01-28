@@ -247,19 +247,26 @@ namespace sci_internal
 	template<class T, class U>
 	SBOOL comp( T t, U u )
 	{
+		return SBOOL 0;
 	}
 	template<class T, class U>
-	std::vector<SBOOL> comp( std::vector<T> t, U u ){}
+	std::vector<SBOOL> comp( std::vector<T> t, U u )
+	{
+		return SBOOL 0;
+	}
 	template<class T, class U>
-	std::vector<SBOOL> comp( T t, std::vector<U> u ){}
+	std::vector<SBOOL> comp( T t, std::vector<U> u )
+	{
+		return SBOOL 0;
+	}
 	template<class T, class U>
-	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[i],u))>{}
+	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[0],u))>{}
 	template<class T, class U>
-	auto comp( T t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t,u[i]))>{}
+	auto comp( T t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t,u[0]))>{}
 	template<class T, class U>
-	auto comp( std::vector<std::vector<T>> t, std::vector<U> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
+	auto comp( std::vector<std::vector<T>> t, std::vector<U> u ) -> std::vector<decltype(comp(t[0],u[0]))>{}
 	template<class T, class U>
-	auto comp( std::vector<T> t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
+	auto comp( std::vector<T> t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t[0],u[0]))>{}
 }
 
 //The prefix used when declaring an operator for a vector which takes
