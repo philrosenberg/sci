@@ -247,17 +247,17 @@ namespace sci_internal
 	template<class T, class U>
 	SBOOL comp( T t, U u )
 	{
-		return SBOOL 0;
+		return 0;
 	}
 	template<class T, class U>
 	std::vector<SBOOL> comp( std::vector<T> t, U u )
 	{
-		return SBOOL 0;
+		return 0;
 	}
 	template<class T, class U>
 	std::vector<SBOOL> comp( T t, std::vector<U> u )
 	{
-		return SBOOL 0;
+		return 0;
 	}
 	template<class T, class U>
 	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[0],u))>{}
