@@ -1,4 +1,3 @@
-SHARE=/usr/local/share
 cp $SHARE/apex/*.cpp .
 cp $SHARE/apex/*.h .
 cp $SHARE/apex/makefile .

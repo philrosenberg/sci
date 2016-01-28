@@ -1,6 +1,8 @@
 if [ -z "$1" ]; then
    echo "INSTALL_DIR = /usr/local/" > makefile
    cat makefile.base >> makefile
+   echo "SHARE = /usr/local/share" > template/mkapex
+   cat template/mkapex.in >> template/mkapex
 elif [ -n "$2" ]; then
    echo "Error - this basic configure script only understands --prefix"
 else
@@ -12,6 +14,8 @@ else
       if [ -z "${P1[3]}" ]; then
          echo "INSTALL_DIR = ${P1[1]}/" > makefile
          cat makefile.base >> makefile
+         echo "SHARE = ${P1[1]}/share" > template/mkapex
+         cat template/mkapex.in >> template/mkapex
       else
          echo "Error - bad file name or more than one option, this basic configure script only understands --prefix"
       fi
