@@ -2,8 +2,8 @@ COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
 
 all: build/libsvector.so
 
-build/libsvector.so: makefile build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
-	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
+build/libsvector.so: makefile build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
+	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
 
 build:
 	mkdir build
@@ -46,6 +46,10 @@ build/sreadwrite.o: build svector/sreadwrite.cpp
 
 build/sstring.o: build svector/sstring.cpp
 	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
+
+
+build/nc.o: build svector/nc.cpp
+         g++ $(COMPILE_FLAGS) -o build/nc.o svector/nc.cpp
 
 build/transforms.o: build svector/transforms.cpp
 	 g++ $(COMPILE_FLAGS) -o build/transforms.o svector/transforms.cpp
