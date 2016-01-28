@@ -78,7 +78,7 @@
     <ClCompile Include="..\svector\wgdos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nc.cpp">
+    <ClCompile Include="..\svector\nc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

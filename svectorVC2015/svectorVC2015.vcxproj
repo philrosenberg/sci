@@ -158,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\svector\memorymap.cpp" />
+    <ClCompile Include="..\svector\nc.cpp" />
     <ClCompile Include="..\svector\operators.cpp" />
     <ClCompile Include="..\svector\plotdata.cpp" />
     <ClCompile Include="..\svector\ppfile.cpp" />
@@ -174,7 +175,6 @@
     <ClCompile Include="..\svector\transforms.cpp" />
     <ClCompile Include="..\svector\undoable.cpp" />
     <ClCompile Include="..\svector\wgdos.cpp" />
-    <ClCompile Include="nc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\svector\algorithm.h" />
