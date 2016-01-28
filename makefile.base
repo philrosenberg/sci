@@ -62,7 +62,7 @@ build/wgdos.o: build svector/wgdos.cpp
 clean:
 	 rm -r build $(INSTALL_DIR)lib/libsvector.so $(INSTALL_DIR)include/svector
 
-install: build/libsvector.so $(INSTALL_DIR)lib $(INSTALL_DIR)lib/libsvector.so installheaders
+install: build/libsvector.so $(INSTALL_DIR)lib $(INSTALL_DIR)lib/libsvector.so installheaders installtemplate $(INSTALL_DIR)bin/mkapex
 	 @echo "Installation complete"
 
 $(INSTALL_DIR)lib: build/libsvector.so
@@ -73,3 +73,13 @@ $(INSTALL_DIR)lib/libsvector.so: build/libsvector.so
 
 installheaders:
 	cp -r include/ $(INSTALL_DIR)
+
+installtemplate: $(INSTALL_DIR)share/svector
+        cp template/Apex++2015/*.cpp $(INSTALL_DIR)share/; cp template/Apex++2015/*.h $(INSTALL_DIR)share/  cp template/Apex++2015/makefile $(INSTALL_DIR)share/
+
+$(INSTALL_DIR)share/svector:
+        mkdir -p $(INSTALL_DIR)share/svector
+
+$(INSTALL_DIR)bin/mkapex
+        cp template/Apex++2015/mkapex $(INSTALL_DIR)share/; chmod +x $(INSTALL_DIR)share/mkapex
+
