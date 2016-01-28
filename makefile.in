@@ -47,9 +47,8 @@ build/sreadwrite.o: build svector/sreadwrite.cpp
 build/sstring.o: build svector/sstring.cpp
 	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
 
-
 build/nc.o: build svector/nc.cpp
-         g++ $(COMPILE_FLAGS) -o build/nc.o svector/nc.cpp
+	 g++ $(COMPILE_FLAGS) -o build/nc.o svector/nc.cpp
 
 build/transforms.o: build svector/transforms.cpp
 	 g++ $(COMPILE_FLAGS) -o build/transforms.o svector/transforms.cpp
@@ -73,17 +72,17 @@ $(INSTALL_DIR)lib: build/libsvector.so
 	 mkdir -p $(INSTALL_DIR)lib
 
 $(INSTALL_DIR)lib/libsvector.so: build/libsvector.so
-	cp build/libsvector.so $(INSTALL_DIR)lib/libsvector.so
+	 cp build/libsvector.so $(INSTALL_DIR)lib/libsvector.so
 
 installheaders:
-	cp -r include/ $(INSTALL_DIR)
+	 cp -r include/ $(INSTALL_DIR)
 
 installtemplate: $(INSTALL_DIR)share/svector
-        cp template/Apex++2015/*.cpp $(INSTALL_DIR)share/; cp template/Apex++2015/*.h $(INSTALL_DIR)share/  cp template/Apex++2015/makefile $(INSTALL_DIR)share/
+	 cp template/Apex++2015/*.cpp $(INSTALL_DIR)share/; cp template/Apex++2015/*.h $(INSTALL_DIR)share/  cp template/Apex++2015/makefile $(INSTALL_DIR)share/
 
 $(INSTALL_DIR)share/svector:
-        mkdir -p $(INSTALL_DIR)share/svector
+	 mkdir -p $(INSTALL_DIR)share/svector
 
-$(INSTALL_DIR)bin/mkapex
-        cp template/Apex++2015/mkapex $(INSTALL_DIR)share/; chmod +x $(INSTALL_DIR)share/mkapex
+$(INSTALL_DIR)bin/mkapex:
+	 cp template/Apex++2015/mkapex $(INSTALL_DIR)share/; chmod +x $(INSTALL_DIR)share/mkapex
 
