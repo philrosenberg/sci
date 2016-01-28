@@ -262,49 +262,15 @@ namespace sci
 		return result;
 	}
 
-	//transposes a 2D vector.
-	template <class T>
-	std::vector< std::vector<T> > transpose(const std::vector< std::vector<T> > &v)
-	{
-		if (v.size() == 0)
-			return std::vector<std::vector<T>>(0);
-		sci::assertThrow(sci::rectangular(v), sci::err());
-		
-
-		std::vector< std::vector<T> > result;
-		std::vector<const T*> transposed(v.size());
-
-		const std::vector <T> *vEnd = &v[0]+v.size();
-		const T **transposedi = &transposed[0];
-		for (const std::vector <T> *vi = &v[0]; vi != vEnd; ++vi, ++transposedi)
-		{
-			*transposedi = &((*vi)[0]);
-		}
-		result = sci::makevector<T>(0.0, v[0].size(), v.size());
-
-		std ::vector <T> *resultEnd = &result[0]+result.size();
-		for(std::vector <T> *resulti = &result[0]; resulti != resultEnd; ++resulti)
-		{
-			const T **transposedi = &transposed[0];
-			T *resultiEnd = &((*resulti)[0])+resulti->size();
-			for (T *resultij = &((*resulti)[0]); resultij != resultiEnd; ++transposedi, ++resultij)
-			{
-				*resultij = **transposedi;
-				++*transposedi;
-			}
-		}
-		return result;
-	}
-
 	template <class T>
 	bool rectangular(const std::vector< std::vector<T> > &v)
 	{
-		if (v.size()==0) return true;
-		size_t size=v[0].size();
+		if (v.size() == 0) return true;
+		size_t size = v[0].size();
 		const std::vector<T> *vEnd = &v[0] + v.size();
-		for(const std::vector<T> *vi=&v[1]; vi!=vEnd; ++vi)
+		for (const std::vector<T> *vi = &v[1]; vi != vEnd; ++vi)
 		{
-			if(vi->size()!=size)
+			if (vi->size() != size)
 				return false;
 		}
 		return true;
@@ -649,6 +615,40 @@ namespace sci
 		{
 			*resulti=(T)val;
 			++val;
+		}
+		return result;
+	}
+
+	//transposes a 2D vector.
+	template <class T>
+	std::vector< std::vector<T> > transpose(const std::vector< std::vector<T> > &v)
+	{
+		if (v.size() == 0)
+			return std::vector<std::vector<T>>(0);
+		sci::assertThrow(sci::rectangular(v), sci::err());
+
+
+		std::vector< std::vector<T> > result;
+		std::vector<const T*> transposed(v.size());
+
+		const std::vector <T> *vEnd = &v[0] + v.size();
+		const T **transposedi = &transposed[0];
+		for (const std::vector <T> *vi = &v[0]; vi != vEnd; ++vi, ++transposedi)
+		{
+			*transposedi = &((*vi)[0]);
+		}
+		result = sci::makevector<T>(0.0, v[0].size(), v.size());
+
+		std::vector <T> *resultEnd = &result[0] + result.size();
+		for (std::vector <T> *resulti = &result[0]; resulti != resultEnd; ++resulti)
+		{
+			const T **transposedi = &transposed[0];
+			T *resultiEnd = &((*resulti)[0]) + resulti->size();
+			for (T *resultij = &((*resulti)[0]); resultij != resultiEnd; ++transposedi, ++resultij)
+			{
+				*resultij = **transposedi;
+				++*transposedi;
+			}
 		}
 		return result;
 	}
