@@ -1,5 +1,6 @@
 #include"../include/svector/dep/serr.h"
 #include"../include/svector/dep/nc.h"
+#include<cstring>
 void sci::NcFileBase::openReadOnly(const std::string &fileName)
 {
 	sci::assertThrow(nc_open(fileName.c_str(), NC_NOWRITE, &m_id) == NC_NOERR, sci::err());
