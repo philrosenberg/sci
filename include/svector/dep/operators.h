@@ -206,6 +206,60 @@ namespace sci_internal
 			*resulti=FUNC(*ai,b);
 		return result;
 	}
+
+	template< class ORIGVECT, class NEW >
+	struct ArrayEquiv
+	{
+		typedef NEW type;
+	};
+
+	template< class ORIGVECT, class NEW >
+	struct ArrayEquiv< std::vector<ORIGVECT>, NEW>
+	{
+		typedef std::vector<NEW> type;
+	};
+
+	template< class ORIGVECT, class NEW >
+	struct ArrayEquiv< std::vector<std::vector<ORIGVECT>>, NEW>
+	{
+		typedef std::vector< typename ArrayEquiv<std::vector<ORIGVECT>, NEW>::type > type;
+	};
+
+	template<class T>
+	struct BaseType
+	{
+		typedef T type;
+	};
+
+	template<class T>
+	struct BaseType<std::vector<T>>
+	{
+		typedef T type;
+	};
+
+	template<class T>
+	struct BaseType<std::vector<std::vector<T>>>
+	{
+		typedef typename BaseType< std::vector<T>>::type type;
+	};
+
+	//functions to return the right type for comparison etc
+	template<class T, class U>
+	SBOOL comp( T t, U u )
+	{
+	}
+	template<class T, class U>
+	std::vector<SBOOL> comp( std::vector<T> t, U u ){}
+	template<class T, class U>
+	std::vector<SBOOL> comp( T t, std::vector<U> u ){}
+	template<class T, class U>
+	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[i],u))>{}
+	template<class T, class U>
+	auto comp( T t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t,u[i]))>{}
+	template<class T, class U>
+	auto comp( std::vector<std::vector<T>> t, std::vector<U> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
+	template<class T, class U>
+	auto comp( std::vector<T> t, std::vector<std::vector<U>> u ) -> std::vector<decltype(comp(t[i],u[i]))>{}
 }
 
 //The prefix used when declaring an operator for a vector which takes
@@ -238,10 +292,12 @@ namespace sci_internal
 {return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< CONST T, const U, TYPE > >(a, b);}
 
 #define VECFUNC(FUNC, CONST, TYPE) (std::vector<T> &a) -> std::vector<TYPE>\
-{return sci_internal::operate< T, const int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
+{return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
 
 #define VECINTFUNC(FUNC, TYPE) (std::vector<T> &a, int) -> std::vector<TYPE>\
-{return sci_internal::operate< T, const int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
+{return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
+
+#define COMMA ,
 
 OPPREFIX+VECVECFUNC(add, const, decltype(T()+U()))
 OPPREFIX-VECVECFUNC(subtract, const, decltype(T()-U()))
@@ -277,19 +333,31 @@ namespace sci
 	NONOPPREFIX gt VECVECFUNC(gt, const, SBOOL)
 	NONOPPREFIX ltEq VECVECFUNC(lteq, const, SBOOL)
 	NONOPPREFIX gtEq VECVECFUNC(gteq, const, SBOOL)
+	NONOPPREFIX isEq VECSCALFUNC(iseq, const, SBOOL)
+	NONOPPREFIX notEq VECSCALFUNC(noteq, const, SBOOL)
+	NONOPPREFIX lt VECSCALFUNC(lt, const, SBOOL)
+	NONOPPREFIX gt VECSCALFUNC(gt, const, SBOOL)
+	NONOPPREFIX ltEq VECSCALFUNC(lteq, const, SBOOL)
+	NONOPPREFIX gtEq VECSCALFUNC(gteq, const, SBOOL)
+	NONOPPREFIX isEq SCALVECFUNC(iseq, SBOOL)
+	NONOPPREFIX notEq SCALVECFUNC(noteq, SBOOL)
+	NONOPPREFIX lt SCALVECFUNC(lt, SBOOL)
+	NONOPPREFIX gt SCALVECFUNC(gt, SBOOL)
+	NONOPPREFIX ltEq SCALVECFUNC(lteq, SBOOL)
+	NONOPPREFIX gtEq SCALVECFUNC(gteq, SBOOL)
 }
-OPPREFIX==VECSCALFUNC(iseq, const, SBOOL)
-OPPREFIX!=VECSCALFUNC(noteq, const, SBOOL)
-OPPREFIX<VECSCALFUNC(lt, const, SBOOL)
-OPPREFIX>VECSCALFUNC(gt, const, SBOOL)
-OPPREFIX<=VECSCALFUNC(lteq, const, SBOOL)
-OPPREFIX>=VECSCALFUNC(gteq, const, SBOOL)
-OPPREFIX==SCALVECFUNC(iseq, SBOOL)
-OPPREFIX!=SCALVECFUNC(noteq, SBOOL)
-OPPREFIX<SCALVECFUNC(lt, SBOOL)
-OPPREFIX>SCALVECFUNC(gt, SBOOL)
-OPPREFIX<=SCALVECFUNC(lteq, SBOOL)
-OPPREFIX>=SCALVECFUNC(gteq, SBOOL)
+OPPREFIX==VECSCALFUNC(iseq, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX!=VECSCALFUNC(noteq, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX<VECSCALFUNC(lt, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX>VECSCALFUNC(gt, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX<=VECSCALFUNC(lteq, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX>=VECSCALFUNC(gteq, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX==SCALVECFUNC(iseq, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX!=SCALVECFUNC(noteq, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX<SCALVECFUNC(lt, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX>SCALVECFUNC(gt, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX<=SCALVECFUNC(lteq, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX>=SCALVECFUNC(gteq, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
 
 OPPREFIX%VECVECFUNC(remainder, const, decltype(T()%U()))
 OPPREFIX%VECSCALFUNC(remainder, const, decltype(T()%U()))
@@ -303,13 +371,13 @@ OPPREFIXSINGLE--VECFUNC( predecrement, , T )
 OPPREFIXSINGLE--VECINTFUNC( postdecrement, T )
 OPPREFIXSINGLE-VECFUNC( unaryminus, const, T )
 
-OPPREFIX&&VECVECFUNC(s_and, const, SBOOL)
-OPPREFIX||VECVECFUNC(s_or, const, SBOOL)
-OPPREFIX&&VECSCALFUNC(s_and, const, SBOOL)
-OPPREFIX||VECSCALFUNC(s_or, const, SBOOL)
-OPPREFIX&&SCALVECFUNC(s_and, SBOOL)
-OPPREFIX||SCALVECFUNC(s_or, SBOOL)
-OPPREFIX!VECFUNC(s_not, const, SBOOL)
+OPPREFIX&&VECVECFUNC(s_and, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX||VECVECFUNC(s_or, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX&&VECSCALFUNC(s_and, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX||VECSCALFUNC(s_or, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX&&SCALVECFUNC(s_and, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIX||SCALVECFUNC(s_or, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type)
+OPPREFIXSINGLE!VECFUNC(s_not, const, typename sci_internal::ArrayEquiv<T COMMA SBOOL>::type )
 
 OPPREFIX&VECVECFUNC(bitwiseand, const, decltype(T()&U()))
 OPPREFIX|VECVECFUNC(bitwiseor, const, decltype(T()|U()))

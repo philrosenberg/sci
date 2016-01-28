@@ -3155,7 +3155,7 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 			}
 		}
 	}
-	else if ( m_bitmap );
+	else if ( m_bitmap )
 	{
 		//The plots haven't changed so just select the bitmap as it already exists if we haven't resized
 		memdc.SelectObject(*m_bitmap);
