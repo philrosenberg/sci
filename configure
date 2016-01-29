@@ -24,3 +24,8 @@ else
    fi
 fi
 
+#remove the install symlink if it exists to avoid problems
+if [ -d install ]; then
+   echo "Removing install symlink from previous make install run."
+   rm install
+fi

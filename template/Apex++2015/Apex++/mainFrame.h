@@ -6,7 +6,7 @@
 #include<svector/splot.h>
 #include<svector/sreadwrite.h>
 #include<svector/sstring.h>
-#include<faam/faam.h>
+//#include<faam/faam.h>
 
 class mainFrame : public wxFrame
 {

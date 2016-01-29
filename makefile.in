@@ -67,11 +67,11 @@ build/wgdos.o: build svector/wgdos.cpp
 clean:
 	 rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
 
-install: build/libsvector.so $(INSTALL_TEMP)lib $(INSTALL_TEMP)lib/libsvector.so installheaders installtemplate $(INSTALL_TEMP)bin/mkapex
+install: build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so installheaders installtemplate $(INSTALL_TEMP)bin/mkapex
 	 @echo "Installation complete"
 
 $(INSTALL_TEMP):
-	 mkdir -p "$(INSTALL_DIR)" && ln -s "$(INSTALL_DIR)" $(INSTALL_TEMP_NOSLASH)
+	 mkdir -p "$(INSTALL_DIR)" && if [ -f $(INSTALL_TEMP_NOSLASH) ] ; then echo "Install link already exists - > continuing"; else ln -s "$(INSTALL_DIR)" $(INSTALL_TEMP_NOSLASH); fi
 
 $(INSTALL_TEMP)lib: build/libsvector.so $(INSTALL_TEMP)
 	 mkdir -p $(INSTALL_TEMP)lib
@@ -80,17 +80,17 @@ $(INSTALL_TEMP)lib/libsvector.so: build/libsvector.so $(INSTALL_TEMP)lib
 	 cp build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
 
 installheaders: $(INSTALL_TEMP)
-#	 cp -r include/ $(INSTALL_TEMP)
+	 cp -r include/ $(INSTALL_TEMP)
 
 installtemplate: $(INSTALL_TEMP)share/svector
-#	 cp template/Apex++2015/Apex++/*.cpp $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/*.h $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/makefile $(INSTALL_TEMP)share/svector/
+	 cp template/Apex++2015/Apex++/*.cpp $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/*.h $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/makefile $(INSTALL_TEMP)share/svector/
 
 $(INSTALL_TEMP)share/svector: $(INSTALL_TEMP)
-#	 mkdir -p $(INSTALL_TEMP)share/svector
+	 mkdir -p $(INSTALL_TEMP)share/svector
 
 $(INSTALL_TEMP)bin/mkapex: $(INSTALL_TEMP)bin
-#	 cp template/mkapex $(INSTALL_TEMP)bin/ && chmod +x $(INSTALL_TEMP)bin/mkapex
+	 cp template/mkapex $(INSTALL_TEMP)bin/ && chmod +x $(INSTALL_TEMP)bin/mkapex
 
 $(INSTALL_TEMP)bin: $(INSTALL_TEMP)
-#	 mkdir -p $(INSTALL_TEMP)bin
+	 mkdir -p $(INSTALL_TEMP)bin
 
