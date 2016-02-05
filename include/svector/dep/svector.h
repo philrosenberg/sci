@@ -2796,6 +2796,18 @@ sublength*=*shapei;
 		return result;
 	}
 
+	template<class T>
+	bool constantStride(const std::vector<std::vector<T>> &v)
+	{
+		if (v.size() < 2)
+			return true;
+		auto stride = &v[1][0] - &v[0][0];
+		for (size_t i = 2; i < v.size(); ++i)
+			if (&v[i][0] - &v[i - 1][0] != stride)
+				return false;
+		return true;
+	}
+
 	//matrix multiplication. In the 2D vector the first index is the row and the second is the column
 	//The 1D vector is assumed to be a row
 	template <class T>
@@ -2807,18 +2819,38 @@ sublength*=*shapei;
 		if(!sci::rectangular(b)) return std::vector<T>();
 		if(b[0].size()==0) return std::vector<T>();
 		if(a.size()!=b.size()) return std::vector<T>();
+		
+		if (a.size() == 1)
+			return(b[0] * a[0]);
 
 		std::vector<T> result(b[0].size(),0.0);
 		size_t dim1=b.size();
 		size_t dim2=b[0].size();
-		qic<T> resulti(result);
-		qic<T> ai(a);
-		qic< std::vector<T> > bi(b);
-		for(size_t i=0; i<dim2; ++i)
+		if (constantStride(b))
 		{
-			for(size_t j=0; j<dim1; ++j)
+			size_t bStride = &b[1][0] - &b[0][0];
+			double *resulti = &result[0];
+			double * resultEnd = resulti + result.size();
+			const double *bi = &b[0][0];
+			for (; resulti != resultEnd; ++bi, ++resulti)
 			{
-				resulti[i]+=ai[j]*bi[j][i];
+				*resulti = 0.0;
+				const double *aj = &a[0];
+				const double *aEnd = aj + a.size();
+				const double *bji = bi;
+				for (; aj != aEnd; ++aj, bji+=bStride)
+				{
+					*resulti += *aj * *bji;
+				}
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < dim2; ++i)
+			{
+				result[i] = 0;
+				for (size_t j = 0; j < dim1; ++j)
+					result[i] += a[j] * b[j][i];
 			}
 		}
 		return result;
