@@ -1244,3 +1244,60 @@ double sci::dateToUnixTime( int year, int month, int day, int hour, int minute, 
 	time.tm_isdst = daylightSaving ? 1 : 0;
 	return (double)mktime( &time ) - floor( second ) + second;
 }
+
+sci::Random::Random(size_t seed)
+{
+	m_engine.seed(seed);
+}
+
+sci::Random::Random()
+{
+}
+
+size_t sci::Random::getInt()
+{
+	return m_engine();
+}
+
+size_t sci::Random::getMin() const
+{
+	return m_engine.min();
+}
+
+size_t sci::Random::getMax() const
+{
+	return m_engine.max();
+}
+
+sci::RandomInt::RandomInt()
+{
+}
+
+sci::RandomInt::RandomInt(size_t seed)
+	:Random(seed)
+{
+
+}
+
+size_t sci::RandomInt::get()
+{
+	return getInt();
+}
+
+sci::RandomReal::RandomReal(size_t seed, double(*cdf)(double))
+	:Random(seed)
+{
+	m_cdf = cdf;
+}
+
+sci::RandomReal::RandomReal(double(*cdf)(double))
+{
+	m_cdf = cdf;
+}
+
+double sci::RandomReal::get(double min, double max )
+{
+	if (m_cdf)
+		return m_cdf(double(getInt()) / double(getMax() - getMin())*(max - min) + min);
+	return double(getInt()) / double(getMax() - getMin())*(max - min) + min;
+}

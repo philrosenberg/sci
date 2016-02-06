@@ -21,6 +21,7 @@
 #include<complex>
 #include<cmath>
 #include<type_traits>
+#include<random>
 
 /*#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -3136,6 +3137,39 @@ sublength*=*shapei;
 	size_t count(const std::vector<SBOOL> &v);
 
 	double dateToUnixTime( int year, int month, int day, int hour, int minute, double second, bool daylightSaving );
+
+	class Random
+	{
+	public:
+		Random(size_t seed);
+		Random();
+		virtual ~Random(){}
+	protected:
+		size_t getInt();
+		size_t getMax() const;
+		size_t getMin() const;
+	private:
+		std::mt19937_64 m_engine;
+	};
+
+	class RandomInt : public Random
+	{
+	public:
+		RandomInt(size_t seed);
+		RandomInt();
+		size_t get();
+	private:
+	};
+
+	class RandomReal :public Random
+	{
+	public:
+		RandomReal(size_t seed, double(*cdf)(double)=nullptr);
+		RandomReal(double(*cdf)(double)=nullptr);
+		double get(double min=0.0, double max=1.0);
+	private:
+		double(*m_cdf)(double);
+	};
 
 	//end of namespace sci
 }
