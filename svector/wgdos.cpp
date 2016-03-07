@@ -80,6 +80,8 @@ uint32_t WgdosExtractor::getNextDataPoint()
 bool WgdosExtractor::getNextBitmapMask()
 {
 	assert(!m_extractingData);
+	m_extractingData = false;
+	m_extractingBitmaps = true;
 	
 	bool result=(((*m_data) >> (31-m_bitmapBit)) << 31) == 0;
 	if(m_bitmapBit==31)
