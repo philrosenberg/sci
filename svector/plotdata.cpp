@@ -1,6 +1,7 @@
 #include "plotdata_internal.h"
 #include "serr_internal.h"
 
+
 LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )
 	: m_width( width ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
 {
@@ -302,27 +303,34 @@ void DrawableItem::draw( plstream *pl, bool xLog, bool yLog )
 	plotData( pl, xLog, yLog );
 }
 
-void PlotData1d::getLimits(  const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
+void XYAxisData::getLimits(  const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
 {
 	xMin = std::numeric_limits<double>::max();
 	yMin = std::numeric_limits<double>::max();
 	xMax = -xMin;
 	yMax = -yMin;
 	
-	if( xs.size() > 0 )
+	if (xs.size() > 0)
 	{
 		const double *xi = &xs[0];
-		const double *yi = &ys[0];
 		const double *xEnd = xi + xs.size();
-		for( ; xi != xEnd; xi++, yi++ )
+		for (; xi != xEnd; xi++)
 		{
-			if( *xi != std::numeric_limits<double>::infinity() && *xi != -std::numeric_limits<double>::infinity() )
+			if (*xi != std::numeric_limits<double>::infinity() && *xi != -std::numeric_limits<double>::infinity())
 			{
-				if( *xi < xMin )
+				if (*xi < xMin)
 					xMin = *xi;
-				if( *xi > xMax )
+				if (*xi > xMax)
 					xMax = *xi;
 			}
+		}
+	}
+	if (ys.size() > 0)
+	{
+		const double *yi = &ys[0];
+		const double *yEnd = yi + ys.size();
+		for (; yi != yEnd; yi++)
+		{
 			if( *yi != std::numeric_limits<double>::infinity() && *yi != -std::numeric_limits<double>::infinity() )
 			{
 				if( *yi < yMin )
@@ -346,7 +354,7 @@ void PlotData1d::getLimits(  const std::vector<double> xs, const std::vector<dou
 	yMin -= yDiff * padAmount;
 }
 
-void PlotData1d::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
+void XYAxisData::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
 {
 	if( ! m_calculatedLimits )
 	{
@@ -359,7 +367,7 @@ void PlotData1d::getLimits( double &xMin, double &xMax, double &yMin, double &yM
 	yMax = m_yMax;
 }
 
-void PlotData1d::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
+void XYAxisData::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
 {
 	if( !m_calculatedLogLimits )
 	{
@@ -372,10 +380,9 @@ void PlotData1d::getLogLimits( double &xMin, double &xMax, double &yMin, double 
 	yMax = m_yMaxLogged;
 }
 
-PlotData1d::PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+XYAxisData::XYAxisData( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:DrawableItem( transformer )
 {
-	sci::assertThrow( xs.size() == ys.size(), sci::err() );
 	m_xData = xs;
 	m_yData = ys;
 	m_xDataLogged = sci::log10( xs );
@@ -383,6 +390,12 @@ PlotData1d::PlotData1d( const std::vector<double> &xs, const std::vector<double>
 	m_padLimitsAmount = autoLimitsPadAmount;
 	m_calculatedLimits = false;
 	m_calculatedLogLimits = false;
+}
+
+PlotData1d::PlotData1d(const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:XYAxisData(xs, ys, transformer, autoLimitsPadAmount)
+{
+	sci::assertThrow(xs.size() == ys.size(), sci::err());
 }
 
 PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
@@ -425,15 +438,100 @@ PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::ve
 }
 
 PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
+	:XYAxisData( xs, ys, transformer, autoLimitsPadAmount )
 {
+
 	m_zData = zs;
 	m_zDataLogged = sci:: log10( zs );
-	sci::assertThrow( xs.size() == zs.size(), sci::err() );
-	for( size_t i=1; i<m_zData.size(); ++i )
-		sci::assertThrow( zs[i].size() == zs[0].size(), sci::err() );
-	if( zs.size() > 0 )
-		sci::assertThrow( zs[0].size() ==ys.size(), sci::err() );
+	m_transformer = transformer;
+
+	
+	m_minZ = std::numeric_limits<double>::infinity();
+	m_maxZ = -std::numeric_limits<double>::infinity();
+	m_minZLogged = std::numeric_limits<double>::infinity();
+	m_maxZLogged = -std::numeric_limits<double>::infinity();
+	double *z;
+	double *zEnd;
+	for (size_t i = 0; i < m_zData.size(); ++i)
+	{
+		z = &m_zData[i][0];
+		zEnd = z + m_zData[i].size();
+		for (;z < zEnd;++z)
+		{
+			if (*z > m_maxZ && *z != std::numeric_limits<double>::infinity())
+				m_maxZ = *z;
+			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
+				m_minZ = *z;
+		}
+	}
+	for (size_t i = 0; i < m_zDataLogged.size(); ++i)
+	{
+		z = &m_zDataLogged[i][0];
+		zEnd = z + m_zData[i].size();
+		for (;z < zEnd;++z)
+		{
+			if (*z > m_maxZ && *z != std::numeric_limits<double>::infinity())
+				m_maxZLogged = *z;
+			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
+				m_minZLogged = *z;
+		}
+	}
+	if(m_minZ == std::numeric_limits<double>::infinity())
+		m_minZ = std::numeric_limits<double>::quiet_NaN();
+	if (m_maxZ == -std::numeric_limits<double>::infinity())
+		m_maxZ = std::numeric_limits<double>::quiet_NaN();
+	if (m_minZLogged == std::numeric_limits<double>::infinity())
+		m_minZLogged = std::numeric_limits<double>::quiet_NaN();
+	if (m_maxZLogged == -std::numeric_limits<double>::infinity())
+		m_maxZLogged = std::numeric_limits<double>::quiet_NaN();
+}
+void PlotData2dStructured::getZLimits(double &min, double &max) const
+{
+	min = m_minZ;
+	max = m_maxZ;
+}
+void PlotData2dStructured::getLogZLimits(double &min, double &max) const
+{
+	min = m_minZLogged;
+	max = m_maxZLogged;
+}
+
+void applyPlotData2dTranform(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
+{
+	PlotData2dStructured *plotData2DStructured = (PlotData2dStructured*)data;
+	plotData2DStructured->transform(xIndex, yIndex, *xOutput, *yOutput);
+}
+
+void PlotData2dStructured::transform(double xIndex, double yIndex, double &xOutput, double &yOutput)
+{
+	double x;
+	double y;
+	size_t xI = size_t(xIndex);
+	size_t yI = size_t(yIndex);
+	double xRemainder = xIndex - xI;
+	double yRemainder = yIndex - yI;
+
+	if (xRemainder == 0.0)
+		x = m_xData[xI];
+	else
+		x = (m_xData[xI + 1] - m_xData[xI])*xRemainder + m_xData[xI];
+
+	if (yRemainder == 0.0)
+		y = m_yData[yI];
+	else
+		y = (m_yData[yI + 1] - m_yData[xI])*yRemainder + m_yData[xI];
+
+	if(m_transformer)
+		m_transformer->transform(x, y, xOutput, yOutput);
+	else
+	{
+		xOutput = x;
+		yOutput = y;
+	}
+	if (m_plotLogX)
+		xOutput = std::log10(xOutput);
+	if (m_plotLogY)
+		yOutput = std::log10(yOutput);
 }
 
 LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
@@ -684,4 +782,51 @@ void VerticalBars::getLogLimits( double &xMin, double &xMax, double &yMin, doubl
 		yMin -= yRange * m_padLimitsAmount;
 		yMax += yRange * m_padLimitsAmount;
 	}
+}
+
+GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:PlotData2dStructured(xs, ys, zs, transformer, autoLimitsPadAmount)
+{
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err());
+	if (zs.size() == 0)
+		sci::assertThrow(ys.size() == 0, sci::err());
+	else
+	{
+		sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err());
+		for (size_t i = 1; i < zs.size(); ++i)
+			sci::assertThrow(zs[i].size() == zs[0].size(), sci::err());
+	}
+
+	m_colourscale = colourScale;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+}
+
+void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
+{
+	if (m_zData.size() == 0 || m_zData[0].size() == 0)
+		return;
+
+	//set up a 2d double ** style array for the z data
+	std::vector<const double*> zs(m_zData.size());
+	if (m_colourscale.isLogarithmic())
+	{
+		for (size_t i = 0; i < zs.size(); ++i)
+			zs[i] = &(m_zDataLogged[i][0]);
+	}
+	else
+	{
+		for (size_t i = 0; i < zs.size(); ++i)
+			zs[i] = &(m_zData[i][0]);
+	}
+
+	//set up the colourscale
+	m_colourscale.setup(pl, this);
+
+	m_plotLogX = xLog;
+	m_plotLogY = yLog;
+	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
+	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
+	pl->imagefr(&zs[0], m_zData.size(), m_zData[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
+		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), applyPlotData2dTranform, (void*)this);
 }

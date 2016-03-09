@@ -134,20 +134,20 @@ private:
 	virtual void plotData( plstream *pl, bool xLog, bool yLog ) const = 0;
 };
 
-class PlotData1d : public DrawableItem
+class XYAxisData : public DrawableItem
 {
 public:
-	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
-	virtual void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+	virtual void getLimits(double &xMin, double &xMax, double &yMin, double &yMax) const;
+	virtual void getLogLimits(double &xMin, double &xMax, double &yMin, double &yMax) const;
 protected:
-	PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+	XYAxisData(const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount);
 	std::vector<double> m_xData;
 	std::vector<double> m_yData;
 	std::vector<double> m_xDataLogged;
 	std::vector<double> m_yDataLogged;
 private:
 	double m_padLimitsAmount;
-	static void getLimits( const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount );
+	static void getLimits(const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
 	mutable double m_xMin;
 	mutable double m_xMax;
 	mutable double m_yMin;
@@ -158,6 +158,12 @@ private:
 	mutable double m_yMaxLogged;
 	mutable bool m_calculatedLimits;
 	mutable bool m_calculatedLogLimits;
+};
+
+class PlotData1d : public XYAxisData
+{
+protected:
+	PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
 };
 
 class PlotData2dLinear : public PlotData1d
@@ -186,13 +192,28 @@ protected:
 	std::vector<double> m_zDataLoggedNormalised2;
 };
 
-class PlotData2dStructured : public PlotData1d
+void applyPlotData2dTranform(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data);
+
+class PlotData2dStructured : public XYAxisData
 {
+public:
 	PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
+	void transform(double xIndex, double yIndex, double &xOutput, double &yOutput);
+	void getZLimits(double &min, double &max) const;
+	void getLogZLimits(double &min, double &max) const;
+protected:
 	std::vector<std::vector<double>> m_zData;
 	std::vector<std::vector<double>> m_zDataLogged;
 	std::vector<std::vector<double>> m_zDataNormalised;
 	std::vector<std::vector<double>> m_zDataLoggedNormalised;
+	mutable bool m_plotLogX;
+	mutable bool m_plotLogY;
+private:
+	std::shared_ptr<splotTransformer> m_transformer;
+	double m_minZ;
+	double m_maxZ;
+	double m_maxZLogged;
+	double m_minZLogged;
 };
 
 class LineData : public PlotData1d
@@ -275,6 +296,17 @@ private:
 	double m_zeroLine;
 	double m_zeroLineLogged;
 	double m_padLimitsAmount;
+};
+
+class GridData : public PlotData2dStructured
+{
+public:
+	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	void plotData(plstream *pl, bool xLog, bool yLog) const;
+private:
+	splotcolourscale m_colourscale;
+	bool m_fillOffscaleBottom;
+	bool m_fillOffscaleTop;
 };
 
 
