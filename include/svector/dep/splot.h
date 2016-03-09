@@ -102,6 +102,7 @@ public:
 
 
 int sploterrorcatcher(const char *message);
+class PlotData2dStructured;
 
 class splotcolourscale
 {
@@ -128,6 +129,7 @@ public:
 	splotcolourscale& operator=(const splotcolourscale& s);
 	bool isLogarithmic() const { return m_logarithmic;}
 	~splotcolourscale(){};
+	void setup(plstream *pl, const PlotData2dStructured* data) const;
 private:
 	void setupdefault();
 	bool m_autovalue;

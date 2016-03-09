@@ -581,6 +581,26 @@ hlscolour splotcolourscale::getHlsOffscaleTop()
 		return hlscolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
 }
 
+void splotcolourscale::setup(plstream *pl, const PlotData2dStructured* data) const
+{
+	const double * intensity = &m_value[0];
+	if (m_logarithmic)
+		intensity = &m_valuel[0];
+	pl->scmap1la(!m_hls, m_colour1.size(), intensity, &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
+	if (m_autovalue)
+	{
+		double maxZ;
+		double minZ;
+		if (m_logarithmic)
+			data->getLogZLimits(minZ, maxZ);
+		else
+			data->getZLimits(minZ, maxZ);
+		pl->scmap1_range(minZ, maxZ);
+	}
+	else
+		pl->scmap1_range(m_bottom, m_top);
+}
+
 splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic)
 {
 	
