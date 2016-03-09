@@ -266,7 +266,7 @@ namespace sci
 	template <class T>
 	bool rectangular(const std::vector< std::vector<T> > &v)
 	{
-		if (v.size() == 0) return true;
+		if (v.size() == 0 || v.size() == 1) return true;
 		size_t size = v[0].size();
 		const std::vector<T> *vEnd = &v[0] + v.size();
 		for (const std::vector<T> *vi = &v[1]; vi != vEnd; ++vi)
