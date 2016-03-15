@@ -71,7 +71,7 @@ class hlscolour
 public:
 	hlscolour(double hue, double lightness, double saturation, double alpha=1.0);
 	hlscolour();
-	rgbcolour convertToRgb();
+	rgbcolour convertToRgb() const;
 	inline double h() const {return m_h;}
 	inline double l() const {return m_l;}
 	inline double s() const {return m_s;}
@@ -89,7 +89,7 @@ class rgbcolour
 public:
 	rgbcolour(double red, double green, double blue, double alpha=1.0);
 	rgbcolour();
-	hlscolour convertToHls();
+	hlscolour convertToHls() const;
 	inline double r() const {return m_r;}
 	inline double g() const {return m_g;}
 	inline double b() const {return m_b;}
@@ -521,7 +521,9 @@ class splotlegend : public splot
 {
 	friend class splotwindow;
 public:
-	void addentry(std::string text, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1, std::string linestyle="");
+	void addentry(std::string text, double textoffset = 0.2, double textsize = 9.6, const std::string &textfont = "", uint32_t textstyle = 0, double textspacing = 0.2, wxColour textcolour = wxColour(0, 0, 0), wxColour pointcolour = wxColour(0, 0, 0), double pointsize = 0.5, std::string pointsymbol = "A", wxColour linecolour = wxColour(0, 0, 0), int linewidth = 1, std::string linestyle = "");
+	void addentry(std::string text, double textoffset = 0.2, double textsize = 9.6, const std::string &textfont = "", uint32_t textstyle = 0, double textspacing = 0.2, rgbcolour textcolour = rgbcolour(0, 0, 0), rgbcolour pointcolour = rgbcolour(0, 0, 0), double pointsize = 0.5, std::string pointsymbol = "A", rgbcolour linecolour = rgbcolour(0, 0, 0), int linewidth = 1, std::string linestyle = "");
+	void addentry(std::string text, double textoffset = 0.2, double textsize = 9.6, const std::string &textfont = "", uint32_t textstyle = 0, double textspacing = 0.2, hlscolour textcolour = hlscolour(0, 0, 0), hlscolour pointcolour = hlscolour(0, 0, 0), double pointsize = 0.5, std::string pointsymbol = "A", hlscolour linecolour = hlscolour(0, 0, 0), int linewidth = 1, std::string linestyle = "");
 	void addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
 	void addentry(std::string text, const splotsizescale &sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const std::string &textfont="", uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), std::string pointsymbol="A", size_t nlines=5);
 	virtual ~splotlegend(){}

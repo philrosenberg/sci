@@ -190,7 +190,7 @@ hlscolour::hlscolour()
 	m_s=0.0;
 	m_a=1.0;
 }
-rgbcolour hlscolour::convertToRgb()
+rgbcolour hlscolour::convertToRgb() const
 {
 	double r, g, b;
 	plhlsrgb( m_h, m_l, m_s, &r, &g, &b );
@@ -210,7 +210,7 @@ rgbcolour::rgbcolour()
 	m_b=0.0;
 	m_a=1.0;
 }
-hlscolour rgbcolour::convertToHls()
+hlscolour rgbcolour::convertToHls() const
 {
 	double h, l, s;
 	plrgbhls(m_r, m_g, m_b, &h, &l, &s );
@@ -3539,9 +3539,39 @@ splotlegend::splotlegend(std::string title, double titlesize, double titledistan
 	m_outlinethickness=outlinewidth;
 }
 
+wxColour getWxColour(const rgbcolour &colour)
+{
+	return wxColour(colour.r() == 1.0 ? 255 : floor(colour.r() * 256),
+		colour.g() == 1.0 ? 255 : floor(colour.g() * 256),
+		colour.b() == 1.0 ? 255 : floor(colour.b() * 256),
+		colour.a() == 1.0 ? 255 : floor(colour.a() * 256));
+}
+wxColour getWxColour(const hlscolour &colour)
+{
+	rgbcolour rgbColour = colour.convertToRgb();
+	return wxColour(rgbColour.r() == 1.0 ? 255 : floor(rgbColour.r() * 256),
+		rgbColour.g() == 1.0 ? 255 : floor(rgbColour.g() * 256),
+		rgbColour.b() == 1.0 ? 255 : floor(rgbColour.b() * 256),
+		rgbColour.a() == 1.0 ? 255 : floor(rgbColour.a() * 256));
+}
+
 void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, int linewidth, std::string linestyle)
 {
 	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,pointsize,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),linecolour,linewidth,linestyle,splotcolourscale(),false,false,splotsizescale(),0,false,1,0.0, false);
+}
+void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, rgbcolour textcolour, rgbcolour pointcolour, double pointsize, std::string pointsymbol, rgbcolour linecolour, int linewidth, std::string linestyle)
+{
+	wxColour wxTextColour = getWxColour(textcolour);
+	wxColour wxPointColour = getWxColour(pointcolour);
+	wxColour wxLineColour = getWxColour(linecolour);
+	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, wxT("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
+}
+void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, hlscolour textcolour, hlscolour pointcolour, double pointsize, std::string pointsymbol, hlscolour linecolour, int linewidth, std::string linestyle)
+{
+	wxColour wxTextColour = getWxColour(textcolour);
+	wxColour wxPointColour = getWxColour(pointcolour);
+	wxColour wxLineColour = getWxColour(linecolour);
+	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, wxT("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
 }
 void splotlegend::addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, unsigned int ncolourlevels, bool contours, size_t height, bool horizontal)
 {
