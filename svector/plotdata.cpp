@@ -496,42 +496,28 @@ void PlotData2dStructured::getLogZLimits(double &min, double &max) const
 	max = m_maxZLogged;
 }
 
-void applyPlotData2dTranform(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
+void getXYValues(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
 {
 	PlotData2dStructured *plotData2DStructured = (PlotData2dStructured*)data;
-	plotData2DStructured->transform(xIndex, yIndex, *xOutput, *yOutput);
+	plotData2DStructured->getXYValues(xIndex, yIndex, *xOutput, *yOutput);
 }
 
-void PlotData2dStructured::transform(double xIndex, double yIndex, double &xOutput, double &yOutput)
+void PlotData2dStructured::getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const
 {
-	double x;
-	double y;
 	size_t xI = size_t(xIndex);
 	size_t yI = size_t(yIndex);
 	double xRemainder = xIndex - xI;
 	double yRemainder = yIndex - yI;
 
 	if (xRemainder == 0.0)
-		x = m_xData[xI];
+		xOutput = m_xData[xI];
 	else
-		x = (m_xData[xI + 1] - m_xData[xI])*xRemainder + m_xData[xI];
+		xOutput = (m_xData[xI + 1] - m_xData[xI])*xRemainder + m_xData[xI];
 
 	if (yRemainder == 0.0)
-		y = m_yData[yI];
+		yOutput = m_yData[yI];
 	else
-		y = (m_yData[yI + 1] - m_yData[xI])*yRemainder + m_yData[xI];
-
-	if(m_transformer)
-		m_transformer->transform(x, y, xOutput, yOutput);
-	else
-	{
-		xOutput = x;
-		yOutput = y;
-	}
-	if (m_plotLogX)
-		xOutput = std::log10(xOutput);
-	if (m_plotLogY)
-		yOutput = std::log10(yOutput);
+		yOutput = (m_yData[yI + 1] - m_yData[yI])*yRemainder + m_yData[yI];
 }
 
 LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
@@ -828,5 +814,5 @@ void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
 	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
 	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
 	pl->imagefr(&zs[0], m_zData.size(), m_zData[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
-		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), applyPlotData2dTranform, (void*)this);
+		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), &(::getXYValues), (void*)this);
 }

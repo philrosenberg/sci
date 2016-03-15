@@ -192,13 +192,13 @@ protected:
 	std::vector<double> m_zDataLoggedNormalised2;
 };
 
-void applyPlotData2dTranform(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data);
+void getXYValues(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data);
 
 class PlotData2dStructured : public XYAxisData
 {
 public:
 	PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
-	void transform(double xIndex, double yIndex, double &xOutput, double &yOutput);
+	void getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const;
 	void getZLimits(double &min, double &max) const;
 	void getLogZLimits(double &min, double &max) const;
 protected:
