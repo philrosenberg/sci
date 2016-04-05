@@ -816,3 +816,22 @@ void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
 	pl->imagefr(&zs[0], m_zData.size(), m_zData[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
 		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), &(::getXYValues), (void*)this);
 }
+
+FillData::FillData(const std::vector<double> &xs, const std::vector<double> &ys, const FillStyle &fillStyle, const LineStyle &outlineStyle, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:PlotData1d(xs, ys, transformer, autoLimitsPadAmount), m_fillStyle(fillStyle), m_outlineStyle(outlineStyle)
+{
+
+}
+
+void FillData::plotData(plstream *pl, bool xLog, bool yLog) const
+{
+	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	m_outlineStyle.setupLineStyle(pl, 1, m_scale);
+	pl->line(m_xData.size(), x, y);
+	m_outlineStyle.resetLineStyle(pl, 1);
+
+	m_fillStyle.setupFillStyle(pl, 1, m_scale);
+	pl->fill(m_xData.size(), x, y);
+
+}

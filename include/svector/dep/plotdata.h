@@ -24,6 +24,8 @@ private:
 	std::vector<PLINT> m_spaces;
 };
 
+const LineStyle noLine(0.0);
+
 class SymbolBase
 {
 public:
@@ -307,6 +309,16 @@ private:
 	splotcolourscale m_colourscale;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
+};
+
+class FillData : public PlotData1d
+{
+public:
+	FillData(const std::vector<double> &xs, const std::vector<double> &ys, const FillStyle &fillStyle = FillStyle(), const LineStyle &outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	void plotData(plstream *pl, bool xLog, bool yLog) const;
+private:
+	FillStyle m_fillStyle;
+	LineStyle m_outlineStyle;
 };
 
 
