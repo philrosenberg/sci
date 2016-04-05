@@ -166,6 +166,12 @@ void FillStyle::setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) 
 	}
 }
 
+void FillStyle::resetFillStyle(plstream *pl, PLINT colourIndex) const
+{
+	pl->scol0a(colourIndex, 0, 0, 0, 1.0);
+	pl->psty(0);
+}
+
 rgbcolour FillStyle::getColour() const
 {
 	if( m_lineSpacingMicrons[0] > 0 )
@@ -834,4 +840,5 @@ void FillData::plotData(plstream *pl, bool xLog, bool yLog) const
 	m_fillStyle.setupFillStyle(pl, 1, m_scale);
 	pl->fill(m_xData.size(), x, y);
 
+	m_fillStyle.resetFillStyle(pl, 1); //just so we don't have residually selected hatching patterns
 }

@@ -110,6 +110,7 @@ public:
 	FillStyle( const LineStyle &lineStyle, double lineSpacingMicrons, double angleDeg );
 	FillStyle( const LineStyle &lineStyle, double lineSpacing1Microns, double angle1Deg, double lineSpacing2Microns, double angle2Deg );
 	void setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const;
+	void resetFillStyle(plstream *pl, PLINT colourIndex) const;
 	rgbcolour getColour() const;
 
 private:
