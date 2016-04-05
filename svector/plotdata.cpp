@@ -534,7 +534,7 @@ void LineData::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
 	m_lineStyle.setupLineStyle( pl, 1, m_scale );
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	
 	pl->line( m_xData.size(), x, y );
 	m_lineStyle.resetLineStyle( pl, 1 );
@@ -549,7 +549,7 @@ void PointData::plotData( plstream *pl, bool xLog, bool yLog ) const
 	m_symbol.setupSymbol( pl, 1, 1.0 );
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	if( symbol.length() > 0)
 		//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 		pl->string(m_xData.size(),x,y,symbol.c_str());
@@ -566,7 +566,7 @@ void PointDataColourVarying::plotData( plstream *pl, bool xLog, bool yLog ) cons
 {
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *z = m_symbol.isLogScaled() ? 
 		( m_autoscaleColour ? &m_zDataLoggedNormalised[0] : &m_zDataLogged[0] )
 		: ( m_autoscaleColour ? &m_zDataNormalised[0] : &m_zData[0] );
@@ -596,7 +596,7 @@ void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *z = m_symbol.isLogScaled() ? 
 		( m_autoscaleSize ? &m_zDataLoggedNormalised[0] : &m_zDataLogged[0] )
 		: ( m_autoscaleSize ? &m_zDataNormalised[0] : &m_zData[0] );
@@ -626,7 +626,7 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog
 {
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *zColour = m_symbol.isColourLogScaled() ? 
 		( m_autoscaleSize ? &m_zDataLoggedNormalised1[0] : &m_zDataLogged1[0] )
 		: ( m_autoscaleSize ? &m_zDataNormalised1[0] : &m_zData1[0] );
@@ -656,7 +656,7 @@ HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const s
 }
 void HorizontalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *xMinusErrors = xLog ? &m_zDataLogged1[0] : &m_zData1[0];
 	const double *xPlusErrors = xLog ? &m_zDataLogged2[0] : &m_zData2[0];
 
@@ -832,7 +832,7 @@ FillData::FillData(const std::vector<double> &xs, const std::vector<double> &ys,
 void FillData::plotData(plstream *pl, bool xLog, bool yLog) const
 {
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = xLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	m_outlineStyle.setupLineStyle(pl, 1, m_scale);
 	pl->line(m_xData.size(), x, y);
 	m_outlineStyle.resetLineStyle(pl, 1);
