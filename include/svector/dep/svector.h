@@ -1394,7 +1394,7 @@ sublength*=*shapei;
 		T var;
 		T varOfVar;
 		sci::variance( v, var, varOfVar);
-		return var;
+		return varOfVar;
 	}
 
 	template<class T>
@@ -1403,7 +1403,7 @@ sublength*=*shapei;
 		T var;
 		T varOfVar;
 		sci::variancenobessel( v, var, varOfVar);
-		return var;
+		return varOfVar;
 	}
 
 	template<class T>
