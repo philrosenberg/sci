@@ -570,6 +570,7 @@ namespace sci{
 	
 
 	double erf(double x);
+	double erfInverse(double x);
 
 }
 #endif

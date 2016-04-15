@@ -1061,8 +1061,9 @@ sublength*=*shapei;
 		const T *vilimit=&v[0]+v.size();
 		for(; vi<vilimit; ++vi) 
 			result+=*vi;
-		auto count=decltype( anyBaseVal(v) )(v.size());
-		return result/count;
+		double count=double(v.size());
+		result/=count;
+		return result;
 
 
 		//T result(0.0);
@@ -2677,8 +2678,8 @@ sublength*=*shapei;
 		if(a.size()!=b.size()) return std::numeric_limits<T>::quiet_NaN();
 		if(a.size()==0) return T(0);
 		//create quick iterators to vectors
-		T* ai = &a[0];
-		T* bi = &a[0];
+		const T* ai = &a[0];
+		const T* bi = &a[0];
 		//do the sum
 		T sum=0.0;
 		for(size_t i=0; i<a.size(); ++i)
@@ -2783,7 +2784,7 @@ sublength*=*shapei;
 		std::vector<T> result(a.size(),0.0);
 		size_t dim1=a.size();
 		size_t dim2=a[0].size();
-		qic<T> resulti(result);
+		qi<T> resulti(result);
 		qic< std::vector<T> > ai(a);
 		qic<T> bi(b);
 		for(size_t i=0; i<dim1; ++i)
@@ -2867,6 +2868,36 @@ sublength*=*shapei;
 	}
 
 	std::vector< std::vector<double> > inverse(const std::vector< std::vector<double> > &mat);
+	
+	//This is a very naive implementation. Should do something better
+	template<class T>
+	T determinant(const std::vector<std::vector<T>> &matrix)
+	{
+		sci::assertThrow(square(matrix), sci::err());
+		if (matrix.size() == 1)
+			return matrix[0][0];
+		else if (matrix.size() == 2)
+			return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+		else
+		{
+			double result = 0;
+			std::vector<std::vector<double>>minor(matrix.size() - 1);
+			double multiplier = 1.0;
+			for (size_t i = 0; i < matrix.size(); ++i)
+			{
+				for (size_t j = 0; j < minor.size(); ++j)
+				{
+					if (j < i)
+						minor[j] = matrix[j];
+					else
+						minor[j] = matrix[j + 1];
+				}
+				result += multiplier * matrix[0][i] * sci::determinant(minor);
+				multiplier *= -1.0;
+			}
+			return result;
+		}
+	}
 
 
 	//sort
@@ -3164,11 +3195,122 @@ sublength*=*shapei;
 	class RandomReal :public Random
 	{
 	public:
-		RandomReal(size_t seed, double(*cdf)(double)=nullptr);
-		RandomReal(double(*cdf)(double)=nullptr);
-		double get(double min=0.0, double max=1.0);
+		RandomReal(size_t seed);
+		RandomReal();
+		virtual double get();
+	};
+
+	class RangedRandomReal :public RandomReal
+	{
+	public:
+		RangedRandomReal(size_t seed, double min, double max);
+		RangedRandomReal(double min, double max);
+		virtual double get();
 	private:
-		double(*m_cdf)(double);
+		double m_min;
+		double m_max;
+	};
+
+	class ProbabilityDistributionFunction
+	{
+	public:
+		virtual double getProbability(const std::vector<double> &x) const = 0;
+	};
+
+	class MultivariateNormalDistribution : public ProbabilityDistributionFunction
+	{
+	public:
+		MultivariateNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations);
+		MultivariateNormalDistribution(const std::vector<double> &means, const std::vector<std::vector<double>> &covarianceMatrix);
+		double getProbability(const std::vector<double> &x) const;
+	private:
+		std::vector<double> m_means;
+		std::vector<double> m_standardDeviations;
+		std::vector<std::vector<double>> m_covarianceMatrix;
+		double m_determinantCovariance;
+	};
+
+	class NormalDistribution : public MultivariateNormalDistribution
+	{
+	public:
+		NormalDistribution(double mean, double standardDeviation);
+		double getProbability(double x) const;
+	};
+
+	class MultivariateInverseCumulativeDistributionFunction
+	{
+	public:
+		//get x from the cdf for one dimension given the values in all other dimensions. otherXs should have one element for each dimension
+		//but the value in otherXs[undefinedIndex] will not be used
+		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const = 0;
+	};
+
+	class UnivariateInverseCumulativeDistributionFunction
+	{
+	public:
+		virtual double getX(double cumulativeProbability) const = 0;
+	};
+
+	class MultivariateInverseCumulativeNormalDistribution : MultivariateInverseCumulativeDistributionFunction
+	{
+	public:
+		MultivariateInverseCumulativeNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations);
+		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const;
+	private:
+		std::vector<double> m_means;
+		std::vector<double> m_standardDeviations;
+	};
+
+	class InverseCumulativeNormalDistribution : public UnivariateInverseCumulativeDistributionFunction
+	{
+	public:
+		InverseCumulativeNormalDistribution(double mean, double standardDeviation);
+		virtual double getX(double cumulativeProbability) const;
+	private:
+		double m_mean;
+		double m_standardDeviation;
+	};
+
+	class MarkovChain : public RandomReal
+	{
+	public:
+		MarkovChain(size_t seed) : RandomReal(seed) {};
+		MarkovChain() : RandomReal() {};
+		virtual std::vector<double> getNext()=0;
+		std::vector<double> getExpectation(size_t nIntegrationSteps);
+		std::vector<std::vector<double>> getMoments(size_t nIntegrationSteps, std::vector<int> moments); //zeroth moment will be mean, 2nd variance, etc
+	protected:
+		//gets a random number over the range max-min for use internally
+		double getUniformRandom(double min, double max);
+	};
+
+	class MetropolisHastingsMarkovChain : public MarkovChain
+	{
+	public:
+		MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<UnivariateInverseCumulativeDistributionFunction *> jumpDistributions);
+		MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<double> jumpStandardDeviations);
+		~MetropolisHastingsMarkovChain();
+		virtual std::vector<double> getNext();
+		void resetAcceptanceRatio();
+		double getAcceptanceRatio();
+	private:
+		std::vector<double> m_currentPoint;
+		double m_currentProbability;
+		ProbabilityDistributionFunction *m_probabilityDistributionFunction;
+		std::vector<UnivariateInverseCumulativeDistributionFunction *> m_jumpDistributions;
+		size_t m_nCalls;
+		size_t m_nAccepted;
+		bool m_deleteLocally;
+	};
+
+	class GibbsMarkovChain : public MarkovChain
+	{
+	public:
+		GibbsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, MultivariateInverseCumulativeDistributionFunction * inverseCumulativeDistributionFunction);
+		virtual std::vector<double> getNext();
+	private:
+		std::vector<double> m_currentPoint;
+		MultivariateInverseCumulativeDistributionFunction *m_inverseCumulativeDistributionFunction;
 	};
 
 	//end of namespace sci

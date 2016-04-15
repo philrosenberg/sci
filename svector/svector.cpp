@@ -1284,20 +1284,260 @@ size_t sci::RandomInt::get()
 	return getInt();
 }
 
-sci::RandomReal::RandomReal(size_t seed, double(*cdf)(double))
+sci::RandomReal::RandomReal(size_t seed)
 	:Random(seed)
 {
-	m_cdf = cdf;
 }
 
-sci::RandomReal::RandomReal(double(*cdf)(double))
+sci::RandomReal::RandomReal()
+	: Random()
 {
-	m_cdf = cdf;
 }
 
-double sci::RandomReal::get(double min, double max )
+sci::RangedRandomReal::RangedRandomReal(size_t seed, double min, double max)
+	:RandomReal(seed)
 {
-	if (m_cdf)
-		return m_cdf(double(getInt()) / double(getMax() - getMin())*(max - min) + min);
-	return double(getInt()) / double(getMax() - getMin())*(max - min) + min;
+	m_min = min;
+	m_max = max;
+}
+
+sci::RangedRandomReal::RangedRandomReal(double min, double max)
+	:RandomReal()
+{
+	m_min = min;
+	m_max = max;
+}
+
+double sci::RandomReal::get()
+{
+	return double(getInt()) / double(getMax() - getMin());
+}
+
+double sci::RangedRandomReal::get()
+{
+	return RandomReal::get()*(m_max - m_min) + m_min;
+}
+
+sci::MultivariateNormalDistribution::MultivariateNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations)
+{
+	m_means = means;
+	m_standardDeviations = standardDeviations;
+	m_determinantCovariance = 1;
+	for (size_t i = 0; i < standardDeviations.size(); ++i)
+		m_determinantCovariance *= standardDeviations[i] * standardDeviations[i];
+}
+
+sci::MultivariateNormalDistribution::MultivariateNormalDistribution(const std::vector<double> &means, const std::vector<std::vector<double>> &covarianceMatrix)
+{
+	m_means = means;
+	m_covarianceMatrix = covarianceMatrix;
+	m_determinantCovariance = sci::determinant(covarianceMatrix);
+}
+
+double sci::MultivariateNormalDistribution::getProbability(const std::vector<double> &x) const
+{
+	sci::assertThrow(x.size() == m_means.size(), sci::err());
+	double power;
+	if (m_covarianceMatrix.size() > 0)
+	{
+		power = sci::matrixmult(x - m_means, sci::matrixmult(m_covarianceMatrix, x - m_means));
+	}
+	else
+	{
+		power = 0.0;
+		for (size_t i = 0; i < x.size(); ++i)
+			power += std::pow((x[i] - m_means[i]) / m_standardDeviations[i], 2);
+	}
+
+	return 1.0/std::sqrt(std::pow(M_2PI,x.size())*m_determinantCovariance)*std::exp(-0.5*power);
+}
+
+sci::NormalDistribution::NormalDistribution(double mean, double standardDeviation)
+: MultivariateNormalDistribution({ mean },{standardDeviation})
+{
+}
+double sci::NormalDistribution::getProbability(double x) const
+{
+	return MultivariateNormalDistribution::getProbability(std::vector<double>(1,x));
+}
+
+
+sci::MultivariateInverseCumulativeNormalDistribution::MultivariateInverseCumulativeNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations)
+{
+	m_means = means;
+	m_standardDeviations = standardDeviations;
+}
+double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const
+{
+	double otherProbability = 1.0;
+	for (size_t i = 0; i < otherXs.size(); ++i)
+		if (i != undefinedIndex)
+			otherProbability *= 1.0 + sci::erf((otherXs[i] - m_means[i] / m_standardDeviations[i] / M_SQRT2));
+	if (otherProbability < cumulativeProbability)
+		return std::numeric_limits<double>::quiet_NaN();
+	else
+		cumulativeProbability = cumulativeProbability / otherProbability;
+
+	return M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
+}
+
+sci::InverseCumulativeNormalDistribution::InverseCumulativeNormalDistribution(double mean, double standardDeviation)
+{
+	m_mean = mean;
+	m_standardDeviation = standardDeviation;
+}
+
+double sci::InverseCumulativeNormalDistribution::getX(double cumulativeProbability) const
+{
+	return m_mean + m_standardDeviation*M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
+}
+
+std::vector<double> sci::MarkovChain::getExpectation(size_t nIntegrationSteps)
+{
+	std::vector<double> result = getNext();
+	for (size_t i = 1; i < nIntegrationSteps; ++i)
+	{
+		result += getNext();
+	}
+	result /= (double)nIntegrationSteps;
+
+	return result;
+}
+
+std::vector<std::vector<double>> sci::MarkovChain::getMoments(size_t nIntegrationSteps, std::vector<int> moments)
+{
+	std::vector<std::vector<double>> samples(nIntegrationSteps);
+	samples[0] = getNext();
+	std::vector<double> means = samples[0];
+	std::vector<double>* samplesBegin = &samples[0];
+	std::vector<double>* samplesEnd = samplesBegin + samples.size();
+	for (std::vector<double>* samplesi = samplesBegin + 1; samplesi < samplesEnd; ++samplesi)
+	{
+		*samplesi = getNext();
+		means += *samplesi;
+	}
+	means /= (double)nIntegrationSteps;
+
+	std::vector<std::vector<double>> result(moments.size());
+	for (size_t i = 0; i < moments.size(); ++i)
+		result[i] = sci::pow(samples[0] - means, moments[i]);
+	int *momentsBegin = &moments[0];
+	int *momentsEnd = momentsBegin + moments.size();
+	std::vector<double>*resultBegin = &result[0];
+	for (std::vector<double>* samplesi = samplesBegin + 1; samplesi < samplesEnd; ++samplesi)
+	{
+		std::vector<double>* resulti = resultBegin;
+		for (int* momentsi = momentsBegin; momentsi < momentsBegin; ++momentsi,++resulti)
+		{
+			*resulti += sci::pow(*samplesi - means, *momentsi);
+		}
+	}
+	result /= double(nIntegrationSteps);
+	for (size_t i = 0; i < moments.size(); ++i)
+		if (moments[i] == 0)
+			result[i] = means;
+
+	return result;
+}
+
+double sci::MarkovChain::getUniformRandom(double min, double max)
+{
+	return RandomReal::get()*(max-min)+min;
+}
+
+sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<UnivariateInverseCumulativeDistributionFunction *> jumpDistributions)
+{
+	sci::assertThrow(startPoint.size() == jumpDistributions.size(), sci::err());
+	m_currentPoint = startPoint;
+	m_probabilityDistributionFunction = probabilityDistributionFunction;
+	m_jumpDistributions = jumpDistributions;
+	m_currentProbability = m_probabilityDistributionFunction->getProbability(m_currentPoint);
+	if (m_jumpDistributions.size() != startPoint.size())
+		throw(sci::err());
+	for (size_t i = 0; i < nBurnInIterations; ++i)
+		getNext();
+	resetAcceptanceRatio();
+	m_deleteLocally = false;
+}
+
+sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<double> jumpStandardDeviations)
+{
+	sci::assertThrow(startPoint.size() == jumpStandardDeviations.size(), sci::err());
+	m_currentPoint = startPoint;
+	m_probabilityDistributionFunction = probabilityDistributionFunction;
+	size_t nextToInitialise = 0;
+	m_jumpDistributions.resize(jumpStandardDeviations.size());
+	try
+	{
+		for (size_t i = 0; i < m_jumpDistributions.size(); ++i)
+		{
+			m_jumpDistributions[i] = new sci::InverseCumulativeNormalDistribution(0.0, jumpStandardDeviations[i]);
+			++nextToInitialise;
+		}
+		m_currentProbability = m_probabilityDistributionFunction->getProbability(m_currentPoint);
+		if (m_jumpDistributions.size() != startPoint.size())
+			throw(sci::err());
+		for (size_t i = 0; i < nBurnInIterations; ++i)
+			getNext();
+		resetAcceptanceRatio();
+		m_deleteLocally = true;
+	}
+	catch (...)
+	{
+		for (size_t i = 0; i < nextToInitialise; ++i)
+			delete m_jumpDistributions[i];
+	}
+}
+
+sci::MetropolisHastingsMarkovChain::~MetropolisHastingsMarkovChain()
+{
+	if (m_deleteLocally)
+		for (size_t i = 0; i < m_jumpDistributions.size(); ++i)
+			delete m_jumpDistributions[i];
+}
+
+std::vector<double> sci::MetropolisHastingsMarkovChain::getNext()
+{
+	std::vector<double> xDashes = m_currentPoint;
+	for (size_t i = 0; i < xDashes.size(); ++i)
+		xDashes[i] += m_jumpDistributions[i]->getX(getUniformRandom(0.0, 1.0));
+	double probabilityDash = m_probabilityDistributionFunction->getProbability(xDashes);
+	++m_nCalls;
+
+	if (probabilityDash >= m_currentProbability || getUniformRandom(0.0, 1.0) <= probabilityDash / m_currentProbability)
+	{
+		m_currentProbability = probabilityDash;
+		m_currentPoint = xDashes;
+		++m_nAccepted;
+	}
+	return m_currentPoint;
+	
+}
+
+void sci::MetropolisHastingsMarkovChain::resetAcceptanceRatio()
+{
+	m_nCalls = 0;
+	m_nAccepted = 0;
+}
+double sci::MetropolisHastingsMarkovChain::getAcceptanceRatio()
+{
+	return double(m_nAccepted) / double(m_nCalls);
+}
+
+sci::GibbsMarkovChain::GibbsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, MultivariateInverseCumulativeDistributionFunction * inverseCumulativeDistributionFunction)
+{
+	m_currentPoint = startPoint;
+	m_inverseCumulativeDistributionFunction = inverseCumulativeDistributionFunction;
+
+	for (size_t i = 0; i < nBurnInIterations; ++i)
+		getNext();
+}
+
+std::vector<double> sci::GibbsMarkovChain::getNext()
+{
+	for (size_t i = 0; i < m_currentPoint.size(); ++i)
+	{
+		m_currentPoint[i] = m_inverseCumulativeDistributionFunction->getX(getUniformRandom(0.0, 1.0), m_currentPoint, i);
+	}
+	return m_currentPoint;
 }
