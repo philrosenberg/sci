@@ -457,7 +457,7 @@ void sci::crosscorr(const std::vector<double> &f, const std::vector<double> &g, 
 	std::vector<double> dummy;
 	svi::algctovectors(algr,r,dummy);
 	if(f.size()==1) fshifts=sci::indexvector<long>(r.size());
-	else fshifts=sci::concat(sci::indexvector<long>(g.size()),sci::indexvector<long>(f.size()-1)-long(f.size()+1));
+	else fshifts=sci::concat(sci::indexvector<long>(g.size()),sci::indexvector<long>(f.size()-1)-long(f.size()-1));
 	
 }
 
