@@ -1353,7 +1353,7 @@ double sci::MultivariateNormalDistribution::getProbability(const std::vector<dou
 }
 
 sci::NormalDistribution::NormalDistribution(double mean, double standardDeviation)
-: MultivariateNormalDistribution({ mean },{standardDeviation})
+: MultivariateNormalDistribution(std::vector<double>(1, mean), std::vector<double>(1, standardDeviation))
 {
 }
 double sci::NormalDistribution::getProbability(double x) const
