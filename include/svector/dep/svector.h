@@ -2881,7 +2881,7 @@ sublength*=*shapei;
 		else
 		{
 			double result = 0;
-			std::vector<std::vector<double>>minor(matrix.size() - 1);
+			std::vector<std::vector<double>> minor(matrix.size() - 1);
 			double multiplier = 1.0;
 			for (size_t i = 0; i < matrix.size(); ++i)
 			{
