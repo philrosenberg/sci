@@ -2881,18 +2881,18 @@ sublength*=*shapei;
 		else
 		{
 			double result = 0;
-			std::vector<std::vector<double>> minor(matrix.size() - 1);
+			std::vector<std::vector<double>> minorMatrix(matrix.size() - 1);
 			double multiplier = 1.0;
 			for (size_t i = 0; i < matrix.size(); ++i)
 			{
-				for (size_t j = 0; j < minor.size(); ++j)
+				for (size_t j = 0; j < minorMatrix.size(); ++j)
 				{
 					if (j < i)
-						minor[j] = sci::subvector(matrix[j],1, matrix[j].size()-1);
+						minorMatrix[j] = sci::subvector(matrix[j],1, matrix[j].size()-1);
 					else
-						minor[j] = sci::subvector(matrix[j+1], 1, matrix[j+1].size() - 1);
+						minorMatrix[j] = sci::subvector(matrix[j+1], 1, matrix[j+1].size() - 1);
 				}
-				result += multiplier * matrix[0][i] * sci::determinant(minor);
+				result += multiplier * matrix[0][i] * sci::determinant(minorMatrix);
 				multiplier *= -1.0;
 			}
 			return result;
