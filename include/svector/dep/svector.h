@@ -2888,9 +2888,9 @@ sublength*=*shapei;
 				for (size_t j = 0; j < minor.size(); ++j)
 				{
 					if (j < i)
-						minor[j] = matrix[j];
+						minor[j] = sci::subvector(matrix[j],1, matrix[j].size()-1);
 					else
-						minor[j] = matrix[j + 1];
+						minor[j] = sci::subvector(matrix[j+1], 1, matrix[j+1].size() - 1);
 				}
 				result += multiplier * matrix[0][i] * sci::determinant(minor);
 				multiplier *= -1.0;
