@@ -134,7 +134,6 @@ private:
 	void setupdefault();
 	bool m_autovalue;
 	std::vector<double> m_value;
-	std::vector<double> m_valuel;
 	std::vector< double > m_colour1;
 	std::vector< double > m_colour2;
 	std::vector< double > m_colour3;

@@ -261,7 +261,8 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 		sci::reverseinplace(m_colour3);
 		sci::reverseinplace(m_alpha);
 	}
-	if(logarithmic) m_value=sci::log10(m_value);
+	if(logarithmic)
+		m_value=sci::log10(m_value);
 	m_logarithmic=logarithmic;
 	m_hls=false;
 
@@ -584,8 +585,6 @@ hlscolour splotcolourscale::getHlsOffscaleTop()
 void splotcolourscale::setup(plstream *pl, const PlotData2dStructured* data) const
 {
 	const double * intensity = &m_value[0];
-	if (m_logarithmic)
-		intensity = &m_valuel[0];
 	pl->scmap1la(!m_hls, m_colour1.size(), intensity, &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
 	if (m_autovalue)
 	{
