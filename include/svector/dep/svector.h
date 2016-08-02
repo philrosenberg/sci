@@ -2867,7 +2867,7 @@ sublength*=*shapei;
 		return sci::dot( a, b );
 	}
 
-	std::vector< std::vector<double> > inverse(const std::vector< std::vector<double> > &mat);
+	std::vector< std::vector<double> > inverse(const std::vector< std::vector<double> > &mat, double conditionNumberLimit = 1.0e10);
 	
 	//This is a very naive implementation. Should do something better
 	template<class T>

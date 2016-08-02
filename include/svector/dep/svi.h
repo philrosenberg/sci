@@ -49,7 +49,7 @@ private:
 	friend size_t sci::minimise(std::vector<double> &tunableparams, const std::vector<std::vector <double> > &fixedparams, double (*functiontominimise)(const std::vector<double> &,const std::vector< std::vector<double> > &));
 	friend size_t sci::fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,const std::vector<double> &), const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
 	friend size_t sci::fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,double), const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
-	friend std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat);
+	friend std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat, double conditionNumberLimit);
 	friend void sci::fitpowerlaw(double power, const std::vector<double> &x, const std::vector<double> &y, double &k, double &vark);
 	friend void fitfunction1d (const alglib::real_1d_array &fitParams, const alglib::real_1d_array &x, double &func, void *ptr);
 	friend void fitfunctionmultid (const alglib::real_1d_array &fitParams, const alglib::real_1d_array &x, double &func, void *ptr);

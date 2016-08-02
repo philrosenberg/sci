@@ -826,7 +826,7 @@ double sci::linearinterpolate(double x, double x1, double x2, double y1, double 
 	return y;
 }
 
-std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat)
+std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat, double conditionNumberLimit)
 {
 	//check validity, must be square
 	//return an empty vector if they fail
@@ -842,7 +842,7 @@ std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<d
 	alglib::rmatrixinverse(algmat,err,rep);
 
 	std::vector<std::vector<double> > result;
-	if(err==-3)
+	if(err==-3 || rep.rinf<1.0/conditionNumberLimit)
 	{
 		//couldn't invert return a matrix of nans
 		result=sci::makevector(std::numeric_limits<double>::quiet_NaN(),mat.size(),mat[0].size());
