@@ -2301,7 +2301,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				uptr[j]=&(m_us[i][j][0]);
 				vptr[j]=&(m_vs[i][j][0]);
 			}
-			pl->vect(uptr,vptr,dim1len,m_us[i][0].size(),0,Coord_Xform_evaluator,transformer);
+			pl->vect(uptr,vptr,dim1len,m_us[i][0].size(),1.0,Coord_Xform_evaluator,transformer);
 			delete vptr;
 			delete uptr;
 		}
