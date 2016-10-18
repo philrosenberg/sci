@@ -546,6 +546,8 @@ PointData::PointData( const std::vector<double> &x, const std::vector<double> &y
 }
 void PointData::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	m_symbol.setupSymbol( pl, 1, 1.0 );
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
@@ -564,6 +566,8 @@ PointDataColourVarying::PointDataColourVarying( const std::vector<double> &xs, c
 
 void PointDataColourVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
 	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
@@ -594,6 +598,8 @@ PointDataSizeVarying::PointDataSizeVarying( const std::vector<double> &xs, const
 
 void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
 	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
@@ -624,6 +630,8 @@ PointDataColourAndSizeVarying::PointDataColourAndSizeVarying( const std::vector<
 }
 void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	std::string symbol = m_symbol.getSymbol();
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
 	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
@@ -656,6 +664,8 @@ HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const s
 }
 void HorizontalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_yData.size() == 0)
+		return;
 	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
 	const double *xMinusErrors = xLog ? &m_zDataLogged1[0] : &m_zData1[0];
 	const double *xPlusErrors = xLog ? &m_zDataLogged2[0] : &m_zData2[0];
@@ -672,6 +682,8 @@ VerticalErrorBars::VerticalErrorBars( const std::vector<double> &xs, const std::
 }
 void VerticalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
 	const double *yMinusErrors = yLog ? &m_zDataLogged1[0] : &m_zData1[0];
 	const double *yPlusErrors = yLog ? &m_zDataLogged2[0] : &m_zData2[0];
@@ -692,6 +704,8 @@ VerticalBars::VerticalBars( const std::vector<double> &xs, const std::vector<dou
 }
 void VerticalBars::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
+	if (m_xData.size() == 0)
+		return;
 	double x[4];
 	double y[4];
 	for(size_t i=0; i<m_xData.size(); ++i)
