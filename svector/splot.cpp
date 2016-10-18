@@ -3839,7 +3839,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				pl->sfci(m_textfci[i]);
 				pl->schr(1.0,m_textsize[i] * linewidthmultiplier / 72.0 * 25.4 );
 				value.clear();
-				value << m_sizescale[i].m_value[0]+(m_sizescale[i].m_value.back()-m_sizescale[i].m_value[0])*(double)j/(double)(m_nlines[i]+1);
+				value << m_sizescale[i].m_value[0]+(m_sizescale[i].m_value.back()-m_sizescale[i].m_value[0])*(double)j/(double)(m_nlines[i]-1);
 				pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,value.mb_str(wxConvUTF8));
 			}
 			positionstep=m_textspacing[i]*m_textsize[i]+std::max(sizes.back(),m_textsize[i]);
