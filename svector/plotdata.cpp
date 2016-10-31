@@ -260,7 +260,7 @@ void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double par
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = useNormalisedScale ? m_sizeScale.getSizeNormalisedScale( parameter ) : m_sizeScale.getsize( parameter );
+	double size = getSize(parameter, useNormalisedScale);
 	pl->schr( size, 1.0 );
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
@@ -269,6 +269,11 @@ void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double par
 bool SizeVaryingSymbol::isLogScaled() const
 {
 	return m_sizeScale.isLogarithmic();
+}
+
+double SizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
+{
+	return useNormalisedScale ? m_sizeScale.getSizeNormalisedScale(parameter) : m_sizeScale.getsize(parameter);
 }
 
 ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::string symbol, splotcolourscale colourScale, splotsizescale sizeScale )
@@ -295,6 +300,10 @@ bool ColourAndSizeVaryingSymbol::isColourLogScaled() const
 bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 {
 	return m_sizeScale.isLogarithmic();
+}
+double ColourAndSizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
+{
+	return useNormalisedScale ? m_sizeScale.getSizeNormalisedScale(parameter) : m_sizeScale.getsize(parameter);
 }
 
 DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )

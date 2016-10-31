@@ -86,6 +86,7 @@ public:
 	SizeVaryingSymbol ( std::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), splotsizescale sizeScale = splotsizescale() );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
 	bool isLogScaled() const;
+	double getSize(double parameter, bool useNormalisedScale) const;
 private:
 	rgbcolour m_colour;
 	splotsizescale m_sizeScale;
@@ -98,6 +99,7 @@ public:
 	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;
+	double getSize(double parameter, bool useNormalisedScale) const;
 private:
 	splotcolourscale m_colourScale;
 	splotsizescale m_sizeScale;
