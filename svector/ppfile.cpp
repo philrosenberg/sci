@@ -364,7 +364,7 @@ std::vector<int64_t> UmFile::getStashCodeList()
 	return list;
 }
 
-void UmFile::getSectionAxes(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxesCentres(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y)
 {
 	if(header.m_gridCode==projSpectral)
 		throw(PPERR_PROJECTION_DATA_MEANINGLESS);
@@ -376,8 +376,7 @@ void UmFile::getSectionAxes(const PpHeader64 &header, std::vector<double> &x, st
 	
 	double dx=header.m_dx;
 	double dy=header.m_dy;
-
-	if(header.m_gridCode==2)
+	if(header.m_gridCode==2) //reg lat lon grid with points at centres
 	{
 		x[0]=header.m_zx + 0.5*dx;
 		y[0]=header.m_zy + 0.5*dy;
@@ -402,9 +401,31 @@ void UmFile::getSectionAxes(const PpHeader64 &header, std::vector<double> &x, st
 
 }
 
-void UmFile::getSectionAxes(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y)
+void UmFile::getSectionAxesEdges(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y)
 {
-	getSectionAxes(m_sections[sectionIndex].m_header,x,y);
+	std::vector<double> xCentres;
+	std::vector<double> yCentres;
+	getSectionAxesCentres(header, xCentres, yCentres);
+
+	x.reserve(xCentres.size() + 1);
+	for (size_t i = 0; i < xCentres.size(); ++i)
+		x.push_back(xCentres[i] - header.m_dx / 2.0);
+	x.push_back(x.back() + header.m_dx);
+
+	y.reserve(yCentres.size() + 1);
+	for (size_t i = 0; i < yCentres.size(); ++i)
+		y.push_back(yCentres[i] - header.m_dy / 2.0);
+	y.push_back(y.back() + header.m_dy);
+}
+
+void UmFile::getSectionAxesCentres(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y)
+{
+	getSectionAxesCentres(m_sections[sectionIndex].m_header,x,y);
+}
+
+void UmFile::getSectionAxesEdges(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y)
+{
+	getSectionAxesEdges(m_sections[sectionIndex].m_header, x, y);
 }
 
 

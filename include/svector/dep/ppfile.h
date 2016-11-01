@@ -561,7 +561,8 @@ public:
 
 	//return an array of filtered headers
 	std::vector<PpHeader64> getFilteredHeaders();
-	static void getSectionAxes(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y);
+	static void getSectionAxesCentres(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y);
+	static void getSectionAxesEdges(const PpHeader64 &header, std::vector<double> &x, std::vector<double> &y);
 
 	//return the header for a particular section
 	PpHeader64 getHeader(size_t sectionIndex){return m_sections[sectionIndex].m_header;}
@@ -572,7 +573,8 @@ public:
 	
 	//get the x and y values for a section works for regular x/y grids. throws an error for
 	//spectral grids
-	void getSectionAxes(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y);
+	void getSectionAxesCentres(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y);
+	void getSectionAxesEdges(size_t sectionIndex, std::vector<double> &x, std::vector<double> &y);
 	void getPolarStereographicParams(size_t sectionIndex, double &orientation, double &referenceLatitude, double &gridLengthAtRef, double &poleX, double &poleY);
 	double getSpectralReferenceLongitude(size_t sectionIndex);
 	void getCrossSectionStashCodes(size_t sectionIndex, int &xStashCode, int &yStashCode);
