@@ -528,7 +528,7 @@ public:
 			m_parent = section32.m_parent;
 			for( size_t i=0; i<45; ++i)
 				*((int64_t*)(&m_header) + i ) = section32.at<int32_t>( i );
-			for( size_t i=46; i<64; ++i)
+			for( size_t i=45; i<64; ++i)
 				*((double*)(&m_header) + i ) = section32.at<float>( i );
 		}
 		Section64()
