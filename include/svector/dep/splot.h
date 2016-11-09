@@ -180,7 +180,7 @@ namespace sym
 {
 	//const std::string filledCircle = "#[0x25cf]";
 	const std::string filledCircle="#[0x2b24]";
-	const std::string openCircle="#[0x25cb]";
+	const std::string openCircle="#[0x2b55]";
 	const std::string dottedCircle="#[0x25cc]";
 	const std::string openCentreFilledCircle="#[0x25c9]";
 	const std::string openDoubleCircle="#[0x25c9]";
