@@ -456,11 +456,11 @@ public:
 				return at<float>(m_parent->m_comparator) < rhs.at<float> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
-		void setDataStart( int32_t start )
+		void setDataStart( std::streamoff start )
 		{
 			m_dataStart = start;
 		}
-		void setDataSize( int32_t size )
+		void setDataSize(std::streamoff size )
 		{
 			m_dataBytes = size;
 		}
@@ -504,7 +504,7 @@ public:
 				return at<double>(m_parent->m_comparator) < rhs.at<double> (m_parent->m_comparator);
 		}
 		void readHeader( std::fstream *fin, size_t nBytes);
-		void setDataStart( int64_t start )
+		void setDataStart(std::streamoff start )
 		{
 			m_dataStart = start;
 		}
@@ -853,25 +853,26 @@ UmFile& UmFile::operator <= ( T rhs )
 template <class T>
 UmFile& UmFile::operator == ( T rhs )
 {
+	std::vector<Section64> result;
+	result.reserve(m_filteredSections.size());
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
 		if( m_comparator > 44 )
 		{
-			if(!(m_filteredSections[i].at<double>(m_comparator) == rhs))
+			if((m_filteredSections[i].at<double>(m_comparator) == rhs))
 			{
-				m_filteredSections.erase(m_filteredSections.begin()+i);
-				--i;
+				result.push_back(m_filteredSections[i]);
 			}
 		}
 		else
 		{
-			if(!(m_filteredSections[i].at<int64_t>(m_comparator) == rhs))
+			if((m_filteredSections[i].at<int64_t>(m_comparator) == rhs))
 			{
-				m_filteredSections.erase(m_filteredSections.begin()+i);
-				--i;
+				result.push_back(m_filteredSections[i]);
 			}
 		}
 	}
+	std::swap(result, m_filteredSections);
 	return *this;
 }
 

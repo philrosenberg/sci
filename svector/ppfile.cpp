@@ -655,9 +655,7 @@ std::vector<UmFile::Section64> PpFileParser32::parse( std::fstream *fin, UmFile 
 		//get the size of the data that follows and set the size in section
 		section.setDataSize( getNextRecordSize( fin, swapEndian ) );
 		//set the data location 
-		if( fin->tellg() > (std::streampos)std::numeric_limits<int32_t>::max() )
-			throw PPERR_32_BIT_FILE_TOO_LARGE;
-		section.setDataStart( (int32_t) fin->tellg() );
+		section.setDataStart( fin->tellg() );
 
 		//skip the data
 		skipRecord( fin, section.getDataSize(), swapEndian );
