@@ -4,6 +4,8 @@
 #include<netcdf.h>
 #include<algorithm>
 
+
+
 namespace sci_internal
 {
 	template <class T>
@@ -80,8 +82,12 @@ namespace sci_internal
 #endif
 }
 
+
 namespace sci
 {
+	class OutputNcFile;
+	class NcDimension;
+	template<class T> class NcVariable;
 
 	class NcAttribute
 	{
@@ -107,6 +113,10 @@ namespace sci
 				free (m_values);
 			}
 		}
+
+		void write(const sci::OutputNcFile & ncFile) const;
+		template<class T>
+		void write(const sci::OutputNcFile & ncFile, const sci::NcVariable<T> &variable) const;
 	private:
 
 		std::string m_name;
@@ -116,6 +126,11 @@ namespace sci
 		nc_type m_writeType;
 	};
 
+	template<>
+	sci::NcAttribute::NcAttribute(const std::string& name, std::string value);
+	template<>
+	sci::NcAttribute::NcAttribute(const std::string& name, const char *value);
+
 	template <class T>
 	sci::NcAttribute::NcAttribute(const std::string& name, T value)
 	{
@@ -123,7 +138,7 @@ namespace sci
 		m_nValues = 1;
 		m_writeType = sci_internal::NcTraits<T>::ncType;
 		m_nBytes = m_nValues * sizeof(T);
-		T *v = malloc(m_nBytes);
+		T *v = (T*) malloc(m_nBytes);
 		v[0] = value;
 		m_values = v;
 	}
@@ -178,7 +193,13 @@ namespace sci
 		}
 	}
 
-	class OutputNcFile;
+	template<class T>
+	void NcAttribute::write(const sci::OutputNcFile & ncFile, const sci::NcVariable<T> &variable) const
+	{
+		sci::assertThrow(ncFile.isOpen(), sci::err());
+		sci::assertThrow(nc_put_att(ncFile.getId(), variable.getId(), m_name.c_str(), m_writeType, m_nValues, m_values) == NC_NOERR, sci::err());
+	}
+
 
 	class AttributeContainer
 	{
@@ -196,6 +217,7 @@ namespace sci
 		NcFileBase() { m_open = false; }
 		virtual ~NcFileBase() { close(); };
 		void openReadOnly(const std::string &fileName);
+		void openWritable(const std::string &fileName);
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
@@ -263,12 +285,104 @@ namespace sci
 		return getVariable<T>(name, shape);
 	}
 
+
+	template<class T>
+	class NcVariable
+	{
+	public:
+		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
+		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension> &dimensions);
+		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
+		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
+		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
+		void write(const OutputNcFile &file) const;
+		int getId() const
+		{
+			sci::assertThrow(m_hasId, sci::err()); return m_id;
+		}
+		size_t getNDimensions() const { return m_dimensionIds.size(); }
+	private:
+		mutable bool m_hasId;
+		mutable int m_id;
+		std::vector<NcAttribute> m_attributes;
+		std::vector<int> m_dimensionIds;
+		std::string m_name;
+	};
+
+	template<class T>
+	NcVariable<T>::NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension)
+	{
+		m_name = name;
+		m_hasId = false;
+		m_dimensionIds.push_back(dimension.getId());
+		sci::assertThrow(ncFile.isOpen(), sci::err());
+		//int dimensionId = dimension.getId();
+		//sci::assertThrow(nc_def_var(ncFile.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, 1, &dimensionId, &m_id) == NC_NOERR, sci::err());
+		//m_hasId = true;
+	}
+
+	/*template<class T>
+	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<const NcDimension&> &dimensions)
+	{
+		m_name = name;
+		m_hasId = false;
+		for (size_t i = 0; i < dimensions.size(); ++i)
+			m_dimensionIds.push_back(dimension.getId());
+	}
+
+	template<class T>
+	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension)
+	{
+
+	}
+	template<class T>
+	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions)
+	{
+
+	}*/
+
+	template<class T>
+	void NcVariable<T>::write(const OutputNcFile &file) const
+	{
+		sci::assertThrow(!m_hasId, sci::err());
+		sci::assertThrow(nc_def_var(getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id) == NC_NOERR, sci::err());
+		m_hasId = true;
+		for (size_t i = 0; i < m_attributes.size(); ++i)
+			m_attributes[i].write(file, *this);
+	}
+
 	class OutputNcFile : public NcFileBase
 	{
 	public:
 		OutputNcFile(const std::string &fileName);
+		template<class T>
+		void write(const T &item) const { item.write(*this); }
+		template<class T>
+		void write(const NcVariable<T> &variable, const std::vector<T> &data) const;
+		template<class T>
+		void write(const NcVariable<T> &variable, const std::vector<std::vector<T>> &data) const;
 	};
 
+	template<class T>
+	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data) const
+	{
+		size_t size = data.size();
+		if( data.size() > 0)
+			sci::assertThrow(nc_put_vara(getId(), variable.getId(), { size_t(0) }, &size, &data[0]) == NC_NOERR, sci::err());
+	}
+
+	template<class T>
+	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<std::vector<T>> &data) const
+	{
+		std::vector<size_t> shape = sci::shape(data);
+		sci::assertThrow(shape.size() == ncDimensions.size(), sci::err());
+		std::vector<size_t> starts(dimensionIds.size(), 0);
+		size_t size = sci::product(data);
+		std::vector<decltype(sci::anyBaseVal(data))> flattenedData;
+		sci::reshape(flattenedData, data, { size });
+		if (data.size() > 0)
+			sci::assertThrow(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &data[0]) == NC_NOERR, sci::err());
+	}
 
 	class NcDimension
 	{
@@ -282,9 +396,8 @@ namespace sci
 		void setLength(size_t length);
 		void load(const InputNcFile &ncFile);
 		void write(const OutputNcFile &ncFile) const;
+		int getId() const { sci::assertThrow(m_hasId, sci::err()); return m_id; }
 	private:
-		template<class T>
-		void setValues(T *values, size_t nValues);
 		std::string m_name;
 		size_t m_length;
 		mutable int m_id;

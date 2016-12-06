@@ -3,7 +3,15 @@
 #include<cstring>
 void sci::NcFileBase::openReadOnly(const std::string &fileName)
 {
+	sci::assertThrow(!m_open, sci::err());
 	sci::assertThrow(nc_open(fileName.c_str(), NC_NOWRITE, &m_id) == NC_NOERR, sci::err());
+	m_open = true;
+}
+
+void sci::NcFileBase::openWritable(const std::string &fileName)
+{
+	sci::assertThrow(!m_open, sci::err());
+	sci::assertThrow(nc_open(fileName.c_str(), NC_CLOBBER, &m_id) == NC_NOERR, sci::err());
 	m_open = true;
 }
 
@@ -199,6 +207,44 @@ sci::NcAttribute& sci::NcAttribute::operator=(sci::NcAttribute &&attribute)
 	return *this;
 }
 
+template<>
+sci::NcAttribute::NcAttribute(const std::string& name, std::string value)
+{
+	m_name = name;
+	m_nValues = value.length();
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	if (m_nValues == 0)
+		m_values = nullptr;
+	else
+	{
+		m_values = malloc(m_nBytes);
+		memcpy(m_values, &value[0], m_nBytes);
+	}
+}
+
+template<>
+sci::NcAttribute::NcAttribute(const std::string& name, const char *value)
+{
+	m_name = name;
+	m_nValues = strlen(value);
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	if (m_nValues == 0)
+		m_values = nullptr;
+	else
+	{
+		m_values = malloc(m_nBytes);
+		memcpy(m_values, &value[0], m_nBytes);
+	}
+}
+
+void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const
+{
+	sci::assertThrow(ncFile.isOpen(), sci::err());
+	sci::assertThrow(nc_put_att(ncFile.getId(), NC_GLOBAL, m_name.c_str(), m_writeType, m_nValues, m_values) == NC_NOERR, sci::err());
+}
+
 /*template<class T>
 void sci::NcAttribute::setValues(const T *values, size_t nValues)
 {
@@ -207,3 +253,9 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 	m_values = new T*[nValues];
 	memcpy(m_values, values, nValues * sizeof(T));
 }*/
+
+
+sci::OutputNcFile::OutputNcFile(const std::string &fileName)
+{
+	openWritable(fileName);
+}
