@@ -2679,7 +2679,7 @@ sublength*=*shapei;
 		if(a.size()==0) return T(0);
 		//create quick iterators to vectors
 		const T* ai = &a[0];
-		const T* bi = &a[0];
+		const T* bi = &b[0];
 		//do the sum
 		T sum=0.0;
 		for(size_t i=0; i<a.size(); ++i)
