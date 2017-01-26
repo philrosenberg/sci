@@ -625,7 +625,8 @@ void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 		{
 			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleSize, 1.0 );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			pl->string(1,xi,yi,symbol.c_str());
+			if(m_symbol.getSize(*zi, m_autoscaleSize) > 0.0)
+				pl->string(1,xi,yi,symbol.c_str());
 		}
 	}
 }
@@ -661,7 +662,8 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog
 		{
 			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, m_autoscaleColour, m_autoscaleSize, 1.0 );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			pl->string(1,xi,yi,symbol.c_str());
+			if (m_symbol.getSize(*zSizei, m_autoscaleSize) > 0.0)
+				pl->string(1,xi,yi,symbol.c_str());
 		}
 	}
 }
