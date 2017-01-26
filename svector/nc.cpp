@@ -11,7 +11,7 @@ void sci::NcFileBase::openReadOnly(const std::string &fileName)
 void sci::NcFileBase::openWritable(const std::string &fileName)
 {
 	sci::assertThrow(!m_open, sci::err());
-	sci::assertThrow(nc_open(fileName.c_str(), NC_CLOBBER, &m_id) == NC_NOERR, sci::err());
+	sci::assertThrow(nc_create(fileName.c_str(), NC_CLOBBER, &m_id) == NC_NOERR, sci::err());
 	m_open = true;
 }
 
@@ -172,6 +172,7 @@ sci::NcDimension::NcDimension(const std::string &name, size_t length, const Outp
 
 sci::NcAttribute::NcAttribute(const sci::NcAttribute &attribute)
 {
+	setNull();
 	*this = attribute;
 }
 sci::NcAttribute::NcAttribute(sci::NcAttribute &&attribute)
@@ -189,6 +190,7 @@ sci::NcAttribute& sci::NcAttribute::operator=(const sci::NcAttribute &attribute)
 			free(m_values);
 		m_values = malloc(m_nBytes);
 		memcpy(m_values, attribute.m_values, m_nBytes);
+		m_writeType = attribute.m_writeType;
 	}
 	return *this;
 }
@@ -205,6 +207,20 @@ sci::NcAttribute& sci::NcAttribute::operator=(sci::NcAttribute &&attribute)
 		attribute.m_values = nullptr;
 	}
 	return *this;
+}
+
+
+sci::NcAttribute::NcAttribute()
+{
+	setNull();
+}
+
+void sci::NcAttribute::setNull()
+{
+	m_nValues = 0;
+	m_nBytes = 0;
+	m_values = nullptr;
+	m_writeType = NC_NAT;
 }
 
 template<>
@@ -257,5 +273,11 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 
 sci::OutputNcFile::OutputNcFile(const std::string &fileName)
 {
+	m_inDefineMode = true;
 	openWritable(fileName);
+}
+
+sci::OutputNcFile::OutputNcFile()
+{
+	m_inDefineMode = true;
 }

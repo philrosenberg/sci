@@ -98,6 +98,9 @@ namespace sci
 		NcAttribute &operator=(const NcAttribute &attribute);
 		NcAttribute &operator=(NcAttribute &&attribute);
 
+
+		NcAttribute();
+
 		template<class T>
 		NcAttribute(const std::string& name, T value);
 		template<class T, class WRITETYPE>
@@ -124,6 +127,8 @@ namespace sci
 		void* m_values;
 		size_t m_nBytes;
 		nc_type m_writeType;
+
+		void setNull();
 	};
 
 	template<>
@@ -224,6 +229,10 @@ namespace sci
 	private:
 		bool m_open;
 		int m_id;
+
+		//remove copy constructors
+		NcFileBase(const NcFileBase&);
+		NcFileBase operator=(const NcFileBase&);
 	};
 
 	class InputNcFile : public NcFileBase
@@ -238,6 +247,10 @@ namespace sci
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
+
+		//remove copy constructors
+		InputNcFile(const InputNcFile&);
+		InputNcFile operator=(const InputNcFile&);
 	};
 
 	template<class T>
@@ -291,7 +304,7 @@ namespace sci
 	{
 	public:
 		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
-		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension> &dimensions);
+		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
 		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
 		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
 		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
@@ -301,12 +314,17 @@ namespace sci
 			sci::assertThrow(m_hasId, sci::err()); return m_id;
 		}
 		size_t getNDimensions() const { return m_dimensionIds.size(); }
+		bool hasId() const { return m_hasId; }
 	private:
 		mutable bool m_hasId;
 		mutable int m_id;
 		std::vector<NcAttribute> m_attributes;
 		std::vector<int> m_dimensionIds;
 		std::string m_name;
+
+		//remove copy constructors
+		NcVariable(const NcVariable&);
+		NcVariable operator=(const NcVariable&);
 	};
 
 	template<class T>
@@ -321,15 +339,16 @@ namespace sci
 		//m_hasId = true;
 	}
 
-	/*template<class T>
-	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<const NcDimension&> &dimensions)
+	template<class T>
+	NcVariable<T>::NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension*> &dimensions)
 	{
 		m_name = name;
 		m_hasId = false;
 		for (size_t i = 0; i < dimensions.size(); ++i)
-			m_dimensionIds.push_back(dimension.getId());
+			m_dimensionIds.push_back(dimensions[i]->getId());
+		sci::assertThrow(ncFile.isOpen(), sci::err());
 	}
-
+	/*
 	template<class T>
 	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension)
 	{
@@ -345,7 +364,8 @@ namespace sci
 	void NcVariable<T>::write(const OutputNcFile &file) const
 	{
 		sci::assertThrow(!m_hasId, sci::err());
-		sci::assertThrow(nc_def_var(getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id) == NC_NOERR, sci::err());
+		int err = nc_def_var(file.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id);
+		sci::assertThrow(err == NC_NOERR, sci::err());
 		m_hasId = true;
 		for (size_t i = 0; i < m_attributes.size(); ++i)
 			m_attributes[i].write(file, *this);
@@ -355,33 +375,55 @@ namespace sci
 	{
 	public:
 		OutputNcFile(const std::string &fileName);
+		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
 		template<class T>
-		void write(const NcVariable<T> &variable, const std::vector<T> &data) const;
-		template<class T>
-		void write(const NcVariable<T> &variable, const std::vector<std::vector<T>> &data) const;
+		void write(const NcVariable<T> &variable, const std::vector<T> &data);
+		template<class T, class U>
+		void write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data);
+	private:
+		bool m_inDefineMode;
+		//remove copy constructors
+		OutputNcFile(const OutputNcFile&);
+		OutputNcFile operator=(const OutputNcFile&);
 	};
 
 	template<class T>
-	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data) const
+	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data)
 	{
+		if (m_inDefineMode)
+		{
+			nc_enddef(getId());
+			m_inDefineMode = false;
+		}
+		sci::assertThrow(variable.getNDimensions() == 1, sci::err());
 		size_t size = data.size();
-		if( data.size() > 0)
-			sci::assertThrow(nc_put_vara(getId(), variable.getId(), { size_t(0) }, &size, &data[0]) == NC_NOERR, sci::err());
+		if (data.size() > 0)
+		{
+			size_t start = 0;
+			int err = nc_put_vara(getId(), variable.getId(), &start, &size, &data[0]);
+			sci::assertThrow(err == NC_NOERR, sci::err());
+		}
+			
 	}
 
-	template<class T>
-	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<std::vector<T>> &data) const
+	template<class T, class U>
+	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data)
 	{
+		if (m_inDefineMode)
+		{
+			nc_enddef(getId());
+			m_inDefineMode = false;
+		};
 		std::vector<size_t> shape = sci::shape(data);
-		sci::assertThrow(shape.size() == ncDimensions.size(), sci::err());
-		std::vector<size_t> starts(dimensionIds.size(), 0);
-		size_t size = sci::product(data);
-		std::vector<decltype(sci::anyBaseVal(data))> flattenedData;
-		sci::reshape(flattenedData, data, { size });
+		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err());
+		std::vector<size_t> starts(variable.getNDimensions(), 0);
+		size_t size = sci::product(shape);
+		std::vector<T> flattenedData;
+		sci::flatten(flattenedData, data);
 		if (data.size() > 0)
-			sci::assertThrow(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &data[0]) == NC_NOERR, sci::err());
+			sci::assertThrow(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]) == NC_NOERR, sci::err());
 	}
 
 	class NcDimension
@@ -402,5 +444,9 @@ namespace sci
 		size_t m_length;
 		mutable int m_id;
 		mutable bool m_hasId;
+
+		//remove copy constructors
+		NcDimension(const NcDimension&);
+		NcDimension operator=(const NcDimension&);
 	};
 }
