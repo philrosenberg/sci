@@ -11,8 +11,8 @@ class LineStyle
 public:
 	LineStyle( double width = 1.0, const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<PLINT> &marks = std::vector<PLINT> ( 0 ), const std::vector<PLINT> &spaces = std::vector<PLINT> ( 0 ) );
 	LineStyle( double width, const rgbcolour &colour, std::string pattern );
-	double getWidth();
-	void getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
+	double getWidth() const;
+	void getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces ) const;
 	rgbcolour getColour() const;
 	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;

@@ -13,11 +13,11 @@ LineStyle::LineStyle( double width, const rgbcolour &colour, std::string pattern
 	parseLineStyle( pattern, m_marks, m_spaces);
 }
 
-double LineStyle::getWidth()
+double LineStyle::getWidth() const
 {
 	return m_width;
 }
-void LineStyle::getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces )
+void LineStyle::getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces ) const
 {
 	marks = m_marks;
 	spaces = m_spaces;
