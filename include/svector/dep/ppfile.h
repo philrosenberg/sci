@@ -584,6 +584,8 @@ public:
 	void sortHeaders();
 	void resetFilteredHeaders(){m_filteredSections=m_sections;}
 	std::vector<size_t> getFilteredSectionIndices();
+	int getComparator() { return (int)m_comparator; }
+	void setFilteredSectionIndices(const std::vector<size_t> &indices);
 
 	template <class T>
 	UmFile& operator > ( T rhs );
@@ -687,7 +689,6 @@ private:
 	//actually held in a int32_t
 	float fromIbmFloat(void *ibmFloat);
 	double fromIbmDouble(void *ibmFloat);
-
 };
 
 //UmFileParser

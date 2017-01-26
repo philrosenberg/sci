@@ -607,6 +607,15 @@ std::vector<size_t> UmFile::getFilteredSectionIndices()
 	return indices;
 }
 
+void UmFile::setFilteredSectionIndices(const std::vector<size_t> &indices)
+{
+	m_filteredSections.resize(indices.size());
+	for (size_t i = 0; i < indices.size(); ++i)
+	{
+		m_filteredSections[i] = m_sections[indices[i]];
+	}
+}
+
 void UmFile::Section32::readHeader( std::fstream *fin, size_t nBytes )
 {
 	fin->read((char*)&m_header,nBytes);
