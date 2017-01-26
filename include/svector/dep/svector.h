@@ -823,8 +823,16 @@ sublength*=*shapei;
 	{
 		size_t thissize=v.size();
 		std::vector<size_t> othershape;
-		if(thissize>0) othershape=sci::shape(v[0]);
-		else othershape=std::vector<size_t>(sci::ndims(v[0]),0);
+		if (thissize > 0)
+		{
+			othershape = sci::shape(v[0]);
+			for (size_t i = 1; i < v.size(); ++i)
+			{
+				sci::assertThrow(othershape == sci::shape(v[i]), sci::err());
+			}
+		}
+		else
+			othershape=std::vector<size_t>(sci::ndims(v[0]),0);
 		othershape.insert(othershape.begin(),thissize);
 		return othershape;
 	}
