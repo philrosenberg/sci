@@ -3096,7 +3096,7 @@ splot2d* splotwindow::addcanvas(double xpos, double ypos, double width, double h
 
 void splotwindow::OnPaint(wxPaintEvent &event)
 {
-	wxBeginBusyCursor();
+	//wxBeginBusyCursor();
 
 	int width;
 	int height;
@@ -3123,7 +3123,7 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 	wxMemoryDC memdc;
 
 	//check if any of the plots have been updated
-	for(size_t i=0; i<m_plots.size(); ++i) m_plotsupdated||m_plots[i]->gethaschanged();
+	for(size_t i=0; i<m_plots.size(); ++i) m_plotsupdated |= m_plots[i]->gethaschanged();
 	//if the plots have been resized or if any plots have been updated since the last redraw then
 	//we need to regenerate the plot bitmap. Otherwise we can just use the old bitmap to redraw the plot
 	if(width!=m_bitmapwidth || height!=m_bitmapheight || m_plotsupdated==true)
@@ -3192,7 +3192,7 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 		memdc.SelectObject(wxNullBitmap);
 	}
 
-	wxEndBusyCursor();
+	//wxEndBusyCursor();
 }
 
 //Write the plot window to an image file. This can be either a bitmap
