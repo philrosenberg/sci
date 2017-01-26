@@ -1518,6 +1518,43 @@ void splot2d::addData( std::shared_ptr<DrawableItem> drawableItem )
 	m_haschanged=true;
 }
 
+void splot2d::removeAllData()
+{
+
+	//the data
+	m_xpluserrs.resize(0);
+	m_xminuserrs.resize(0);
+	m_ypluserrs.resize(0);
+	m_yminuserrs.resize(0);
+	m_xpluserrsl.resize(0);
+	m_xminuserrsl.resize(0);
+	m_ypluserrsl.resize(0);
+	m_yminuserrsl.resize(0);
+	m_images.resize(0);
+	m_imageXBottomLefts.resize(0);
+	m_imageYBottomLefts.resize(0);
+	m_imageWidths.resize(0);
+	m_imageHeights.resize(0);
+	m_imageRotations.resize(0);
+	m_imageBrightnesses.resize(0);
+	m_imageContrasts.resize(0);
+	m_text.resize(0);
+	m_textFont.resize(0);
+	m_textFci.resize(0);
+	m_textSize.resize(0);
+
+	//the data properties
+	m_xerrcolour.resize(0);
+	m_yerrcolour.resize(0);
+	m_xerrthickness.resize(0);
+	m_yerrthickness.resize(0);
+
+	//the DrawableItems
+	m_drawableItems.resize(0);
+
+	splot::removeAllData();
+}
+
 void splot2d::addImage(std::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
 {
 	incrementdatasize();
@@ -1658,6 +1695,63 @@ void splot::adddatasetproperties(wxColour pointcolour, double pointsize, std::st
 	else m_linkcontoursandcolours.push_back(false);
 	m_contourlabelssize.push_back(contourlabelssize);
 	m_map.push_back(map);
+}
+
+void splot::removeAllData()
+{
+
+	m_xs.resize(0);
+	m_ys.resize(0);
+	m_xsl.resize(0);//if we are plotting on a log axis then these datasets will be filled with logged values
+	m_ysl.resize(0);
+	m_xs2d.resize(0);
+	m_ys2d.resize(0);
+	m_xs2dl.resize(0);//if we are plotting on a log axis then these datasets will be filled with logged values
+	m_ys2dl.resize(0);
+	m_structzs.resize(0); //structured z data (regular, rectilinear, curvilinear) is 2d and can be shaded/contoured, but should have size 0,0 for an x,y dataset or an unstructured dataset
+	m_structzsl.resize(0);
+	m_colunstructzs.resize(0); //unstructured z data is 1d, it currectly cannot be countoured/shaded (may change) but symbol colour may vary with this parameter. It should have size 0 for an x,y dataset or a structured dataset
+	m_colunstructzsl.resize(0);
+	m_sizeunstructzs.resize(0); //unstructured z data is 1d, it currectly cannot be countoured/shaded (may change) but symbol size may vary with this parameter. It should have size 0 for an x,y dataset or a structured dataset
+	m_us.resize(0); //v and v data is for plotting vector arrows
+	m_vs.resize(0);
+	m_minstructz.resize(0);//need these to fill in the colourscale past the ends if required
+	m_maxstructz.resize(0);
+	m_mincolunstructz.resize(0);
+	m_maxcolunstructz.resize(0);
+	m_minstructzl.resize(0);//same as the four previous, but for logarithmic colour scales
+	m_maxstructzl.resize(0);
+	m_mincolunstructzl.resize(0);
+	m_maxcolunstructzl.resize(0);
+	m_lowerxlimits.resize(0); //for bar charts
+	m_upperxlimits.resize(0); //for bar charts
+	m_lowerxlimitsl.resize(0); //for bar charts log versions
+	m_upperxlimitsl.resize(0); //for bar charts log versions
+	m_beginAtZeros.resize(0); //for bar charts
+	m_isGrid.resize(0); //to distinguish between grid and contour style data
+
+								//dataset properties
+	m_pointchar.resize(0); //this is the character used for plotting
+	m_pointfci.resize(0); //this is the style of the char (bold, italic, font family)
+	m_pointfont.resize(0); //this is the fontface name of the font we want for the plot points. If not accessible we default to the fci family
+	m_linethickness.resize(0); //0.0 for no line/contour
+	m_pointsize.resize(0); //0.0 for no point, ignored for contour/shade datasets
+	m_pointcolour.resize(0);
+	m_linecolour.resize(0);
+	m_linestyle.resize(0);
+	m_colourscale.resize(0); //if null shading won't be used for stuctured z data. Will be used for point colour for unstructured z data
+	m_sizescale.resize(0); //will be used to adjust point size for unstructured z
+	m_colourlevels.resize(0); //colour levels used for colourscale plots
+	m_filloffscaletop.resize(0); //flag to state whether to colour offscale regions with the max colour or leave blank
+	m_filloffscalebottom.resize(0); //flag to state whether to colour offscale regions with the max colour or leave blank
+	m_contourlevels.resize(0); //colour levels used for colourscale plots
+	m_contourlabelssize.resize(0);
+	m_map.resize(0);
+	m_transformers.resize(0);
+	m_linkcontoursandcolours.resize(0);
+	m_arrowstyle.resize(0);
+
+	m_haschanged = true;
 }
 
 void splot::setupcolourscale(int ncolours, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double maxcontour, double mincontour, int contourlabelssize)

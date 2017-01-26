@@ -341,6 +341,8 @@ public:
 	inline splotaxis *getyaxis(){return &m_yaxis; m_haschanged=true;};
 	bool inline gethaschanged(){return m_haschanged;};
 
+	virtual void removeAllData();
+
 private:
 	//keep track of if the plot has changed
 	bool m_haschanged;
@@ -472,6 +474,8 @@ public:
 	void addImage(std::string picture, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0=0, int cropY0=0, int cropWidth=-1, int cropHeight=-1, double brightnessCorrection=0.0, double contrastCorrection=0.0);
 	void addText(std::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const std::string &font="", uint32_t style=0, wxColour colour=wxColour(0,0,0));
 	void setdatasetproperties(size_t setindex, wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, std::string pointsymbol="A", wxColour linecolour=wxColour(0,0,0), int linewidth=1.0, wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), int xerrwidth=1, int yerrwidth=1);
+
+	void removeAllData();
 
 private:
 	//private constructor so only friends can create a plot
