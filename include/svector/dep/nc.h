@@ -3,6 +3,7 @@
 #include<vector>
 #include<netcdf.h>
 #include<algorithm>
+#include<svector\serr.h>
 
 
 
