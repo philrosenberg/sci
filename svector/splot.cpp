@@ -636,10 +636,13 @@ splotsizescale::splotsizescale(const std::vector<double> &value, const std::vect
 
 double splotsizescale::getsize(double value) const
 {
-	if(value<=m_value[0]) return m_size[0];
-	if(value>=m_value.back()) return m_size.back();
+	if(value<=m_value[0])
+		return m_size[0];
+	if(value>=m_value.back())
+		return m_size.back();
 	size_t lowerindex=0;
-	while(value<m_value[lowerindex])++lowerindex;
+	while(value<m_value[lowerindex])
+		++lowerindex;
 	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
 }
 
