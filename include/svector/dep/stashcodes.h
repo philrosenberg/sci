@@ -6,7 +6,8 @@ namespace stash
 	const int uCompOfWindAfterTimestep=2;
 	const int vCompOfWindAfterTimestep=3;
 	const int thetaAfterTimestep=4;
-	const int specHumAfterTimestep=10;
+	const int q=10;
+	const int qcf = 12;
 	const int seaIceFractionAfterTimestep=31;
 	const int tracer15HF=75;
 	const int tracer16=76;
@@ -22,8 +23,10 @@ namespace stash
 	const int tracer28NH4_2SO2=88;
 	const int tracer29Mineral=89;
 	const int wCompOfWind=150;
+	const int qcl = 254;
 	const int bulkCloudFraction=266;
 	const int bulkCloudFractionInEachLayer=266;
+	const int waterVapourMixingRatio = 391;
 	const int pressureAtRhoLevelsAfterTimestep=407;
 	const int pressureAtThetaLevelsAfterTimestep=408;
 	const int surfacePressureAfterTimestep=409;
@@ -61,7 +64,9 @@ namespace stash
 	const int tempOnThetaLevels_K=16004;
 	const int pressureAtMeanSeaLevel=16222;
 	const int totalDustConc_ug_per_m3=17257;
-
+	const int geopotentialOnThetaLevels = 16201;
+	const int geopotentialOnPressureLevels = 16202;
+	const int geopotentialOnRhoLevels = 16255;
 
 
 }
