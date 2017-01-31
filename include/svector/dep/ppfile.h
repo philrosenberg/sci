@@ -540,6 +540,43 @@ public:
 		PpHeader64 getHeader() {return m_header;}
 	};
 
+	class PpHeader64Sorter
+	{
+	public:
+		PpHeader64Sorter() {}
+		PpHeader64Sorter(const std::vector<int> &variableIds) { m_comparisonVariables = variableIds; }
+		void setComparisonVariables(const std::vector<int> &variableIds) { m_comparisonVariables = variableIds; }
+
+		bool operator()(const UmFile::PpHeader64 &lhs, const UmFile::PpHeader64 &rhs) const
+		{
+			for (size_t i = 0; i < m_comparisonVariables.size(); ++i)
+			{
+				int comparator = m_comparisonVariables[i];
+				if (comparator > 44)
+				{
+					double v1 = *((double*)(&lhs) + comparator);
+					double v2 = *((double*)(&rhs) + comparator);
+					if (v1 < v2)
+						return true;
+					if (v1 > v2)
+						return false;
+				}
+				else
+				{
+					int64_t v1 = *((int64_t*)(&lhs) + comparator);
+					int64_t v2 = *((int64_t*)(&rhs) + comparator);
+					if (v1 < v2)
+						return true;
+					if (v1 > v2)
+						return false;
+				}
+			}
+			return false;
+		}
+	private:
+		std::vector<int> m_comparisonVariables;
+	};
+
 
 public:
 	UmFile(std::string name);
