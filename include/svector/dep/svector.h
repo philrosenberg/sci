@@ -145,76 +145,6 @@ namespace sci
 		typedef std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<T> > > > > > > > > > d10;
 	};
 
-	template<class T>
-	class sortablevector;
-	template<class T>
-	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
-	//class used for sorting and keeping track of elements
-	template<class T>
-	class sortableelement
-	{
-		friend class sortablevector<T>;
-		friend class std::vector<sortableelement<T> >;
-	private:
-		inline void setval(T element){m_element=element;};
-		inline void setoriginallocation(size_t location){m_location=location;};
-		inline T getval() const{return m_element;};
-		inline size_t getoriginallocation() const{return m_location;};
-		T m_element;
-		size_t m_location;
-	public:
-		sortableelement(){}; //to do - this was private but had to make it public when upgrading to VS2012, work out why, maybe to do with debug allocator
-		bool inline operator< (const sortableelement<T> &rhs) const {return m_element<rhs.m_element;}
-	};
-
-	//class used for sorting vectors
-	template<class T>
-	class sortablevector
-	{
-		friend void sci::sort<T>(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &originallocations);
-	private:
-		sortablevector(const std::vector<T> &origv);
-		void getvectors(std::vector<T> &vect, std::vector<size_t> &origpositions) const;
-		std::vector< sortableelement<T> > m_vector;
-		void sort();
-	};
-
-	template<class T>
-	sortablevector<T>::sortablevector(const std::vector<T> &origv)
-	{
-		m_vector.resize(origv.size());
-		typename std::vector< sortableelement<T> >::iterator vbegin=m_vector.begin();
-		typename std::vector<T>::const_iterator origvi=origv.begin();
-		for(typename std::vector< sortableelement<T> >::iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
-		{
-			vi->setoriginallocation(vi-vbegin);
-			vi->setval(*origvi);
-			++origvi;
-		}
-	}
-
-	template<class T>
-	void sortablevector<T>::getvectors(std::vector<T> &vect, std::vector<size_t> &origpositions) const
-	{
-		vect.resize(m_vector.size());
-		origpositions.resize(m_vector.size());
-		typename std::vector<T>::iterator vecti=vect.begin();
-		typename std::vector<size_t>::iterator origi=origpositions.begin();
-		for(typename std::vector< sortableelement<T> >::const_iterator vi=m_vector.begin(); vi!=m_vector.end(); ++vi) 
-		{
-			*vecti=vi->getval();
-			*origi=vi->getoriginallocation();
-			++vecti;
-			++origi;
-		}
-	}
-
-	template<class T>
-	void sortablevector<T>::sort()
-	{
-		std::sort(m_vector.begin(),m_vector.end());
-	}
-
 
 	
 	//********************************************************
@@ -2907,26 +2837,56 @@ sublength*=*shapei;
 		}
 	}
 
-
 	//sort
 	template<class T>
 	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &newlocations)
 	{
-		sci::sortablevector<T> sortv(v);
-		sortv.sort();
-		std::vector<size_t> originallocations;
-		sortv.getvectors(sortedv,originallocations);
-		newlocations.resize(originallocations.size());
-		for(size_t i=0; i<originallocations.size(); ++i)
+		//create a vector of locations
+		std::vector<size_t> originalLocations = sci::indexvector<size_t>(v.size());
+		//sort the locations based on the data in v
+		std::sort(originalLocations.begin(), originalLocations.end(), [v](size_t lhs, size_t rhs) {return v[lhs] < v[rhs];});
+
+		//set up our newLocations
+		newlocations.resize(originalLocations.size());
+		for (size_t i = 0; i<originalLocations.size(); ++i)
 		{
-			newlocations[originallocations[i]]=i;
+			newlocations[originalLocations[i]] = i;
 		}
+
+		//copy the data to the sorted vector
+		sortedv = sci::reorder(v, newlocations);
+	}
+
+	template<class T, class SORTER>
+	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &newlocations, SORTER sorter)
+	{
+		//create a vector of locations
+		std::vector<size_t> originalLocations = sci::indexvector<size_t>(v.size());
+		//sort the locations based on the data in v
+		std::sort(originalLocations.begin(), originalLocations.end(), [v,sorter](size_t lhs, size_t rhs) {return sorter(v[lhs], v[rhs]);});
+
+		//set up our newLocations
+		newlocations.resize(originalLocations.size());
+		for (size_t i = 0; i<originalLocations.size(); ++i)
+		{
+			newlocations[originalLocations[i]] = i;
+		}
+
+		//copy the data to the sorted vector
+		sortedv = sci::reorder(v, newlocations);
 	}
 
 	template<class T>
 	inline std::vector<T> sort(std::vector<T> v)
 	{
 		std::sort(v.begin(),v.end());
+		return v;
+	}
+
+	template<class T, class SORTER>
+	inline std::vector<T> sort(std::vector<T> v, SORTER sorter)
+	{
+		std::sort(v.begin(), v.end(), sorter);
 		return v;
 	}
 
