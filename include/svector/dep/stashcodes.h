@@ -62,6 +62,7 @@ namespace stash
 	const int vCompOfGravWaveStress=6202;
 	const int xCompOfGravWaveStress=6223;
 	const int yCompOfGravWaveStress=6224;
+	const int lowCloudAmount = 9203;
 	const int tempOnModelLevels_K=16004;
 	const int tempOnThetaLevels_K=16004;
 	const int pressureAtMeanSeaLevel=16222;
