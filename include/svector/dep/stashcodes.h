@@ -28,6 +28,7 @@ namespace stash
 	const int qcl = 254;
 	const int bulkCloudFraction=266;
 	const int bulkCloudFractionInEachLayer=266;
+	const int rainAmount = 272;
 	const int waterVapourMixingRatio = 391;
 	const int pressureAtRhoLevelsAfterTimestep=407;
 	const int pressureAtThetaLevelsAfterTimestep=408;
@@ -62,7 +63,10 @@ namespace stash
 	const int vCompOfGravWaveStress=6202;
 	const int xCompOfGravWaveStress=6223;
 	const int yCompOfGravWaveStress=6224;
+	const int extralowCloudAmount = 9202;
 	const int lowCloudAmount = 9203;
+	const int medCloudAmount = 9204;
+	const int highCloudAmount = 9205;
 	const int tempOnModelLevels_K=16004;
 	const int tempOnThetaLevels_K=16004;
 	const int pressureAtMeanSeaLevel=16222;

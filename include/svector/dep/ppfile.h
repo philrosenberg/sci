@@ -841,25 +841,41 @@ UmFile& UmFile::operator >= ( T rhs )
 template <class T>
 UmFile& UmFile::operator < ( T rhs )
 {
+	size_t eraseSectionBegin = -1;
 	for(size_t i=0; i<m_filteredSections.size(); ++i)
 	{
+		bool erase = false;
 		if( m_comparator > 44 )
 		{
 			if(!(m_filteredSections[i].at<double>(m_comparator) < rhs))
 			{
-				m_filteredSections.erase(m_filteredSections.begin()+i);
-				--i;
+				erase = true;
 			}
 		}
 		else
 		{
 			if(!(m_filteredSections[i].at<int64_t>(m_comparator) < rhs))
 			{
-				m_filteredSections.erase(m_filteredSections.begin()+i);
-				--i;
+				erase = true;
 			}
 		}
+		if (erase && eraseSectionBegin == -1)
+		{
+			eraseSectionBegin = i;
+		}
+		else if (!erase && eraseSectionBegin != -1)
+		{
+			//we found the end of the section
+			size_t n = i - eraseSectionBegin;
+			m_filteredSections.erase(m_filteredSections.begin() + eraseSectionBegin, m_filteredSections.begin() + eraseSectionBegin + n);
+			i-=n;
+			eraseSectionBegin = -1;
+		}
 	}
+
+	//check if we need to erase the last bit
+	if( eraseSectionBegin != -1)
+		m_filteredSections.erase(m_filteredSections.begin() + eraseSectionBegin, m_filteredSections.end());
 	return *this;
 }
 
