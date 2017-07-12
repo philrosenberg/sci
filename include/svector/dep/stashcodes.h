@@ -54,7 +54,7 @@ namespace stash
 	const int surfaceAndBoundaryLayerTotalMoistureFlux=3223;
 	const int surfaceLatentHeatFlux=3234;
 	const int specHumAfterLsPrecip=4010;
-	const int largeScaleRainAmount=4201;
+	const int largeScaleRainAmount=4202;
 	const int cloudLiqWatAfterLsPrecip=4205;
 	const int cloudIceWatAfterLsPrecip=4206;
 	const int relHumAfterLsPrecip=4207;
