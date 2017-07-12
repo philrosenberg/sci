@@ -19,3 +19,5 @@ svector.opensdf
 makefile
 template/mkapex
 install
+**.VC.opendb
+**.VC.db
