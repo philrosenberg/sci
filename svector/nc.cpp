@@ -258,7 +258,8 @@ sci::NcAttribute::NcAttribute(const std::string& name, const char *value)
 void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err());
-	sci::assertThrow(nc_put_att(ncFile.getId(), NC_GLOBAL, m_name.c_str(), m_writeType, m_nValues, m_values) == NC_NOERR, sci::err());
+	int err = nc_put_att(ncFile.getId(), NC_GLOBAL, m_name.c_str(), m_writeType, m_nValues, m_values);
+	sci::assertThrow(err == NC_NOERR, sci::err());
 }
 
 /*template<class T>

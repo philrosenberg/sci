@@ -306,6 +306,7 @@ namespace sci
 	public:
 		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
 		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
+		NcVariable(NcVariable &&) = default;
 		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
 		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
 		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
