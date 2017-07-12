@@ -600,8 +600,9 @@ namespace sci
 		return result;
 	}
 	
-	//these functions reshape, access and resize vectors which have a number of dimensions which
+	//These functions reshape, access and resize vectors which have a number of dimensions which
 	//are unknown at the time of writing the library but will be known by the user at compile time
+	//Note that you can pass in a multi-d vector, but only the first dimension will be reshaped
 	template<class T, class A>
 	bool reshape(std::vector<T> &result, const std::vector<A> &v, const std::vector<size_t> &shape)
 	{
@@ -615,7 +616,7 @@ namespace sci
 		}
 		size_t sublength=1;
 		for(typename std::vector<size_t>::const_iterator shapei=shape.begin()+1; shapei!=shape.end(); ++shapei) 
-sublength*=*shapei;
+			sublength*=*shapei;
 		std::vector<size_t> nextshape(shape.begin()+1,shape.end());
 		result.resize(shape[0]);
 		for(size_t i=0; i<shape[0]; ++i) 
@@ -631,14 +632,6 @@ sublength*=*shapei;
 	{
 		result=v;
 		return true;
-	}
-
-	//if v has more than 1 dimension report an error
-	template<class T, class A>
-	bool reshape(std::vector<T> &result, const std::vector< std::vector<A> > &v, const std::vector<size_t> &shape)
-	{
-		//to do add error message
-		return false;
 	}
 
 	template<class T>
