@@ -222,9 +222,31 @@ splotcolourscale::splotcolourscale()
 	setupdefault();
 }
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour,bool logarithmic, bool autostretch)
+splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool logarithmic, bool autostretch)
 {
-	sci::assertThrow( value.size()>1 && value.size()==colour.size(), sci::err() );
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err());
+	if (value.size() == colour.size())
+		//setup continuous colour scale
+		setup(value, colour, logarithmic, autostretch);
+	else
+	{
+		//setup discrete colour scale
+		std::vector<double> newValues(colour.size() * 2);
+		std::vector<rgbcolour> newColours(colour.size() * 2);
+		for (size_t i = 0; i < colour.size(); ++i)
+		{
+			newColours[i * 2] = colour[i];
+			newColours[i * 2 + 1] = colour[i];
+			newValues[i * 2] = newValues[i];
+			newValues[i * 2 + 1] = newValues[i + 1];
+		}
+		setup(newValues, newColours, logarithmic, autostretch);
+	}
+}
+
+void splotcolourscale::setup(const std::vector<double> &value, const std::vector<rgbcolour> &colour,bool logarithmic, bool autostretch)
+{
+	sci::assertThrow(value.size()>1 && value.size() == colour.size(), sci::err());
 	//check values are ascending or descending, catch Nans at the same time
 	bool ascending=true;
 	bool descending=true;
@@ -282,11 +304,33 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	m_value-=m_bottom;
 	m_value/=m_top-m_bottom;
 	m_autovalue=autostretch;
-}	
+}
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour,bool logarithmic, bool autostretch)
+splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool logarithmic, bool autostretch)
 {
-	sci::assertThrow( value.size()>1 && value.size()==colour.size(), sci::err() );
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err());
+	if (value.size() == colour.size())
+		//setup continuous colour scale
+		setup(value, colour, logarithmic, autostretch);
+	else
+	{
+		//setup discrete colour scale
+		std::vector<double> newValues(colour.size() * 2);
+		std::vector<hlscolour> newColours(colour.size() * 2);
+		for (size_t i = 0; i < colour.size(); ++i)
+		{
+			newColours[i * 2] = colour[i];
+			newColours[i * 2 + 1] = colour[i];
+			newValues[i * 2] = newValues[i];
+			newValues[i * 2 + 1] = newValues[i + 1];
+		}
+		setup(newValues, newColours, logarithmic, autostretch);
+	}
+}
+
+void splotcolourscale::setup(const std::vector<double> &value, const std::vector<hlscolour> &colour,bool logarithmic, bool autostretch)
+{
+	sci::assertThrow( value.size()>1 && value.size() == colour.size(), sci::err() );
 	//check values are ascending or descending, catch Nans at the same time
 	bool ascending=true;
 	bool descending=true;

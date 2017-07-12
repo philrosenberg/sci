@@ -111,7 +111,9 @@ class splotcolourscale
 	friend class splotlegend;
 public:
 	splotcolourscale();
+	//create a colourscale from rgb colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
 	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false);
+	//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
 	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false);
 	splotcolourscale(const splotcolourscale& s);
 	splotcolourscale(const splotcolourscale& predefinedscale, double newmin, double newmax);
@@ -132,6 +134,8 @@ public:
 	void setup(plstream *pl, const PlotData2dStructured* data) const;
 private:
 	void setupdefault();
+	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic = false, bool autostretch = false);
+	void setup(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic = false, bool autostretch = false);
 	bool m_autovalue;
 	std::vector<double> m_value;
 	std::vector< double > m_colour1;
