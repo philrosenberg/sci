@@ -838,7 +838,7 @@ void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
 	}
 
 	//set up the colourscale
-	m_colourscale.setup(pl, this);
+	m_colourscale.setup(pl);
 
 	m_plotLogX = xLog;
 	m_plotLogY = yLog;

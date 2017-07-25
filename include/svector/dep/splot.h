@@ -131,7 +131,7 @@ public:
 	splotcolourscale& operator=(const splotcolourscale& s);
 	bool isLogarithmic() const { return m_logarithmic;}
 	~splotcolourscale(){};
-	void setup(plstream *pl, const PlotData2dStructured* data) const;
+	void setup(plstream *pl) const;
 private:
 	void setupdefault();
 	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic = false, bool autostretch = false);
