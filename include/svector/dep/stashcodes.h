@@ -9,6 +9,7 @@ namespace stash
 	const int q=10;
 	const int qcf = 12;
 	const int seaIceFractionAfterTimestep=31;
+	const int orography = 33;
 	const int cloudNumberAfterTimestep=75;
 	const int rainNumberAfterTimestep =76;
 	const int rainThirdMomentAfterTimestep =77;
