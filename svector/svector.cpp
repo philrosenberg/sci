@@ -1486,6 +1486,7 @@ sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<do
 	{
 		for (size_t i = 0; i < nextToInitialise; ++i)
 			delete m_jumpDistributions[i];
+		throw;
 	}
 }
 
