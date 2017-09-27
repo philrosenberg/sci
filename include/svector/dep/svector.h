@@ -1721,56 +1721,93 @@ namespace sci
 
 	//replace nans with another value
 	template<class T>
-	inline void replacenans(T &element, const T &replacement)
-	{
-		if(element!=element) element=replacement;
-	}
-	template<class T, class U>
-	void replacenans(std::vector<T> &v, const U &replacement)
+	void replacenans(std::vector<T> &v, const T &replacement)
 	{
 		if(v.size()==0)
 			return;
-		for(typename std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replacenans(*vi,replacement);
+		T* iter = &v[0];
+		T* end = iter + v.size();
+		for( ; iter!=end; ++iter)
+			if(*iter!=*iter)
+				*iter=replacement;
+	}
+	template<class T, class U>
+	void replacenans(std::vector<std::vector<T>> &v, const U &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		std::vector<T>* iter = &v[0];
+		std::vector<T>* end = iter + v.size();
+		for (; iter != end; ++iter)
+			replacenans(*vi, replacement);
+	}
+
+	template<class T>
+	void replaceinfs(std::vector<T> &v, const T &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		T* iter = &v[0];
+		T* end = iter + v.size();
+		for (; iter != end; ++iter)
+			if (*iter == std::numeric_limits<T>::infinity() || *iter == -std::numeric_limits<T>::infinity())
+				*iter = replacement;
+	}
+	template<class T, class U>
+	void replaceinfs(std::vector<std::vector<T>> &v, const U &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		std::vector<T>* iter = &v[0];
+		std::vector<T>* end = iter + v.size();
+		for (; iter != end; ++iter)
+			replaceinfs(*vi, replacement);
+	}
+
+	template<class T>
+	void replaceNegativeInfs(std::vector<T> &v, const T &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		T* iter = &v[0];
+		T* end = iter + v.size();
+		for (; iter != end; ++iter)
+			if (*iter == -std::numeric_limits<T>::infinity())
+				*iter = replacement;
+	}
+	template<class T, class U>
+	void replaceNegativeInfs(std::vector<std::vector<T>> &v, const U &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		std::vector<T>* iter = &v[0];
+		std::vector<T>* end = iter + v.size();
+		for (; iter != end; ++iter)
+			replaceNegativeInfs(*vi, replacement);
+	}
+
+	template<class T>
+	void replacePositiveInfs(std::vector<T> &v, const T &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		T* iter = &v[0];
+		T* end = iter + v.size();
+		for (; iter != end; ++iter)
+			if (*iter == std::numeric_limits<T>::infinity())
+				*iter = replacement;
+	}
+	template<class T, class U>
+	void replacePositiveInfs(std::vector<std::vector<T>> &v, const U &replacement)
+	{
+		if (v.size() == 0)
+			return;
+		std::vector<T>* iter = &v[0];
+		std::vector<T>* end = iter + v.size();
+		for (; iter != end; ++iter)
+			replacePositiveInfs(*vi, replacement);
 	}
 	
-	template<class T>
-	inline void replaceinfs(T &element, const T &replacement)
-	{
-		if(element==std::numeric_limits<T>::infinity() || -element==std::numeric_limits<T>::infinity()) element=replacement;
-	}
-	template<class T, class U>
-	void replaceinfs(std::vector<T> &v, const U &replacement)
-	{
-		if(v.size()==0)
-			return;
-		for(typename std::vector<T>::iterator vi=v.begin(); vi!=v.end(); ++vi) replaceinfs(*vi,replacement);
-	}
-	
-	template<class T>
-	inline void replaceNegativeInfs(T &element, const T &replacement)
-	{
-		if(-element==std::numeric_limits<T>::infinity()) element=replacement;
-	}
-	template<class T, class U>
-	void replaceNegativeInfs(std::vector<T> &v, const U &replacement)
-	{
-		if(v.size()==0)
-			return;
-		for(T* vi=&v[0]; vi!=&v.back()+1; ++vi) replaceNegativeInfs(*vi,replacement);
-	}
-	
-	template<class T>
-	inline void replacePositiveInfs(T &element, const T &replacement)
-	{
-		if(element==std::numeric_limits<T>::infinity()) element=replacement;
-	}
-	template<class T, class U>
-	void replacePositiveInfs(std::vector<T> &v, const U &replacement)
-	{
-		if(v.size()==0)
-			return;
-		for(T* vi=&v[0]; vi!=&v.back()+1; ++vi) replacePositiveInfs(*vi,replacement);
-	}
 
 	template<class T>
 	std::vector<T> reverse(const std::vector<T> &v)
