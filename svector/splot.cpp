@@ -237,8 +237,8 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 		{
 			newColours[i * 2] = colour[i];
 			newColours[i * 2 + 1] = colour[i];
-			newValues[i * 2] = newValues[i];
-			newValues[i * 2 + 1] = newValues[i + 1];
+			newValues[i * 2] = value[i];
+			newValues[i * 2 + 1] = value[i + 1];
 		}
 		setup(newValues, newColours, logarithmic, autostretch);
 	}
