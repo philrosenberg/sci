@@ -8,6 +8,7 @@ namespace stash
 	const int thetaAfterTimestep=4;
 	const int q=10;
 	const int qcf = 12;
+	const int blDepth = 25;
 	const int seaIceFractionAfterTimestep=31;
 	const int orography = 33;
 	const int cloudNumberAfterTimestep=75;
@@ -54,6 +55,14 @@ namespace stash
 	const int yCompOfSurfAndBlWindStress_N_per_m2=3220;
 	const int surfaceAndBoundaryLayerTotalMoistureFlux=3223;
 	const int surfaceLatentHeatFlux=3234;
+	const int stableBlIndicator= 3305;
+	const int scOverStableBlIndicator= 3306;
+	const int wellMixedBlIndicator= 3307;
+	const int decoubledScNotOverCuIndicator= 3308;
+	const int decoupledScOverCuIndicator= 3309;
+	const int cumulusCappedBlIndicator= 3310;
+	const int entrainmentRateSurfaceMl = 3362;
+	const int entrainmentRateBl = 3363;
 	const int specHumAfterLsPrecip=4010;
 	const int largeScaleRainAmount=4202;
 	const int cloudLiqWatAfterLsPrecip=4205;
