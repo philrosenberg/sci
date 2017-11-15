@@ -1739,7 +1739,7 @@ namespace sci
 		std::vector<T>* iter = &v[0];
 		std::vector<T>* end = iter + v.size();
 		for (; iter != end; ++iter)
-			replacenans(*vi, replacement);
+			replacenans(*iter, replacement);
 	}
 
 	template<class T>
@@ -1761,7 +1761,7 @@ namespace sci
 		std::vector<T>* iter = &v[0];
 		std::vector<T>* end = iter + v.size();
 		for (; iter != end; ++iter)
-			replaceinfs(*vi, replacement);
+			replaceinfs(*iter, replacement);
 	}
 
 	template<class T>
@@ -1783,7 +1783,7 @@ namespace sci
 		std::vector<T>* iter = &v[0];
 		std::vector<T>* end = iter + v.size();
 		for (; iter != end; ++iter)
-			replaceNegativeInfs(*vi, replacement);
+			replaceNegativeInfs(*iter, replacement);
 	}
 
 	template<class T>
@@ -1805,7 +1805,7 @@ namespace sci
 		std::vector<T>* iter = &v[0];
 		std::vector<T>* end = iter + v.size();
 		for (; iter != end; ++iter)
-			replacePositiveInfs(*vi, replacement);
+			replacePositiveInfs(*iter, replacement);
 	}
 	
 
