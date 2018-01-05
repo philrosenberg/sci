@@ -35,6 +35,21 @@ namespace sci
 	void toUpper( std::string &str );
 	std::string trimmed( const std::string &str );
 	void trim( std::string &str );
+
+	void replaceAll(std::wstring &destination, std::wstring textToFind, std::wstring replacementText);
+	std::wstring afterLast(std::wstring source, std::wstring textToFind);
+	std::wstring beforeLast(std::wstring source, std::wstring textToFind);
+	std::wstring afterFirst(std::wstring source, std::wstring textToFind);
+	std::wstring beforeFirst(std::wstring source, std::wstring textToFind);
+	std::wstring lower(const std::wstring &str);
+	std::wstring upper(const std::wstring &str);
+	void toLower(std::wstring &str);
+	void toUpper(std::wstring &str);
+	std::wstring trimmed(const std::wstring &str);
+	void trim(std::wstring &str);
+
+	std::string utf16To8(const std::wstring &string);
+	std::wstring utf8To16(const std::string &string);
 }
 
 

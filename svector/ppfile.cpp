@@ -6,6 +6,7 @@
 #include"../include/svector/dep/wgdos.h"
 #include<algorithm>
 #include<cstring>
+#include<wx/filefn.h> 
 
 UmFile::UmFile(std::string name)
 {
@@ -84,11 +85,108 @@ UmFile::UmFile(std::string name)
 	if( m_umFileParser == nullptr )
 		throw( PPERR_UNKNOWN_FILE_FORMAT );
 
-	m_sections = m_umFileParser->parse( &m_fin, this, m_swapEndian );
+	std::string indexName = name + ".index";
 
-	//set all the indices
-	for(size_t i=0; i<m_sections.size(); ++i)
-		m_sections[i].m_index = i;
+	bool readFromIndex = false;
+	if (wxFileExists(indexName))
+	{
+		std::fstream indexIn;
+		indexIn.open(indexName.c_str(), std::ios::in | std::ios::binary);
+		//read and check the fcc
+		char fcc[4]{ '\0','\0','\0','\0' };
+		indexIn.read(fcc, 4);
+		bool correctFcc = (fcc[0] == 'P' && fcc[1] == 'P' && fcc[2] == 'D' && fcc[3] == 'X');
+		if (!correctFcc)
+		{
+			m_fin.close();
+			indexIn.close();
+			throw(PPERR_INDEX_FILE_WRONG_FCC);
+		}
+		//read and check the version;
+		uint64_t version = 0;
+		indexIn.read((char*)(&version), sizeof(version));
+
+		//read and check the completed flag;
+		uint64_t completed = 0;
+		indexIn.read((char*)(&completed), sizeof(completed));
+
+		//read the time the index was created
+		int64_t indexCreationTime;
+		indexIn.read((char*)(&indexCreationTime), sizeof(indexCreationTime));
+		//get the time the data file was last modified
+		time_t modifiedTime = wxFileModificationTime(name);
+		//only read from the index if the data file hasn't been modified since the index was created.
+		if (modifiedTime < indexCreationTime && version == 2 && completed > 0)
+		{
+			//read the number of sections
+			uint64_t nSections = 0;
+			indexIn.read((char*)(&nSections), sizeof(nSections));
+			//resize m_sections and read in the contents of each one.
+			m_sections.resize(nSections);
+			for (size_t i = 0; i < m_sections.size(); ++i)
+			{
+				indexIn.read((char*)(&m_sections[i].m_header), sizeof(m_sections[i].m_header));
+				uint64_t dataStart = 0;
+				uint64_t dataBytes = 0;
+				uint64_t index = 0;
+				indexIn.read((char*)(&dataStart), sizeof(dataStart));
+				indexIn.read((char*)(&dataBytes), sizeof(dataBytes));
+				indexIn.read((char*)(&index), sizeof(index));
+				m_sections[i].m_dataStart = dataStart;
+				m_sections[i].m_dataBytes = dataBytes;
+				m_sections[i].m_index = index;
+			}
+			readFromIndex = true;
+		}
+		indexIn.close();
+
+	}
+
+	if(!readFromIndex)
+	{
+		//parse the file directly
+		m_sections = m_umFileParser->parse(&m_fin, this, m_swapEndian);
+		//set all the indices
+		for (size_t i = 0; i<m_sections.size(); ++i)
+			m_sections[i].m_index = i;
+
+		//write out the index
+		std::fstream indexOut;
+		indexOut.open(indexName.c_str(), std::ios::out | std::ios::binary);
+		//write a fcc to identify the file type
+		indexOut.write("PPDX", 4);
+		//write a version number for the file type
+		uint64_t version = 2;
+		indexOut.write((const char*)(&version), sizeof(version));
+		//write a flag saying we have not yet completed the writing
+		uint64_t completed = 0;
+		indexOut.write((const char*)(&completed), sizeof(completed));
+		//write the current time - used to check if the index is out of date compared to the data file
+		time_t now;
+		time(&now);
+		int64_t now64 = now;
+		indexOut.write((const char*)(&now64), sizeof(now64));
+		//write the number of sections
+		uint64_t nSections = m_sections.size();
+		indexOut.write((const char*)(&nSections), sizeof(nSections));
+		//write the contents of each of the sections.
+		for (size_t i = 0; i < m_sections.size(); ++i)
+		{
+			indexOut.write((const char*)(&m_sections[i].m_header), sizeof(m_sections[i].m_header));
+			uint64_t dataStart = m_sections[i].m_dataStart;
+			uint64_t dataBytes = m_sections[i].m_dataBytes;
+			uint64_t index = m_sections[i].m_index;
+			indexOut.write((const char*)(&dataStart), sizeof(dataStart));
+			indexOut.write((const char*)(&dataBytes), sizeof(dataBytes));
+			indexOut.write((const char*)(&index), sizeof(index));
+		}
+
+		//go back to near the beginning and overwrite the completed flag
+		indexOut.seekp(4 + sizeof(version));
+		completed = 1;
+		indexOut.write((const char*)(&completed), sizeof(completed));
+		indexOut.close();
+	}
 
 	m_filteredSections=m_sections;
 }
