@@ -7,20 +7,29 @@
 #include<wx/filefn.h>
 #include<wx/dir.h>
 
-
 sci::csv_err sci::readcsvcolumns(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
+{
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in | std::ios_base::binary);
+	return sci::readcsvcolumns(fin, nheaderlines, header, data, startpos, endpos, startrow, maxrows);
+}
+
+sci::csv_err sci::readcsvcolumns(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
+{
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in | std::ios_base::binary);
+	return sci::readcsvcolumns(fin, nheaderlines, header, data, startpos, endpos, startrow, maxrows);
+}
+
+sci::csv_err sci::readcsvcolumns(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
 {
 	//empty the header and the data vector
 	data.resize(0);
 	header="";
-	//open file returning an error code if this fails
-	std::fstream fin;
-	fin.open(filename.c_str(),std::ios::in|std::ios_base::binary);
-	if(!fin.is_open()) 
+	if (!fin.is_open())
 	{
 		return sci::csv_filefail;
 	}
-
 
 	//move to the startpos
 	fin.seekg(startpos);
@@ -129,6 +138,18 @@ sci::csv_err sci::readcsvcolumns(std::string filename, unsigned long nheaderline
 
 sci::csv_err sci::readtextcolumns(std::string filename, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<sci::readtype> &type)
 {
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in);
+	return sci::readtextcolumns(fin, delimiters, mergeAdjacentDelimiters, nheaderlines, header, data, text, type);
+}
+sci::csv_err sci::readtextcolumns(std::wstring filename, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<sci::readtype> &type)
+{
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in);
+	return sci::readtextcolumns(fin, delimiters, mergeAdjacentDelimiters, nheaderlines, header, data, text, type);
+}
+sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<sci::readtype> &type)
+{
 	std::vector<size_t> datadest(type.size());
 	std::vector<size_t> textdest(type.size());
 	//work out how many string and data columns we have
@@ -157,8 +178,6 @@ sci::csv_err sci::readtextcolumns(std::string filename, std::string delimiters, 
 
 	header="";
 	//open file returning an error code if this fails
-	std::fstream fin;
-	fin.open(filename.c_str(),std::ios::in);
 	if(!fin.is_open()) return sci::csv_filefail;
 
 	//read in the header and write it to the header variable removing the last newline
@@ -255,12 +274,22 @@ sci::csv_err sci::readtextcolumns(std::string filename, std::string delimiters, 
 
 sci::csv_err sci::readcsvrows(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data)
 {
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in);
+	return sci::readcsvrows(fin, nheaderlines, header, data);
+}
+sci::csv_err sci::readcsvrows(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data)
+{
+	std::ifstream fin;
+	fin.open(filename.c_str(), std::ios::in);
+	return sci::readcsvrows(fin, nheaderlines, header, data);
+}
+sci::csv_err sci::readcsvrows(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data)
+{
 	//empty the header and the data vector
 	data.resize(0);
 	header="";
 	//open file returning an error code if this fails
-	std::fstream fin;
-	fin.open(filename.c_str(),std::ios::in);
 	if(!fin.is_open()) return sci::csv_filefail;
 
 	//read in the header and write it to the header variable removing the last newline
@@ -389,8 +418,19 @@ size_t sci::splitcommastring(const std::string &datastring, std::vector <double>
 		
 sci::csv_err sci::writecsvcolumns(std::string filename, std::string header, const std::vector< std::vector <double> > &data)
 {
-	std::fstream fout;
+	std::ofstream fout;
 	fout.open(filename.c_str(), std::ios::out);
+	return sci::writecsvcolumns(fout, header, data);
+}
+sci::csv_err sci::writecsvcolumns(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data)
+{
+	std::ofstream fout;
+	fout.open(filename.c_str(), std::ios::out);
+	return sci::writecsvcolumns(fout, header, data);
+}
+sci::csv_err sci::writecsvcolumns(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data)
+{
+	
 	if(!fout.is_open()) return sci::csv_filefail;
 	if(header.length()>0)fout << header.c_str() << "\n";
 	if(data.size()==0) 
@@ -430,10 +470,26 @@ sci::csv_err sci::writecsvcolumn(std::string filename, std::string header, const
 	data2d.push_back(data);
 	return writecsvcolumns(filename,header,data2d);
 }
+sci::csv_err sci::writecsvcolumn(std::wstring filename, std::string header, const std::vector<double>  &data)
+{
+	std::vector<std::vector<double> > data2d;
+	data2d.push_back(data);
+	return writecsvcolumns(filename, header, data2d);
+}
 sci::csv_err sci::writecsvrows(std::string filename, std::string header, const std::vector< std::vector <double> > &data, bool pad)
 {
-	std::fstream fout;
+	std::ofstream fout;
 	fout.open(filename.c_str(), std::ios::out);
+	return sci::writecsvrows(fout, header, data, pad);
+}
+sci::csv_err sci::writecsvrows(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data, bool pad)
+{
+	std::ofstream fout;
+	fout.open(filename.c_str(), std::ios::out);
+	return sci::writecsvrows(fout, header, data, pad);
+}
+sci::csv_err sci::writecsvrows(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data, bool pad)
+{
 	if(!fout.is_open()) return sci::csv_filefail;
 	if(header.length()>0)fout << header.c_str() << "\n";
 	if(data.size()==0) 
@@ -490,6 +546,23 @@ sci::csv_err sci::writecsvrow(std::string filename, std::string header, const st
 	}
 	fout << data[0];
 	for(size_t i=1; i<data.size(); i++) fout << "," << data[i];
+	fout << "\n";
+	fout.close();
+	return sci::csv_ok;
+}
+sci::csv_err sci::writecsvrow(std::wstring filename, std::string header, const std::vector<double>  &data)
+{
+	std::fstream fout;
+	fout.open(filename.c_str(), std::ios::out);
+	if (!fout.is_open()) return sci::csv_filefail;
+	if (header.length()>0)fout << header.c_str() << "\n";
+	if (data.size() == 0)
+	{
+		fout.close();
+		return sci::csv_ok;
+	}
+	fout << data[0];
+	for (size_t i = 1; i<data.size(); i++) fout << "," << data[i];
 	fout << "\n";
 	fout.close();
 	return sci::csv_ok;

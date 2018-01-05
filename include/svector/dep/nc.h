@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SVECTOR_NC_H
+#define SVECTOR_NC_H
 #include<string>
 #include<vector>
 #include<netcdf.h>
@@ -456,3 +457,5 @@ namespace sci
 		NcDimension operator=(const NcDimension&);
 	};
 }
+
+#endif

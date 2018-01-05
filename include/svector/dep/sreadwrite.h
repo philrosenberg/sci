@@ -11,6 +11,7 @@
 #include<fstream>
 #include<sstream>
 #include<vector>
+#include<svector/dep/nc.h>
 
 namespace sci
 {
@@ -45,11 +46,15 @@ namespace sci
 	//Outputs
 	//header:		Text of the header lines - the last newline character before the data will be omitted
 	//data:			The data read from the file
-	csv_err readcsvcolumns(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos=0, std::streamoff *endpos=NULL, size_t startrow=0, size_t maxrows=(0-1));
+	csv_err readcsvcolumns(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos = 0, std::streamoff *endpos = NULL, size_t startrow = 0, size_t maxrows = (0 - 1));
+	csv_err readcsvcolumns(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos = 0, std::streamoff *endpos = NULL, size_t startrow = 0, size_t maxrows = (0 - 1));
+	csv_err readcsvcolumns(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos=0, std::streamoff *endpos=NULL, size_t startrow=0, size_t maxrows=(0-1));
 
 	
 	//this is as above but you can specify columns to ignore or to read in as text
+	csv_err readtextcolumns(std::ifstream &fin, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<readtype> &type);
 	csv_err readtextcolumns(std::string filename, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<readtype> &type);
+	csv_err readtextcolumns(std::wstring filename, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<readtype> &type);
 
 	//read csv data into a 2d vector where dimension 1 is the row number and dimension 2 is the column number
 	//this is best if you wish to be able to extract individual rows from the data.
@@ -62,7 +67,9 @@ namespace sci
 	//Outputs
 	//header:		Text of the header lines - the last newline character before the data will be omitted
 	//data:			The data read from the file
+	csv_err readcsvrows(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data);
 	csv_err readcsvrows(std::string filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data);
+	csv_err readcsvrows(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data);
 
 	//takes a string of numbers separated by commas and puts them in a vactor of doubles. Returns the number of elements in the vector.
 	//Any blanks will be filled with NANs.Any non-numberic values will be filled with NANs.
@@ -71,14 +78,20 @@ namespace sci
 	size_t splitcommastring(const std::string &datastring, std::vector <double> &data);
 
 	//write csv data from 2D array data into file filename. If the vector is not rectangular then blanks are put in to fill the gaps
+	csv_err writecsvcolumns(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data);
 	csv_err writecsvcolumns(std::string filename, std::string header, const std::vector< std::vector <double> > &data);
+	csv_err writecsvcolumns(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data);
 	//write csv data from 1D array into file filename.
 	csv_err writecsvcolumn(std::string filename, std::string header, const std::vector<double>  &data);
+	csv_err writecsvcolumn(std::wstring filename, std::string header, const std::vector<double>  &data);
 
 	//write csv data from 2D array data into file filename. If the vector is not rectangular and pad is true then blanks are put in to fill the gaps
-	csv_err writecsvrows(std::string filename, std::string header, const std::vector< std::vector <double> > &data, bool pad=true);
+	csv_err writecsvrows(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data, bool pad = true);
+	csv_err writecsvrows(std::string filename, std::string header, const std::vector< std::vector <double> > &data, bool pad = true);
+	csv_err writecsvrows(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data, bool pad=true);
 	//write csv data from 1D array into file filename.
 	csv_err writecsvrow(std::string filename, std::string header, const std::vector<double>  &data);
+	csv_err writecsvrow(std::wstring filename, std::string header, const std::vector<double>  &data);
 
 	double atofcustom(const std::string &numstr);
 	inline bool iswhitespace(char c) {return (c==' ' || c=='\t');}
@@ -102,7 +115,13 @@ namespace sci
 	{
 		std::vector<T> tempvar;
 		return readncvariable(filename,varname,var,tempvar);
-	}		
+	}
+	template<class T>
+	bool readncvariable(std::wstring filename, std::string varname, std::vector<T>& var)
+	{
+		std::vector<T> tempvar;
+		return readncvariable(filename, varname, var, tempvar);
+	}
 	//looks in the netcdf for variables with names that consist of varnamestart followed
 	//by a non-negative integer number. These are all read into vars, with varsn being put into the nth element
 	//of vars. vars must have one more demension than the variables. Any variables that are
@@ -116,6 +135,11 @@ namespace sci
 	{
 		return readnumberedncvariables(filename,varnamestart,"",vars);
 	}
+	template<class T>
+	bool readpostnumberedncvariables(std::wstring filename, std::string varnamestart, std::vector< std::vector<T> >& vars)
+	{
+		return readnumberedncvariables(filename, varnamestart, "", vars);
+	}
 
 	//looks in the netcdf for variables with names that consist of varnamestart followed
 	//by a non-negative integer number, followed by varnameend. These are all read into vars, 
@@ -126,12 +150,10 @@ namespace sci
 	//If the variable cannot be read then the corresponding element of vars will be emptied
 	//If any variables are read the function will return true, otherwise it will return false
 	template<class T>
-	bool readnumberedncvariables(std::string filename, std::string varnamestart, std::string varnameend, std::vector< std::vector<T> >& vars,size_t minnumber=0, size_t maxnumber=std::numeric_limits<size_t>::max())
+	bool readnumberedncvariables(sci::InputNcFile &file, std::string varnamestart, std::string varnameend, std::vector< std::vector<T> >& vars,size_t minnumber=0, size_t maxnumber=std::numeric_limits<size_t>::max())
 	{
 		try
 		{
-			//try to open the file
-			sci::InputNcFile file(filename);
 			std::vector<std::string> varlist = file.getVariableNames();
 
 			std::vector<size_t> indices;
@@ -218,6 +240,32 @@ namespace sci
 		}
 		return true;
 	}
+	template<class T>
+	bool readnumberedncvariables(std::string filename, std::string varnamestart, std::string varnameend, std::vector< std::vector<T> >& vars, size_t minnumber = 0, size_t maxnumber = std::numeric_limits<size_t>::max())
+	{
+		try
+		{
+			sci::InputNcFile file(filename);
+			return readnumberedncvariables(file, varnamestart, varnameend, vars, minnumber, maxnumber);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+	template<class T>
+	bool readnumberedncvariables(std::wstring filename, std::string varnamestart, std::string varnameend, std::vector< std::vector<T> >& vars, size_t minnumber = 0, size_t maxnumber = std::numeric_limits<size_t>::max())
+	{
+		try
+		{
+			sci::InputNcFile file(filename);
+			return readnumberedncvariables(file, varnamestart, varnameend, vars, minnumber, maxnumber);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
 
 	//internal function
 	//function that gets called by the above functions if tempvar has more than 1 dimension
@@ -230,17 +278,22 @@ namespace sci
 		tempvar.resize(1);
 		return readncvariable(filename,varname,var,tempvar[0]);
 	}
+	template<class T, class A>
+	bool readncvariable(std::wstring filename, std::string varname, std::vector<T>& var, std::vector< std::vector<A> > &tempvar)
+	{
+		tempvar.resize(1);
+		return readncvariable(filename, varname, var, tempvar[0]);
+	}
 
 	//function that gets called by the above functions if tempvar is 1d
 	template<class T, class A>
-	bool readncvariable(std::string filename, std::string varname, std::vector<T>& var, std::vector<A> &tempvar)
+	bool readncvariable(InputNcFile &file, std::string varname, std::vector<T>& var, std::vector<A> &tempvar)
 	{
 		//empty the var and shape vectors
 		var.clear();
 		tempvar.clear();
 		try
 		{
-			InputNcFile file(filename);
 			if (sci::ndims(var) == 1)
 			{
 				//the elaborate and hacky pointer play below is so that 
@@ -264,7 +317,39 @@ namespace sci
 		
 		return true;
 	}
+	template<class T, class A>
+	bool readncvariable(std::string filename, std::string varname, std::vector<T>& var, std::vector<A> &tempvar)
+	{
+		try
+		{
+			sci::InputNcFile file(filename);
+			return readncvariable(file, varname, var, tempvar);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+	template<class T, class A>
+	bool readncvariable(std::wstring filename, std::string varname, std::vector<T>& var, std::vector<A> &tempvar)
+	{
+		try
+		{
+			sci::InputNcFile file(filename);
+			return readncvariable(file, varname, var, tempvar);
+		}
+		catch (...)
+		{
+			return false;
+		}
+	}
+
+
 	inline bool readncvariableattribute(const std::string &filename, const std::string &variablename, const std::string &attributename, std::string &attributevalue)
+	{
+		return false;
+	}
+	inline bool readncvariableattribute(const std::wstring &filename, const std::string &variablename, const std::string &attributename, std::string &attributevalue)
 	{
 		return false;
 	}
