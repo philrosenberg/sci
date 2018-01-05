@@ -41,11 +41,13 @@ namespace stash
 	const int dustDivision4MassMixingRatio=434;
 	const int dustDivision5MassMixingRatio=435;
 	const int dustDivision6MassMixingRatio=436;
+	const int temperatureIncrementSw = 1181;
 	const int incomingSwFluxToa=1207;
 	const int outgoingSwFluxToa=1208;
 	const int directFlux=1230;
 	const int diffuseFlux=1231;
 	const int totalDownwardSurfaceSwFlux=1235;
+	const int temperatureIncrementLw = 2181;
 	const int netDownwardSurfaceLwFlux=2201;
 	const int outgoingLwFluxToa=2205;
 	const int downwardLwFluxSurface=2207;
@@ -73,10 +75,13 @@ namespace stash
 	const int vCompOfGravWaveStress=6202;
 	const int xCompOfGravWaveStress=6223;
 	const int yCompOfGravWaveStress=6224;
+	const int temperatureIncrementBlCloud = 9181;
 	const int extralowCloudAmount = 9202;
 	const int lowCloudAmount = 9203;
 	const int medCloudAmount = 9204;
 	const int highCloudAmount = 9205;
+	const int temperatureIncrementAdvection = 12181;
+	const int temperatureIncrementDiffusion = 13181;
 	const int tempOnModelLevels_K=16004;
 	const int tempOnThetaLevels_K=16004;
 	const int pressureAtMeanSeaLevel=16222;
