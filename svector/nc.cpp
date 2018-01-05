@@ -1,5 +1,6 @@
 #include"../include/svector/dep/serr.h"
 #include"../include/svector/dep/nc.h"
+#include"../include/svector/dep/sstring.h"
 #include<cstring>
 void sci::NcFileBase::openReadOnly(const std::string &fileName)
 {
@@ -8,10 +9,24 @@ void sci::NcFileBase::openReadOnly(const std::string &fileName)
 	m_open = true;
 }
 
+void sci::NcFileBase::openReadOnly(const std::wstring &fileName)
+{
+	sci::assertThrow(!m_open, sci::err());
+	sci::assertThrow(nc_open(utf16To8(fileName).c_str(), NC_NOWRITE, &m_id) == NC_NOERR, sci::err());
+	m_open = true;
+}
+
 void sci::NcFileBase::openWritable(const std::string &fileName)
 {
 	sci::assertThrow(!m_open, sci::err());
 	sci::assertThrow(nc_create(fileName.c_str(), NC_CLOBBER, &m_id) == NC_NOERR, sci::err());
+	m_open = true;
+}
+
+void sci::NcFileBase::openWritable(const std::wstring &fileName)
+{
+	sci::assertThrow(!m_open, sci::err());
+	sci::assertThrow(nc_create(utf16To8(fileName).c_str(), NC_CLOBBER, &m_id) == NC_NOERR, sci::err());
 	m_open = true;
 }
 
@@ -25,6 +40,11 @@ void sci::NcFileBase::close()
 }
 
 sci::InputNcFile::InputNcFile(const std::string &fileName)
+{
+	openReadOnly(fileName);
+}
+
+sci::InputNcFile::InputNcFile(const std::wstring &fileName)
 {
 	openReadOnly(fileName);
 }
@@ -273,6 +293,12 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 
 
 sci::OutputNcFile::OutputNcFile(const std::string &fileName)
+{
+	m_inDefineMode = true;
+	openWritable(fileName);
+}
+
+sci::OutputNcFile::OutputNcFile(const std::wstring &fileName)
 {
 	m_inDefineMode = true;
 	openWritable(fileName);

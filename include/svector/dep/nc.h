@@ -224,6 +224,8 @@ namespace sci
 		virtual ~NcFileBase() { close(); };
 		void openReadOnly(const std::string &fileName);
 		void openWritable(const std::string &fileName);
+		void openReadOnly(const std::wstring &fileName);
+		void openWritable(const std::wstring &fileName);
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
@@ -240,6 +242,7 @@ namespace sci
 	{
 	public:
 		InputNcFile(const std::string &fileName);
+		InputNcFile(const std::wstring &fileName);
 		template<class T>
 		std::vector<T> getVariable(const std::string &name);
 		template<class T>
@@ -377,6 +380,7 @@ namespace sci
 	{
 	public:
 		OutputNcFile(const std::string &fileName);
+		OutputNcFile(const std::wstring &fileName);
 		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
