@@ -135,6 +135,8 @@ namespace sci
 
 	template<>
 	sci::NcAttribute::NcAttribute(const std::string& name, std::string value);
+	template <>
+	sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value);
 	template<>
 	sci::NcAttribute::NcAttribute(const std::string& name, const char *value);
 

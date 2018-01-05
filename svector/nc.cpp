@@ -260,6 +260,23 @@ sci::NcAttribute::NcAttribute(const std::string& name, std::string value)
 }
 
 template<>
+sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
+{
+	m_name = name;
+	std::string utf8Value = sci::utf16To8(value);
+	m_nValues = utf8Value.length();
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	if (m_nValues == 0)
+		m_values = nullptr;
+	else
+	{
+		m_values = malloc(m_nBytes);
+		memcpy(m_values, &utf8Value[0], m_nBytes);
+	}
+}
+
+template<>
 sci::NcAttribute::NcAttribute(const std::string& name, const char *value)
 {
 	m_name = name;
