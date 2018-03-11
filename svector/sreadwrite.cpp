@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include"sreadwrite_internal.h"
 #include"serr_internal.h"
 #include"svector_internal.h"

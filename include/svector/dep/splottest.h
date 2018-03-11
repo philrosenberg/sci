@@ -1,12 +1,22 @@
 #ifndef splot_h
 #define splot_h
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
+#endif
+
 #include<vector>
 #include<wx/colour.h>
 #include<plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>
+
+#ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
+#undef _CRT_SECURE_NO_WARNINGS
+#undef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
+#endif
 
 //emptyvector
 static const std::vector<double> empty1d;

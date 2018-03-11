@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "plotdata_internal.h"
 #include "serr_internal.h"
 
