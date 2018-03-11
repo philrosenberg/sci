@@ -17,7 +17,7 @@ void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &res
 
 void sci::Minimiser::minimise()
 {
-	sci::assertThrow(m_xs.size()>0, sci::err());
+	sci::assertThrow(m_xs.size()>0, sci::err(sci::SERR_MINIMISER, -1, "Minimiser::minimise called but with no x data available (xs size is zero)."));
 
 	//create tunable params
 	alglib::real_1d_array algtunableparams;
@@ -64,7 +64,7 @@ std::vector<double> sci::Minimiser::getXUncertainties()
 
 void sci::Minimiser::setXs(const std::vector<double> &xs)
 {
-	sci::assertThrow(xs.size()>0,sci::err());
+	sci::assertThrow(xs.size()>0,sci::err(SERR_MINIMISER, -1, "sci::Minimiser::setXs called with zero elements in xs."));
 	m_xs=xs;
 
 	//set the scale of the variables. Helps algorithm converge. Should
@@ -81,8 +81,8 @@ void sci::Minimiser::setXs(const std::vector<double> &xs)
 
 void sci::Minimiser::setXs(const std::vector<double> &xs, const std::vector<double> &scales)
 {
-	sci::assertThrow(xs.size()>0,sci::err());
-	sci::assertThrow(xs.size()==scales.size(), sci::err());
+	sci::assertThrow(xs.size()>0,sci::err(SERR_MINIMISER, -1, "sci::Minimiser::setXs called with zero elements in xs."));
+	sci::assertThrow(xs.size()==scales.size(), sci::err(SERR_MINIMISER, -1, "sci::Minimiser::setXs called with a different number of elements in xs and scales."));
 	m_xs=xs;
 	//set the scale of the variables. Helps algorithm converge. Should
 	//be about the magnitude of the variables or the magnitude of how much
@@ -92,7 +92,7 @@ void sci::Minimiser::setXs(const std::vector<double> &xs, const std::vector<doub
 
 void sci::Minimiser::setXsWithoutSettingScales(const std::vector<double> &xs)
 {
-	sci::assertThrow(xs.size()>0,sci::err());
+	sci::assertThrow(xs.size()>0,sci::err(SERR_MINIMISER, -1, "sci::Minimiser::setXsWithoutSettingScales called with zero elements in xs."));
 	m_xs=xs;
 }
 
@@ -150,8 +150,8 @@ sci::Fitter1d::Fitter1d(const std::vector<double> &xs, const std::vector<double>
 }
 void sci::Fitter1d::setData(const std::vector<double> &xs, const std::vector<double> &ys)
 {
-	sci::assertThrow(xs.size()>0,sci::err());
-	sci::assertThrow(xs.size()==ys.size(),sci::err());
+	sci::assertThrow(xs.size()>0,sci::err(SERR_MINIMISER, -1, "sci::Fitter1d::setData called with zero elements in xs."));
+	sci::assertThrow(xs.size()==ys.size(),sci::err(SERR_MINIMISER, -1, "sci::Fitter1d::setData called with a different number of elements in xs and ys."));
 	m_xs=xs;
 	m_ys=ys;
 }
@@ -184,7 +184,7 @@ sci::Fitter1dWeighted::Fitter1dWeighted(const std::vector<double> &xs, const std
 void sci::Fitter1dWeighted::setData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &weights)
 {
 	Fitter1d::setData(xs, ys);
-	sci::assertThrow(xs.size()==weights.size(),sci::err());
+	sci::assertThrow(xs.size()==weights.size(),sci::err(SERR_MINIMISER, -1, "sci::Fitter1dWeighted::setXs called with a different number of elements in xs and weights."));
 	m_weights=weights;
 }
 double sci::Fitter1dWeighted::getWeightedSumSquaredErrors()
@@ -219,8 +219,8 @@ sci::Fitter1dXYErrors::Fitter1dXYErrors(const std::vector<double> &xs, const std
 void sci::Fitter1dXYErrors::setData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xErrors, const std::vector<double> &yErrors)
 {
 	Fitter1d::setData(xs, ys);
-	sci::assertThrow(xs.size()==xErrors.size(),sci::err());
-	sci::assertThrow(xs.size()==yErrors.size(),sci::err());
+	sci::assertThrow(xs.size() == xErrors.size(), sci::err(SERR_MINIMISER, -1, "sci::Fitter1dXYErrors::setData called with a different number of elements in xs and xErrors."));
+	sci::assertThrow(ys.size() == yErrors.size(), sci::err(SERR_MINIMISER, -1, "sci::Fitter1dXYErrors::setData called with a different number of elements in ys and yErrors."));
 	m_xErrors=xErrors;
 	m_yErrors=yErrors;
 }

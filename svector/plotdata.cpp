@@ -6,7 +6,7 @@
 LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )
 	: m_width( width ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
 {
-	sci::assertThrow(m_marks.size() == m_spaces.size(), sci::err() );
+	sci::assertThrow(m_marks.size() == m_spaces.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle constructor called with a different number of spaces to marks.") );
 }
 LineStyle::LineStyle( double width, const rgbcolour &colour, std::string pattern )
 	: m_width( width ), m_colour( colour )
@@ -103,7 +103,7 @@ void LineStyle::parseLineStyle(const std::string &pattern, std::vector<PLINT> &m
 		else if(pattern[i]=='-')
 			marklength+=800;
 		else
-			sci::assertThrow( false, sci::err() );
+			sci::assertThrow( false, sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle::parseLineStyle called with characters that cannot be converted to line marks. use only space, tab, ., -, _.") );
 	}
 	//add the last mark or space
 	if(onmark==true)
@@ -411,13 +411,13 @@ XYAxisData::XYAxisData( const std::vector<double> &xs, const std::vector<double>
 PlotData1d::PlotData1d(const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
 	:XYAxisData(xs, ys, transformer, autoLimitsPadAmount)
 {
-	sci::assertThrow(xs.size() == ys.size(), sci::err());
+	sci::assertThrow(xs.size() == ys.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData1d constructor called with xs and ys of different lengths."));
 }
 
 PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
 {
-	sci::assertThrow( zs.size() == xs.size(), sci::err() );
+	sci::assertThrow( zs.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData2dLinear constructor called with xs and zs of different lengths.") );
 	m_zData = zs;
 	m_zDataLogged = sci::log10( m_zData );
 	double zMin = sci::min<double>( m_zData );
@@ -431,8 +431,8 @@ PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::ve
 PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
 	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
 {
-	sci::assertThrow( zs1.size() == xs.size(), sci::err() );
-	sci::assertThrow( zs2.size() == xs.size(), sci::err() );
+	sci::assertThrow( zs1.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData3dLinear constructor called with xs and zs1 of different lengths.") );
+	sci::assertThrow( zs2.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData3dLinear constructor called with xs and zs2 of different lengths.") );
 	m_zData1 = zs1;
 	m_zDataLogged1 = sci::log10( m_zData1 );
 	double zMin1 = sci::min<double>( m_zData1 );
@@ -805,14 +805,18 @@ void VerticalBars::getLogLimits( double &xMin, double &xMax, double &yMin, doubl
 GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
 	:PlotData2dStructured(xs, ys, zs, transformer, autoLimitsPadAmount)
 {
-	sci::assertThrow(xs.size() == zs.size() + 1, sci::err());
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	if (zs.size() == 0)
-		sci::assertThrow(ys.size() == 0, sci::err());
+		sci::assertThrow(ys.size() == 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
 	else
 	{
-		sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err());
+		sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs[0] of different lengths."));
 		for (size_t i = 1; i < zs.size(); ++i)
-			sci::assertThrow(zs[i].size() == zs[0].size(), sci::err());
+		{
+			std::stringstream message;
+			message << "GridData constructor called with zs[" << i << "] and zs[0] of different lengths.";
+			sci::assertThrow(zs[i].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, message.str()));
+		}
 	}
 
 	m_colourscale = colourScale;

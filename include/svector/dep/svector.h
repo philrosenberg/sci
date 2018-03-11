@@ -556,7 +556,7 @@ namespace sci
 	{
 		if (v.size() == 0)
 			return std::vector<std::vector<T>>(0);
-		sci::assertThrow(sci::rectangular(v), sci::err());
+		sci::assertThrow(sci::rectangular(v), sci::err(SERR_VECTOR, -1, "sci::transpose called with a vector that isn't rectangular."));
 
 
 		std::vector< std::vector<T> > result;
@@ -751,7 +751,7 @@ namespace sci
 			othershape = sci::shape(v[0]);
 			for (size_t i = 1; i < v.size(); ++i)
 			{
-				sci::assertThrow(othershape == sci::shape(v[i]), sci::err());
+				sci::assertThrow(othershape == sci::shape(v[i]), sci::err(SERR_VECTOR, -999, "sci::shape called with some elements of different size to tthose in the same dimension."));
 			}
 		}
 		else
@@ -2050,7 +2050,6 @@ namespace sci
 	//floor((inputsize-1)*factor) to ceil((inputsize+1)*factor)
 	void resample(const std::vector<double> &input, double factor, std::vector<double> &output);
 	void resample(const std::vector<float> &input, float factor, std::vector<float> &output);
-	void outputerr(std::string err);
 	//fft
 	//note that if you wish to normalise the result you must divide the result by the number of elements in input
 	void fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output);
@@ -2841,7 +2840,7 @@ namespace sci
 	template<class T>
 	T determinant(const std::vector<std::vector<T>> &matrix)
 	{
-		sci::assertThrow(square(matrix), sci::err());
+		sci::assertThrow(square(matrix), sci::err(SERR_VECTOR, -999, "sci::determinant called with a non-square matrix."));
 		if (matrix.size() == 1)
 			return matrix[0][0];
 		else if (matrix.size() == 2)

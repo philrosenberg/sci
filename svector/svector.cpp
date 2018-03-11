@@ -8,11 +8,13 @@
 #include"operators_internal.h"
 #include"math_internal.h"
 #include"sstring_internal.h"
+#include<assert.h>
+
 
 void sci::resample(const std::vector<double> &input, double factor, std::vector<double> &output)
 {
 	size_t outputSize=(size_t)ceil((input.size()+1)*factor);
-	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err());
+	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err(SERR_VECTOR, -999, "sci::resample called with input too large - it can only be the maximum int in size."));
 	output.resize(outputSize);
 	void *rs=resample_opend(1,factor,factor);
 	int used;
@@ -27,7 +29,7 @@ void sci::resample(const std::vector<double> &input, double factor, std::vector<
 void sci::resample(const std::vector<float> &input, float factor, std::vector<float> &output)
 {
 	size_t outputSize=(size_t)ceil((input.size()+1)*factor);
-	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err());
+	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err(SERR_VECTOR, -999, "sci::resample called with input too large - it can only be the maximum int in size."));
 	output.resize(outputSize);
 	void *rs=resample_open(1,factor,factor);
 	int used;
@@ -51,13 +53,10 @@ void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_outpu
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 	svi::algctovectors(algoutput,re_output,im_output);
-}
-
-void sci::outputerr(std::string err)
-{
 }
 
 std::vector<double> sci::powerspectrum(const std::vector<double> &v)
@@ -167,8 +166,8 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
 	//approximation of y=sum(Ci*Fi(x))
 	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
-	sci::assertThrow(x.size()>1,sci::err());
-	sci::assertThrow(x.size()==y.size(),sci::err());
+	sci::assertThrow(x.size()>1,sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with 1 or fewer x values."));
+	sci::assertThrow(x.size()==y.size(),sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with a different number of x and y values."));
 
 	std::vector < std::vector<double> > basises;
 	basises.push_back(x);
@@ -191,12 +190,8 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
-		grad=std::numeric_limits<double>::quiet_NaN();
-		intercept=std::numeric_limits<double>::quiet_NaN();
-		vargrad=std::numeric_limits<double>::quiet_NaN();
-		varintercept=std::numeric_limits<double>::quiet_NaN();
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 
@@ -218,10 +213,10 @@ void sci::fitstraightline(const std::vector<std::vector<double>> &x, const std::
 	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
 	//approximation of y=sum(Ci*Fi(x))
 	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
-	sci::assertThrow(x.size()>0,sci::err());
+	sci::assertThrow(x.size()>0,sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with 1 or fewer x values."));
 	for(size_t i=1; i<x.size(); ++i)
-		sci::assertThrow( x[i].size() == x[0].size(), sci::err() );
-	sci::assertThrow( y.size()==x[0].size(), sci::err() );
+		sci::assertThrow( x[i].size() == x[0].size(), sci::err(SERR_VECTOR, -999, "sci::fitProportional called with multi-dimensional x values, but not all x values with the same number of dimensions.") );
+	sci::assertThrow( y.size()==x[0].size(), sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with a different number of x and y values.") );
 	grad.resize( x.size(), std::numeric_limits<double>::quiet_NaN() );
 	intercept = std::numeric_limits<double>::quiet_NaN();
 	covar = sci::makevector( std::numeric_limits<double>::quiet_NaN(), x.size()+1, x.size()+1 );
@@ -249,8 +244,8 @@ void sci::fitstraightline(const std::vector<std::vector<double>> &x, const std::
 	}
 	catch(alglib::ap_error err)
 	{
-		sci::outputerr(err.msg);
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 	//put results in outputs
@@ -268,10 +263,10 @@ void sci::fitProportional(const std::vector<std::vector<double>> &x, const std::
 	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
 	//approximation of y=sum(Ci*Fi(x))
 	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
-	sci::assertThrow(x.size()>0,sci::err());
+	sci::assertThrow(x.size()>0,sci::err(SERR_VECTOR, -999, "sci::fitProportional called with 0 x values."));
 	for(size_t i=1; i<x.size(); ++i)
-		sci::assertThrow( x[i].size() == x[0].size(), sci::err() );
-	sci::assertThrow( y.size()==x[0].size(), sci::err() );
+		sci::assertThrow( x[i].size() == x[0].size(), sci::err(SERR_VECTOR, -999, "sci::fitProportional called with multi-dimensional x values, but not all x values with the same number of dimensions.") );
+	sci::assertThrow( y.size()==x[0].size(), sci::err(SERR_VECTOR, -999, "sci::fitProportional called with a different number of x and y values.") );
 	grad.resize( x.size(), std::numeric_limits<double>::quiet_NaN() );
 	covar = sci::makevector( std::numeric_limits<double>::quiet_NaN(), x.size(), x.size() );
 
@@ -298,8 +293,8 @@ void sci::fitProportional(const std::vector<std::vector<double>> &x, const std::
 	}
 	catch(alglib::ap_error err)
 	{
-		sci::outputerr(err.msg);
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 	//put results in outputs
@@ -314,8 +309,8 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
 	//approximation of y=sum(Ci*Fi(x))
 	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
-	sci::assertThrow(x.size()>1,sci::err());
-	sci::assertThrow(x.size()==y.size(),sci::err());
+	sci::assertThrow(x.size()>1,sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with 1 or fewer x values."));
+	sci::assertThrow(x.size()==y.size(),sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with a different number of x and y values."));
 
 	std::vector < std::vector<double> > basises;
 	basises.push_back(x);
@@ -340,12 +335,8 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
-		grad=std::numeric_limits<double>::quiet_NaN();
-		intercept=std::numeric_limits<double>::quiet_NaN();
-		vargrad=std::numeric_limits<double>::quiet_NaN();
-		varintercept=std::numeric_limits<double>::quiet_NaN();
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 
@@ -363,8 +354,8 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 //Returns the number of data points used in the fit
 size_t sci::fitstraightlinewithoutlierremoval(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double maxresidual)
 {
-	sci::assertThrow(x.size()>1, sci::err());
-	sci::assertThrow(x.size()==y.size(), sci::err());
+	sci::assertThrow(x.size()>1, sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with 1 or fewer x values."));
+	sci::assertThrow(x.size()==y.size(), sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with a different number of x and y values."));
 	std::vector<double> fitx=x;
 	std::vector<double> fity=y;
 	double maxresidualsquared=maxresidual*maxresidual;
@@ -414,10 +405,8 @@ void sci::fitpowerlaw(double power, const std::vector<double> &x, const std::vec
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
-		k=std::numeric_limits<double>::quiet_NaN();
-		vark=std::numeric_limits<double>::quiet_NaN();
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 
@@ -448,9 +437,8 @@ void sci::crosscorr(const std::vector<double> &f, const std::vector<double> &g, 
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
-		r.resize(0);
-		return;
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 	//put results in outputs
@@ -532,7 +520,8 @@ size_t sci::minimise(std::vector<double> &tunableparams, const std::vector<doubl
 	}
 	catch(alglib::ap_error err)
 	{
-		outputerr(err.msg);
+		assert(false);
+		throw(sci::err(SERR_ALG, -999, err.msg));
 	}
 
 	//get the results
@@ -971,7 +960,7 @@ size_t sci::randInt(size_t maxVal)
 
 void sci::eigenvalues(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary)
 {
-	sci::assertThrow(sci::square(matrix),sci::err());
+	sci::assertThrow(sci::square(matrix),sci::err(SERR_VECTOR, -999, "sci::eigenvalues called with a non-square matrix."));
 	
 	alglib::real_2d_array algMatrix;
 	svi::vectortoalg(matrix,algMatrix);
@@ -983,7 +972,7 @@ void sci::eigenvalues(const std::vector<std::vector<double>> &matrix, std::vecto
 
 	//get the eigen values, note that setting parameter 3 to zero means the eigenvectors aren't derived, but the parameters
 	//still need to be passed
-	sci::assertThrow(alglib::rmatrixevd(algMatrix, matrix.size(), 0, algEigenvalues, algImaginaryEigenvalues, algRightEigenvectors, algLeftEigenvectors),sci::err());
+	sci::assertThrow(alglib::rmatrixevd(algMatrix, matrix.size(), 0, algEigenvalues, algImaginaryEigenvalues, algRightEigenvectors, algLeftEigenvectors),sci::err(SERR_ALG, -999, "Error when calling the ALG routine to determine eigenvectors."));
 
 	svi::algtovector(algEigenvalues,eigenvaluesReal);
 	svi::algtovector(algImaginaryEigenvalues,eigenvaluesImaginary);
@@ -991,7 +980,7 @@ void sci::eigenvalues(const std::vector<std::vector<double>> &matrix, std::vecto
 
 void sci::eigenvector(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary, std::vector<std::vector<double>> &eigenvectors)
 {
-	sci::assertThrow(sci::square(matrix),sci::err());
+	sci::assertThrow(sci::square(matrix),sci::err(SERR_VECTOR, -999, "sci::eigenvalues called with a non-square matrix."));
 	
 	alglib::real_2d_array algMatrix;
 	svi::vectortoalg(matrix,algMatrix);
@@ -1003,7 +992,7 @@ void sci::eigenvector(const std::vector<std::vector<double>> &matrix, std::vecto
 
 	//get the eigen values, note that setting parameter 3 to one means the right eigenvectors are derived, but the left parameter
 	//still need to be passed
-	sci::assertThrow(alglib::rmatrixevd(algMatrix, matrix.size(), 1, algEigenvalues, algImaginaryEigenvalues, algRightEigenvectors, algLeftEigenvectors),sci::err());
+	sci::assertThrow(alglib::rmatrixevd(algMatrix, matrix.size(), 1, algEigenvalues, algImaginaryEigenvalues, algRightEigenvectors, algLeftEigenvectors),sci::err(SERR_ALG, -999, "Error when calling the ALG routine to determine eigenvectors."));
 
 	svi::algtovector(algEigenvalues,eigenvaluesReal);
 	svi::algtovector(algImaginaryEigenvalues,eigenvaluesImaginary);
@@ -1183,7 +1172,7 @@ bool sci::allFalse(const std::vector<SBOOL> &v)
 
 std::vector<SBOOL> sci::rollingOr(const std::vector<SBOOL> &v, size_t n)
 {
-	sci::assertThrow(n>0, sci::err());
+	sci::assertThrow(n>0, sci::err(SERR_VECTOR, -999, "sci::rollingOr called with n equal to zero."));
 	if(n>v.size())
 		return std::vector<SBOOL>(0,0);
 	std::vector<SBOOL> result(v.size()-n+1);
@@ -1202,7 +1191,7 @@ std::vector<SBOOL> sci::rollingOr(const std::vector<SBOOL> &v, size_t n)
 
 std::vector<SBOOL> sci::rollingAnd(const std::vector<SBOOL> &v, size_t n)
 {
-	sci::assertThrow(n>0, sci::err());
+	sci::assertThrow(n>0, sci::err(SERR_VECTOR, -999, "sci::rollingAnd called with n equal to zero."));
 	if(n>v.size())
 		return std::vector<SBOOL>(0,1);
 	std::vector<SBOOL> result(v.size()-n+1);
@@ -1336,7 +1325,7 @@ sci::MultivariateNormalDistribution::MultivariateNormalDistribution(const std::v
 
 double sci::MultivariateNormalDistribution::getProbability(const std::vector<double> &x) const
 {
-	sci::assertThrow(x.size() == m_means.size(), sci::err());
+	sci::assertThrow(x.size() == m_means.size(), sci::err(SERR_DISTRIBUTIONS, -999, "sci::MultivariateNormalDistribution::getProbability called with the wrong number of x values."));
 	double power;
 	if (m_covarianceMatrix.size() > 0)
 	{
@@ -1447,13 +1436,11 @@ double sci::MarkovChain::getUniformRandom(double min, double max)
 
 sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<UnivariateInverseCumulativeDistributionFunction *> jumpDistributions)
 {
-	sci::assertThrow(startPoint.size() == jumpDistributions.size(), sci::err());
+	sci::assertThrow(startPoint.size() == jumpDistributions.size(), sci::err(SERR_ANALYSIS, -999, "sci::MetropolisHastingsMarkovChain constructor called with startPoint and jumpDistributions of different number of dimensions."));
 	m_currentPoint = startPoint;
 	m_probabilityDistributionFunction = probabilityDistributionFunction;
 	m_jumpDistributions = jumpDistributions;
 	m_currentProbability = m_probabilityDistributionFunction->getProbability(m_currentPoint);
-	if (m_jumpDistributions.size() != startPoint.size())
-		throw(sci::err());
 	for (size_t i = 0; i < nBurnInIterations; ++i)
 		getNext();
 	resetAcceptanceRatio();
@@ -1462,7 +1449,7 @@ sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<do
 
 sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<double> startPoint, size_t nBurnInIterations, ProbabilityDistributionFunction *probabilityDistributionFunction, std::vector<double> jumpStandardDeviations)
 {
-	sci::assertThrow(startPoint.size() == jumpStandardDeviations.size(), sci::err());
+	sci::assertThrow(startPoint.size() == jumpStandardDeviations.size(), sci::err(SERR_ANALYSIS, -999, "sci::MetropolisHastingsMarkovChain constructor called with startPoint and jumpDistributions of different number of dimensions."));
 	m_currentPoint = startPoint;
 	m_probabilityDistributionFunction = probabilityDistributionFunction;
 	size_t nextToInitialise = 0;
@@ -1475,8 +1462,6 @@ sci::MetropolisHastingsMarkovChain::MetropolisHastingsMarkovChain(std::vector<do
 			++nextToInitialise;
 		}
 		m_currentProbability = m_probabilityDistributionFunction->getProbability(m_currentPoint);
-		if (m_jumpDistributions.size() != startPoint.size())
-			throw(sci::err());
 		for (size_t i = 0; i < nBurnInIterations; ++i)
 			getNext();
 		resetAcceptanceRatio();

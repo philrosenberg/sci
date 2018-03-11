@@ -9,11 +9,11 @@ sci::MemoryMap::Handle::Handle(size_t nBytes, std::string name)
 		INVALID_HANDLE_VALUE,    // use paging file
 		NULL,                    // default security
 		PAGE_READWRITE,          // read/write access
-		nBytes/DWORD(-1),                       // maximum object size (high-order DWORD)
-		nBytes%DWORD(-1),// maximum object size (low-order DWORD)
+		DWORD(nBytes/DWORD(-1)), // maximum object size (high-order DWORD)
+		DWORD(nBytes%DWORD(-1)), // maximum object size (low-order DWORD)
 		std::wstring(name.begin(),name.end()).c_str());                 // name of mapping object
 
-	sci::assertThrow(m_mapFile!=NULL, sci::err());
+	sci::assertThrow(m_mapFile!=NULL, sci::err(SERR_MEMMAP, WindowsError()));
 	m_count=new size_t;
 	*m_count=1;
 }
@@ -25,7 +25,7 @@ sci::MemoryMap::Handle::Handle(std::string name)
 		FALSE,                 // do not inherit the name
 		std::wstring(name.begin(),name.end()).c_str()); // name of mapping object
 
-	sci::assertThrow(m_mapFile!=NULL, sci::err());
+	sci::assertThrow(m_mapFile!=NULL, sci::err(SERR_MEMMAP, WindowsError()));
 	m_count=new size_t;
 	*m_count=1;
 }
@@ -55,10 +55,10 @@ sci::MemoryMap::Buffer::Buffer(MemoryMap::Handle &memoryMapHandle, size_t offset
 {
 	m_buffer = MapViewOfFile(memoryMapHandle.m_mapFile,   // handle to map object
 						FILE_MAP_ALL_ACCESS, // read/write permission
-						offset/DWORD(-1), //high order offset
-						offset%DWORD(-1), //low order offset
+						DWORD(offset/DWORD(-1)), //high order offset
+						DWORD(offset%DWORD(-1)), //low order offset
 						nBytes);//maps the whole file
-	sci::assertThrow(m_buffer!=NULL, sci::err());
+	sci::assertThrow(m_buffer!=NULL, sci::err( SERR_MEMMAP, WindowsError()));
 	m_count=new size_t;
 	*m_count=1;
 }

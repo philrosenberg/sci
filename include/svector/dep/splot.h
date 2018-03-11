@@ -20,6 +20,9 @@
 #undef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #endif
 
+const int colourscaleErrorCode = 2;
+const int sizescaleErrorCode = 3;
+const int splot2dErrorCode = 4;
 
 //pre declarations
 class splot;

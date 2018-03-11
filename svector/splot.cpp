@@ -224,7 +224,7 @@ splotcolourscale::splotcolourscale()
 
 splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool logarithmic, bool autostretch)
 {
-	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err());
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
 		//setup continuous colour scale
 		setup(value, colour, logarithmic, autostretch);
@@ -246,7 +246,7 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 
 void splotcolourscale::setup(const std::vector<double> &value, const std::vector<rgbcolour> &colour,bool logarithmic, bool autostretch)
 {
-	sci::assertThrow(value.size()>1 && value.size() == colour.size(), sci::err());
+	sci::assertThrow(value.size()>1 && value.size() == colour.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with invalid sizes for the values or colours array."));
 	//check values are ascending or descending, catch Nans at the same time
 	bool ascending=true;
 	bool descending=true;
@@ -256,7 +256,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		descending &= value[i]<=value[i-1];
 	}
 	bool monotonic=ascending || descending;
-	sci::assertThrow(monotonic, sci::err());
+	sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with values which are neither monotonically ascending nor monotonically descending."));
 
 	//assign values
 	if(descending)
@@ -295,7 +295,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 	m_colour2=sci::subvector(m_colour2, filter);
 	m_colour3=sci::subvector(m_colour3, filter);
 	m_alpha=sci::subvector(m_alpha, filter);
-	sci::assertThrow(m_value.size()>1, sci::err());
+	sci::assertThrow(m_value.size()>1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with a values array containing only NaNs and +/- infnity."));
 
 
 	//remember the top and bottom and normalise scale to 0.0-1.0 range
@@ -308,7 +308,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 
 splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool logarithmic, bool autostretch)
 {
-	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err());
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
 		//setup continuous colour scale
 		setup(value, colour, logarithmic, autostretch);
@@ -330,7 +330,7 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 
 void splotcolourscale::setup(const std::vector<double> &value, const std::vector<hlscolour> &colour,bool logarithmic, bool autostretch)
 {
-	sci::assertThrow( value.size()>1 && value.size() == colour.size(), sci::err() );
+	sci::assertThrow( value.size()>1 && value.size() == colour.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with invalid sizes for the values or colours array.") );
 	//check values are ascending or descending, catch Nans at the same time
 	bool ascending=true;
 	bool descending=true;
@@ -340,7 +340,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		descending &= value[i]<=value[i-1];
 	}
 	bool monotonic=ascending || descending;
-	sci::assertThrow(monotonic, sci::err());
+	sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with values which are neither monotonically ascending nor monotonically descending."));
 
 	//assign values
 	if(descending)
@@ -637,7 +637,7 @@ splotsizescale::splotsizescale(const std::vector<double> &value, const std::vect
 {
 	
 	//check the sizes and values are the same length
-	sci::assertThrow( value.size() == size.size(), sci::err());
+	sci::assertThrow( value.size() == size.size(), sci::err(sci::SERR_PLOT, sizescaleErrorCode, "splotsizescale constructor called with value and size arrays of different sizes."));
 
 	//assign values as are
 	m_value=value;
@@ -653,7 +653,7 @@ splotsizescale::splotsizescale(const std::vector<double> &value, const std::vect
 		ascending &= m_value[i] >= m_value[i-1];
 		descending &= m_value[i] <= m_value[i-1];
 	}
-	sci::assertThrow( ascending || descending, sci::err() );
+	sci::assertThrow( ascending || descending, sci::err(sci::SERR_PLOT, sizescaleErrorCode, "splotsizescale constructor called with values which are neither monotonically increasing nor monotonically decreasing.") );
 	if( descending )
 	{
 		m_value = sci::reverse( m_value );
@@ -1452,10 +1452,12 @@ void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vec
 void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, splotTransformer *transformer)
 {
 	//checks
-	sci::assertThrow(xs.size()==zs.size()+1,sci::err());
+	sci::assertThrow(xs.size()==zs.size()+1,sci::err(sci::SERR_PLOT, splot2dErrorCode, "splot2d::addShadedGrid called with size of zs not one more than size of xs."));
 	for(size_t i=0; i<zs.size(); ++i) 
 	{
-		sci::assertThrow(ys.size()==zs[i].size()+1,sci::err());
+		std::stringstream message;
+		message << "splot2d::addShadedGrid called with size of zs[" << i << "] not one more than size of ys.";
+		sci::assertThrow(ys.size()==zs[i].size()+1,sci::err(sci::SERR_PLOT, splot2dErrorCode, message.str()));
 	}
 
 	//increase the size of all data
@@ -1491,8 +1493,8 @@ void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<dou
 			--i;
 		}
 	}
-	sci::assertThrow( m_xs.back().size()>0, sci::err() );
-	sci::assertThrow( m_ys.back().size()>0, sci::err() );
+	sci::assertThrow( m_xs.back().size()>0, sci::err(sci::SERR_PLOT, splot2dErrorCode, "splot2d::addShadedGrid called with xs consisting only of NaNs.") );
+	sci::assertThrow( m_ys.back().size()>0, sci::err(sci::SERR_PLOT, splot2dErrorCode, "splot2d::addShadedGrid called with ys consisting only of NaNs.") );
 
 	//generate logged values if needed and replace infinities with max/lowest doubles
 	if(colourscale.m_logarithmic) 

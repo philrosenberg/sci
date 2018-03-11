@@ -50,6 +50,7 @@ namespace sci
 		//as all buffers will be freed when the Memory Map is destroyed. However, you may wish to free
 		//a buffer sto save memory.
 		void freeBuffer(void *buffer);
+
 		private:
 		MemoryMap::Handle m_memoryMapHandle;
 		std::vector<MemoryMap::Buffer> m_memoryMapBuffers;

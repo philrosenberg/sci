@@ -5,6 +5,7 @@
 #include<string>
 #include<memory>
 
+const int plotDataErrorCode = 1;
 
 class LineStyle
 {

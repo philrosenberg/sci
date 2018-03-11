@@ -7,7 +7,6 @@
 #include<svector\serr.h>
 
 
-
 namespace sci_internal
 {
 	template <class T>
@@ -87,9 +86,22 @@ namespace sci_internal
 
 namespace sci
 {
+	void checkNcCall(long errorCode);
 	class OutputNcFile;
 	class NcDimension;
 	template<class T> class NcVariable;
+
+	const long localNcError = -10000;
+
+
+	class NcError
+	{
+	public:
+		NcError(long code);
+		sci::err getError() const;
+	private:
+		const long m_code;
+	};
 
 	class NcAttribute
 	{
@@ -205,8 +217,8 @@ namespace sci
 	template<class T>
 	void NcAttribute::write(const sci::OutputNcFile & ncFile, const sci::NcVariable<T> &variable) const
 	{
-		sci::assertThrow(ncFile.isOpen(), sci::err());
-		sci::assertThrow(nc_put_att(ncFile.getId(), variable.getId(), m_name.c_str(), m_writeType, m_nValues, m_values) == NC_NOERR, sci::err());
+		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcAttribute::write called before the file was opened."));
+		checkNcCall(nc_put_att(ncFile.getId(), variable.getId(), m_name.c_str(), m_writeType, m_nValues, m_values));
 	}
 
 
@@ -264,18 +276,18 @@ namespace sci
 	std::vector<T> InputNcFile::getVariable(const std::string &name, std::vector<size_t> &shape)
 	{
 		int varId;
-		sci::assertThrow(nc_inq_varid(getId(), name.c_str(), &varId) == NC_NOERR, sci::err());
+		checkNcCall(nc_inq_varid(getId(), name.c_str(), &varId));
 		int nDims;
-		sci::assertThrow(nc_inq_varndims(getId(), varId, &nDims) == NC_NOERR, sci::err());
+		checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
 		size_t nValues = 1;
 		shape.resize(nDims);
 		if (nDims > 0)
 		{
 			std::vector<int> dimIds(nDims);
-			sci::assertThrow(nc_inq_vardimid(getId(), varId, &dimIds[0]) == NC_NOERR, sci::err());
+			checkNcCall(nc_inq_vardimid(getId(), varId, &dimIds[0]));
 			for (int i = 0; i < nDims; ++i)
 			{
-				sci::assertThrow(nc_inq_dimlen(getId(), dimIds[i], &shape[i]) == NC_NOERR, sci::err());
+				checkNcCall(nc_inq_dimlen(getId(), dimIds[i], &shape[i]));
 				nValues *= shape[i];
 			}
 		}
@@ -319,7 +331,7 @@ namespace sci
 		void write(const OutputNcFile &file) const;
 		int getId() const
 		{
-			sci::assertThrow(m_hasId, sci::err()); return m_id;
+			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written.")); return m_id;
 		}
 		size_t getNDimensions() const { return m_dimensionIds.size(); }
 		bool hasId() const { return m_hasId; }
@@ -341,7 +353,7 @@ namespace sci
 		m_name = name;
 		m_hasId = false;
 		m_dimensionIds.push_back(dimension.getId());
-		sci::assertThrow(ncFile.isOpen(), sci::err());
+		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
 		//int dimensionId = dimension.getId();
 		//sci::assertThrow(nc_def_var(ncFile.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, 1, &dimensionId, &m_id) == NC_NOERR, sci::err());
 		//m_hasId = true;
@@ -354,7 +366,7 @@ namespace sci
 		m_hasId = false;
 		for (size_t i = 0; i < dimensions.size(); ++i)
 			m_dimensionIds.push_back(dimensions[i]->getId());
-		sci::assertThrow(ncFile.isOpen(), sci::err());
+		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
 	}
 	/*
 	template<class T>
@@ -371,9 +383,8 @@ namespace sci
 	template<class T>
 	void NcVariable<T>::write(const OutputNcFile &file) const
 	{
-		sci::assertThrow(!m_hasId, sci::err());
-		int err = nc_def_var(file.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id);
-		sci::assertThrow(err == NC_NOERR, sci::err());
+		sci::assertThrow(!m_hasId, sci::err(SERR_NC, localNcError, "sci::NcVariable::write called multiple times on the same variable."));
+		checkNcCall(nc_def_var(file.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
 		m_hasId = true;
 		for (size_t i = 0; i < m_attributes.size(); ++i)
 			m_attributes[i].write(file, *this);
@@ -406,13 +417,12 @@ namespace sci
 			nc_enddef(getId());
 			m_inDefineMode = false;
 		}
-		sci::assertThrow(variable.getNDimensions() == 1, sci::err());
+		sci::assertThrow(variable.getNDimensions() == 1, sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a multi-dimensional variable and single-dimensional data."));
 		size_t size = data.size();
 		if (data.size() > 0)
 		{
 			size_t start = 0;
-			int err = nc_put_vara(getId(), variable.getId(), &start, &size, &data[0]);
-			sci::assertThrow(err == NC_NOERR, sci::err());
+			checkNcCall(nc_put_vara(getId(), variable.getId(), &start, &size, &data[0]));
 		}
 			
 	}
@@ -426,13 +436,13 @@ namespace sci
 			m_inDefineMode = false;
 		};
 		std::vector<size_t> shape = sci::shape(data);
-		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err());
+		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions."));
 		std::vector<size_t> starts(variable.getNDimensions(), 0);
 		size_t size = sci::product(shape);
 		std::vector<T> flattenedData;
 		sci::flatten(flattenedData, data);
 		if (data.size() > 0)
-			sci::assertThrow(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]) == NC_NOERR, sci::err());
+			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
 	}
 
 	class NcDimension
@@ -447,7 +457,7 @@ namespace sci
 		void setLength(size_t length);
 		void load(const InputNcFile &ncFile);
 		void write(const OutputNcFile &ncFile) const;
-		int getId() const { sci::assertThrow(m_hasId, sci::err()); return m_id; }
+		int getId() const { sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "sci::NcDimension::getId called when the dimension does not yet have an id." )); return m_id; }
 	private:
 		std::string m_name;
 		size_t m_length;
