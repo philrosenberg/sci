@@ -13,6 +13,15 @@
 #include<vector>
 #include<svector/dep/nc.h>
 
+#ifdef max
+#define SVECTOR_RESTORE_MAX max
+#undef max
+#endif
+#ifdef min
+#define SVECTOR_RESTORE_MIN min
+#undef min
+#endif
+
 namespace sci
 {
 	enum csv_err
@@ -640,5 +649,15 @@ namespace sci
 	std::string concatPath( std::string part1, std::string part2);
 	
 }
+
+
+#ifdef SVECTOR_RESTORE_MAX
+#define max SVECTOR_RESTORE_MAX
+#undef SVECTOR_RESTORE_MAX
+#endif
+#ifdef SVECTOR_RESTORE_MIN
+#define min SVECTOR_RESTORE_MIN
+#undef SVECTOR_RESTORE_MIN
+#endif
 
 #endif
