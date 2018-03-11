@@ -89,8 +89,8 @@ namespace stash
 	const int geopotentialOnThetaLevels = 16201;
 	const int geopotentialOnPressureLevels = 16202;
 	const int geopotentialOnRhoLevels = 16255;
-
-
+	const int densityDryAirOnThetaLevels = 999999; //note this is one I made up as I use it a lot myself
+	const int densityMoistAirOnThetaLevels = 999998; //note this is one I made up as I use it a lot myself
 }
 
 #endif
