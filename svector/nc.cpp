@@ -222,6 +222,7 @@ sci::NcAttribute& sci::NcAttribute::operator=(sci::NcAttribute &&attribute)
 		m_nValues = attribute.m_nValues;
 		m_nBytes = attribute.m_nBytes;
 		m_values = attribute.m_values;
+		m_writeType = attribute.m_writeType;
 		attribute.m_nValues = 0;
 		attribute.m_nBytes = 0;
 		attribute.m_values = nullptr;
