@@ -157,6 +157,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\svector\kdtree.cpp" />
     <ClCompile Include="..\svector\memorymap.cpp" />
     <ClCompile Include="..\svector\nc.cpp" />
     <ClCompile Include="..\svector\operators.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="..\include\svector\dep\undoable.h" />
     <ClInclude Include="..\include\svector\dep\wgdos.h" />
     <ClInclude Include="..\include\svector\dep\windows.h" />
+    <ClInclude Include="..\include\svector\kdTree.h" />
     <ClInclude Include="..\include\svector\math.h" />
     <ClInclude Include="..\include\svector\memorymap.h" />
     <ClInclude Include="..\include\svector\operators.h" />

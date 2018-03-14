@@ -81,6 +81,9 @@
     <ClCompile Include="..\svector\nc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\svector\kdtree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\svector\algorithm_internal.h">
@@ -241,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="..\include\svector\dep\nc.h">
       <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\kdTree.h">
+      <Filter>Header Files\external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
