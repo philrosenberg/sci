@@ -7,6 +7,9 @@ wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &de
 
 namespace sci
 {
+	bool getTextFromUser(std::string &result, const std::string &message, const std::string &title, const std::string &defaultValue);
+	bool getRealFromUser(double &result, const std::string &message, const std::string &title, double defaultValue);
+	bool getIntegerFromUser(long &result, const std::string &message, const std::string &title, long defaultValue);
 }
 
 #endif
