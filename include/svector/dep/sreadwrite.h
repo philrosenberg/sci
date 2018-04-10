@@ -315,7 +315,7 @@ namespace sci
 			{
 				std::vector<size_t> shape;
 				tempvar = file.getVariable<A>(varname, shape);
-				sci::assertThrow(shape.size() == sci::ndims(var), sci::err());
+				sci::assertThrow(shape.size() == sci::ndims(var), sci::err(SERR_NC, -9999, "readncvariable called with a vector with a number of dimensions which does not match the number of dimensions of the variable in the netcdf file."));
 				sci::reshape(var, tempvar, shape);
 			}
 		}
