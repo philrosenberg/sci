@@ -13,7 +13,8 @@ namespace sci
 		SERR_VECTOR,
 		SERR_DISTRIBUTIONS,
 		SERR_ANALYSIS,
-		SERR_ALG
+		SERR_ALG,
+		SERR_USER
 	};
 	//error codes should be selected from this list based on their errcategory
 
