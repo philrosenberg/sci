@@ -263,6 +263,9 @@ namespace sci
 		template<class T>
 		std::vector<T> getVariable(const std::string &name, std::vector<size_t> &shape);
 		std::vector<std::string>getVariableNames();
+		template<class T>
+		T getGlobalAttribute(const std::string &name);
+		std::vector<std::string> getGlobalAttributeList();
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
@@ -309,6 +312,41 @@ namespace sci
 	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues);
 	template<>
 	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues);
+
+
+	template<>
+	double InputNcFile::getGlobalAttribute<double>(const std::string &name);
+	template<>
+	float InputNcFile::getGlobalAttribute<float>(const std::string &name);
+	template<>
+	short InputNcFile::getGlobalAttribute<short>(const std::string &name);
+	template<>
+	int InputNcFile::getGlobalAttribute<int>(const std::string &name);
+	template<>
+	long InputNcFile::getGlobalAttribute<long>(const std::string &name);
+	template<>
+	int8_t InputNcFile::getGlobalAttribute<int8_t>(const std::string &name);
+	template<>
+	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const std::string &name);
+	template<>
+	std::string InputNcFile::getGlobalAttribute<std::string>(const std::string &name);
+
+	template<>
+	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name);
+	template<>
+	std::vector<float> InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name);
+	template<>
+	std::vector<short> InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name);
+	template<>
+	std::vector<int> InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name);
+	template<>
+	std::vector<long> InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name);
+	template<>
+	std::vector<int8_t> InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name);
+	template<>
+	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name);
+	template<>
+	std::vector<std::string> InputNcFile::getGlobalAttribute<std::vector<std::string>>(const std::string &name);
 
 	template<class T>
 	std::vector<T> InputNcFile::getVariable(const std::string &name)

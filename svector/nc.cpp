@@ -209,6 +209,194 @@ std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t
 	return result;
 }
 
+template<>
+double sci::InputNcFile::getGlobalAttribute<double>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	
+	double result;
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+float sci::InputNcFile::getGlobalAttribute<float>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	
+	float result;
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+short sci::InputNcFile::getGlobalAttribute<short>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	
+	short result;
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+int sci::InputNcFile::getGlobalAttribute<int>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	
+	int result;
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+long sci::InputNcFile::getGlobalAttribute<long>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	
+	long result;
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+int8_t sci::InputNcFile::getGlobalAttribute<int8_t>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+
+	int8_t result;
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, name.c_str(), &result));
+
+	return result;
+}
+
+template<>
+std::string sci::InputNcFile::getGlobalAttribute<std::string>(const std::string &name)
+{
+	size_t nChars;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nChars));
+	std::vector<char> characters(nChars + 1); // they are all initialised to 0
+	checkNcCall(nc_get_att_text(getId(), NC_GLOBAL, name.c_str(), &characters[0]));
+
+	return std::string(&characters[0]);
+}
+
+template<>
+std::vector<double> sci::InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<double> result(nValues);
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<float> sci::InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<float> result(nValues);
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<short> sci::InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<short> result(nValues);
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<int> sci::InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<int> result(nValues);
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<long> sci::InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<long> result(nValues);
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<int8_t> sci::InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<int8_t> result(nValues);
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+template<>
+std::vector<uint8_t> sci::InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+
+	std::vector<uint8_t> result(nValues);
+	checkNcCall(nc_get_att_uchar(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+
+	return result;
+}
+
+std::vector<std::string> sci::InputNcFile::getGlobalAttributeList()
+{
+	int nAttributes;
+	checkNcCall(nc_inq_natts(getId(), &nAttributes));
+	std::vector<std::string> result(nAttributes);
+	for (int i = 0; i < nAttributes; ++i)
+	{
+		std::vector<char> thisName(NC_MAX_NAME + 1);
+		nc_inq_attname(getId(), NC_GLOBAL, i, &thisName[0]);
+		result[i] = std::string(&thisName[0]);
+	}
+	return result;
+}
+
+
 sci::NcDimension::NcDimension(const std::string &name, size_t length)
 {
 	setName(name);
