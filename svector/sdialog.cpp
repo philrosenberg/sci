@@ -54,4 +54,23 @@ bool sci::getIntegerFromUser(long &result, const std::string &message, const std
 	return false;
 }
 	
+sci::DecimalNumberTextCtrl<double>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, double *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+	:NumberTextCtrl<double>(parent, id, "%g", valPtr, value, pos, size, style, name)
+{
+}
+
+sci::DecimalNumberTextCtrl<double>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, double minVal, double maxVal, double *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+	: NumberTextCtrl<double>(parent, id, "%g", minVal, maxVal, valPtr, value, pos, size, style, name)
+{
+}
+
+sci::DecimalNumberTextCtrl<float>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, float *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+	: NumberTextCtrl<float>(parent, id, "%g", valPtr, value, pos, size, style, name)
+{
+}
+
+sci::DecimalNumberTextCtrl<float>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, float minVal, float maxVal, float *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+	: NumberTextCtrl<float>(parent, id, "%g", minVal, maxVal, valPtr, value, pos, size, style, name)
+{
+}
 

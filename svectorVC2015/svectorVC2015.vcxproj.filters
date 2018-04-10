@@ -84,6 +84,9 @@
     <ClCompile Include="..\svector\kdtree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\svector\NumberFromTextValidator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\svector\algorithm_internal.h">
@@ -249,6 +252,9 @@
       <Filter>Header Files\external</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\sminimiser2.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\NumberFromTextValidator.h">
       <Filter>Header Files\external</Filter>
     </ClInclude>
   </ItemGroup>

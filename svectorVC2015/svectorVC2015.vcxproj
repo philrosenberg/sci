@@ -160,6 +160,7 @@
     <ClCompile Include="..\svector\kdtree.cpp" />
     <ClCompile Include="..\svector\memorymap.cpp" />
     <ClCompile Include="..\svector\nc.cpp" />
+    <ClCompile Include="..\svector\NumberFromTextValidator.cpp" />
     <ClCompile Include="..\svector\operators.cpp" />
     <ClCompile Include="..\svector\plotdata.cpp" />
     <ClCompile Include="..\svector\ppfile.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="..\include\svector\kdTree.h" />
     <ClInclude Include="..\include\svector\math.h" />
     <ClInclude Include="..\include\svector\memorymap.h" />
+    <ClInclude Include="..\include\svector\NumberFromTextValidator.h" />
     <ClInclude Include="..\include\svector\operators.h" />
     <ClInclude Include="..\include\svector\plotdata.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
