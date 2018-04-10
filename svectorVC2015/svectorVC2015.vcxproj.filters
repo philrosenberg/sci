@@ -248,5 +248,8 @@
     <ClInclude Include="..\include\svector\kdTree.h">
       <Filter>Header Files\external</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\sminimiser2.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

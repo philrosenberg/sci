@@ -212,6 +212,7 @@
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
+    <ClInclude Include="..\include\svector\sminimiser2.h" />
     <ClInclude Include="..\include\svector\splot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="..\include\svector\sstring.h" />
