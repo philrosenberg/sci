@@ -117,7 +117,7 @@ T NumberFromTextValidator<T>::textToNumber(const wxString &text) const
 				if (!text.ToLongLong(&result, 10))
 					throw(std::string("Error: Invalid base 10 value."));
 			}
-			if (result > std::numeric_limits<T>::max() || result < std::numeric_limits<T>::min())
+			if (result > (wxLongLong_t)std::numeric_limits<T>::max() || result < (wxLongLong_t)std::numeric_limits<T>::min())
 				throw(std::string("Error: out of range."));
 			T finalResult = T(result);
 			if (m_extraRangeChecks && (finalResult < m_minVal || finalResult > m_maxVal))
