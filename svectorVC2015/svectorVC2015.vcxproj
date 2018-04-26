@@ -174,6 +174,7 @@
     <ClCompile Include="..\svector\sstring.cpp" />
     <ClCompile Include="..\svector\svector.cpp" />
     <ClCompile Include="..\svector\svi.cpp" />
+    <ClCompile Include="..\svector\time.cpp" />
     <ClCompile Include="..\svector\transforms.cpp" />
     <ClCompile Include="..\svector\undoable.cpp" />
     <ClCompile Include="..\svector\wgdos.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="..\include\svector\dep\sterminal.h" />
     <ClInclude Include="..\include\svector\dep\svector.h" />
     <ClInclude Include="..\include\svector\dep\svi.h" />
+    <ClInclude Include="..\include\svector\dep\time.h" />
     <ClInclude Include="..\include\svector\dep\transforms.h" />
     <ClInclude Include="..\include\svector\dep\undoable.h" />
     <ClInclude Include="..\include\svector\dep\wgdos.h" />
@@ -219,6 +221,7 @@
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="..\include\svector\sstring.h" />
     <ClInclude Include="..\include\svector\svector.h" />
+    <ClInclude Include="..\include\svector\time.h" />
     <ClInclude Include="..\include\svector\transforms.h" />
     <ClInclude Include="..\svector\algorithm_internal.h" />
     <ClInclude Include="..\svector\math_internal.h" />

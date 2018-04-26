@@ -87,6 +87,9 @@
     <ClCompile Include="..\svector\NumberFromTextValidator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\svector\time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\svector\algorithm_internal.h">
@@ -255,6 +258,12 @@
       <Filter>Header Files\external</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\NumberFromTextValidator.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\time.h">
+      <Filter>Header Files\dep</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\time.h">
       <Filter>Header Files\external</Filter>
     </ClInclude>
   </ItemGroup>
