@@ -35,6 +35,24 @@ void sci::UtcTime::set(int year, unsigned int month, unsigned int dayOfMonth, un
 	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime); 
 }
 
+void sci::UtcTime::setTime(unsigned int hour, unsigned int minute, double second)
+{
+	m_cTime.tm_hour = hour;
+	m_cTime.tm_min = minute;
+	m_cTime.tm_sec = int(std::floor(second));
+	m_cTime.tm_isdst = 0;
+	m_secondFraction = second - std::floor(second);
+	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime);
+}
+
+void sci::UtcTime::setDate(int year, unsigned int month, unsigned int dayOfMonth)
+{
+	m_cTime.tm_year = year - 1900;
+	m_cTime.tm_mon = month - 1;
+	m_cTime.tm_mday = dayOfMonth;
+	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime);
+}
+
 int sci::UtcTime::getYear() const
 {
 	return m_cTime.tm_year+1900;

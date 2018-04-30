@@ -24,6 +24,8 @@ namespace sci
 		UtcTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second);
 		TimeInterval getUnixTime() const;
 		void set(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second);
+		void setTime(unsigned int hour, unsigned int minute, double second);
+		void setDate(int year, unsigned int month, unsigned int dayOfMonth);
 		int getYear() const;
 		unsigned int getMonth() const;
 		unsigned int getDayOfMonth() const;
