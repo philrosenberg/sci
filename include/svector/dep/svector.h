@@ -1050,7 +1050,7 @@ namespace sci
 	T meanIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights)
 	{
 		if(v.size()==0) return std::numeric_limits<T>::quiet_NaN();
-		sci::assertThrow( v.size() == weights.size(), sci::err() );
+		sci::assertThrow( v.size() == weights.size(), sci::err(SERR_VECTOR, 0, "When performing a weighted mean the weights must have the same size as the data.") );
 		T result=0.0;
 		T weight=0.0;
 		const T *vi=&v[0];
@@ -1229,7 +1229,7 @@ namespace sci
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
-		sci::assertThrow( v.size() == weights.size(), sci::err() );
+		sci::assertThrow( v.size() == weights.size(), sci::err(SERR_VECTOR, 0, "When calculating a weighted variance, the wheits must have the same size as the data") );
 		T result = 0.0;
 		T weight = 0.0;
 		const T *vi = &v[0];
