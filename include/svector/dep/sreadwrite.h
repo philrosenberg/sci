@@ -235,12 +235,9 @@ namespace sci
 
 			//resize our output to hold the correct number of variables
 			vars.resize(sci::max<size_t>(indices + size_t(1)));
-			//grab the variables
-			bool succeeded = false;
 			for (size_t i = 0; i < varlist.size(); ++i)
 			{
-				bool thissucceeded = sci::readncvariable(filename, varlist[i], vars[indices[i]]);
-				succeeded = succeeded || thissucceeded;
+				vars[indices[i]] = file.getVariable<T>(varlist[i]); 
 			}
 		}
 		catch (...)
