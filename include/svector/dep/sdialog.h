@@ -4,6 +4,7 @@
 #include<wx/filedlg.h>
 #include<wx/textctrl.h>
 #include<svector/NumberFromTextValidator.h>
+#include<wx/frame.h>
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path=wxT(""), const wxString &default_filename=wxT(""), const wxString &wildcard=wxT("*.*"), int flags=0, wxWindow *parent=NULL, int x=-1,int y=-1);
 
@@ -102,6 +103,20 @@ namespace sci
 		DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, float *valPtr, const wxString &value = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxTextCtrlNameStr);
 		DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, float minVal, float maxVal, float *valPtr, const wxString &value = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxTextCtrlNameStr);
 		virtual ~DecimalNumberTextCtrl() {}
+	};
+
+	class SlaveRenderPanel;
+
+	class GraphicsFrame : public wxFrame
+	{
+	public:
+		static const int PANEL_ID;
+		GraphicsFrame(wxWindow *parent, wxWindowID id, const wxString& title, bool clearBeforeRender = false, const wxColour &backgroundColour = wxColour(255, 255, 255), const wxPoint& position = wxDefaultPosition,
+			const wxSize& size = wxDefaultSize, long style = wxDEFAULT_FRAME_STYLE, const wxString& name = wxFrameNameStr);
+		virtual void render( wxDC *dc);
+	private:
+		SlaveRenderPanel *m_panel;
+		wxColour m_backgroundColour;
 	};
 }
 

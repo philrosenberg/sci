@@ -1,5 +1,8 @@
 #include"sdialog_internal.h"
 #include <wx/textdlg.h>
+#include <wx/dcclient.h>
+#include <wx/dcgraph.h>
+#include <wx/sizer.h>
 
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path, const wxString &default_filename, const wxString &wildcard, int flags, wxWindow *parent, int x,int y)
@@ -74,3 +77,46 @@ sci::DecimalNumberTextCtrl<float>::DecimalNumberTextCtrl(wxWindow *parent, wxWin
 {
 }
 
+const int sci::GraphicsFrame::PANEL_ID = wxNewId();
+
+namespace sci
+{
+	class SlaveRenderPanel : public wxPanel
+	{
+	public:
+		SlaveRenderPanel(sci::GraphicsFrame *parent, int id, bool clearBeforeRender, const wxColour &backgroundColour)
+			:wxPanel(parent, id)
+		{
+			m_parent = parent;
+			m_clearBeforeRender = clearBeforeRender;
+			SetBackgroundColour(backgroundColour);
+			Connect(wxEVT_PAINT, wxPaintEventHandler(SlaveRenderPanel::OnPaint));
+		}
+	private:
+		void OnPaint(wxPaintEvent &event)
+		{
+			wxPaintDC dc(this);
+			wxColour bg = GetBackgroundColour();
+			dc.SetBackground(GetBackgroundColour());
+			dc.Clear();
+			m_parent->render(&dc);
+		}
+		sci::GraphicsFrame *m_parent;
+		bool m_clearBeforeRender;
+	};
+}
+
+sci::GraphicsFrame::GraphicsFrame(wxWindow *parent, wxWindowID id, const wxString& title, bool clearBeforeRender, const wxColour &backgroundColour, const wxPoint& position,
+	const wxSize& size, long style, const wxString& name)
+:wxFrame(parent, id, title, position, size, style, name)
+{
+	m_backgroundColour = backgroundColour;
+	m_panel = new SlaveRenderPanel(this, PANEL_ID, clearBeforeRender, m_backgroundColour);
+	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+	sizer->Add(m_panel, 1, wxEXPAND);
+	this->SetSizer(sizer);
+}
+
+void sci::GraphicsFrame::render(wxDC *dc)
+{
+}
