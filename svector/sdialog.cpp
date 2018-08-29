@@ -91,6 +91,7 @@ namespace sci
 			m_clearBeforeRender = clearBeforeRender;
 			SetBackgroundColour(backgroundColour);
 			Connect(wxEVT_PAINT, wxPaintEventHandler(SlaveRenderPanel::OnPaint));
+			Connect(wxEVT_ERASE_BACKGROUND, wxEraseEventHandler(SlaveRenderPanel::OnErase));
 		}
 	private:
 		void OnPaint(wxPaintEvent &event)
@@ -100,6 +101,10 @@ namespace sci
 			dc.SetBackground(GetBackgroundColour());
 			dc.Clear();
 			m_parent->render(&dc);
+		}
+		void OnErase(wxEraseEvent &event)
+		{
+			//do nothing to avoid flicker
 		}
 		sci::GraphicsFrame *m_parent;
 		bool m_clearBeforeRender;
