@@ -125,3 +125,30 @@ sci::GraphicsFrame::GraphicsFrame(wxWindow *parent, wxWindowID id, const wxStrin
 void sci::GraphicsFrame::render(wxDC *dc)
 {
 }
+
+const int sci::StepAnimatedGraphicsFrame::TIMER_ID = wxNewId();
+
+sci::StepAnimatedGraphicsFrame::StepAnimatedGraphicsFrame(wxWindow *parent, wxWindowID id, const wxString& title, size_t millisecondsPerFrame, bool clearBeforeRender, const wxColour &backgroundColour, const wxPoint& position,
+	const wxSize& size, long style, const wxString& name)
+	:GraphicsFrame(parent, id, title,clearBeforeRender, backgroundColour, position, size, style, name)
+{
+	m_millisecondsPerFrame = millisecondsPerFrame;
+	m_animationTimer = new wxTimer(this, TIMER_ID);
+	Connect(TIMER_ID, wxEVT_TIMER, wxTimerEventHandler(sci::StepAnimatedGraphicsFrame::OnAnimationTimer));
+}
+
+void sci::StepAnimatedGraphicsFrame::start()
+{
+	m_animationTimer->Start(m_millisecondsPerFrame);
+}
+
+void sci::StepAnimatedGraphicsFrame::stop()
+{
+	m_animationTimer->Stop();
+}
+
+void sci::StepAnimatedGraphicsFrame::OnAnimationTimer(wxTimerEvent &event)
+{
+	incrementTime();
+	Refresh();
+}

@@ -5,6 +5,7 @@
 #include<wx/textctrl.h>
 #include<svector/NumberFromTextValidator.h>
 #include<wx/frame.h>
+#include<wx/timer.h>
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path=wxT(""), const wxString &default_filename=wxT(""), const wxString &wildcard=wxT("*.*"), int flags=0, wxWindow *parent=NULL, int x=-1,int y=-1);
 
@@ -117,6 +118,20 @@ namespace sci
 	private:
 		SlaveRenderPanel *m_panel;
 		wxColour m_backgroundColour;
+	};
+	class StepAnimatedGraphicsFrame : public GraphicsFrame
+	{
+	public:
+		static const int TIMER_ID;
+		StepAnimatedGraphicsFrame(wxWindow *parent, wxWindowID id, const wxString& title, size_t millisecondsPerFrame, bool clearBeforeRender = false, const wxColour &backgroundColour = wxColour(255, 255, 255), const wxPoint& position = wxDefaultPosition,
+			const wxSize& size = wxDefaultSize, long style = wxDEFAULT_FRAME_STYLE, const wxString& name = wxFrameNameStr);
+		void start();
+		void stop();
+		virtual void incrementTime() = 0;
+	private:
+		wxTimer *m_animationTimer;
+		size_t m_millisecondsPerFrame;
+		void OnAnimationTimer(wxTimerEvent &event);
 	};
 }
 
