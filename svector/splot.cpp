@@ -629,7 +629,7 @@ hlscolour splotcolourscale::getHlsOffscaleTop()
 void splotcolourscale::setup(plstream *pl) const
 {
 	const double * intensity = &m_value[0];
-
+	pl->scmap1n(256);
 	pl->scmap1la(!m_hls, m_colour1.size(), intensity, &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
 }
 
