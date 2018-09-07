@@ -7,7 +7,7 @@
 
 namespace alglib
 {
-	class ap_err;
+	class ap_error;
 }
 
 namespace sci
