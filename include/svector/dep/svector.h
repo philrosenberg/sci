@@ -100,8 +100,7 @@ namespace sci
 		inline qic(const std::vector<T> &v){m_start=&v[0];}
 		inline const T& operator[](size_t index) const 
 		{
-			T result=*(m_start+index);
-			return result;
+			return *(m_start+index);
 		}
 	private:
 		const T *m_start;
@@ -114,8 +113,7 @@ namespace sci
 		inline qi(std::vector<T> &v){m_start=&v[0];}
 		inline T& operator[](size_t index) const 
 		{
-			T result=*(m_start+index);
-			return result;
+			return *(m_start+index);
 		}
 	private:
 		T *m_start;
