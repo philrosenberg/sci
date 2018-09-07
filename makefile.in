@@ -1,4 +1,4 @@
-COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
+COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude
 INSTALL_TEMP = install/
 INSTALL_TEMP_NOSLASH = install
 
