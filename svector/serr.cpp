@@ -45,11 +45,11 @@ sci::err::err(errcategory category, long code, const std::string &message)
 sci::err::err(const alglib::ap_error &err, long code)
 	: m_category(SERR_ALG), m_code(code), m_message(err.msg)
 {}
-
+#ifdef _WIN32
 sci::err::err(errcategory category, const WindowsError &windowsError)
 	: m_category(category), m_code(windowsError.getCode()), m_message(windowsError.getMessage())
 {}
-
+#endif
 void sci::assertThrow(bool test, const sci::err &err)
 {
 	assert(test);
