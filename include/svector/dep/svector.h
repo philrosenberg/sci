@@ -22,6 +22,7 @@
 #include<cmath>
 #include<type_traits>
 #include<random>
+#include<svector/serr.h>
 
 /*#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -2241,7 +2242,7 @@ namespace sci
 		}
 		catch(alglib::ap_error err)
 		{
-			outputerr(err.msg);
+			throw sci::err( err, 0);
 		}
 
 		//get the results

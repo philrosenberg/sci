@@ -4,6 +4,12 @@
 #ifdef WIN32
 #include<Windows.h>
 #endif
+
+namespace alglib
+{
+	class ap_err;
+}
+
 namespace sci
 {
 	enum errcategory
@@ -40,6 +46,7 @@ namespace sci
 	public:
 		err(errcategory category, long code);
 		err(errcategory category, long code, const std::string &message);
+		err(const alglib::ap_error &err, long code);
 #ifdef WIN32
 		err(errcategory category, const WindowsError &windowsError);
 #endif
