@@ -1,7 +1,9 @@
 #ifndef serr_H
 #define serr_H
 #include<string>
+#ifdef WIN32
 #include<Windows.h>
+#endif
 namespace sci
 {
 	enum errcategory
@@ -18,6 +20,7 @@ namespace sci
 	};
 	//error codes should be selected from this list based on their errcategory
 
+#ifdef WIN32
 	class WindowsError
 	{
 	public:
@@ -30,13 +33,16 @@ namespace sci
 		DWORD m_code;
 		std::string m_message;
 	};
+#endif
 
 	class err
 	{
 	public:
 		err(errcategory category, long code);
 		err(errcategory category, long code, const std::string &message);
+#ifdef WIN32
 		err(errcategory category, const WindowsError &windowsError);
+#endif
 		errcategory getErrorCategory() const { return m_category; }
 		long getErrorCode() const { return m_code; }
 		std::string getErrorMessage() const { return m_message; }
