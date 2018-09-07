@@ -101,7 +101,7 @@ namespace sci
 		inline const T& operator[](size_t index) const 
 		{
 			T result=*(m_start+index);
-			return *(m_start+index);
+			return result;
 		}
 	private:
 		const T *m_start;
@@ -115,7 +115,7 @@ namespace sci
 		inline T& operator[](size_t index) const 
 		{
 			T result=*(m_start+index);
-			return *(m_start+index);
+			return result;
 		}
 	private:
 		T *m_start;
