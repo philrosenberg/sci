@@ -3241,19 +3241,21 @@ namespace sci
 		//get x from the cdf for one dimension given the values in all other dimensions. otherXs should have one element for each dimension
 		//but the value in otherXs[undefinedIndex] will not be used
 		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const = 0;
+		virtual ~MultivariateInverseCumulativeDistributionFunction() {}
 	};
 
 	class UnivariateInverseCumulativeDistributionFunction
 	{
 	public:
 		virtual double getX(double cumulativeProbability) const = 0;
+		virtual ~UnivariateInverseCumulativeDistributionFunction() {}
 	};
 
 	class MultivariateInverseCumulativeNormalDistribution : MultivariateInverseCumulativeDistributionFunction
 	{
 	public:
 		MultivariateInverseCumulativeNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations);
-		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const;
+		double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const;
 	private:
 		std::vector<double> m_means;
 		std::vector<double> m_standardDeviations;
@@ -3263,10 +3265,11 @@ namespace sci
 	{
 	public:
 		InverseCumulativeNormalDistribution(double mean, double standardDeviation);
-		virtual double getX(double cumulativeProbability) const;
+		double getX(double cumulativeProbability) const;
 	private:
 		double m_mean;
 		double m_standardDeviation;
+		virtual ~InverseCumulativeNormalDistribution() {}
 	};
 
 	class MarkovChain : public RandomReal
