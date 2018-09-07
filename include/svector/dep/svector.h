@@ -2260,8 +2260,8 @@ namespace sci
 		//for a given nNodes, which feels a bit odd. Basically there is an assumption that
 		//our function can be modelled by a polynomial of order nNodes-1 multiplied by 
 		//exp(-x) and some clever maths to prove that the given nodes work.
-		alglib::real_1d_array x();
-		alglib::real_1d_array w();
+		alglib::real_1d_array x;
+		alglib::real_1d_array w;
 		x.resize( nNodes );
 		w.resize( nNodes );
 		alglib::ae_int_t algresult;
