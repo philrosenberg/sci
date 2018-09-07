@@ -2262,8 +2262,8 @@ namespace sci
 		//exp(-x) and some clever maths to prove that the given nodes work.
 		alglib::real_1d_array x;
 		alglib::real_1d_array w;
-		x.resize( nNodes );
-		w.resize( nNodes );
+		x.setlength( nNodes );
+		w.setlength( nNodes );
 		alglib::ae_int_t algresult;
 		alglib::gqgenerategausslaguerre( nNodes, 0.0, algresult, x, w );
 		sci::assertThrow( algresult == 1, sci::err() );
