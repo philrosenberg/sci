@@ -23,7 +23,7 @@ build/plotdata.o: build svector/plotdata.cpp
 	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/plotdata.o svector/plotdata.cpp
 
 build/ppfile.o: build svector/ppfile.cpp
-	 g++ $(COMPILE_FLAGS) -o build/ppfile.o svector/ppfile.cpp
+	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/ppfile.o svector/ppfile.cpp
 
 build/sdialog.o: build svector/sdialog.cpp
 	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sdialog.o svector/sdialog.cpp
