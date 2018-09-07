@@ -252,12 +252,12 @@ namespace sci_internal
 	template<class T, class U>
 	std::vector<SBOOL> comp( std::vector<T> t, U u )
 	{
-		return 0;
+		return std::vector<SBOOL>(0);
 	}
 	template<class T, class U>
 	std::vector<SBOOL> comp( T t, std::vector<U> u )
 	{
-		return 0;
+		return std::vector<SBOOL>(0);
 	}
 	template<class T, class U>
 	auto comp( std::vector<std::vector<T>> t, U u ) -> std::vector<decltype(comp(t[0],u))>{}
