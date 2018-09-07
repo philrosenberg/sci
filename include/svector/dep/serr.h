@@ -1,7 +1,7 @@
 #ifndef serr_H
 #define serr_H
 #include<string>
-#ifdef WIN32
+#ifdef _WIN32
 #include<Windows.h>
 #endif
 
@@ -26,7 +26,7 @@ namespace sci
 	};
 	//error codes should be selected from this list based on their errcategory
 
-#ifdef WIN32
+#ifdef _WIN32
 	class WindowsError
 	{
 	public:
@@ -47,7 +47,7 @@ namespace sci
 		err(errcategory category, long code);
 		err(errcategory category, long code, const std::string &message);
 		err(const alglib::ap_error &err, long code);
-#ifdef WIN32
+#ifdef _WIN32
 		err(errcategory category, const WindowsError &windowsError);
 #endif
 		errcategory getErrorCategory() const { return m_category; }

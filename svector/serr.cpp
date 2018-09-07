@@ -5,6 +5,7 @@
 #include<sstream>
 #include<alg\ap.h>
 
+#ifdef _WIN32
 sci::WindowsError::WindowsError()
 {
 	m_code = ::GetLastError();
@@ -33,6 +34,7 @@ std::string sci::WindowsError::GetWindowsErrorMessageFromCode( DWORD code)
 
 	return message;
 }
+#endif
 
 sci::err::err(errcategory category, long code)
 	: m_category(category), m_code(code)
