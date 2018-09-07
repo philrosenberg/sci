@@ -3,7 +3,7 @@
 #include<assert.h>
 #include<wx/wx.h>
 #include<sstream>
-#include<alg\ap.h>
+#include<alg/ap.h>
 
 #ifdef _WIN32
 sci::WindowsError::WindowsError()
