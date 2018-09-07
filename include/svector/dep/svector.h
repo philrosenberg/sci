@@ -2867,6 +2867,14 @@ namespace sci
 		}
 	}
 
+	template<class T>
+	std::vector<T> reorder(const std::vector<T> &v, const std::vector<size_t> &newlocations)
+	{
+		std::vector<T> result(v.size());
+		for (size_t i = 0; i<result.size(); ++i) result[newlocations[i]] = v[i];
+		return result;
+	}
+
 	//sort
 	template<class T>
 	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &newlocations)
@@ -2918,14 +2926,6 @@ namespace sci
 	{
 		std::sort(v.begin(), v.end(), sorter);
 		return v;
-	}
-
-	template<class T>
-	std::vector<T> reorder(const std::vector<T> &v, const std::vector<size_t> &newlocations)
-	{
-		std::vector<T> result(v.size());
-		for(size_t i=0; i<result.size(); ++i) result[newlocations[i]]=v[i];
-		return result;
 	}
 
 
