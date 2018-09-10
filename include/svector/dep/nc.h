@@ -152,6 +152,181 @@ namespace sci
 	template<>
 	sci::NcAttribute::NcAttribute(const std::string& name, const char *value);
 
+	class AttributeContainer
+	{
+	public:
+		void writeAttributes(OutputNcFile *outputNcFile);
+		void addAttribute(const NcAttribute &attribute);
+		virtual int getId() = 0;
+	private:
+		std::vector<NcAttribute> m_attributes;
+	};
+
+	class NcFileBase
+	{
+	public:
+		NcFileBase() { m_open = false; }
+		virtual ~NcFileBase() { close(); };
+		void openReadOnly(const std::string &fileName);
+		void openWritable(const std::string &fileName);
+		void openReadOnly(const std::wstring &fileName);
+		void openWritable(const std::wstring &fileName);
+		void close();
+		bool isOpen() const { return m_open; }
+		int getId() const { return m_id; }
+	private:
+		bool m_open;
+		int m_id;
+
+		//remove copy constructors
+		NcFileBase(const NcFileBase&);
+		NcFileBase operator=(const NcFileBase&);
+	};
+
+	class InputNcFile : public NcFileBase
+	{
+	public:
+		InputNcFile(const std::string &fileName);
+		InputNcFile(const std::wstring &fileName);
+		template<class T>
+		std::vector<T> getVariable(const std::string &name);
+		template<class T>
+		std::vector<T> getVariable(const std::string &name, std::vector<size_t> &shape);
+		std::vector<std::string>getVariableNames();
+		template<class T>
+		T getGlobalAttribute(const std::string &name);
+		std::vector<std::string> getGlobalAttributeList();
+	private:
+		template<class T>
+		std::vector<T> getVariableFromId(int id, size_t nValues);
+
+		//remove copy constructors
+		InputNcFile(const InputNcFile&);
+		InputNcFile operator=(const InputNcFile&);
+	};
+
+	template<>
+	std::vector<double> InputNcFile::getVariableFromId<double>(int id, size_t nValues);
+	template<>
+	std::vector<float> InputNcFile::getVariableFromId<float>(int id, size_t nValues);
+	template<>
+	std::vector<short> InputNcFile::getVariableFromId<short>(int id, size_t nValues);
+	template<>
+	std::vector<int> InputNcFile::getVariableFromId<int>(int id, size_t nValues);
+	template<>
+	std::vector<long> InputNcFile::getVariableFromId<long>(int id, size_t nValues);
+	template<>
+	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues);
+	template<>
+	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues);
+
+
+	template<>
+	double InputNcFile::getGlobalAttribute<double>(const std::string &name);
+	template<>
+	float InputNcFile::getGlobalAttribute<float>(const std::string &name);
+	template<>
+	short InputNcFile::getGlobalAttribute<short>(const std::string &name);
+	template<>
+	int InputNcFile::getGlobalAttribute<int>(const std::string &name);
+	template<>
+	long InputNcFile::getGlobalAttribute<long>(const std::string &name);
+	template<>
+	int8_t InputNcFile::getGlobalAttribute<int8_t>(const std::string &name);
+	template<>
+	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const std::string &name);
+	template<>
+	std::string InputNcFile::getGlobalAttribute<std::string>(const std::string &name);
+
+	template<>
+	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name);
+	template<>
+	std::vector<float> InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name);
+	template<>
+	std::vector<short> InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name);
+	template<>
+	std::vector<int> InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name);
+	template<>
+	std::vector<long> InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name);
+	template<>
+	std::vector<int8_t> InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name);
+	template<>
+	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name);
+	template<>
+	std::vector<std::string> InputNcFile::getGlobalAttribute<std::vector<std::string>>(const std::string &name);
+
+	template<class T>
+	class NcVariable
+	{
+	public:
+		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
+		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
+		NcVariable(NcVariable &&) = default;
+		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
+		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
+		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
+		void write(const OutputNcFile &file) const;
+		int getId() const
+		{
+			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written.")); return m_id;
+		}
+		size_t getNDimensions() const { return m_dimensionIds.size(); }
+		bool hasId() const { return m_hasId; }
+	private:
+		mutable bool m_hasId;
+		mutable int m_id;
+		std::vector<NcAttribute> m_attributes;
+		std::vector<int> m_dimensionIds;
+		std::string m_name;
+
+		//remove copy constructors
+		NcVariable(const NcVariable&);
+		NcVariable operator=(const NcVariable&);
+	};
+
+	class OutputNcFile : public NcFileBase
+	{
+	public:
+		OutputNcFile(const std::string &fileName);
+		OutputNcFile(const std::wstring &fileName);
+		OutputNcFile();
+		template<class T>
+		void write(const T &item) const { item.write(*this); }
+		template<class T>
+		void write(const NcVariable<T> &variable, const std::vector<T> &data);
+		template<class T, class U>
+		void write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data);
+	private:
+		bool m_inDefineMode;
+		//remove copy constructors
+		OutputNcFile(const OutputNcFile&);
+		OutputNcFile operator=(const OutputNcFile&);
+	};
+
+	class NcDimension
+	{
+	public:
+		NcDimension(const std::string &name, size_t length);
+		NcDimension(const std::string &name, const InputNcFile &ncFile);
+		NcDimension(const std::string &name, size_t length, const OutputNcFile &ncFile);
+		std::string getName() { return m_name; }
+		void setName(const std::string &name);
+		size_t getLength() { return m_length; }
+		void setLength(size_t length);
+		void load(const InputNcFile &ncFile);
+		void write(const OutputNcFile &ncFile) const;
+		int getId() const { sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "sci::NcDimension::getId called when the dimension does not yet have an id.")); return m_id; }
+	private:
+		std::string m_name;
+		size_t m_length;
+		mutable int m_id;
+		mutable bool m_hasId;
+
+		//remove copy constructors
+		NcDimension(const NcDimension&);
+		NcDimension operator=(const NcDimension&);
+	};
+
 	template <class T>
 	sci::NcAttribute::NcAttribute(const std::string& name, T value)
 	{
@@ -221,60 +396,6 @@ namespace sci
 		checkNcCall(nc_put_att(ncFile.getId(), variable.getId(), m_name.c_str(), m_writeType, m_nValues, m_values));
 	}
 
-
-	class AttributeContainer
-	{
-	public:
-		void writeAttributes(OutputNcFile *outputNcFile);
-		void addAttribute(const NcAttribute &attribute);
-		virtual int getId() = 0;
-	private:
-		std::vector<NcAttribute> m_attributes;
-	};
-
-	class NcFileBase
-	{
-	public:
-		NcFileBase() { m_open = false; }
-		virtual ~NcFileBase() { close(); };
-		void openReadOnly(const std::string &fileName);
-		void openWritable(const std::string &fileName);
-		void openReadOnly(const std::wstring &fileName);
-		void openWritable(const std::wstring &fileName);
-		void close();
-		bool isOpen() const { return m_open; }
-		int getId() const { return m_id; }
-	private:
-		bool m_open;
-		int m_id;
-
-		//remove copy constructors
-		NcFileBase(const NcFileBase&);
-		NcFileBase operator=(const NcFileBase&);
-	};
-
-	class InputNcFile : public NcFileBase
-	{
-	public:
-		InputNcFile(const std::string &fileName);
-		InputNcFile(const std::wstring &fileName);
-		template<class T>
-		std::vector<T> getVariable(const std::string &name);
-		template<class T>
-		std::vector<T> getVariable(const std::string &name, std::vector<size_t> &shape);
-		std::vector<std::string>getVariableNames();
-		template<class T>
-		T getGlobalAttribute(const std::string &name);
-		std::vector<std::string> getGlobalAttributeList();
-	private:
-		template<class T>
-		std::vector<T> getVariableFromId(int id, size_t nValues);
-
-		//remove copy constructors
-		InputNcFile(const InputNcFile&);
-		InputNcFile operator=(const InputNcFile&);
-	};
-
 	template<class T>
 	std::vector<T> InputNcFile::getVariable(const std::string &name, std::vector<size_t> &shape)
 	{
@@ -298,92 +419,12 @@ namespace sci
 		return getVariableFromId<T>(varId, nValues);
 	}
 
-	template<>
-	std::vector<double> InputNcFile::getVariableFromId<double>(int id, size_t nValues);
-	template<>
-	std::vector<float> InputNcFile::getVariableFromId<float>(int id, size_t nValues);
-	template<>
-	std::vector<short> InputNcFile::getVariableFromId<short>(int id, size_t nValues);
-	template<>
-	std::vector<int> InputNcFile::getVariableFromId<int>(int id, size_t nValues);
-	template<>
-	std::vector<long> InputNcFile::getVariableFromId<long>(int id, size_t nValues);
-	template<>
-	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues);
-	template<>
-	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues);
-
-
-	template<>
-	double InputNcFile::getGlobalAttribute<double>(const std::string &name);
-	template<>
-	float InputNcFile::getGlobalAttribute<float>(const std::string &name);
-	template<>
-	short InputNcFile::getGlobalAttribute<short>(const std::string &name);
-	template<>
-	int InputNcFile::getGlobalAttribute<int>(const std::string &name);
-	template<>
-	long InputNcFile::getGlobalAttribute<long>(const std::string &name);
-	template<>
-	int8_t InputNcFile::getGlobalAttribute<int8_t>(const std::string &name);
-	template<>
-	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const std::string &name);
-	template<>
-	std::string InputNcFile::getGlobalAttribute<std::string>(const std::string &name);
-
-	template<>
-	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name);
-	template<>
-	std::vector<float> InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name);
-	template<>
-	std::vector<short> InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name);
-	template<>
-	std::vector<int> InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name);
-	template<>
-	std::vector<long> InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name);
-	template<>
-	std::vector<int8_t> InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name);
-	template<>
-	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name);
-	template<>
-	std::vector<std::string> InputNcFile::getGlobalAttribute<std::vector<std::string>>(const std::string &name);
-
 	template<class T>
 	std::vector<T> InputNcFile::getVariable(const std::string &name)
 	{
 		std::vector<size_t> shape;
 		return getVariable<T>(name, shape);
 	}
-
-
-	template<class T>
-	class NcVariable
-	{
-	public:
-		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
-		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
-		NcVariable(NcVariable &&) = default;
-		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
-		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
-		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
-		void write(const OutputNcFile &file) const;
-		int getId() const
-		{
-			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written.")); return m_id;
-		}
-		size_t getNDimensions() const { return m_dimensionIds.size(); }
-		bool hasId() const { return m_hasId; }
-	private:
-		mutable bool m_hasId;
-		mutable int m_id;
-		std::vector<NcAttribute> m_attributes;
-		std::vector<int> m_dimensionIds;
-		std::string m_name;
-
-		//remove copy constructors
-		NcVariable(const NcVariable&);
-		NcVariable operator=(const NcVariable&);
-	};
 
 	template<class T>
 	NcVariable<T>::NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension)
@@ -428,25 +469,6 @@ namespace sci
 			m_attributes[i].write(file, *this);
 	}
 
-	class OutputNcFile : public NcFileBase
-	{
-	public:
-		OutputNcFile(const std::string &fileName);
-		OutputNcFile(const std::wstring &fileName);
-		OutputNcFile();
-		template<class T>
-		void write(const T &item) const { item.write(*this); }
-		template<class T>
-		void write(const NcVariable<T> &variable, const std::vector<T> &data);
-		template<class T, class U>
-		void write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data);
-	private:
-		bool m_inDefineMode;
-		//remove copy constructors
-		OutputNcFile(const OutputNcFile&);
-		OutputNcFile operator=(const OutputNcFile&);
-	};
-
 	template<class T>
 	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data)
 	{
@@ -482,30 +504,6 @@ namespace sci
 		if (data.size() > 0)
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
 	}
-
-	class NcDimension
-	{
-	public:
-		NcDimension(const std::string &name, size_t length);
-		NcDimension(const std::string &name, const InputNcFile &ncFile);
-		NcDimension(const std::string &name, size_t length, const OutputNcFile &ncFile);
-		std::string getName() { return m_name; }
-		void setName(const std::string &name);
-		size_t getLength() { return m_length; }
-		void setLength(size_t length);
-		void load(const InputNcFile &ncFile);
-		void write(const OutputNcFile &ncFile) const;
-		int getId() const { sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "sci::NcDimension::getId called when the dimension does not yet have an id." )); return m_id; }
-	private:
-		std::string m_name;
-		size_t m_length;
-		mutable int m_id;
-		mutable bool m_hasId;
-
-		//remove copy constructors
-		NcDimension(const NcDimension&);
-		NcDimension operator=(const NcDimension&);
-	};
 }
 
 #endif
