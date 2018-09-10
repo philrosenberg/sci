@@ -5,7 +5,7 @@
 #include<netcdf.h>
 #include<algorithm>
 #include<svector/serr.h>
-
+#include<svector/svector.h>
 
 namespace sci_internal
 {
