@@ -2,8 +2,7 @@
 #include"../include/svector/dep/time.h"
 #include<cmath>
 #include<mutex>
-
-std::mutex g_timeMutex;
+#include"../include/svector/dep/serr.h"
 
 std::time_t mkgmtime( std::tm &time)
 {
@@ -17,20 +16,13 @@ std::time_t mkgmtime( std::tm &time)
 std::tm gmtime( std::time_t time)
 {
 	std::tm result;
-#ifdef __STDC_LIB_EXT1
-	g_timeMutex.lock();
-        try
-        {
-                std::gmtime_s(&time, &result);
-        }
-        catch (...)
-        {
-                g_timeMutex.unlock();
-                throw;
-        }
-        g_timeMutex.unlock();
+#ifdef _WIN32
+	errno_t err = gmtime_s(&result, &time);
+	if (err != 0)
+		throw (sci::err(sci::SERR_TIME, sci::WindowsError(err)));
 #else
-	gmtime_r(&time, &result);
+	if (gmtime_r(&time, &result) == NULL)
+		throw(sci::err(sci::SERR_TIME, 0, "Could not convert time as the year is too large."));
 #endif
 	return result;
 }
