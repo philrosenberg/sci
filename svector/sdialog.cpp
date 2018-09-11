@@ -3,7 +3,7 @@
 #include <wx/dcclient.h>
 #include <wx/dcgraph.h>
 #include <wx/sizer.h>
-
+#include <wx/panel.h>
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path, const wxString &default_filename, const wxString &wildcard, int flags, wxWindow *parent, int x,int y)
 {
