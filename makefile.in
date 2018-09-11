@@ -5,11 +5,11 @@ SRCS = $(shell find svector -name *.cpp)
 OBJS = $(addprefix build/,$(SRCS:.cpp=.o))
 deps = $(addprefix build/,$(SRCS:.cpp=.d))
 
-all: build/libsvector.so
+all: build/svector/libsvector.so
 
-build/libsvector.so: makefile $(OBJS)
+build/svector/libsvector.so: makefile $(OBJS) | build/svector
 	echo $(SRCS)
-	 gcc -shared -o build/libsvector.so $(OBJS)
+	 gcc -shared -o build/svector/libsvector.so $(OBJS)
 
 build/svector:
 	mkdir -p build/svector
