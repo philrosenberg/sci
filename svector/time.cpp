@@ -1,8 +1,31 @@
+#define __STDC_WANT_LIB_EXT1__
 #include"../include/svector/dep/time.h"
 #include<cmath>
 #include<mutex>
+#include"../include/svector/dep/serr.h"
 
-std::mutex g_timeMutex;
+std::time_t mkgmtime( std::tm &time)
+{
+#ifdef _WIN32
+	return _mkgmtime(&time);
+#else
+	return timegm(&time);
+#endif
+}
+
+std::tm gmtime( std::time_t time)
+{
+	std::tm result;
+#ifdef _WIN32
+	errno_t err = gmtime_s(&result, &time);
+	if (err != 0)
+		throw (sci::err(sci::SERR_TIME, sci::WindowsError(err)));
+#else
+	if (gmtime_r(&time, &result) == NULL)
+		throw(sci::err(sci::SERR_TIME, 0, "Could not convert time as the year is too large."));
+#endif
+	return result;
+}
 
 sci::UtcTime::UtcTime()
 {
@@ -14,7 +37,7 @@ sci::UtcTime::UtcTime()
 	m_cTime.tm_sec = 0;
 	m_cTime.tm_isdst = 0;
 	m_secondFraction = 0.0;
-	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime); 
+	m_secsAfterPosixEpoch = mkgmtime(m_cTime); 
 }
 
 sci::UtcTime::UtcTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
@@ -32,7 +55,7 @@ void sci::UtcTime::set(int year, unsigned int month, unsigned int dayOfMonth, un
 	m_cTime.tm_sec = int(std::floor(second));
 	m_cTime.tm_isdst = 0;
 	m_secondFraction = second - std::floor(second);
-	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime); 
+	m_secsAfterPosixEpoch = mkgmtime(m_cTime); 
 }
 
 void sci::UtcTime::setTime(unsigned int hour, unsigned int minute, double second)
@@ -42,7 +65,7 @@ void sci::UtcTime::setTime(unsigned int hour, unsigned int minute, double second
 	m_cTime.tm_sec = int(std::floor(second));
 	m_cTime.tm_isdst = 0;
 	m_secondFraction = second - std::floor(second);
-	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime);
+	m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 }
 
 void sci::UtcTime::setDate(int year, unsigned int month, unsigned int dayOfMonth)
@@ -50,7 +73,7 @@ void sci::UtcTime::setDate(int year, unsigned int month, unsigned int dayOfMonth
 	m_cTime.tm_year = year - 1900;
 	m_cTime.tm_mon = month - 1;
 	m_cTime.tm_mday = dayOfMonth;
-	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime);
+	m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 }
 
 int sci::UtcTime::getYear() const
@@ -92,7 +115,7 @@ void sci::UtcTime::set(std::tm time, double secondFraction)
 {
 	m_cTime = time;
 	m_secondFraction = secondFraction;
-	m_secsAfterPosixEpoch = _mkgmtime(&m_cTime);
+	m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 }
 
 sci::TimeInterval operator-(const sci::UtcTime &t1, const sci::UtcTime &t2)
@@ -104,7 +127,7 @@ sci::TimeInterval operator-(const sci::UtcTime &t1, const sci::UtcTime &t2)
 sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	std::tm cTime = time.m_cTime;
-	std::time_t integerSeconds = _mkgmtime(&cTime);
+	std::time_t integerSeconds = mkgmtime(cTime);
 	integerSeconds += (time_t)std::floor(interval);
 	double fraction = time.m_secondFraction+(interval-std::floor(interval));
 	if (fraction >= 1.0)
@@ -113,19 +136,7 @@ sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interv
 		fraction -= 1.0;
 	}
 	
-	std::tm cTimeNew;
-	g_timeMutex.lock();
-	try
-	{
-		localtime_s(&cTimeNew, &integerSeconds);
-	}
-	catch (...)
-	{
-		g_timeMutex.unlock();
-		throw;
-	}
-	g_timeMutex.unlock();
-
+	std::tm cTimeNew = gmtime( integerSeconds );
 	cTimeNew.tm_isdst = 0;
 
 	return sci::UtcTime(cTimeNew, fraction);
@@ -134,7 +145,7 @@ sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interv
 sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	std::tm cTime = time.m_cTime;
-	std::time_t integerSeconds = _mkgmtime(&cTime);
+	std::time_t integerSeconds = mkgmtime(cTime);
 	integerSeconds -= (time_t)std::floor(interval);
 	double fraction = time.m_secondFraction - (interval - std::floor(interval));
 	if (fraction < 0.0)
@@ -143,19 +154,7 @@ sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interv
 		fraction += 1.0;
 	}
 
-	std::tm cTimeNew;
-	g_timeMutex.lock();
-	try
-	{
-		localtime_s(&cTimeNew, &integerSeconds);
-	}
-	catch (...)
-	{
-		g_timeMutex.unlock();
-		throw;
-	}
-	g_timeMutex.unlock();
-
+	std::tm cTimeNew = gmtime( integerSeconds );
 	cTimeNew.tm_isdst = 0;
 
 	return sci::UtcTime(cTimeNew, fraction);

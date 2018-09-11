@@ -1,96 +1,78 @@
-COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3
+COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations
 INSTALL_TEMP = install/
 INSTALL_TEMP_NOSLASH = install
+SRCS = $(shell find svector -name *.cpp)
+OBJS = $(addprefix build/,$(SRCS:.cpp=.o))
+deps = $(addprefix build/,$(SRCS:.cpp=.d))
+HDRS = $(shell find include -name *.h)
+INSTHDRS = $(addprefix $(INSTALL_TEMP),$(HDRS))
+TEMPLATESRCS = $(notdir $(shell find template/Apex++2015/Apex++ -name *.cpp -o -name *.h -o -name *makefile))
+INSTTEMPLATESRCS = $(addprefix $(INSTALL_TEMP)share/svector/,$(TEMPLATESRCS))
 
-all: build/libsvector.so
+all: build/svector/libsvector.so
 
-build/libsvector.so: makefile build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
-	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
+build/svector/libsvector.so: $(OBJS) | build/svector
+	 gcc -shared -o build/svector/libsvector.so $(OBJS)
 
-build:
-	mkdir build
+build/svector:
+	mkdir -p build/svector
 
-build/svector.o: build svector/svector.cpp 
-	 g++ $(COMPILE_FLAGS) -o build/svector.o svector/svector.cpp
+# The symbols $@ and $< are the file being generated and the first dependency respectively
+# The $* symbol contains the same as %
+build/svector/%.o: svector/%.cpp | build/svector
+	@#Build the actual .o file
+	g++ $(COMPILE_FLAGS) -o $@ $<
+	@#build the associated dependency file
+	g++ $(COMPILE_FLAGS) -MT $@ -MMD -MP -MF build/svector/$*.td $<
+	@#After compilation, move the temporary dependency files to their proper location
+	@#we have the touch command to ensure the object file is more recent than the dependency
+	mv -f build/svector/$*.td build/svector/$*.d && touch build/svector/$*.o
 
-build/memorymap.o: build svector/memorymap.cpp
-	 g++ $(COMPILE_FLAGS) -o build/memorymap.o svector/memorymap.cpp
+#do nothing for dependency file prerequisites.
+#We actually build the dependencies with the -MT -MMD -MP -MF commands of gcc
+#but having this rule ensures that if the file doesn't exist the compilation is rerun
+build/svector/%.d :
 
-build/operators.o: build svector/operators.cpp
-	 g++ $(COMPILE_FLAGS) -o build/operators.o svector/operators.cpp
-
-build/plotdata.o: build svector/plotdata.cpp
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/plotdata.o svector/plotdata.cpp
-
-build/ppfile.o: build svector/ppfile.cpp
-	 g++ $(COMPILE_FLAGS) -o build/ppfile.o svector/ppfile.cpp
-
-build/sdialog.o: build svector/sdialog.cpp
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sdialog.o svector/sdialog.cpp
-
-build/serr.o: build svector/serr.cpp
-	 g++ $(COMPILE_FLAGS) -o build/serr.o svector/serr.cpp
-
-build/sframe.o: build svector/sframe.cpp
-	 g++ $(COMPILE_FLAGS) -o build/sframe.o svector/sframe.cpp
-
-build/smath.o: build svector/smath.cpp
-	 g++ $(COMPILE_FLAGS) -o build/smath.o svector/smath.cpp
-
-build/sminimiser.o: build svector/sminimiser.cpp
-	 g++ $(COMPILE_FLAGS) -o build/sminimiser.o svector/sminimiser.cpp
-
-build/splot.o: build svector/splot.cpp
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/splot.o svector/splot.cpp
-
-build/sreadwrite.o: build svector/sreadwrite.cpp
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sreadwrite.o svector/sreadwrite.cpp
-
-build/sstring.o: build svector/sstring.cpp
-	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
-
-build/nc.o: build svector/nc.cpp
-	 g++ $(COMPILE_FLAGS) -o build/nc.o svector/nc.cpp
-
-build/transforms.o: build svector/transforms.cpp
-	 g++ $(COMPILE_FLAGS) -o build/transforms.o svector/transforms.cpp
-
-build/svi.o: build svector/svi.cpp
-	 g++ $(COMPILE_FLAGS) -o build/svi.o svector/svi.cpp
-
-build/undoable.o: build svector/undoable.cpp
-	 g++ $(COMPILE_FLAGS) -o build/undoable.o svector/undoable.cpp
-
-build/wgdos.o: build svector/wgdos.cpp
-	 g++ $(COMPILE_FLAGS) -o build/wgdos.o svector/wgdos.cpp
-     
 clean:
-	 rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
+	rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
 
-install: build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so installheaders installtemplate $(INSTALL_TEMP)bin/mkapex
-	 @echo "Installation complete"
+install: $(INSTALL_TEMP)lib/libsvector.so $(INSTHDRS) $(INSTTEMPLATESRCS) $(INSTALL_TEMP)bin/mkapex
 
-$(INSTALL_TEMP):
-	 mkdir -p "$(INSTALL_DIR)" && if [ -f $(INSTALL_TEMP_NOSLASH) ] ; then echo "Install link already exists - > continuing"; else ln -s "$(INSTALL_DIR)" $(INSTALL_TEMP_NOSLASH); fi
+#The Following set of rules create the install directories, with a symlink to them
+$(INSTALL_DIR):
+	mkdir -p "$(INSTALL_DIR)"
 
-$(INSTALL_TEMP)lib: build/libsvector.so $(INSTALL_TEMP)
-	 mkdir -p $(INSTALL_TEMP)lib
+$(INSTALL_TEMP): | $(INSTALL_DIR)
+	@if [ -f $(INSTALL_TEMP_NOSLASH) ] ; then echo "Install link already exists - > continuing"; else ln -s "$(INSTALL_DIR)" $(INSTALL_TEMP_NOSLASH); fi
 
-$(INSTALL_TEMP)lib/libsvector.so: build/libsvector.so $(INSTALL_TEMP)lib
-	 cp build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
+$(INSTALL_TEMP)lib: | $(INSTALL_TEMP)
+	mkdir -p $(INSTALL_TEMP)lib
 
-installheaders: $(INSTALL_TEMP)
-	 cp -r include/ $(INSTALL_TEMP)
+$(INSTALL_TEMP)bin: | $(INSTALL_TEMP)
+	mkdir -p $(INSTALL_TEMP)bin
 
-installtemplate: $(INSTALL_TEMP)share/svector
-	 cp template/Apex++2015/Apex++/*.cpp $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/*.h $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/makefile $(INSTALL_TEMP)share/svector/
+$(INSTALL_TEMP)share/svector: | $(INSTALL_TEMP)
+	mkdir -p $(INSTALL_TEMP)share/svector
 
-$(INSTALL_TEMP)share/svector: $(INSTALL_TEMP)
-	 mkdir -p $(INSTALL_TEMP)share/svector
+$(INSTALL_TEMP)include/svector/dep: | $(INSTALL_TEMP)
+	mkdir -p $(INSTALL_TEMP)include/svector/dep
 
-$(INSTALL_TEMP)bin/mkapex: $(INSTALL_TEMP)bin
-	 cp template/mkapex $(INSTALL_TEMP)bin/ && chmod +x $(INSTALL_TEMP)bin/mkapex
+#This rule copies the built library
+$(INSTALL_TEMP)lib/libsvector.so: build/svector/libsvector.so | $(INSTALL_TEMP)lib
+	cp build/svector/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
 
-$(INSTALL_TEMP)bin: $(INSTALL_TEMP)
-	 mkdir -p $(INSTALL_TEMP)bin
+#This rule should copy all the headers over 
+$(INSTALL_TEMP)include/svector/%.h: include/svector/%.h | $(INSTALL_TEMP)include/svector/dep
+	cp $< $@
 
+#This rule should copy the template over
+$(INSTALL_TEMP)share/svector/%: template/Apex++2015/Apex++/% | $(INSTALL_TEMP)share/svector
+	cp $< $@
+
+#This rule copies a script for building apex projects
+$(INSTALL_TEMP)bin/mkapex: | $(INSTALL_TEMP)bin
+	cp template/mkapex $(INSTALL_TEMP)bin/ && chmod +x $(INSTALL_TEMP)bin/mkapex
+
+#include all the dependency files made by gcc
+$(shell mkdir -p build/svector)
+include $(shell find build/svector -name *.d)

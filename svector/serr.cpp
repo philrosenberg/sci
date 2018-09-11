@@ -3,7 +3,9 @@
 #include<assert.h>
 #include<wx/wx.h>
 #include<sstream>
+#include<alg/ap.h>
 
+#ifdef _WIN32
 sci::WindowsError::WindowsError()
 {
 	m_code = ::GetLastError();
@@ -32,6 +34,7 @@ std::string sci::WindowsError::GetWindowsErrorMessageFromCode( DWORD code)
 
 	return message;
 }
+#endif
 
 sci::err::err(errcategory category, long code)
 	: m_category(category), m_code(code)
@@ -39,11 +42,14 @@ sci::err::err(errcategory category, long code)
 sci::err::err(errcategory category, long code, const std::string &message)
 	: m_category(category), m_code(code), m_message(message)
 {}
-
+sci::err::err(const alglib::ap_error &err, long code)
+	: m_category(SERR_ALG), m_code(code), m_message(err.msg)
+{}
+#ifdef _WIN32
 sci::err::err(errcategory category, const WindowsError &windowsError)
 	: m_category(category), m_code(windowsError.getCode()), m_message(windowsError.getMessage())
 {}
-
+#endif
 void sci::assertThrow(bool test, const sci::err &err)
 {
 	assert(test);

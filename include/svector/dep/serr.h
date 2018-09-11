@@ -1,7 +1,15 @@
 #ifndef serr_H
 #define serr_H
 #include<string>
+#ifdef _WIN32
 #include<Windows.h>
+#endif
+
+namespace alglib
+{
+	class ap_error;
+}
+
 namespace sci
 {
 	enum errcategory
@@ -14,10 +22,12 @@ namespace sci
 		SERR_DISTRIBUTIONS,
 		SERR_ANALYSIS,
 		SERR_ALG,
+		SERR_TIME,
 		SERR_USER
 	};
 	//error codes should be selected from this list based on their errcategory
 
+#ifdef _WIN32
 	class WindowsError
 	{
 	public:
@@ -30,13 +40,17 @@ namespace sci
 		DWORD m_code;
 		std::string m_message;
 	};
+#endif
 
 	class err
 	{
 	public:
 		err(errcategory category, long code);
 		err(errcategory category, long code, const std::string &message);
+		err(const alglib::ap_error &err, long code);
+#ifdef _WIN32
 		err(errcategory category, const WindowsError &windowsError);
+#endif
 		errcategory getErrorCategory() const { return m_category; }
 		long getErrorCode() const { return m_code; }
 		std::string getErrorMessage() const { return m_message; }

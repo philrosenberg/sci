@@ -15,12 +15,14 @@ sci::csv_err sci::readcsvcolumns(std::string filename, unsigned long nheaderline
 	return sci::readcsvcolumns(fin, nheaderlines, header, data, startpos, endpos, startrow, maxrows);
 }
 
+#ifdef _WIN32
 sci::csv_err sci::readcsvcolumns(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
 {
 	std::ifstream fin;
 	fin.open(filename.c_str(), std::ios::in | std::ios_base::binary);
 	return sci::readcsvcolumns(fin, nheaderlines, header, data, startpos, endpos, startrow, maxrows);
 }
+#endif
 
 sci::csv_err sci::readcsvcolumns(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, size_t startpos, std::streamoff *endpos, size_t startrow, size_t maxrows)
 {
@@ -143,12 +145,14 @@ sci::csv_err sci::readtextcolumns(std::string filename, std::string delimiters, 
 	fin.open(filename.c_str(), std::ios::in);
 	return sci::readtextcolumns(fin, delimiters, mergeAdjacentDelimiters, nheaderlines, header, data, text, type);
 }
+#ifdef _WIN32
 sci::csv_err sci::readtextcolumns(std::wstring filename, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<sci::readtype> &type)
 {
 	std::ifstream fin;
 	fin.open(filename.c_str(), std::ios::in);
 	return sci::readtextcolumns(fin, delimiters, mergeAdjacentDelimiters, nheaderlines, header, data, text, type);
 }
+#endif
 sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bool mergeAdjacentDelimiters, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data, std::vector< std::vector< std::string > > &text, const std::vector<sci::readtype> &type)
 {
 	std::vector<size_t> datadest(type.size());
@@ -279,12 +283,14 @@ sci::csv_err sci::readcsvrows(std::string filename, unsigned long nheaderlines, 
 	fin.open(filename.c_str(), std::ios::in);
 	return sci::readcsvrows(fin, nheaderlines, header, data);
 }
+#ifdef _WIN32
 sci::csv_err sci::readcsvrows(std::wstring filename, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data)
 {
 	std::ifstream fin;
 	fin.open(filename.c_str(), std::ios::in);
 	return sci::readcsvrows(fin, nheaderlines, header, data);
 }
+#endif
 sci::csv_err sci::readcsvrows(std::ifstream &fin, unsigned long nheaderlines, std::string &header, std::vector< std::vector <double> > &data)
 {
 	//empty the header and the data vector
@@ -423,12 +429,14 @@ sci::csv_err sci::writecsvcolumns(std::string filename, std::string header, cons
 	fout.open(filename.c_str(), std::ios::out);
 	return sci::writecsvcolumns(fout, header, data);
 }
+#ifdef _WIN32
 sci::csv_err sci::writecsvcolumns(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data)
 {
 	std::ofstream fout;
 	fout.open(filename.c_str(), std::ios::out);
 	return sci::writecsvcolumns(fout, header, data);
 }
+#endif
 sci::csv_err sci::writecsvcolumns(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data)
 {
 	
@@ -471,24 +479,28 @@ sci::csv_err sci::writecsvcolumn(std::string filename, std::string header, const
 	data2d.push_back(data);
 	return writecsvcolumns(filename,header,data2d);
 }
+#ifdef _WIN32
 sci::csv_err sci::writecsvcolumn(std::wstring filename, std::string header, const std::vector<double>  &data)
 {
 	std::vector<std::vector<double> > data2d;
 	data2d.push_back(data);
 	return writecsvcolumns(filename, header, data2d);
 }
+#endif
 sci::csv_err sci::writecsvrows(std::string filename, std::string header, const std::vector< std::vector <double> > &data, bool pad)
 {
 	std::ofstream fout;
 	fout.open(filename.c_str(), std::ios::out);
 	return sci::writecsvrows(fout, header, data, pad);
 }
+#ifdef _WIN32
 sci::csv_err sci::writecsvrows(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data, bool pad)
 {
 	std::ofstream fout;
 	fout.open(filename.c_str(), std::ios::out);
 	return sci::writecsvrows(fout, header, data, pad);
 }
+#endif
 sci::csv_err sci::writecsvrows(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data, bool pad)
 {
 	if(!fout.is_open()) return sci::csv_filefail;
@@ -551,6 +563,7 @@ sci::csv_err sci::writecsvrow(std::string filename, std::string header, const st
 	fout.close();
 	return sci::csv_ok;
 }
+#ifdef _WIN32
 sci::csv_err sci::writecsvrow(std::wstring filename, std::string header, const std::vector<double>  &data)
 {
 	std::fstream fout;
@@ -568,6 +581,7 @@ sci::csv_err sci::writecsvrow(std::wstring filename, std::string header, const s
 	fout.close();
 	return sci::csv_ok;
 }
+#endif
 
 double sci::atofcustom(const std::string &numstr)
 {

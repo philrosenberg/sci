@@ -22,6 +22,7 @@
 #include<cmath>
 #include<type_traits>
 #include<random>
+#include<svector/serr.h>
 
 /*#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -99,7 +100,6 @@ namespace sci
 		inline qic(const std::vector<T> &v){m_start=&v[0];}
 		inline const T& operator[](size_t index) const 
 		{
-			T result=*(m_start+index);
 			return *(m_start+index);
 		}
 	private:
@@ -113,7 +113,6 @@ namespace sci
 		inline qi(std::vector<T> &v){m_start=&v[0];}
 		inline T& operator[](size_t index) const 
 		{
-			T result=*(m_start+index);
 			return *(m_start+index);
 		}
 	private:
@@ -2241,7 +2240,7 @@ namespace sci
 		}
 		catch(alglib::ap_error err)
 		{
-			outputerr(err.msg);
+			throw sci::err( err, 0);
 		}
 
 		//get the results
@@ -2259,10 +2258,10 @@ namespace sci
 		//for a given nNodes, which feels a bit odd. Basically there is an assumption that
 		//our function can be modelled by a polynomial of order nNodes-1 multiplied by 
 		//exp(-x) and some clever maths to prove that the given nodes work.
-		alglib::real_1d_array x();
-		alglib::real_1d_array w();
-		x.resize( nNodes );
-		w.resize( nNodes );
+		alglib::real_1d_array x;
+		alglib::real_1d_array w;
+		x.setlength( nNodes );
+		w.setlength( nNodes );
 		alglib::ae_int_t algresult;
 		alglib::gqgenerategausslaguerre( nNodes, 0.0, algresult, x, w );
 		sci::assertThrow( algresult == 1, sci::err() );
@@ -2866,6 +2865,14 @@ namespace sci
 		}
 	}
 
+	template<class T>
+	std::vector<T> reorder(const std::vector<T> &v, const std::vector<size_t> &newlocations)
+	{
+		std::vector<T> result(v.size());
+		for (size_t i = 0; i<result.size(); ++i) result[newlocations[i]] = v[i];
+		return result;
+	}
+
 	//sort
 	template<class T>
 	void sort(const std::vector<T> &v, std::vector<T> &sortedv, std::vector<size_t> &newlocations)
@@ -2917,14 +2924,6 @@ namespace sci
 	{
 		std::sort(v.begin(), v.end(), sorter);
 		return v;
-	}
-
-	template<class T>
-	std::vector<T> reorder(const std::vector<T> &v, const std::vector<size_t> &newlocations)
-	{
-		std::vector<T> result(v.size());
-		for(size_t i=0; i<result.size(); ++i) result[newlocations[i]]=v[i];
-		return result;
 	}
 
 
@@ -3240,19 +3239,21 @@ namespace sci
 		//get x from the cdf for one dimension given the values in all other dimensions. otherXs should have one element for each dimension
 		//but the value in otherXs[undefinedIndex] will not be used
 		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const = 0;
+		virtual ~MultivariateInverseCumulativeDistributionFunction() {}
 	};
 
 	class UnivariateInverseCumulativeDistributionFunction
 	{
 	public:
 		virtual double getX(double cumulativeProbability) const = 0;
+		virtual ~UnivariateInverseCumulativeDistributionFunction() {}
 	};
 
 	class MultivariateInverseCumulativeNormalDistribution : MultivariateInverseCumulativeDistributionFunction
 	{
 	public:
 		MultivariateInverseCumulativeNormalDistribution(const std::vector<double> &means, const std::vector<double> &standardDeviations);
-		virtual double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const;
+		double getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const;
 	private:
 		std::vector<double> m_means;
 		std::vector<double> m_standardDeviations;
@@ -3262,10 +3263,11 @@ namespace sci
 	{
 	public:
 		InverseCumulativeNormalDistribution(double mean, double standardDeviation);
-		virtual double getX(double cumulativeProbability) const;
+		double getX(double cumulativeProbability) const;
 	private:
 		double m_mean;
 		double m_standardDeviation;
+		virtual ~InverseCumulativeNormalDistribution() {}
 	};
 
 	class MarkovChain : public RandomReal

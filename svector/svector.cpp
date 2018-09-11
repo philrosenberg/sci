@@ -1416,7 +1416,7 @@ std::vector<std::vector<double>> sci::MarkovChain::getMoments(size_t nIntegratio
 	for (std::vector<double>* samplesi = samplesBegin + 1; samplesi < samplesEnd; ++samplesi)
 	{
 		std::vector<double>* resulti = resultBegin;
-		for (int* momentsi = momentsBegin; momentsi < momentsBegin; ++momentsi,++resulti)
+		for (int* momentsi = momentsBegin; momentsi < momentsEnd; ++momentsi,++resulti)
 		{
 			*resulti += sci::pow(*samplesi - means, *momentsi);
 		}

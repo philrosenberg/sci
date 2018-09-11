@@ -537,7 +537,6 @@ namespace sci{
 			*resulti=std::pow(base,*poweri);
 			++resulti;
 		}
-		return result;
 	}
 
 	//power of a non vector to a multi dimensional vector
@@ -564,7 +563,6 @@ namespace sci{
 			sci::pow(base,*poweri,*resulti);
 			++resulti;
 		}
-		return result;
 	}
 
 	

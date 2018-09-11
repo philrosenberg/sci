@@ -1,6 +1,8 @@
 #include "sstring_internal.h"
 #include <algorithm>
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 #include <vector>
 
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
@@ -173,6 +175,7 @@ void sci::trim(std::wstring &str)
 	}
 }
 
+#ifdef _WIN32
 std::string sci::utf16To8(const std::wstring &string)
 {
 	//I'm never sure if it is safe to do
@@ -195,3 +198,4 @@ std::wstring sci::utf8To16(const std::string &string)
 	MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, &buffer[0], (int)buffer.size());
 	return std::wstring(&buffer[0]);
 }
+#endif
