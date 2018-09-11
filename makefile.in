@@ -1,4 +1,4 @@
-COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude
+COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations
 INSTALL_TEMP = install/
 INSTALL_TEMP_NOSLASH = install
 SRCS = $(shell find svector -name *.cpp)
@@ -12,15 +12,26 @@ INSTTEMPLATESRCS = $(addprefix $(INSTALL_TEMP)share/svector/,$(TEMPLATESRCS))
 all: build/svector/libsvector.so
 
 build/svector/libsvector.so: $(OBJS) | build/svector
-	echo $(SRCS)
 	 gcc -shared -o build/svector/libsvector.so $(OBJS)
 
 build/svector:
 	mkdir -p build/svector
 
 # The symbols $@ and $< are the file being generated and the first dependency respectively
-build/%.o: %.cpp | build/svector
-	g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o $@ $<
+# The $* symbol contains the same as %
+build/svector/%.o: svector/%.cpp | build/svector
+	@#Build the actual .o file
+	g++ $(COMPILE_FLAGS) -o $@ $<
+	@#build the associated dependency file
+	g++ $(COMPILE_FLAGS) -MT $@ -MMD -MP -MF build/svector/$*.td $<
+	@#After compilation, move the temporary dependency files to their proper location
+	@#we have the touch command to ensure the object file is more recent than the dependency
+	mv -f build/svector/$*.td build/svector/$*.d && touch build/svector/$*.o
+
+#do nothing for dependency file prerequisites.
+#We actually build the dependencies with the -MT -MMD -MP -MF commands of gcc
+#but having this rule ensures that if the file doesn't exist the compilation is rerun
+build/svector/%.d :
 
 clean:
 	rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
@@ -48,7 +59,7 @@ $(INSTALL_TEMP)include/svector/dep: | $(INSTALL_TEMP)
 
 #This rule copies the built library
 $(INSTALL_TEMP)lib/libsvector.so: build/svector/libsvector.so | $(INSTALL_TEMP)lib
-	cp build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
+	cp build/svector/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
 
 #This rule should copy all the headers over 
 $(INSTALL_TEMP)include/svector/%.h: include/svector/%.h | $(INSTALL_TEMP)include/svector/dep
@@ -62,3 +73,6 @@ $(INSTALL_TEMP)share/svector/%: template/Apex++2015/Apex++/% | $(INSTALL_TEMP)sh
 $(INSTALL_TEMP)bin/mkapex: | $(INSTALL_TEMP)bin
 	cp template/mkapex $(INSTALL_TEMP)bin/ && chmod +x $(INSTALL_TEMP)bin/mkapex
 
+#include all the dependency files made by gcc
+$(shell mkdir -p build/svector)
+include $(shell find build/svector -name *.d)
