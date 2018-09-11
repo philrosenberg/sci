@@ -1,69 +1,23 @@
 COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude
 INSTALL_TEMP = install/
 INSTALL_TEMP_NOSLASH = install
+SRCS = $(shell find svector -name *.cpp)
+OBJS = $(addprefix build/,$(SRCS:.cpp=.o))
+deps = $(addprefix build/,$(SRCS:.cpp=.d))
 
 all: build/libsvector.so
 
-build/libsvector.so: makefile build build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
-	 gcc -shared -o build/libsvector.so build/svector.o build/memorymap.o build/operators.o build/plotdata.o build/ppfile.o build/sdialog.o build/serr.o build/sframe.o build/smath.o build/sminimiser.o build/splot.o build/sreadwrite.o build/sstring.o build/nc.o build/transforms.o build/svi.o build/undoable.o build/wgdos.o
+build/libsvector.so: makefile $(OBJS)
+	echo $(SRCS)
+	 gcc -shared -o build/libsvector.so $(OBJS)
 
-build:
-	mkdir build
+build/svector:
+	mkdir -p build/svector
 
-build/svector.o: svector/svector.cpp | build 
-	 g++ $(COMPILE_FLAGS) -o build/svector.o svector/svector.cpp
+# The symbols $@ and $< are the file being generated and the first dependency respectively
+build/%.o: %.cpp | build/svector
+	g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o $@ $<
 
-build/memorymap.o: svector/memorymap.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/memorymap.o svector/memorymap.cpp
-
-build/operators.o: svector/operators.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/operators.o svector/operators.cpp
-
-build/plotdata.o: svector/plotdata.cpp | build
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/plotdata.o svector/plotdata.cpp
-
-build/ppfile.o: svector/ppfile.cpp | build
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/ppfile.o svector/ppfile.cpp
-
-build/sdialog.o: svector/sdialog.cpp | build
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sdialog.o svector/sdialog.cpp
-
-build/serr.o: svector/serr.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/serr.o svector/serr.cpp
-
-build/sframe.o: svector/sframe.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/sframe.o svector/sframe.cpp
-
-build/smath.o: svector/smath.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/smath.o svector/smath.cpp
-
-build/sminimiser.o: svector/sminimiser.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/sminimiser.o svector/sminimiser.cpp
-
-build/splot.o: svector/splot.cpp | build
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/splot.o svector/splot.cpp
-
-build/sreadwrite.o: svector/sreadwrite.cpp | build
-	 g++ $(COMPILE_FLAGS) `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations -o build/sreadwrite.o svector/sreadwrite.cpp
-
-build/sstring.o: svector/sstring.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/sstring.o svector/sstring.cpp
-
-build/nc.o: svector/nc.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/nc.o svector/nc.cpp
-
-build/transforms.o: svector/transforms.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/transforms.o svector/transforms.cpp
-
-build/svi.o: svector/svi.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/svi.o svector/svi.cpp
-
-build/undoable.o: svector/undoable.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/undoable.o svector/undoable.cpp
-
-build/wgdos.o: svector/wgdos.cpp | build
-	 g++ $(COMPILE_FLAGS) -o build/wgdos.o svector/wgdos.cpp
-     
 clean:
 	rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
 
