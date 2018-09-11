@@ -4,6 +4,8 @@ INSTALL_TEMP_NOSLASH = install
 SRCS = $(shell find svector -name *.cpp)
 OBJS = $(addprefix build/,$(SRCS:.cpp=.o))
 deps = $(addprefix build/,$(SRCS:.cpp=.d))
+HDRS = $(shell find include -name *.h)
+INSTHDRS = $(addprefix $(INSTALL_TEMP),$(HDRS))
 
 all: build/svector/libsvector.so
 
@@ -21,7 +23,7 @@ build/%.o: %.cpp | build/svector
 clean:
 	rm -r build $(INSTALL_TEMP)lib/libsvector.so $(INSTALL_TEMP)include/svector $(INSTALL_TEMP)share/svector $(INSTALL_TEMP)bin\mkapex
 
-install: $(INSTALL_TEMP)lib/libsvector.so installheaders installtemplate $(INSTALL_TEMP)bin/mkapex
+install: $(INSTALL_TEMP)lib/libsvector.so $(INSTHDRS) installtemplate $(INSTALL_TEMP)bin/mkapex
 	@echo "Installation complete"
 
 $(INSTALL_DIR):
@@ -33,11 +35,15 @@ $(INSTALL_TEMP): | $(INSTALL_DIR)
 $(INSTALL_TEMP)lib: | $(INSTALL_TEMP)
 	mkdir -p $(INSTALL_TEMP)lib
 
-$(INSTALL_TEMP)lib/libsvector.so: build/libsvector.so | $(INSTALL_TEMP)lib
+$(INSTALL_TEMP)lib/libsvector.so: build/svector/libsvector.so | $(INSTALL_TEMP)lib
 	cp build/libsvector.so $(INSTALL_TEMP)lib/libsvector.so
 
-installheaders: | $(INSTALL_TEMP)
-	cp -r include/ $(INSTALL_TEMP)
+$(INSTALL_TEMP)include/svector/dep: | $(INSTALL_TEMP)
+	mkdir -p $(INSTALL_TEMP)include/svector/dep
+
+#This rule should copy all the headers over 
+$(INSTALL_TEMP)%.h: %.h | $(INSTALL_TEMP)include/svector/dep
+	cp $< $@
 
 installtemplate: | $(INSTALL_TEMP)share/svector
 	cp template/Apex++2015/Apex++/*.cpp $(INSTALL_TEMP)share/svector/; cp template/Apex++2015/Apex++/*.h $(INSTALL_TEMP)share/svector/;cp template/Apex++2015/Apex++/makefile $(INSTALL_TEMP)share/svector/
