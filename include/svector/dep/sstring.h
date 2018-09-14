@@ -48,8 +48,10 @@ namespace sci
 	std::wstring trimmed(const std::wstring &str);
 	void trim(std::wstring &str);
 
+#ifdef _WIN32
 	std::string utf16To8(const std::wstring &string);
 	std::wstring utf8To16(const std::string &string);
+#endif
 }
 
 

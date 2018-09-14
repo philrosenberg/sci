@@ -147,8 +147,10 @@ namespace sci
 
 	template<>
 	sci::NcAttribute::NcAttribute(const std::string& name, std::string value);
+#ifdef _WIN32
 	template <>
 	sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value);
+#endif
 	template<>
 	sci::NcAttribute::NcAttribute(const std::string& name, const char *value);
 
@@ -169,8 +171,10 @@ namespace sci
 		virtual ~NcFileBase() { close(); };
 		void openReadOnly(const std::string &fileName);
 		void openWritable(const std::string &fileName);
+#ifdef _WIN32
 		void openReadOnly(const std::wstring &fileName);
 		void openWritable(const std::wstring &fileName);
+#endif
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
@@ -187,7 +191,9 @@ namespace sci
 	{
 	public:
 		InputNcFile(const std::string &fileName);
+#ifdef _WIN32
 		InputNcFile(const std::wstring &fileName);
+#endif
 		template<class T>
 		std::vector<T> getVariable(const std::string &name);
 		template<class T>
@@ -288,7 +294,9 @@ namespace sci
 	{
 	public:
 		OutputNcFile(const std::string &fileName);
+#ifdef _WIN32
 		OutputNcFile(const std::wstring &fileName);
+#endif
 		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
