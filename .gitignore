@@ -17,7 +17,6 @@ build/*
 umdp_F3-UMDPF3.pdf
 svector.opensdf
 makefile
-template/mkapex
 install
 **.VC.opendb
 **.VC.db
