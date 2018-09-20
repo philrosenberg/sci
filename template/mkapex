@@ -1,0 +1,7 @@
+SHARE = /usr/local/share
+
+cp "$SHARE/svector/app.cpp" .
+cp "$SHARE/svector/app.h" .
+cp "$SHARE/svector/mainFrame.cpp" .
+cp "$SHARE/svector/mainFrame.h" .
+cp "$SHARE/svector/makefile" .

@@ -1,4 +1,4 @@
-COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -o3 -Iinclude `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations
+COMPILE_FLAGS = -c -Wall -g -std=c++11 -fPIC -O3 -Iinclude `wx-config --cxxflags` -Wno-deprecated -Wno-deprecated-declarations
 INSTALL_TEMP = install/
 INSTALL_TEMP_NOSLASH = install
 SRCS = $(shell find svector -name *.cpp)
@@ -20,10 +20,8 @@ build/svector:
 # The symbols $@ and $< are the file being generated and the first dependency respectively
 # The $* symbol contains the same as %
 build/svector/%.o: svector/%.cpp | build/svector
-	@#Build the actual .o file
-	g++ $(COMPILE_FLAGS) -o $@ $<
-	@#build the associated dependency file
-	g++ $(COMPILE_FLAGS) -MT $@ -MMD -MP -MF build/svector/$*.td $<
+	@#build the associated dependency file and object files
+	g++ $(COMPILE_FLAGS) -MT $@ -MMD -MP -MF build/svector/$*.td -o $@ $<
 	@#After compilation, move the temporary dependency files to their proper location
 	@#we have the touch command to ensure the object file is more recent than the dependency
 	mv -f build/svector/$*.td build/svector/$*.d && touch build/svector/$*.o

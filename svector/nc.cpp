@@ -75,12 +75,14 @@ void sci::NcFileBase::openReadOnly(const std::string &fileName)
 	m_open = true;
 }
 
+#ifdef _WIN32
 void sci::NcFileBase::openReadOnly(const std::wstring &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenReadOnly called when the file is already open."));
 	checkNcCall(nc_open(ucs16ToUtf8(fileName).c_str(), NC_NOWRITE, &m_id));
 	m_open = true;
 }
+#endif
 
 void sci::NcFileBase::openWritable(const std::string &fileName)
 {
@@ -89,12 +91,14 @@ void sci::NcFileBase::openWritable(const std::string &fileName)
 	m_open = true;
 }
 
+#ifdef _WIN32
 void sci::NcFileBase::openWritable(const std::wstring &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
 	checkNcCall(nc_create(ucs16ToUtf8(fileName).c_str(), NC_CLOBBER, &m_id));
 	m_open = true;
 }
+#endif
 
 void sci::NcFileBase::close()
 {
@@ -110,10 +114,12 @@ sci::InputNcFile::InputNcFile(const std::string &fileName)
 	openReadOnly(fileName);
 }
 
+#ifdef _WIN32
 sci::InputNcFile::InputNcFile(const std::wstring &fileName)
 {
 	openReadOnly(fileName);
 }
+#endif
 
 std::vector<std::string> sci::InputNcFile::getVariableNames()
 {
@@ -514,6 +520,7 @@ sci::NcAttribute::NcAttribute(const std::string& name, std::string value)
 	}
 }
 
+#ifdef _WIN32
 template<>
 sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
 {
@@ -530,6 +537,7 @@ sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
 		memcpy(m_values, &utf8Value[0], m_nBytes);
 	}
 }
+#endif
 
 template<>
 sci::NcAttribute::NcAttribute(const std::string& name, const char *value)
@@ -569,11 +577,13 @@ sci::OutputNcFile::OutputNcFile(const std::string &fileName)
 	openWritable(fileName);
 }
 
+#ifdef _WIN32
 sci::OutputNcFile::OutputNcFile(const std::wstring &fileName)
 {
 	m_inDefineMode = true;
 	openWritable(fileName);
 }
+#endif
 
 sci::OutputNcFile::OutputNcFile()
 {
