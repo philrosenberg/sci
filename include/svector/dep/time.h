@@ -46,6 +46,7 @@ namespace sci
 		unsigned int getHour() const;
 		unsigned int getMinute() const;
 		double getSecond() const;
+		static UtcTime now();
 	private:
 		std::tm m_cTime;
 		std::time_t m_secsAfterPosixEpoch;

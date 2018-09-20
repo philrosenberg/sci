@@ -4,6 +4,7 @@
 #include <Windows.h>
 #endif
 #include <vector>
+#include <locale>
 
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
 {
@@ -176,7 +177,168 @@ void sci::trim(std::wstring &str)
 }
 
 #ifdef _WIN32
-std::string sci::utf16To8(const std::wstring &string)
+//On Windows the native unicode version is UTF-16 represented by std:::wstring
+
+//We cannot know if a std::string is utf-8 or codepage, so don't attempt
+//this conversion.
+//std::wstring nativeUnicode(const std::string &str)
+//{
+//
+//}
+//avoid copying by using references
+const std::wstring &sci::nativeUnicode(const std::wstring &str)
+{
+	//no conversion needed
+	return str;
+}
+std::wstring &sci::nativeUnicode(std::wstring &str)
+{
+	//no conversion needed
+	return str;
+}
+
+std::wstring sci::nativeUnicode(const std::u16string &str)
+{
+	//no conversion needed, just copying
+	return std::wstring(str.begin(), str.end());
+}
+
+std::wstring sci::nativeUnicode(const std::u32string &str)
+{
+	std::wstring result;
+	result.reserve(str.length() * 2);
+	for (auto strIt = str.begin(); strIt != str.end(); ++strIt)
+	{
+		
+		if (*strIt < 0xd800 || (*strIt > 0xdfff && *strIt < 0x10000))
+		{
+			//basic multilingual plane - just write the value out
+			result.push_back(wchar_t(*strIt));
+		}
+		else if (*strIt > 0xFFFF && *strIt < 0x20000)
+		{
+			char32_t val = *strIt - 0x10000;
+			char32_t highTen = val >> 10;
+			char32_t lowTen = val & 0x3ff;
+			result.push_back(wchar_t(highTen + 0xd800));
+			result.push_back(wchar_t(lowTen + 0xdc00));
+		}
+		else
+		{
+			result.push_back(0xfffd); //The character was invalid utf32 so use the unicode replacement character
+		}
+	}
+	return result;
+}
+
+std::string sci::nativeCodepage(const std::wstring &str)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::u16string &str)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::u32string &str)
+{
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::wstring &str, char replacementCharacter)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u16string &str, char replacementCharacter)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u32string &str, char replacementCharacter)
+{
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::wstring &str, char replacementCharacter, bool &usedReplacement)
+{
+	BOOL replaced;
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u16string &str, char replacementCharacter, bool &usedReplacement)
+{
+	BOOL replaced;
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u32string &str, char replacementCharacter, bool &usedReplacement)
+{
+	BOOL replaced;
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+#else
+//On Linux the native unicode version is UTF-8 represented by std:::string
+
+//avoid copying by using references
+const std::string &sci::nativeUnicode(const std::string &str)
+{
+	//no conversion to do, just return the string
+	return str;
+}
+std::string &sci::nativeUnicode(std::string &str)
+{
+	//no conversion to do, just return the string
+	return str;
+}
+std::string sci::nativeUnicode(const std::wstring &str)
+{
+	std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>, wchar_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.to_bytes(str);
+}
+std::string sci::nativeUnicode(const std::u16string &str)
+{
+	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.to_bytes(str);
+}
+std::string sci::nativeUnicode(const std::u32string &str)
+{
+	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.to_bytes(str);
+}
+#endif
+
+#ifdef _WIN32
+std::string sci::ucs16ToUtf8(const std::wstring &string)
 {
 	//I'm never sure if it is safe to do
 	//std::string str; str.resize(somelength); memcpy(str[0], source, somelength);
@@ -191,7 +353,7 @@ std::string sci::utf16To8(const std::wstring &string)
 	return std::string(&buffer[0]);
 }
 
-std::wstring sci::utf8To16(const std::string &string)
+std::wstring sci::utf8ToUcs16(const std::string &string)
 {
 	int nCharsNeeded = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, NULL, 0);
 	std::vector<wchar_t> buffer(nCharsNeeded);
@@ -199,3 +361,30 @@ std::wstring sci::utf8To16(const std::string &string)
 	return std::wstring(&buffer[0]);
 }
 #endif
+
+std::string sci::utf16ToUtf8(const std::u16string &string)
+{
+#ifdef _WIN32
+	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
+	std::wstring_convert<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> converter;
+	auto p = reinterpret_cast<const int16_t *>(string.data());
+	return converter.to_bytes(p, p + string.length());
+#else
+	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.to_bytes(string);
+#endif
+}
+
+std::u16string sci::utf8ToUtf16(const std::string &string)
+{
+#ifdef _WIN32
+	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
+	std::wstring_convert<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> converter;
+	std::basic_string<int16_t> resultInt = converter.from_bytes(string);
+	auto p = reinterpret_cast<const char16_t *>(resultInt.data());
+	return std::u16string(p, p + resultInt.length());
+#else
+	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.from_bytes(string);
+#endif
+}

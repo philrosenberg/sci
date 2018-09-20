@@ -78,7 +78,7 @@ void sci::NcFileBase::openReadOnly(const std::string &fileName)
 void sci::NcFileBase::openReadOnly(const std::wstring &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenReadOnly called when the file is already open."));
-	checkNcCall(nc_open(utf16To8(fileName).c_str(), NC_NOWRITE, &m_id));
+	checkNcCall(nc_open(ucs16ToUtf8(fileName).c_str(), NC_NOWRITE, &m_id));
 	m_open = true;
 }
 
@@ -92,7 +92,7 @@ void sci::NcFileBase::openWritable(const std::string &fileName)
 void sci::NcFileBase::openWritable(const std::wstring &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(utf16To8(fileName).c_str(), NC_CLOBBER, &m_id));
+	checkNcCall(nc_create(ucs16ToUtf8(fileName).c_str(), NC_CLOBBER, &m_id));
 	m_open = true;
 }
 
@@ -518,7 +518,7 @@ template<>
 sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
 {
 	m_name = name;
-	std::string utf8Value = sci::utf16To8(value);
+	std::string utf8Value = sci::ucs16ToUtf8(value);
 	m_nValues = utf8Value.length();
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
