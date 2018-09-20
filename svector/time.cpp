@@ -101,6 +101,15 @@ double sci::UtcTime::getSecond() const
 	return sci::TimeInterval(m_cTime.tm_sec)+m_secondFraction;
 }
 
+sci::UtcTime sci::UtcTime::now()
+{
+	auto time = std::chrono::system_clock::now();
+	decltype(time) epoch = std::chrono::system_clock::from_time_t(0);
+	std::chrono::duration<float> secondsSinceEpoch = time - epoch;
+	UtcTime result = UtcTime(1970, 1, 1, 0, 0, 0.0)+secondsSinceEpoch.count();
+	return result;
+}
+
 sci::TimeInterval sci::UtcTime::getUnixTime() const
 {
 	return m_secsAfterPosixEpoch + m_secondFraction;
