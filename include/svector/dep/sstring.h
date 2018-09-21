@@ -23,7 +23,7 @@ std::string operator >> (std::string &lhs, T &rhs)
 }
 
 //A way to set unicode strings, but change it globally if I want to swap the types
-#define sU(x) U##x
+#define sU(x) u##x
 
 namespace sci
 {
@@ -51,7 +51,11 @@ namespace sci
 	std::wstring trimmed(const std::wstring &str);
 	void trim(std::wstring &str);
 
-	typedef std::u32string string;
+	typedef char16_t char_t;
+	typedef std::basic_string<sci::char_t> string;
+	typedef std::basic_stringstream<sci::char_t> stringstream;
+	typedef std::basic_istringstream<sci::char_t> istringstream;
+	typedef std::basic_ostringstream<sci::char_t> ostringstream;
 #ifdef _WIN32
 	//On Windows the native unicode version is UTS-16 represented by std:::wstring
 	const std::wstring &nativeUnicode(const std::wstring &str);
@@ -99,7 +103,21 @@ namespace sci
 #endif
 
 	std::string utf16ToUtf8(const std::u16string &string);
+	std::string utf32ToUtf8(const std::u32string &string);
+
 	std::u16string utf8ToUtf16(const std::string &string);
+	std::u16string utf32ToUtf16(const std::u32string &string);
+
+	std::u32string utf8ToUtf32(const std::string &string);
+	std::u32string utf16ToUtf32(const std::u16string &string);
+
+	std::string toUtf8(const sci::string &string);
+	std::u16string toUtf16(const sci::string &string);
+	std::u32string toUtf32(const sci::string &string);
+
+	sci::string fromUtf8(const std::string &string);
+	sci::string fromUtf16(const std::u16string &string);
+	sci::string fromUtf32(const std::u32string &string);
 }
 
 

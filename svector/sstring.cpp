@@ -205,30 +205,7 @@ std::wstring sci::nativeUnicode(const std::u16string &str)
 
 std::wstring sci::nativeUnicode(const std::u32string &str)
 {
-	std::wstring result;
-	result.reserve(str.length() * 2);
-	for (auto strIt = str.begin(); strIt != str.end(); ++strIt)
-	{
-		
-		if (*strIt < 0xd800 || (*strIt > 0xdfff && *strIt < 0x10000))
-		{
-			//basic multilingual plane - just write the value out
-			result.push_back(wchar_t(*strIt));
-		}
-		else if (*strIt > 0xFFFF && *strIt < 0x20000)
-		{
-			char32_t val = *strIt - 0x10000;
-			char32_t highTen = val >> 10;
-			char32_t lowTen = val & 0x3ff;
-			result.push_back(wchar_t(highTen + 0xd800));
-			result.push_back(wchar_t(lowTen + 0xdc00));
-		}
-		else
-		{
-			result.push_back(0xfffd); //The character was invalid utf32 so use the unicode replacement character
-		}
-	}
-	return result;
+	return sci::nativeUnicode(utf32ToUtf16(str));
 }
 
 std::string sci::nativeCodepage(const std::wstring &str)
@@ -375,6 +352,19 @@ std::string sci::utf16ToUtf8(const std::u16string &string)
 #endif
 }
 
+std::string sci::utf32ToUtf8(const std::u32string &string)
+{
+#ifdef _WIN32
+	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
+	std::wstring_convert<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> converter;
+	auto p = reinterpret_cast<const int32_t *>(string.data());
+	return converter.to_bytes(p, p + string.length());
+#else
+	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.to_bytes(string);
+#endif
+}
+
 std::u16string sci::utf8ToUtf16(const std::string &string)
 {
 #ifdef _WIN32
@@ -388,3 +378,121 @@ std::u16string sci::utf8ToUtf16(const std::string &string)
 	return converter.from_bytes(string);
 #endif
 }
+
+
+
+
+std::u16string sci::utf32ToUtf16(const std::u32string &string)
+{
+	std::u16string result;
+	result.reserve(string.length()+string.length()/10);//most of the time this will be sufficient as few characters use surrogate pairs, could be a max of 2 times
+	for (auto strIt = string.begin(); strIt != string.end(); ++strIt)
+	{
+
+		if (*strIt < 0xd800 || (*strIt > 0xdfff && *strIt < 0x10000))
+		{
+			//basic multilingual plane - just write the value out
+			result.push_back(wchar_t(*strIt));
+		}
+		else if (*strIt > 0xFFFF && *strIt < 0x20000)
+		{
+			char32_t val = *strIt - 0x10000;
+			char32_t highTen = val >> 10;
+			char32_t lowTen = val & 0x3ff;
+			result.push_back(wchar_t(highTen + 0xd800));
+			result.push_back(wchar_t(lowTen + 0xdc00));
+		}
+		else
+		{
+			result.push_back(0xfffd); //The character was invalid utf32 so use the unicode replacement character
+		}
+	}
+	return result;
+}
+
+std::u32string sci::utf8ToUtf32(const std::string &string)
+{
+#ifdef _WIN32
+	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
+	std::wstring_convert<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> converter;
+	std::basic_string<int32_t> resultInt = converter.from_bytes(string);
+	auto p = reinterpret_cast<const char32_t *>(resultInt.data());
+	return std::u32string(p, p + resultInt.length());
+#else
+	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	return converter.from_bytes(string);
+#endif
+}
+
+std::u32string sci::utf16ToUtf32(const std::u16string &string)
+{
+	std::u32string result;
+	result.reserve(string.length());
+	for (auto strIt = string.begin(); strIt != string.end(); ++strIt)
+	{
+
+		if (*strIt < 0xd800 || *strIt > 0xdfff)
+		{
+			//basic multilingual plane - just write the value out
+			result.push_back(*strIt);
+		}
+		else if (*strIt < 0xd800)
+		{
+			//this is the highest ten bits of a surrogate pair
+			if (strIt + 1 == string.end() || *(strIt+1) < 0xdc00 || *(strIt+1) > 0xdfff)
+			{
+				//we only have half a character, or the next character is not a valid low ten bits
+				//use the unicode replacement character
+				result.push_back(0xfffd);
+			}
+			else
+			{
+				result.push_back(((*strIt) - 0xd800) << 10 );
+				result.back() |= *(strIt + 1) - 0xdc00;
+			}
+		}
+		else
+		{
+			//this is the lowest ten bits of a surrogate pair
+			if (strIt + 1 == string.end() || *(strIt + 1) < 0xd800 || *(strIt + 1) > 0xdbff)
+			{
+				//we only have half a character, or the next character is not a valid high ten bits
+				//use the unicode replacement character
+				result.push_back(0xfffd);
+			}
+			else
+			{
+				result.push_back((*(strIt + 1) - 0xd800) << 10);
+				result.back() |= (*strIt) - 0xdc00;
+			}
+		}
+	}
+	return result;
+}
+
+std::string sci::toUtf8(const sci::string &string)
+{
+	return utf16ToUtf8(string);
+}
+std::u16string sci::toUtf16(const sci::string &string)
+{
+	return string;
+}
+std::u32string sci::toUtf32(const sci::string &string)
+{
+	return utf16ToUtf32(string);;
+}
+
+sci::string sci::fromUtf8(const std::string &string)
+{
+	return utf8ToUtf16(string);
+}
+sci::string sci::fromUtf16(const std::u16string &string)
+{
+	return string;
+}
+sci::string sci::fromUtf32(const std::u32string &string)
+{
+	return utf32ToUtf16(string);
+}
+
