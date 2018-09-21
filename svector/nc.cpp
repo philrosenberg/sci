@@ -68,37 +68,32 @@ sci::err sci::NcError::getError() const
 	return sci::err(SERR_NC, m_code, message);
 }
 
-void sci::NcFileBase::openReadOnly(const std::string &fileName)
+void sci::NcFileBase::openReadOnly(const sci::string &fileName)
 {
+	//annoyingly netcdf only provides an interface for using 8bit strings
+	//and these strings are simply passed into the OS file API, so on windows
+	//that means the ansi functions.
+	//Convert our string to ansi. There is little point trying to convert
+	//characters if they are not representable given the file will need to exist
+	//anyway for the open to work.
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenReadOnly called when the file is already open."));
-	checkNcCall(nc_open(fileName.c_str(), NC_NOWRITE, &m_id));
+	checkNcCall(nc_open(sci::nativeCodepage(fileName).c_str(), NC_NOWRITE, &m_id));
 	m_open = true;
 }
 
-#ifdef _WIN32
-void sci::NcFileBase::openReadOnly(const std::wstring &fileName)
-{
-	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenReadOnly called when the file is already open."));
-	checkNcCall(nc_open(ucs16ToUtf8(fileName).c_str(), NC_NOWRITE, &m_id));
-	m_open = true;
-}
-#endif
-
-void sci::NcFileBase::openWritable(const std::string &fileName)
+void sci::NcFileBase::openWritable(const sci::string &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(fileName.c_str(), NC_CLOBBER, &m_id));
+	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER, &m_id));
 	m_open = true;
 }
 
-#ifdef _WIN32
-void sci::NcFileBase::openWritable(const std::wstring &fileName)
+void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeReplacementCharacter)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(ucs16ToUtf8(fileName).c_str(), NC_CLOBBER, &m_id));
+	checkNcCall(nc_create(sci::nativeCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER, &m_id));
 	m_open = true;
 }
-#endif
 
 void sci::NcFileBase::close()
 {
@@ -109,23 +104,16 @@ void sci::NcFileBase::close()
 	}
 }
 
-sci::InputNcFile::InputNcFile(const std::string &fileName)
+sci::InputNcFile::InputNcFile(const sci::string &fileName)
 {
 	openReadOnly(fileName);
 }
 
-#ifdef _WIN32
-sci::InputNcFile::InputNcFile(const std::wstring &fileName)
-{
-	openReadOnly(fileName);
-}
-#endif
-
-std::vector<std::string> sci::InputNcFile::getVariableNames()
+std::vector<sci::string> sci::InputNcFile::getVariableNames()
 {
 	int nVars;
 	checkNcCall(nc_inq_nvars(getId(), &nVars));
-	std::vector<std::string> result(nVars);
+	std::vector<sci::string> result(nVars);
 	int count = 0;
 	int id = 0;
 	while (count<nVars)
@@ -134,7 +122,7 @@ std::vector<std::string> sci::InputNcFile::getVariableNames()
 		try
 		{
 			checkNcCall(nc_inq_varname(getId(), id, name));
-			result[count] = std::string(name);
+			result[count] = sci::fromUtf8(name);
 			++count;
 		}
 		catch (...)
@@ -216,201 +204,203 @@ std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t
 }
 
 template<>
-double sci::InputNcFile::getGlobalAttribute<double>(const std::string &name)
+double sci::InputNcFile::getGlobalAttribute<double>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 	
 	double result;
-	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-float sci::InputNcFile::getGlobalAttribute<float>(const std::string &name)
+float sci::InputNcFile::getGlobalAttribute<float>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 	
 	float result;
-	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-short sci::InputNcFile::getGlobalAttribute<short>(const std::string &name)
+short sci::InputNcFile::getGlobalAttribute<short>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 	
 	short result;
-	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-int sci::InputNcFile::getGlobalAttribute<int>(const std::string &name)
+int sci::InputNcFile::getGlobalAttribute<int>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 	
 	int result;
-	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-long sci::InputNcFile::getGlobalAttribute<long>(const std::string &name)
+long sci::InputNcFile::getGlobalAttribute<long>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 	
 	long result;
-	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-int8_t sci::InputNcFile::getGlobalAttribute<int8_t>(const std::string &name)
+int8_t sci::InputNcFile::getGlobalAttribute<int8_t>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + name + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
 
 	int8_t result;
-	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, name.c_str(), &result));
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
 
 template<>
-std::string sci::InputNcFile::getGlobalAttribute<std::string>(const std::string &name)
+sci::string sci::InputNcFile::getGlobalAttribute<sci::string>(const sci::string &name)
 {
 	size_t nChars;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nChars));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nChars));
 	std::vector<char> characters(nChars + 1); // they are all initialised to 0
-	checkNcCall(nc_get_att_text(getId(), NC_GLOBAL, name.c_str(), &characters[0]));
+	checkNcCall(nc_get_att_text(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &characters[0]));
 
-	return std::string(&characters[0]);
+	std::string utf8String(&characters[0]);
+
+	return sci::fromUtf8(utf8String);
 }
 
 template<>
-std::vector<double> sci::InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name)
+std::vector<double> sci::InputNcFile::getGlobalAttribute<std::vector<double>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<double> result(nValues);
-	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<float> sci::InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name)
+std::vector<float> sci::InputNcFile::getGlobalAttribute<std::vector<float>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<float> result(nValues);
-	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<short> sci::InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name)
+std::vector<short> sci::InputNcFile::getGlobalAttribute<std::vector<short>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<short> result(nValues);
-	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<int> sci::InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name)
+std::vector<int> sci::InputNcFile::getGlobalAttribute<std::vector<int>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<int> result(nValues);
-	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<long> sci::InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name)
+std::vector<long> sci::InputNcFile::getGlobalAttribute<std::vector<long>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<long> result(nValues);
-	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<int8_t> sci::InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name)
+std::vector<int8_t> sci::InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<int8_t> result(nValues);
-	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
 template<>
-std::vector<uint8_t> sci::InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name)
+std::vector<uint8_t> sci::InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, name.c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<uint8_t> result(nValues);
-	checkNcCall(nc_get_att_uchar(getId(), NC_GLOBAL, name.c_str(), &result[0]));
+	checkNcCall(nc_get_att_uchar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
 
-std::vector<std::string> sci::InputNcFile::getGlobalAttributeList()
+std::vector<sci::string> sci::InputNcFile::getGlobalAttributeList()
 {
 	int nAttributes;
 	checkNcCall(nc_inq_natts(getId(), &nAttributes));
-	std::vector<std::string> result(nAttributes);
+	std::vector<sci::string> result(nAttributes);
 	for (int i = 0; i < nAttributes; ++i)
 	{
 		std::vector<char> thisName(NC_MAX_NAME + 1);
 		nc_inq_attname(getId(), NC_GLOBAL, i, &thisName[0]);
-		result[i] = std::string(&thisName[0]);
+		result[i] = fromUtf8(&thisName[0]);
 	}
 	return result;
 }
 
 
-sci::NcDimension::NcDimension(const std::string &name, size_t length)
+sci::NcDimension::NcDimension(const sci::string &name, size_t length)
 {
 	setName(name);
 	setLength(length);
 	m_hasId = false;
 }
 
-void sci::NcDimension::setName(const std::string &name)
+void sci::NcDimension::setName(const sci::string &name)
 {
 	m_name = name;
 }
@@ -423,7 +413,7 @@ void sci::NcDimension::setLength(size_t length)
 void sci::NcDimension::load(const InputNcFile &ncFile)
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcDimension::load called before the file was opened."));
-	checkNcCall(nc_inq_dimid(ncFile.getId(), m_name.c_str(), &m_id));
+	checkNcCall(nc_inq_dimid(ncFile.getId(), sci::toUtf8(m_name).c_str(), &m_id));
 	checkNcCall(nc_inq_dimlen(ncFile.getId(), m_id, &m_length));
 	m_hasId = true;
 }
@@ -431,18 +421,18 @@ void sci::NcDimension::load(const InputNcFile &ncFile)
 void sci::NcDimension::write(const OutputNcFile &ncFile) const
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcDimension::write called before the file was opened."));
-	checkNcCall(nc_def_dim(ncFile.getId(), m_name.c_str(), m_length, &m_id));
+	checkNcCall(nc_def_dim(ncFile.getId(), sci::toUtf8(m_name).c_str(), m_length, &m_id));
 	m_hasId = true;
 }
 
 
-sci::NcDimension::NcDimension(const std::string &name, const InputNcFile &ncFile)
+sci::NcDimension::NcDimension(const sci::string &name, const InputNcFile &ncFile)
 {
 	setName(name);
 	load(ncFile);
 }
 
-sci::NcDimension::NcDimension(const std::string &name, size_t length, const OutputNcFile &ncFile)
+sci::NcDimension::NcDimension(const sci::string &name, size_t length, const OutputNcFile &ncFile)
 {
 	setName(name);
 	setLength(length);
@@ -505,27 +495,10 @@ void sci::NcAttribute::setNull()
 }
 
 template<>
-sci::NcAttribute::NcAttribute(const std::string& name, std::string value)
+sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 {
 	m_name = name;
-	m_nValues = value.length();
-	m_writeType = NC_CHAR;
-	m_nBytes = m_nValues;
-	if (m_nValues == 0)
-		m_values = nullptr;
-	else
-	{
-		m_values = malloc(m_nBytes);
-		memcpy(m_values, &value[0], m_nBytes);
-	}
-}
-
-#ifdef _WIN32
-template<>
-sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
-{
-	m_name = name;
-	std::string utf8Value = sci::ucs16ToUtf8(value);
+	std::string utf8Value = sci::toUtf8(value);
 	m_nValues = utf8Value.length();
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
@@ -534,31 +507,14 @@ sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value)
 	else
 	{
 		m_values = malloc(m_nBytes);
-		memcpy(m_values, &utf8Value[0], m_nBytes);
-	}
-}
-#endif
-
-template<>
-sci::NcAttribute::NcAttribute(const std::string& name, const char *value)
-{
-	m_name = name;
-	m_nValues = strlen(value);
-	m_writeType = NC_CHAR;
-	m_nBytes = m_nValues;
-	if (m_nValues == 0)
-		m_values = nullptr;
-	else
-	{
-		m_values = malloc(m_nBytes);
-		memcpy(m_values, &value[0], m_nBytes);
+		memcpy(m_values, utf8Value.data(), m_nBytes);
 	}
 }
 
 void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcAttribute::write called before the file was opened."));
-	checkNcCall(nc_put_att(ncFile.getId(), NC_GLOBAL, m_name.c_str(), m_writeType, m_nValues, m_values));
+	checkNcCall(nc_put_att(ncFile.getId(), NC_GLOBAL, sci::toUtf8(m_name).c_str(), m_writeType, m_nValues, m_values));
 }
 
 /*template<class T>
@@ -571,19 +527,11 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 }*/
 
 
-sci::OutputNcFile::OutputNcFile(const std::string &fileName)
+sci::OutputNcFile::OutputNcFile(const sci::string &fileName)
 {
 	m_inDefineMode = true;
 	openWritable(fileName);
 }
-
-#ifdef _WIN32
-sci::OutputNcFile::OutputNcFile(const std::wstring &fileName)
-{
-	m_inDefineMode = true;
-	openWritable(fileName);
-}
-#endif
 
 sci::OutputNcFile::OutputNcFile()
 {

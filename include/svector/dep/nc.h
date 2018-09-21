@@ -6,6 +6,7 @@
 #include<algorithm>
 #include<svector/serr.h>
 #include<svector/svector.h>
+#include<svector/sstring.h>
 
 namespace sci_internal
 {
@@ -116,13 +117,13 @@ namespace sci
 		NcAttribute();
 
 		template<class T>
-		NcAttribute(const std::string& name, T value);
+		NcAttribute(const sci::string& name, T value);
 		template<class T, class WRITETYPE>
-		NcAttribute(const std::string& name, T value, const WRITETYPE &);
+		NcAttribute(const sci::string& name, T value, const WRITETYPE &);
 		template<class T>
-		NcAttribute(const std::string& name, std::vector<T> values);
+		NcAttribute(const sci::string& name, std::vector<T> values);
 		template<class T, class WRITETYPE>
-		NcAttribute(const std::string& name, std::vector<T> values, const WRITETYPE &);
+		NcAttribute(const sci::string& name, std::vector<T> values, const WRITETYPE &);
 		~NcAttribute()
 		{
 			if (m_values)
@@ -136,7 +137,7 @@ namespace sci
 		void write(const sci::OutputNcFile & ncFile, const sci::NcVariable<T> &variable) const;
 	private:
 
-		std::string m_name;
+		sci::string m_name;
 		size_t m_nValues;
 		void* m_values;
 		size_t m_nBytes;
@@ -146,13 +147,7 @@ namespace sci
 	};
 
 	template<>
-	sci::NcAttribute::NcAttribute(const std::string& name, std::string value);
-#ifdef _WIN32
-	template <>
-	sci::NcAttribute::NcAttribute(const std::string& name, std::wstring value);
-#endif
-	template<>
-	sci::NcAttribute::NcAttribute(const std::string& name, const char *value);
+	sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value);
 
 	class AttributeContainer
 	{
@@ -169,12 +164,12 @@ namespace sci
 	public:
 		NcFileBase() { m_open = false; }
 		virtual ~NcFileBase() { close(); };
-		void openReadOnly(const std::string &fileName);
-		void openWritable(const std::string &fileName);
-#ifdef _WIN32
-		void openReadOnly(const std::wstring &fileName);
-		void openWritable(const std::wstring &fileName);
-#endif
+		void openReadOnly(const sci::string &fileName);
+		void openWritable(const sci::string &fileName);
+		//This version permits the filename to have unicode characters not represented
+		//by the current codepage to be replaced by another character. Only really of
+		//use on Windows because netcdf on windows only permits ansi file names.
+		void openWritable(const sci::string &fileName, char unicodeReplacementCharacter);
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
@@ -190,18 +185,15 @@ namespace sci
 	class InputNcFile : public NcFileBase
 	{
 	public:
-		InputNcFile(const std::string &fileName);
-#ifdef _WIN32
-		InputNcFile(const std::wstring &fileName);
-#endif
+		InputNcFile(const sci::string &fileName);
 		template<class T>
-		std::vector<T> getVariable(const std::string &name);
+		std::vector<T> getVariable(const sci::string &name);
 		template<class T>
-		std::vector<T> getVariable(const std::string &name, std::vector<size_t> &shape);
-		std::vector<std::string>getVariableNames();
+		std::vector<T> getVariable(const sci::string &name, std::vector<size_t> &shape);
+		std::vector<sci::string>getVariableNames();
 		template<class T>
-		T getGlobalAttribute(const std::string &name);
-		std::vector<std::string> getGlobalAttributeList();
+		T getGlobalAttribute(const sci::string &name);
+		std::vector<sci::string> getGlobalAttributeList();
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
@@ -228,48 +220,48 @@ namespace sci
 
 
 	template<>
-	double InputNcFile::getGlobalAttribute<double>(const std::string &name);
+	double InputNcFile::getGlobalAttribute<double>(const sci::string &name);
 	template<>
-	float InputNcFile::getGlobalAttribute<float>(const std::string &name);
+	float InputNcFile::getGlobalAttribute<float>(const sci::string &name);
 	template<>
-	short InputNcFile::getGlobalAttribute<short>(const std::string &name);
+	short InputNcFile::getGlobalAttribute<short>(const sci::string &name);
 	template<>
-	int InputNcFile::getGlobalAttribute<int>(const std::string &name);
+	int InputNcFile::getGlobalAttribute<int>(const sci::string &name);
 	template<>
-	long InputNcFile::getGlobalAttribute<long>(const std::string &name);
+	long InputNcFile::getGlobalAttribute<long>(const sci::string &name);
 	template<>
-	int8_t InputNcFile::getGlobalAttribute<int8_t>(const std::string &name);
+	int8_t InputNcFile::getGlobalAttribute<int8_t>(const sci::string &name);
 	template<>
-	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const std::string &name);
+	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const sci::string &name);
 	template<>
-	std::string InputNcFile::getGlobalAttribute<std::string>(const std::string &name);
+	sci::string InputNcFile::getGlobalAttribute<sci::string>(const sci::string &name);
 
 	template<>
-	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const std::string &name);
+	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const sci::string &name);
 	template<>
-	std::vector<float> InputNcFile::getGlobalAttribute<std::vector<float>>(const std::string &name);
+	std::vector<float> InputNcFile::getGlobalAttribute<std::vector<float>>(const sci::string &name);
 	template<>
-	std::vector<short> InputNcFile::getGlobalAttribute<std::vector<short>>(const std::string &name);
+	std::vector<short> InputNcFile::getGlobalAttribute<std::vector<short>>(const sci::string &name);
 	template<>
-	std::vector<int> InputNcFile::getGlobalAttribute<std::vector<int>>(const std::string &name);
+	std::vector<int> InputNcFile::getGlobalAttribute<std::vector<int>>(const sci::string &name);
 	template<>
-	std::vector<long> InputNcFile::getGlobalAttribute<std::vector<long>>(const std::string &name);
+	std::vector<long> InputNcFile::getGlobalAttribute<std::vector<long>>(const sci::string &name);
 	template<>
-	std::vector<int8_t> InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const std::string &name);
+	std::vector<int8_t> InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const sci::string &name);
 	template<>
-	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const std::string &name);
+	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const sci::string &name);
 	template<>
-	std::vector<std::string> InputNcFile::getGlobalAttribute<std::vector<std::string>>(const std::string &name);
+	std::vector<sci::string> InputNcFile::getGlobalAttribute<std::vector<sci::string>>(const sci::string &name);
 
 	template<class T>
 	class NcVariable
 	{
 	public:
-		NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
-		NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
 		NcVariable(NcVariable &&) = default;
-		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
-		//NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
+		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
+		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
 		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
 		void write(const OutputNcFile &file) const;
 		int getId() const
@@ -283,7 +275,7 @@ namespace sci
 		mutable int m_id;
 		std::vector<NcAttribute> m_attributes;
 		std::vector<int> m_dimensionIds;
-		std::string m_name;
+		sci::string m_name;
 
 		//remove copy constructors
 		NcVariable(const NcVariable&);
@@ -293,10 +285,7 @@ namespace sci
 	class OutputNcFile : public NcFileBase
 	{
 	public:
-		OutputNcFile(const std::string &fileName);
-#ifdef _WIN32
-		OutputNcFile(const std::wstring &fileName);
-#endif
+		OutputNcFile(const sci::string &fileName);
 		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
@@ -314,18 +303,18 @@ namespace sci
 	class NcDimension
 	{
 	public:
-		NcDimension(const std::string &name, size_t length);
-		NcDimension(const std::string &name, const InputNcFile &ncFile);
-		NcDimension(const std::string &name, size_t length, const OutputNcFile &ncFile);
-		std::string getName() { return m_name; }
-		void setName(const std::string &name);
+		NcDimension(const sci::string &name, size_t length);
+		NcDimension(const sci::string &name, const InputNcFile &ncFile);
+		NcDimension(const sci::string &name, size_t length, const OutputNcFile &ncFile);
+		sci::string getName() { return m_name; }
+		void setName(const sci::string &name);
 		size_t getLength() { return m_length; }
 		void setLength(size_t length);
 		void load(const InputNcFile &ncFile);
 		void write(const OutputNcFile &ncFile) const;
 		int getId() const { sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "sci::NcDimension::getId called when the dimension does not yet have an id.")); return m_id; }
 	private:
-		std::string m_name;
+		sci::string m_name;
 		size_t m_length;
 		mutable int m_id;
 		mutable bool m_hasId;
@@ -336,7 +325,7 @@ namespace sci
 	};
 
 	template <class T>
-	sci::NcAttribute::NcAttribute(const std::string& name, T value)
+	sci::NcAttribute::NcAttribute(const sci::string& name, T value)
 	{
 		m_name = name;
 		m_nValues = 1;
@@ -349,7 +338,7 @@ namespace sci
 
 
 	template<class T, class WRITETYPE>
-	sci::NcAttribute::NcAttribute(const std::string& name, T value, const WRITETYPE &)
+	sci::NcAttribute::NcAttribute(const sci::string& name, T value, const WRITETYPE &)
 	{
 		m_name = name;
 		m_nValues = 1;
@@ -361,7 +350,7 @@ namespace sci
 	}
 
 	template <class T>
-	sci::NcAttribute::NcAttribute(const std::string& name, std::vector<T> values)
+	sci::NcAttribute::NcAttribute(const sci::string& name, std::vector<T> values)
 	{
 		m_name = name;
 		m_nValues = values.size();
@@ -378,7 +367,7 @@ namespace sci
 
 
 	template<class T, class WRITETYPE>
-	sci::NcAttribute::NcAttribute(const std::string& name, std::vector<T> values, const WRITETYPE &)
+	sci::NcAttribute::NcAttribute(const sci::string& name, std::vector<T> values, const WRITETYPE &)
 	{
 		m_name = name;
 		m_nValues = values.size();
@@ -405,7 +394,7 @@ namespace sci
 	}
 
 	template<class T>
-	std::vector<T> InputNcFile::getVariable(const std::string &name, std::vector<size_t> &shape)
+	std::vector<T> InputNcFile::getVariable(const sci::string &name, std::vector<size_t> &shape)
 	{
 		int varId;
 		checkNcCall(nc_inq_varid(getId(), name.c_str(), &varId));
@@ -428,14 +417,14 @@ namespace sci
 	}
 
 	template<class T>
-	std::vector<T> InputNcFile::getVariable(const std::string &name)
+	std::vector<T> InputNcFile::getVariable(const sci::string &name)
 	{
 		std::vector<size_t> shape;
 		return getVariable<T>(name, shape);
 	}
 
 	template<class T>
-	NcVariable<T>::NcVariable(std::string name, const OutputNcFile &ncFile, const NcDimension& dimension)
+	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension)
 	{
 		m_name = name;
 		m_hasId = false;
@@ -447,7 +436,7 @@ namespace sci
 	}
 
 	template<class T>
-	NcVariable<T>::NcVariable(std::string name, const OutputNcFile &ncFile, const std::vector<NcDimension*> &dimensions)
+	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension*> &dimensions)
 	{
 		m_name = name;
 		m_hasId = false;
@@ -457,12 +446,12 @@ namespace sci
 	}
 	/*
 	template<class T>
-	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension)
+	NcVariable<T>::NcVariable(sci::string name, const NcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension)
 	{
 
 	}
 	template<class T>
-	NcVariable<T>::NcVariable(std::string name, const NcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions)
+	NcVariable<T>::NcVariable(sci::string name, const NcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions)
 	{
 
 	}*/
