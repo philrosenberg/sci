@@ -12,6 +12,7 @@
 #include<sstream>
 #include<vector>
 #include<svector/dep/nc.h>
+#include<svector/sstring.h>
 
 #ifdef max
 #define SVECTOR_RESTORE_MAX max
@@ -639,11 +640,11 @@ namespace sci
 	std::vector<std::string> splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators);
 	bool getFileLocked (std::string fileName);
 
-	std::vector< std::string > getAllFiles( std::string directory, bool recursive, bool includeHidden );
-	std::string getFileExtension( std::string fileName );
-	std::string getFileName( std::string fullPath );
-	std::string getContainingDirectoryPath( std::string fullPath );
-	std::string concatPath( std::string part1, std::string part2);
+	std::vector< sci::string > getAllFiles( sci::string directory, bool recursive, bool includeHidden );
+	sci::string getFileExtension( sci::string fileName );
+	sci::string getFileName( sci::string fullPath );
+	sci::string getContainingDirectoryPath( sci::string fullPath );
+	sci::string concatPath( sci::string part1, sci::string part2);
 	
 }
 

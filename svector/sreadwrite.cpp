@@ -867,46 +867,56 @@ bool sci::getFileLocked (std::string fileName)
 		return true;
 }
 
-std::vector< std::string > sci::getAllFiles( std::string directory, bool recursive, bool includeHidden )
+std::vector< sci::string > sci::getAllFiles( sci::string directory, bool recursive, bool includeHidden )
 {
 	wxArrayString wxResult(false);
 	int flags = wxDIR_FILES | ( recursive ? wxDIR_DIRS : 0 ) | ( includeHidden ? wxDIR_HIDDEN : 0 );
-	wxDir::GetAllFiles( directory, &wxResult, "", flags);
-	std::vector<std::string> result(wxResult.size());
+	if(directory.length() > 0)
+		wxDir::GetAllFiles( sci::nativeUnicode(directory), &wxResult, "", flags);
+	else
+	{
+		wxString cwd = wxGetCwd();
+		if (!cwd.EndsWith('/') && !cwd.EndsWith('\\'))
+			cwd += '/';
+		wxDir::GetAllFiles(wxGetCwd(), &wxResult, "", flags);
+		for (size_t i = 0; i < wxResult.size(); ++i)
+			wxResult[i] = wxResult[i].substr(cwd.length());
+	}
+	std::vector<sci::string> result(wxResult.size());
 	for(size_t i=0; i<wxResult.size(); ++i)
-		result[i] = wxResult[i];
+		result[i] = fromUtf8(wxResult[i].utf8_str().data());
 
 	return result;
 }
 
-size_t getLastDirectorySeparator( std::string path )
+size_t getLastDirectorySeparator( sci::string path )
 {
 #ifdef _WIN32
-	return path.find_last_of( "/\\" );
+	return path.find_last_of( sU("/\\") );
 #else
-	return path.find_last_of( "/" );
+	return path.find_last_of( sU("/") );
 #endif
 }
 
-bool isDirectorySeparator( char character )
+bool isDirectorySeparator( sci::char_t character )
 {
 #ifdef _WIN32
-	return character == '/' || character == '\\';
+	return character == sU('/') || character == sU('\\');
 #else
-	return character == '/';
+	return character == sU('/');
 #endif
 }
 
-std::string getDirectorySeparator()
+sci::string getDirectorySeparator()
 {
 #ifdef _WIN32
-	return "\\";
+	return sU("\\");
 #else
-	return "/";
+	return sU("/");
 #endif
 }
 
-std::string sci::getFileExtension( std::string fileName )
+sci::string sci::getFileExtension( sci::string fileName )
 {
 	std::string result;
 	size_t lastSlash = getLastDirectorySeparator( fileName );
@@ -914,14 +924,14 @@ std::string sci::getFileExtension( std::string fileName )
 	if( lastDot > lastSlash || lastSlash == std::string::npos )
 		return fileName.substr( lastDot+1 );
 	else
-		return "";
+		return sU("");
 }
 
 //Returns the last element of fullPath assuming fullPath is a
 //path separated by apropriate slashes (\ or / or Windows, / on
 //linux). If the last character is a slash then an empty string
 //will be returned.
-std::string sci::getFileName( std::string fullPath )
+sci::string sci::getFileName( sci::string fullPath )
 {
 	size_t lastSlash = getLastDirectorySeparator( fullPath );
 	if( lastSlash == std::string::npos )
@@ -934,17 +944,17 @@ std::string sci::getFileName( std::string fullPath )
 //slash then the string will be returned unchanged. This behaviour
 //means that fullPath == getContainingDirectoryPath( fullPath ) +
 //getFileName( fullPath ) will be true;
-std::string sci::getContainingDirectoryPath( std::string fullPath )
+sci::string sci::getContainingDirectoryPath( sci::string fullPath )
 {
 	size_t lastSlash = getLastDirectorySeparator( fullPath );
 	if( lastSlash == std::string::npos )
-		return "";
+		return sU("");
 	return fullPath.substr( 0, lastSlash +1 );
 }
 
 //Returns the concatenation of the two paths with a slash added
 //if necessary
-std::string sci::concatPath( std::string part1, std::string part2)
+sci::string sci::concatPath( sci::string part1, sci::string part2)
 {
 	if( part1.length() == 0 )
 		return part2;
