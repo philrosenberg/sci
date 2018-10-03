@@ -390,7 +390,7 @@ namespace sci
 	void NcAttribute::write(const sci::OutputNcFile & ncFile, const sci::NcVariable<T> &variable) const
 	{
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcAttribute::write called before the file was opened."));
-		checkNcCall(nc_put_att(ncFile.getId(), variable.getId(), m_name.c_str(), m_writeType, m_nValues, m_values));
+		checkNcCall(nc_put_att(ncFile.getId(), variable.getId(), toUtf8(m_name).c_str(), m_writeType, m_nValues, m_values));
 	}
 
 	template<class T>
@@ -460,7 +460,7 @@ namespace sci
 	void NcVariable<T>::write(const OutputNcFile &file) const
 	{
 		sci::assertThrow(!m_hasId, sci::err(SERR_NC, localNcError, "sci::NcVariable::write called multiple times on the same variable."));
-		checkNcCall(nc_def_var(file.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
+		checkNcCall(nc_def_var(file.getId(), toUtf8(m_name).c_str(), sci_internal::NcTraits<T>::ncType, (int)m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
 		m_hasId = true;
 		for (size_t i = 0; i < m_attributes.size(); ++i)
 			m_attributes[i].write(file, *this);
