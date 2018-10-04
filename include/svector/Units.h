@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+#include<svector/sstring.h>
 namespace sci
 {
 	template<uint64_t BASE_POWERS, int64_t EXPONENT>
@@ -547,6 +548,230 @@ namespace sci
 	template <class T>
 	Physical<T> PhysicalDivide(const Physical<T> &numerator, size_t denominator)
 	{
-		return numerator / unitless(denominator);
+		return numerator / unitless((double)denominator);
+	}
+	
+	inline bool checkMultiple(int8_t first, int8_t second, int8_t &multiple)
+	{
+		if (first == 0 && second == 0)
+		{
+			multiple = 0;
+			return true;
+		}
+		if (first == 0)
+		{
+			multiple = 0;
+			return false;
+		}
+		if (second == 0)
+		{
+			multiple = 0;
+			return false;
+		}
+		if (first > second)
+		{
+			if (first%second == 0)
+			{
+				multiple = first / second;
+				return true;
+			}
+			else
+			{
+				multiple = 0;
+				return false;
+			}
+		}
+		if (first < second)
+		{
+			if (second%first == 0)
+			{
+				multiple = second / first;
+				return true;
+			}
+			else
+			{
+				multiple = 0;
+				return false;
+			}
+		}
+		
+		multiple = 1;
+		return true;
+	}
+	template <class T, class U>
+	bool isPowerOf( int8_t &multiple)
+	{
+		int8_t multiples[8];
+		bool isMultiple[8];
+		isMultiples[0] = checkMultiples(decodePower<T::basePowers, 0>(), decodePower<U::basePowers, 0>(), multiples[0]);
+		isMultiples[1] = checkMultiples(decodePower<T::basePowers, 1>(), decodePower<U::basePowers, 1>(), multiples[1]);
+		isMultiples[2] = checkMultiples(decodePower<T::basePowers, 2>(), decodePower<U::basePowers, 2>(), multiples[2]);
+		isMultiples[3] = checkMultiples(decodePower<T::basePowers, 3>(), decodePower<U::basePowers, 3>(), multiples[3]);
+		isMultiples[4] = checkMultiples(decodePower<T::basePowers, 4>(), decodePower<U::basePowers, 4>(), multiples[4]);
+		isMultiples[5] = checkMultiples(decodePower<T::basePowers, 5>(), decodePower<U::basePowers, 5>(), multiples[5]);
+		isMultiples[6] = checkMultiples(decodePower<T::basePowers, 6>(), decodePower<U::basePowers, 6>(), multiples[6]);
+		isMultiples[7] = checkMultiples(decodePower<T::basePowers, 7>(), decodePower<U::basePowers, 7>(), multiples[7]);
+		
+		for (size_t i = 0; i < 8; ++i)
+			if (!isMultiples)
+				return false;
+		multiple = 0;
+		for (size_t i = 0; i < 8; ++i)
+		{
+			if (multiple == 0)
+				multiple = multiples[i];
+			else if (multiple != multiples[i])
+				return false;
+		}
+
+		return true;
+	}
+
+	inline sci::string getUnitPrefix(uint8_t exponent)
+	{
+		if (exponent == 24)
+			return sU("Y");
+		if (exponent == 21)
+			return sU("Z");
+		if (exponent == 18)
+			return sU("E");
+		if (exponent == 15)
+			return sU("P");
+		if (exponent == 12)
+			return sU("T");
+		if (exponent == 9)
+			return sU("G");
+		if (exponent == 6)
+			return sU("M");
+		if (exponent == 3)
+			return sU("k");
+		if (exponent == 2)
+			return sU("h");
+		if (exponent == 1)
+			return sU("da");
+		if (exponent == 0)
+			return sU("");
+		if (exponent == -1)
+			return sU("d");
+		if (exponent == -2)
+			return sU("c");
+		if (exponent == -3)
+			return sU("m");
+		if (exponent == -6)
+			return sU("\u00b5");
+		if (exponent == -9)
+			return sU("n");
+		if (exponent == -12)
+			return sU("p");
+		if (exponent == -15)
+			return sU("f");
+		if (exponent == -18)
+			return sU("a");
+		if (exponent == -21)
+			return sU("z");
+		if (exponent == -24)
+			return sU("y");
+
+		throw("Unit prefix requested for an exponent without one.");
+	}
+
+	template<class T>
+	sci::string getUnitString()
+	{
+		static_assert(T::basePowers != 0 || T::exponent == 0 || T::exponent == -2, "Can only give a unit to a unitless parameter if it has an exponent of 0 (unitless) -2, -3, or -4 (percent, permille and permyriad), -6, -9, -12, -15 (ppm, ppb, ppt, ppq)");
+		if (T::basePowers == 0)
+		{
+			if (T::exponent == 0)
+				return sU("");
+			else if (T::basePowers == 0 && T::exponent == -2)
+				return sU("%");
+			else if (T::basePowers == 0 && T::exponent == -3)
+				return sU("\u2030");
+			else if (T::basePowers == 0 && T::exponent == -4)
+				return sU("\u8241");
+			else if (T::basePowers == 0 && T::exponent == -6)
+				return sU("ppm");
+			else if (T::basePowers == 0 && T::exponent == -9)
+				return sU("ppb");
+			else if (T::basePowers == 0 && T::exponent == -12)
+				return sU("ppt");
+			else if (T::basePowers == 0 && T::exponent == -15)
+				return sU("ppq");
+
+		}
+		std::vector< int8_t >  powers
+		{
+			decodePower<T::basePowers, 0>(),
+			decodePower<T::basePowers, 1>(),
+			decodePower<T::basePowers, 2>(),
+			decodePower<T::basePowers, 3>(),
+			decodePower<T::basePowers, 4>(),
+			decodePower<T::basePowers, 5>(),
+			decodePower<T::basePowers, 6>(),
+			decodePower<T::basePowers, 7>()
+		};
+
+		std::vector<sci::string> names
+		{
+			sU("A"), sU("K"), sU("s"), sU("m"), sU("g"), sU("ca"), sU("mol"), sU("rad")
+		};
+
+		bool canSingle = T::exponent % 3 == 0 || (T::exponent <3 && T::exponent >-3);
+		bool hasOnePower = false;
+		bool hasNegOnePower = false;
+		for(size_t i=0; i<powers.size(); ++i)
+		{
+			if (powers[i] == 1)
+				hasOnePower = true;
+			if (powers[i] == -1)
+				hasNegOnePower = true;
+		}
+
+		if (hasOnePower && canSingle)
+		{
+			sci::string result;
+			bool writtenPrefix = false;
+			for (size_t i = 0; i < powers.size(); ++i)
+			{
+				if (powers[i] == 1 && !writtenPrefix)
+				{
+					result = result + getUnitPrefix(T::exponent);
+					writtenPrefix = true;
+				}
+				else if (powers[i] != 0)
+				{
+					if (result.length() != 0)
+						result = result + sU(" ");
+					result = result + names[i];
+					sci::stringstream strm;
+					strm << powers[i];
+					result = result + strm.str();
+				}
+			}
+		}
+		else if (hasNegOnePower && canSingle)
+		{
+			sci::string result;
+			bool writtenPrefix = false;
+			for (size_t i = 0; i < powers.size(); ++i)
+			{
+				if (powers[i] == -1 && !writtenPrefix)
+				{
+					result = result + getUnitPrefix(-T::exponent);
+					writtenPrefix = true;
+				}
+				else if (powers[i] != 0)
+				{
+					if (result.length() != 0)
+						result = result + sU(" ");
+					result = result + names[i];
+					sci::stringstream strm;
+					strm << powers[i];
+					result = result + strm.str();
+				}
+			}
+		}
+
+		throw("Sorry can't generate a label for this unit yet");
 	}
 }
