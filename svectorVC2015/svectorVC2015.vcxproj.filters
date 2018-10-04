@@ -266,5 +266,8 @@
     <ClInclude Include="..\include\svector\time.h">
       <Filter>Header Files\external</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\Units.h">
+      <Filter>Header Files\external</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1893,6 +1893,19 @@ namespace sci
 		}
 		return result;
 	}
+	template<class T, class U, class V>
+	std::vector<T> boxcaraverage(const std::vector<T> &v, size_t period, U divider(V numerator, size_t denominator))
+	{
+		std::vector<T> result(v.size() / period, 0); //integer division so no need to round down
+		typename std::vector<T>::const_iterator vsubbegin = v.begin();
+		for (typename std::vector<T>::iterator resulti = result.begin(); resulti != result.end(); ++resulti)
+		{
+			for (typename std::vector<T>::const_iterator vi = vsubbegin; vi != vsubbegin + period; ++vi) *resulti += *vi;
+			*resulti = divider(*resulti, period);
+			vsubbegin += period;
+		}
+		return result;
+	}
 
 	//returns a vector for which element 0 is the average over the first period elements of
 	//v, element 1 is the average over the next period*base elements of v, element 2 
