@@ -1,4 +1,4 @@
-#include"sdialog_internal.h"
+#include"../include/svector/sdialog.h"
 #include <wx/textdlg.h>
 #include <wx/dcclient.h>
 #include <wx/dcgraph.h>

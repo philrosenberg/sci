@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "../include/svector/dep/ppfile.h"
 #include<assert.h>
 #include<vector>

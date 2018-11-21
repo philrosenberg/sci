@@ -1,7 +1,7 @@
 
 #ifndef svi_h
 #define svi_h
-
+/*
 #include<vector>
 #include<alg/ap.h>
 #include<complex>
@@ -59,7 +59,7 @@ private:
 	friend void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &result, void *ptr);
 	 
 };
-
+*/
 
 //class algwrapperrealvector : public alglib::real_1d_array
 //{

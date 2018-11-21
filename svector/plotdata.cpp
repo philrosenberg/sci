@@ -1,6 +1,7 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include "plotdata_internal.h"
-#include "serr_internal.h"
+#include "../include/svector/dep/plot/plotdata.h"
+#include "../include/svector/dep/plot/transforms.h"
+#include "../include/svector/serr.h"
+#include "../include/svector/svector.h"
 
 
 LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )

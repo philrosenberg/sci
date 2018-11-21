@@ -4,9 +4,9 @@
 #include<vector>
 #include<netcdf.h>
 #include<algorithm>
-#include<svector/serr.h>
-#include<svector/svector.h>
-#include<svector/sstring.h>
+#include"../serr.h"
+#include"../svector.h"
+#include"../sstring.h"
 
 namespace sci_internal
 {

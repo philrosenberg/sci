@@ -1,5 +1,5 @@
-#include"svi_internal.h"
-
+#include"../include/svector/dep/svi.h"
+/*
 void svi::vectortoalg(const std::vector<double> &src, alglib::real_1d_array &dst)
 {
 	dst.setcontent(src.size(),&src[0]);
@@ -95,3 +95,4 @@ void svi::algtovector(const alglib::real_2d_array &src, std::vector< std::vector
 	}
 }
 
+*/

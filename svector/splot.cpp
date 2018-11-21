@@ -1,6 +1,3 @@
-#define _USE_MATH_DEFINES
-#define _CRT_SECURE_NO_WARNINGS
-
 #include<wx/wx.h>
 #include<wx/filename.h>
 #include<wx/dcps.h>
@@ -10,11 +7,12 @@
 #include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
                        // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
                        //not sure why.
-#include"splot_internal.h"
-#include"serr_internal.h"
-#include"svector_internal.h"
-#include"sstring_internal.h"
-#include"sreadwrite_internal.h"
+#include"../include/svector/dep/plot/splot.h"
+#include"../include/svector/dep/plot/transforms.h"
+#include"../include/svector/serr.h"
+#include"../include/svector/svector.h"
+#include"../include/svector/sstring.h"
+#include"../include/svector/sreadwrite.h"
 #include<cmath>
 #include<algorithm>
 #include<float.h>
@@ -859,7 +857,7 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xint
 }
 
 //scatter
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -947,7 +945,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter varying colour
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1038,7 +1036,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter varying size
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotsizescale &sizescale, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotsizescale &sizescale, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1118,7 +1116,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter with varying point colour and size
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, const splotsizescale &sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, const splotsizescale &sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1211,7 +1209,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //contour/colour
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=zs.size()) return;
@@ -1298,7 +1296,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //contour/colour with 2d x and y
-void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, unsigned int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, splotTransformer *transformer)
+void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, unsigned int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=zs.size()) return;
@@ -1378,7 +1376,7 @@ void splot2d::adddata(const std::vector<double> &minedges, const std::vector<dou
 //}
 
 //vector/arrow plot
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()==0) return;
@@ -1411,7 +1409,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	m_haschanged=true;
 }
 //vector/arrow plot with 2d x/y
-void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, splotTransformer *transformer)
+void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()==0) return;
@@ -1449,7 +1447,7 @@ void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vec
 }
 
 //grid plot
-void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, splotTransformer *transformer)
+void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	sci::assertThrow(xs.size()==zs.size()+1,sci::err(sci::SERR_PLOT, splot2dErrorCode, "splot2d::addShadedGrid called with size of zs not one more than size of xs."));
@@ -1527,7 +1525,7 @@ void addShadedGrid(const std::vector< std::vector <double> > &xs, const std::vec
 	
 
 
-void splot2d::addmap(std::string map, wxColour linecolour, double linewidth, std::string linestyle, splotTransformer *transformer)
+void splot2d::addmap(std::string map, wxColour linecolour, double linewidth, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//increase the size of all data
 	incrementdatasize();

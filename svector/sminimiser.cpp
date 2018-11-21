@@ -1,12 +1,13 @@
-#include"sminimiser_internal.h"
-#include"serr_internal.h"
-#include"svector_internal.h"
-#include"operators_internal.h"
-#include"svi_internal.h"
-#include <alg/interpolation.h>
+#include"../include/svector/sminimiser.h"
+#include"../include/svector/serr.h"
+#include"../include/svector/svector.h"
+#include"../include/svector/operators.h"
+#include"../include/svector/dep/svi.h"
+#include<cmath>
+//#include <alg/interpolation.h>
 
 
-void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &result, void *ptr)
+/*void sci::minimiserFunction (const alglib::real_1d_array &fitParams, double &result, void *ptr)
 {
 	Minimiser *minimiser=(Minimiser*)ptr;
 	std::vector<double> xsV;
@@ -50,7 +51,7 @@ void sci::Minimiser::minimise()
 
 	//return the number of iterations
 	m_nIterations=report.iterationscount;
-}
+}*/
 
 std::vector<double> sci::Minimiser::getXs()
 {

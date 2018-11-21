@@ -1,6 +1,6 @@
 #ifndef SREADWRITE_EXTERNAL_H
 #define SREADWRITE_EXTERNAL_H
-#include <svector/dep/nc.h>
-#include <svector/dep/sreadwrite.h>
-#include <svector/dep/ppfile.h>
+#include "dep/nc.h"
+#include "dep/sreadwrite.h"
+#include "dep/ppfile.h"
 #endif

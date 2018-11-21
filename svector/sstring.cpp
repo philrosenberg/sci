@@ -1,4 +1,4 @@
-#include "sstring_internal.h"
+#include "../include/svector/sstring.h"
 #include <algorithm>
 #ifdef _WIN32
 #include <Windows.h>

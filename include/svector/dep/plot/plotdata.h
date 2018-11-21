@@ -5,6 +5,8 @@
 #include<string>
 #include<memory>
 
+#include"splot.h"
+
 const int plotDataErrorCode = 1;
 
 class LineStyle
@@ -123,6 +125,7 @@ private:
 	PLINT m_angleDeg[2];
 };
 
+class splotTransformer;
 
 class DrawableItem
 {

@@ -1,10 +1,7 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include"sreadwrite_internal.h"
-#include"serr_internal.h"
-#include"svector_internal.h"
-#include"sstring_internal.h"
-#include"../include/svector/dep/ppfile.h"
-#include"../include/svector/dep/nc.h"
+#include"../include/svector/sreadwrite.h"
+#include"../include/svector/serr.h"
+#include"../include/svector/svector.h"
+#include"../include/svector/sstring.h"
 #include<wx/filefn.h>
 #include<wx/dir.h>
 

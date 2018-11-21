@@ -1,7 +1,7 @@
 
 #ifdef _WIN32
-#include"memorymap_internal.h"
-#include"serr_internal.h"
+#include"../include/svector/MemoryMap.h"
+#include"../include/svector/serr.h"
 
 sci::MemoryMap::Handle::Handle(size_t nBytes, std::string name)
 {

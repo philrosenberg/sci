@@ -1,7 +1,6 @@
 #ifndef SVECTOR_EXTERNAL_H
 #define SVECTOR_EXTERNAL_H
-#include<svector/serr.h>
-#include<svector/operators.h>
-#include<svector/math.h>
-#include<svector/dep/svector.h>
+#include"operators.h"
+#include"math.h"
+#include"dep/svector.h"
 #endif

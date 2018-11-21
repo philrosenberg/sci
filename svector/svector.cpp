@@ -1,13 +1,13 @@
-#include"svector_internal.h"
+#include"../include/svector/svector.h"
 #include<libresample.h>
-#include <alg/ap.h>
-#include <alg/fasttransforms.h>
-#include <alg/interpolation.h>
+//#include <alg/ap.h>
+//#include <alg/fasttransforms.h>
+//#include <alg/interpolation.h>
 #include<time.h>
-#include"svi_internal.h"
-#include"operators_internal.h"
-#include"math_internal.h"
-#include"sstring_internal.h"
+#include"../include/svector/dep/svi.h"
+#include"../include/svector/operators.h"
+#include"../include/svector/math.h"
+#include"../include/svector/sstring.h"
 #include<assert.h>
 
 
@@ -41,7 +41,7 @@ void sci::resample(const std::vector<float> &input, float factor, std::vector<fl
 	}
 
 }
-
+/*
 void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output)
 {
 	alglib::real_1d_array alginput;
@@ -58,7 +58,7 @@ void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_outpu
 	}
 	svi::algctovectors(algoutput,re_output,im_output);
 }
-
+*/
 std::vector<double> sci::powerspectrum(const std::vector<double> &v)
 {
 	std::vector<double>im;
@@ -158,7 +158,7 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	double covar;
 	sci::fitstraightline(x,y,grad,intercept,varm,varc,covar);
 }
-
+/*
 void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar)
 {
 	//fit y=mx+c
@@ -841,7 +841,7 @@ std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<d
 		svi::algtovector(algmat,result);
 	}
 	return result;
-}
+}*/
 
 bool sci::pointinpolygon(std::vector<double> polygonx, std::vector<double> polygony, double pointx, double pointy)
 {
@@ -930,7 +930,7 @@ void integrableFunction(double x, double xminusa, double bminusx, double &y, voi
 	IntegrableData *integrableData=(IntegrableData*)ptr;
 	y=integrableData->functionToIntegrate(x,*integrableData->data);
 }
-
+/*
 double sci::integrate(double xMin, double xMax, double intervalMax, double (*functionToIntegrate)(double x, const std::vector<double> &params), const std::vector<double> &params)
 {
     alglib::autogkstate state;
@@ -996,7 +996,7 @@ void sci::eigenvector(const std::vector<std::vector<double>> &matrix, std::vecto
 
 	svi::algtovector(algEigenvalues,eigenvaluesReal);
 	svi::algtovector(algImaginaryEigenvalues,eigenvaluesImaginary);
-}
+}*/
 
 double sci::distribution::normal(double x, double mean, double standardDeviation)
 {
@@ -1075,7 +1075,7 @@ double sci::distribution::cumulativeCauchy(double x, double mean, double halfWid
 	return atan( (x-mean)/halfWidthAtHalfMaximum )/M_PI+0.5;
 }
 		
-
+/*
 double sci::gamma( double x )
 {
 	return alglib::gammafunction(x);
@@ -1093,7 +1093,7 @@ double sci::upperIncompleteGamma( double a, double x )
 	//note the alglib inclomplete gamma function gives incomplete gamma(a,x) as a fraction of gamma(a)
 	//which is not the general definition
 	return sci::gamma(a)*(1.0-alglib::incompletegamma(a, x));
-}
+}*/
 
 
 void sci::solveQuadratic(double a, double b, double c, std::complex<double> &sln1, std::complex<double> &sln2)
@@ -1356,7 +1356,7 @@ sci::MultivariateInverseCumulativeNormalDistribution::MultivariateInverseCumulat
 	m_means = means;
 	m_standardDeviations = standardDeviations;
 }
-double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const
+/*double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const
 {
 	double otherProbability = 1.0;
 	for (size_t i = 0; i < otherXs.size(); ++i)
@@ -1368,7 +1368,7 @@ double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulat
 		cumulativeProbability = cumulativeProbability / otherProbability;
 
 	return M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
-}
+}*/
 
 sci::InverseCumulativeNormalDistribution::InverseCumulativeNormalDistribution(double mean, double standardDeviation)
 {
@@ -1376,10 +1376,10 @@ sci::InverseCumulativeNormalDistribution::InverseCumulativeNormalDistribution(do
 	m_standardDeviation = standardDeviation;
 }
 
-double sci::InverseCumulativeNormalDistribution::getX(double cumulativeProbability) const
+/*double sci::InverseCumulativeNormalDistribution::getX(double cumulativeProbability) const
 {
 	return m_mean + m_standardDeviation*M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
-}
+}*/
 
 std::vector<double> sci::MarkovChain::getExpectation(size_t nIntegrationSteps)
 {

@@ -3,16 +3,12 @@
 
 
 #include<string>
-#ifdef _WIN32
-//#include<nc/netcdfcpp.h>
-#include<nc/netcdf.h>
-#endif
 #include<limits>
 #include<fstream>
 #include<sstream>
 #include<vector>
-#include<svector/dep/nc.h>
-#include<svector/sstring.h>
+#include"nc.h"
+#include"../sstring.h"
 
 #ifdef max
 #define SVECTOR_RESTORE_MAX max

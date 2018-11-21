@@ -2,17 +2,12 @@
 #define svector_h
 
 
-#if defined _SCL_SECURE_NO_WARNINGS
-#define poo 1
-#endif
-#define _USE_MATH_DEFINES
 //2*M_PI
 #define M_2PI     6.28318530717958647692
 //sqrt(M_PI)
 #define M_SQRTPI  1.77245385090551602729
 //sqrt(2.0*M_PI)
 #define M_SQRT2PI 2.50662827463100050241
-#define NOMINMAX
 
 #include<vector>
 #include<limits>
@@ -22,7 +17,7 @@
 #include<cmath>
 #include<type_traits>
 #include<random>
-#include<svector/serr.h>
+#include"../serr.h"
 
 /*#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -37,9 +32,9 @@
 #endif*/
 
 
-#include <alg/ap.h>
+/*#include <alg/ap.h>
 #include <alg/fasttransforms.h>
-#include <alg/interpolation.h>
+#include <alg/interpolation.h>*/
 
 #ifdef min
 #undef min
@@ -2207,7 +2202,7 @@ namespace sci
 	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,const std::vector<double> &), const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
 	size_t fitnonlinear(std::vector<double> &tunableparams, std::vector<double> &paramErrs, std::vector<double> tunableparamlowerlimits, std::vector<double> tunableparamupperlimits, double (*function)(const std::vector<double> &,double), const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &weights);
 
-	template< class T > 
+	/*template< class T > 
 	void minimiseCaller(const alglib::real_1d_array &fitParams, double &result, void *ptr )
 	{
 		T* minimisable = (T*)(ptr);
@@ -2301,7 +2296,7 @@ namespace sci
 		alglib::autogkresults( state, result, report );
 		sci::assertThrow( report.terminationtype == 1, sci::err() );
 		return result;
-	}
+	}*/
 
 	//Integrates from a starting point outwards into the tails of a distribution.
 	//Will integrate until either we reach the limits, or the change is less than
