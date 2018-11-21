@@ -20,3 +20,4 @@ makefile
 install
 **.VC.opendb
 **.VC.db
+.vs
