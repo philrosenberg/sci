@@ -121,7 +121,7 @@
     <IntDir>$(SolutionDir)..\svectorbuild\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(INCLUDE);$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(INCLUDE);$(WXWIN)\include\msvc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\svectorbuild\bin\</OutDir>
@@ -136,8 +136,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|x64'">
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(INCLUDE);$(WXWIN)\include\msvc;</IncludePath>
-    <OutDir>$(LIB64SD)\</OutDir>
+    <IncludePath>$(IncludePath);$(INCLUDE);$(WXWIN)\include\msvc</IncludePath>
+    <OutDir>$(SolutionDir)x64\Debug</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
     <OutDir>$(LOCAL)\lib32s\</OutDir>
@@ -148,7 +148,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|x64'">
     <IncludePath>$(IncludePath);$(INCLUDE);$(WXWIN)\include\msvc</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
-    <OutDir>$(LIB64S)\</OutDir>
+    <OutDir>$(SolutionDir)x64\Release</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -242,7 +242,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(INCLUDE);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WXWIN)/include;$(WXADDITIONS)/include;$(WXWIN)/contrib/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;STRICT;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;NOMINMAX;__WXMSW__;__WX__;_DEBUG;__WXDEBUG__;_WINDOWS;wxUSE_UNICODE;WXUSINGDLL;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
