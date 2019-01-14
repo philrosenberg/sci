@@ -302,43 +302,43 @@ namespace sci
 	}\
 	static sci::string getShortName()\
 	{\
-		return sU("SHORTNAME");\
+		return SHORTNAME;\
 	}
 
 	template<int64_t EXPONENT = 0>
 	struct Unitless : public EncodedUnit<0, EXPONENT>
 	{
-		NAMEDEF()
+		NAMEDEF(sU(""))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Amp : public EncodedUnit<encodePower<POWER, 0>(), EXPONENT*POWER>
 	{
-		NAMEDEF(A)
+		NAMEDEF(sU("A"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Kelvin : public EncodedUnit<encodePower<POWER, 1>(), EXPONENT*POWER>
 	{
-		NAMEDEF(K)
+		NAMEDEF(sU("K"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Second : public EncodedUnit<encodePower<POWER, 2>(), EXPONENT*POWER>
 	{
-		NAMEDEF(s)
+		NAMEDEF(sU("s"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Metre : public EncodedUnit<encodePower<POWER, 3>(), EXPONENT*POWER>
 	{
-		NAMEDEF(m)
+		NAMEDEF(sU("m"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gram : public EncodedUnit<encodePower<POWER, 4>(), EXPONENT*POWER>
 	{
-		NAMEDEF(g)
+		NAMEDEF(sU("g"))
 	};
 
 	template<int8_t POWER = 1>
@@ -349,19 +349,19 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Candela : public EncodedUnit<encodePower<POWER, 5>(), EXPONENT*POWER>
 	{
-		NAMEDEF(cd)
+		NAMEDEF(sU("cd"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Mole : public EncodedUnit<encodePower<POWER, 6>(), EXPONENT*POWER>
 	{
-		NAMEDEF(mol)
+		NAMEDEF(sU("mol"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Radian : public EncodedUnit<encodePower<POWER, 7>(), EXPONENT*POWER>
 	{
-		NAMEDEF(rad)
+		NAMEDEF(sU("rad"))
 	};
 
 	//When defining these derived units we simply pass the exponent to a
@@ -372,122 +372,122 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Steradian : public MultipliedEncodedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
-		NAMEDEF(sr)
+		NAMEDEF(sU("sr"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
-		NAMEDEF(Hz)
+		NAMEDEF(sU("Hz"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedEncodedUnit<MultipliedEncodedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
-		NAMEDEF(N)
+		NAMEDEF(sU("N"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
-		NAMEDEF(Pa)
+		NAMEDEF(sU("Pa"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
-		NAMEDEF(J)
+		NAMEDEF(sU("J"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
-		NAMEDEF(W)
+		NAMEDEF(sU("W"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedEncodedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
-		NAMEDEF(C)
+		NAMEDEF(sU("C"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedEncodedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		NAMEDEF(V)
+		NAMEDEF(sU("V"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedEncodedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
-		NAMEDEF(F)
+		NAMEDEF(sU("F"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		NAMEDEF(\u2126)
+		NAMEDEF(sU("\u2126"))
 	};
 
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
-		NAMEDEF(S)
+		NAMEDEF(sU("S"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
-		NAMEDEF(Wb)
+		NAMEDEF(sU("Wb"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
-		NAMEDEF(T)
+		NAMEDEF(sU("T"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		NAMEDEF(H)
+		NAMEDEF(sU("H"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedEncodedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
-		NAMEDEF(lm)
+		NAMEDEF(sU("lm"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedEncodedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
-		NAMEDEF(lx)
+		NAMEDEF(sU("lx"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Becquerel : public Second<-POWER, EXPONENT>
 	{
-		NAMEDEF(Bq)
+		NAMEDEF(sU("Bq"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
-		NAMEDEF(Gy)
+		NAMEDEF(sU("Gy"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
-		NAMEDEF(Sv)
+		NAMEDEF(sU("Sv"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedEncodedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
-		NAMEDEF(kat)
+		NAMEDEF(sU("kat"))
 	};
 
 
