@@ -84,6 +84,9 @@
     <ClCompile Include="kiss_fft\kiss_fftr.c">
       <Filter>Source Files\kiss_fft</Filter>
     </ClCompile>
+    <ClCompile Include="nc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
