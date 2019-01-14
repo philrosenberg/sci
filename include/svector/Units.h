@@ -519,6 +519,11 @@ namespace sci
 			static_assert(false, "Cannot assign a physical value from a raw double. Use the Physical constructor to create a Physical first.");
 		}
 
+		static sci::string getShortUnitString(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			return ENCODED_UNIT::getShortRepresentation(exponentPrefix, exponentSuffix);
+		}
+
 		static const uint64_t basePowers = ENCODED_UNIT::basePowers;
 		static const int64_t exponent = ENCODED_UNIT::exponent;
 		typedef ENCODED_UNIT unit;
