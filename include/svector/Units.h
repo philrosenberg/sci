@@ -638,7 +638,7 @@ namespace sci
 
 	//> operator
 	template <class T, class U>
-	bool operator>(Physical<T> &first, const Physical<U> &second)
+	bool operator>(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v > Physical<T>(second).m_v;
@@ -646,7 +646,7 @@ namespace sci
 
 	//< operator
 	template <class T, class U>
-	bool operator<(Physical<T> &first, const Physical<U> &second)
+	bool operator<(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v < Physical<T>(second).m_v;
@@ -654,7 +654,7 @@ namespace sci
 
 	//== operator
 	template <class T, class U>
-	bool operator==(Physical<T> &first, const Physical<U> &second)
+	bool operator==(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v == Physical<T>(second).m_v;
@@ -662,7 +662,7 @@ namespace sci
 
 	//!= operator
 	template <class T, class U>
-	bool operator!=(Physical<T> &first, const Physical<U> &second)
+	bool operator!=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v != Physical<T>(second).m_v;
@@ -670,7 +670,7 @@ namespace sci
 
 	//>= operator
 	template <class T, class U>
-	bool operator>=(Physical<T> &first, const Physical<U> &second)
+	bool operator>=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v >= Physical<T>(second).m_v;
@@ -678,7 +678,7 @@ namespace sci
 
 	//<= operator
 	template <class T, class U>
-	bool operator<=(Physical<T> &first, const Physical<U> &second)
+	bool operator<=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
 		return first.m_v <= Physical<T>(second).m_v;
