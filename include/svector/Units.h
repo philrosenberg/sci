@@ -260,9 +260,9 @@ namespace sci
 	template<class ENCODEDUNIT, int POW>
 	struct PoweredEncodedUnit : public EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW>
 	{
-		static sci::string getShortName(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
-			return ENCODEDUNIT::getShortName(exponentPrefix, exponentSuffix, POW);
+			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
 	};
 
@@ -271,9 +271,9 @@ namespace sci
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
 	struct MultipliedEncodedUnit : public EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent>
 	{
-		static sci::string getShortName(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
-			return ENCODEDUNIT1::getShortName(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getShortName(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT1::getShortRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getShortRepresentation(exponentPrefix, exponentSuffix);
 		}
 	};
 
