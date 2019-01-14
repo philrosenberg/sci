@@ -552,7 +552,7 @@ namespace sci
 
 	// / operator
 	template <class T, class U>
-	Physical<DividedEncodedUnit<T, U>> operator*(const Physical<T> &first, const Physical<U> &second)
+	Physical<DividedEncodedUnit<T, U>> operator/(const Physical<T> &first, const Physical<U> &second)
 	{
 		return Physical <DividedEncodedUnit<T, U>>(first.m_v / second.m_v);
 	}
