@@ -106,6 +106,11 @@ namespace sci_internal
 
 namespace sci{
 
+	//An inverse erf function
+	double erfInverse(double a);
+	float erfInverse(float a);
+
+
 	//********************************************************
 	//*************Cmaths and similar functions***************
 	//***Templated but will only work with numerical values***

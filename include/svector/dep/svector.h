@@ -2184,13 +2184,13 @@ namespace sci
 		return result;
 	}
 	
-	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	/*void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept);
 	//fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
 	// in both dimensions. The last element represents the covariance with the intercept.
-	void fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
-		std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar);
+	//void fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+	//	std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar);*/
 	void fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
 	std::vector<double> &grad, std::vector<std::vector<double>> &covar);
 	void fitpolynomial(const std::vector<double> &x, const std::vector<double> &y, size_t max_power, std::vector<double> &coefs, std::vector<std::vector<double>> &covariancematrix);
@@ -3053,10 +3053,10 @@ namespace sci
 		double cumulativeLognormal(double x, double logMean, double logStandardDeviation);
 		double exponential(double x, double rate);
 		double cumulativeExponential(double x, double rate);
-		double gamma(double x, double shape, double scale);
+		/*double gamma(double x, double shape, double scale);
 		double cumulativeGamma(double x, double shape, double scale);
 		double generalisedGamma(double x, double shapeK, double shapeGamma, double scale);
-		double cumulativeGeneralisedGamma(double x, double shapeK, double shapeGamma, double scale);
+		double cumulativeGeneralisedGamma(double x, double shapeK, double shapeGamma, double scale);*/
 		double weibull(double x, double shape, double scale);
 		double cumulativeWeibull(double x, double shape, double scale);
 		double rayleigh(double x, double scale);
@@ -3068,9 +3068,9 @@ namespace sci
 		
 	}
 
-	double gamma( double x );
-	double lowerIncompleteGamma( double a, double x );
-	double upperIncompleteGamma( double a, double x );
+	//double gamma( double x );
+	//double lowerIncompleteGamma( double a, double x );
+	//double upperIncompleteGamma( double a, double x );
 
 	void solveQuadratic(double a, double b, double c, std::complex<double> &sln1, std::complex<double> &sln2);
 	void solveCubic(double a, double b, double c, double d, std::complex<double> &sln1, std::complex<double> &sln2, std::complex<double> &sln3);

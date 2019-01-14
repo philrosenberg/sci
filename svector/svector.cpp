@@ -204,14 +204,14 @@ void sci::logspace(double xstart, double xinterval, std::vector<double> y, doubl
 	}
 }
 
-void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept)
+/*void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept)
 {
 	double varm;
 	double varc;
 	double covar;
 	sci::fitstraightline(x,y,grad,intercept,varm,varc,covar);
 }
-/*
+
 void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar)
 {
 	//fit y=mx+c
@@ -857,7 +857,7 @@ size_t sci::fitnonlinear(std::vector<double> &tunableparams, std::vector<double>
 	svi::algtovector(report.errpar,paramErrs);
 	return report.iterationscount;
 }
-
+*/
 	
 
 
@@ -867,7 +867,7 @@ double sci::linearinterpolate(double x, double x1, double x2, double y1, double 
 	double y=m*(x-x1)+y1;
 	return y;
 }
-
+/*
 std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat, double conditionNumberLimit)
 {
 	//check validity, must be square
@@ -1079,7 +1079,7 @@ double sci::distribution::cumulativeExponential(double x, double rate)
 {
 	return x < 0.0 ? 0.0 : 1.0-std::exp(-rate*x);
 }
-double sci::distribution::gamma(double x, double shape, double scale)
+/*double sci::distribution::gamma(double x, double shape, double scale)
 {
 	return std::pow(x/scale, shape)/x/sci::gamma(shape)*std::exp(-x/scale);
 }
@@ -1094,7 +1094,7 @@ double sci::distribution::generalisedGamma(double x, double shapeK, double shape
 double sci::distribution::cumulativeGeneralisedGamma(double x, double shapeK, double shapeGamma, double scale)
 {
 	return lowerIncompleteGamma(shapeK/shapeGamma,std::pow(x/scale,shapeGamma))/sci::gamma(shapeK/shapeGamma);
-}
+}*/
 double sci::distribution::weibull(double x, double shape, double scale)
 {
 	return x < 0.0 ? 0.0 : shape/scale*std::pow(x/scale,shape-1)*std::exp(-std::pow(x/scale,shape));
@@ -1409,7 +1409,7 @@ sci::MultivariateInverseCumulativeNormalDistribution::MultivariateInverseCumulat
 	m_means = means;
 	m_standardDeviations = standardDeviations;
 }
-/*double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const
+double sci::MultivariateInverseCumulativeNormalDistribution::getX(double cumulativeProbability, std::vector<double> otherXs, size_t undefinedIndex) const
 {
 	double otherProbability = 1.0;
 	for (size_t i = 0; i < otherXs.size(); ++i)
@@ -1421,7 +1421,7 @@ sci::MultivariateInverseCumulativeNormalDistribution::MultivariateInverseCumulat
 		cumulativeProbability = cumulativeProbability / otherProbability;
 
 	return M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
-}*/
+}
 
 sci::InverseCumulativeNormalDistribution::InverseCumulativeNormalDistribution(double mean, double standardDeviation)
 {
@@ -1429,10 +1429,10 @@ sci::InverseCumulativeNormalDistribution::InverseCumulativeNormalDistribution(do
 	m_standardDeviation = standardDeviation;
 }
 
-/*double sci::InverseCumulativeNormalDistribution::getX(double cumulativeProbability) const
+double sci::InverseCumulativeNormalDistribution::getX(double cumulativeProbability) const
 {
 	return m_mean + m_standardDeviation*M_SQRT2 * sci::erfInverse(2.0*cumulativeProbability - 1.0);
-}*/
+}
 
 std::vector<double> sci::MarkovChain::getExpectation(size_t nIntegrationSteps)
 {
