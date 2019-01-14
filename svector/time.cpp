@@ -1,8 +1,8 @@
 #define __STDC_WANT_LIB_EXT1__
-#include"../include/svector/dep/time.h"
+#include"../include/svector/time.h"
 #include<cmath>
 #include<mutex>
-#include"../include/svector/dep/serr.h"
+#include"../include/svector/serr.h"
 
 std::time_t mkgmtime( std::tm &time)
 {

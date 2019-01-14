@@ -308,6 +308,7 @@
     <ClCompile Include="sstring.cpp" />
     <ClCompile Include="svector.cpp" />
     <ClCompile Include="svi.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="transforms.cpp" />
     <ClCompile Include="undoable.cpp" />
     <ClCompile Include="wgdos.cpp" />
