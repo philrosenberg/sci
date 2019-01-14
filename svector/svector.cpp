@@ -41,24 +41,77 @@ void sci::resample(const std::vector<float> &input, float factor, std::vector<fl
 	}
 
 }
-/*
+
+#include"kiss_fft/kiss_fftr.h"
 void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output)
 {
-	alglib::real_1d_array alginput;
-	alglib::complex_1d_array algoutput;
-	svi::vectortoalg(re_input,alginput);
+	sci::assertThrow(re_input.size() % 2 == 0, sci::err(SERR_KISSFFT, 1, "Can only do a FFT with an even number of points."));
+	sci::assertThrow(re_input.size() <= std::numeric_limits<int>::max(), sci::err(SERR_KISSFFT, 3, "Too many points for fft"));
+
+	//set up the state
+	kiss_fftr_cfg myCfg = NULL;
+	myCfg = kiss_fftr_alloc((int)re_input.size(), 0, NULL, NULL);
+
+	sci::assertThrow(myCfg, sci::err(SERR_KISSFFT, 2, "Error allocating memeory for FFT"));
+	
 	try
 	{
-		alglib::fftr1d(alginput,algoutput);
+		//allocate working memory
+		std::vector<kiss_fft_cpx> result(re_input.size() / 2 + 1);
+		//do fft
+		kiss_fftr(myCfg, &re_input[0], &result[0]);
+
+		//copy the data to the output
+		re_output.resize(re_input.size()/2+1);
+		im_output.resize(re_input.size() / 2 + 1);
+		for (size_t i = 0; i < re_output.size(); ++i)
+		{
+			re_output[i] = result[i].r;
+			im_output[i] = result[i].i;
+		}
 	}
-	catch(alglib::ap_error err)
+	catch (...)
 	{
-		assert(false);
-		throw(sci::err(SERR_ALG, -999, err.msg));
+		kiss_fftr_free(myCfg);
+		throw;
 	}
-	svi::algctovectors(algoutput,re_output,im_output);
+	kiss_fftr_free(myCfg);
 }
-*/
+
+//You can only use this version if you know the output will be real
+void sci::ifft(const std::vector<double> &re_input, std::vector<double> &im_input, std::vector<double> &re_output)
+{
+	size_t nOutputPoints = (re_input.size() - 1) * 2;
+
+	sci::assertThrow(nOutputPoints<=std::numeric_limits<int>::max(), sci::err(SERR_KISSFFT, 3, "Too many points for ifft"));
+
+	//set up the state
+	kiss_fftr_cfg myCfg = NULL;
+	myCfg = kiss_fftr_alloc((int)nOutputPoints, 1, NULL, NULL);
+
+	sci::assertThrow(myCfg, sci::err(SERR_KISSFFT, 2, "Error allocating memeory for FFT"));
+
+	try
+	{
+		//copy the input
+		std::vector<kiss_fft_cpx> intermediate(re_input.size());
+		for (size_t i = 0; i < re_input.size(); ++i)
+		{
+			intermediate[i].r = re_input[i];
+			intermediate[i].i = im_input[i];
+		}
+		//do ifft
+		re_output.resize(nOutputPoints);
+		kiss_fftri(myCfg, &intermediate[0], &re_output[0]);
+	}
+	catch (...)
+	{
+		kiss_fftr_free(myCfg);
+		throw;
+	}
+	kiss_fftr_free(myCfg);
+}
+
 std::vector<double> sci::powerspectrum(const std::vector<double> &v)
 {
 	std::vector<double>im;

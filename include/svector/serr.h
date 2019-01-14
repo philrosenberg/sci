@@ -23,7 +23,8 @@ namespace sci
 		SERR_ANALYSIS,
 		SERR_ALG,
 		SERR_TIME,
-		SERR_USER
+		SERR_USER,
+		SERR_KISSFFT
 	};
 	//error codes should be selected from this list based on their errcategory
 

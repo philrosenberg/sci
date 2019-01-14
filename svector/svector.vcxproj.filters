@@ -19,6 +19,9 @@
     <Filter Include="Header Files\dep\plot">
       <UniqueIdentifier>{e4e88078-4b71-4653-8bf4-6f543b8b77c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\kiss_fft">
+      <UniqueIdentifier>{f95e3320-0d48-4533-a6dd-ea57099504b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="operators.cpp">
@@ -74,6 +77,12 @@
     </ClCompile>
     <ClCompile Include="time.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kiss_fft\kiss_fft.c">
+      <Filter>Source Files\kiss_fft</Filter>
+    </ClCompile>
+    <ClCompile Include="kiss_fft\kiss_fftr.c">
+      <Filter>Source Files\kiss_fft</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -2058,8 +2058,8 @@ namespace sci
 	void resample(const std::vector<double> &input, double factor, std::vector<double> &output);
 	void resample(const std::vector<float> &input, float factor, std::vector<float> &output);
 	//fft
-	//note that if you wish to normalise the result you must divide the result by the number of elements in input
 	void fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output);
+	void ifft(const std::vector<double> &re_input, std::vector<double> &im_input, std::vector<double> &re_output);
 	//discrete power spectrum normalised so that the sum of the output is equal to the variance of the input
 	std::vector<double> powerspectrum(const std::vector<double> &v);
 	//discrete cospectrum normalised so that the sum of the output is equal to the covariance of the inputs
