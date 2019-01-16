@@ -6,6 +6,7 @@
 #include<memory>
 
 #include"splot.h"
+#include"../../Units.h"
 
 const int plotDataErrorCode = 1;
 
@@ -175,6 +176,41 @@ protected:
 	PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
 };
 
+
+template<class T, class U>
+class PhysicalPlotData1d
+{
+public:
+	sci::string getXAxisUnits(sci::string brace=sU("(")) const
+	{
+		sci::string closeBrace = brace;
+		if (closeBrace == sU("("))
+			closeBrace = sU(")");
+		else if (closeBrace == sU("["))
+			closeBrace = sU("]");
+		else if (closeBrace == sU("{"))
+			closeBrace = sU("}");
+		else if (closeBrace == sU("<"))
+			closeBrace = sU(">");
+		return brace + sci::Physical<T>::getShortUnitString(sU("#u"), sU("#d")) + closeBrace;
+	}
+	sci::string getYAxisUnits(sci::string brace = sU("(")) const
+	{
+		sci::string closeBrace = brace;
+		if (closeBrace == sU("("))
+			closeBrace = sU(")");
+		else if (closeBrace == sU("["))
+			closeBrace = sU("]");
+		else if (closeBrace == sU("{"))
+			closeBrace = sU("}");
+		else if (closeBrace == sU("<"))
+			closeBrace = sU(">");
+		return brace + sci::Physical<U>::getShortUnitString(sU("#u"), sU("#d")) + closeBrace;
+	}
+	typedef T xUnitType;
+	typedef U yUnitType;
+};
+
 class PlotData2dLinear : public PlotData1d
 {
 public:
@@ -234,13 +270,41 @@ private:
 	void plotData( plstream *pl, bool xLog, bool yLog ) const;
 };
 
+template<class T, class U>
+class PhysicalLineData : public PhysicalPlotData1d<T, U>, LineData
+{
+public:
+	PhysicalLineData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: LineData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), lineStyle, transformer)
+	{
+	}
+private:
+	LineStyle m_lineStyle;
+	void plotData(plstream *pl, bool xLog, bool yLog) const
+	{
+		m_lineStyle.setupLineStyle(pl, 1, m_scale);
+		const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
+		const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
+
+		pl->line(m_xData.size(), x, y);
+		m_lineStyle.resetLineStyle(pl, 1);
+	}
+};
+
 class PointData : public PlotData1d
 {
 public:
 	PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
-private:
-	Symbol m_symbol;
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+};
+
+template<class T, class U>
+class PhysicalPointData : public PhysicalPlotData1d<T, U>, PointData
+{
+public:
+	PhysicalPointData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: PointData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), symbol, transformer)
+	{
+	}
 };
 
 class PointDataColourVarying : public PlotData2dLinear
