@@ -788,7 +788,7 @@ void splotaxis::setnsubticks(unsigned int nsubticks)
 	m_haschanged=true;
 }
 
-void splot2d::setallparams(bool logx, bool logy,std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+void splot2d::setallparams(bool logx, bool logy,sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//these aren't given in the constructor parameters but must be true for this constructor
 	m_xautointersect=true;
@@ -803,7 +803,7 @@ void splot2d::setallparams(bool logx, bool logy,std::string title, double titles
 	//now for the given parameters
 	m_xaxis.m_logarithmic=logx;
 	m_yaxis.m_logarithmic=logy;
-	m_title=wxString(title.c_str(),wxConvUTF8);
+	m_title=title;
 	m_titlesize=titlesize;
 	m_titledistance=titledistance;
 	m_titlefont=wxString(titlefont.c_str(),wxConvUTF8);
@@ -814,7 +814,7 @@ void splot2d::setallparams(bool logx, bool logy,std::string title, double titles
 	calculateautolimits();
 }
 
-splot2d::splot2d(bool logx, bool logy,std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//this is the default constructor so just set the all the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -822,7 +822,7 @@ splot2d::splot2d(bool logx, bool logy,std::string title, double titlesize, doubl
 	m_yaxis.m_rotatelabels=true;
 }
 
-splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, bool logy, std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//set the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -839,7 +839,7 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, 
 	//use calculateautolimits to set new intersects
 	calculateautolimits();
 }
-splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//set the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -3072,7 +3072,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	b=m_titlecolour.Blue();
 	pl->scol0(0,r,g,b);
 	pl->col0(0);
-	pl->mtex("t",m_titledistance,0.5,0.5,m_title.mb_str());
+	pl->mtex("t",m_titledistance,0.5,0.5,sci::utf16ToUtf8(m_title).c_str());
 	
 	//legend
 	/*double legendwidth;
@@ -3145,7 +3145,7 @@ void splotwindow::setautofitplots()
 }
 
 
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, bool logx, bool logy, std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3158,7 +3158,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	return newplot;
 }
 
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx, bool logy, std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(minx,maxx,miny,maxy,logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3170,7 +3170,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	Refresh();
 	return newplot;
 }
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, std::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(minx,maxx,miny,maxy,xintersect,yintersect,logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3183,7 +3183,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	return newplot;
 }
 
-splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, std::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
+splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
 {
 	splotlegend *newlegend=new splotlegend(title,titlesize,titledistance,titlespacing,titlefont,titlestyle,titlecolour,outlinecolour,outlinewidth);
 	m_legends.push_back(newlegend);
@@ -3655,9 +3655,9 @@ splotframe::splotframe(wxWindow* parent, bool antialiasing, wxWindowID id, const
 	SetSizer(sizer);
 }
 
-splotlegend::splotlegend(std::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
+splotlegend::splotlegend(sci::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
 {
-	m_title=wxString(title.c_str(),wxConvUTF8);
+	m_title=title;
 	m_titlesize=titlesize;
 	m_titledistance=-titledistance;
 	m_titlespacing=titlespacing;
@@ -3818,7 +3818,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 	b=m_titlecolour.Blue();
 	pl->scol0(1,r,g,b);
 	pl->col0(1);
-	pl->mtex("t",m_titledistance+0.5,0.5,0.5,m_title.mb_str(wxConvUTF8));
+	pl->mtex("t",m_titledistance+0.5,0.5,0.5,sci::utf16ToUtf8(m_title).c_str());
 	//pl->ptex(0.5,0.5,1.0,0.5,0.5,m_title.mb_str(wxConvUTF8)); //testing rotated text
 	//pl->ptex(0.5,0.5,1.0,0.4,0.5,m_title.mb_str(wxConvUTF8)); //testing rotated text
 
