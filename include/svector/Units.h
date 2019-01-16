@@ -795,3 +795,24 @@ namespace sci
 		return numerator / unitless((double)denominator);
 	}
 }
+
+template<class T>
+std::istream & operator>> (std::istream &stream, sci::Physical<T> &physical)
+{
+	double temp;
+	stream >> temp;
+	physical=Physical<T>(temp);
+	return stream;
+}
+
+template<class T>
+std::ostream & operator<< (std::istream &stream, sci::Physical<T> &physical)
+{
+	return stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+}
+
+template<class T>
+sci::ostringstream & operator<< (sci::ostringstream &stream, sci::Physical<T> &physical)
+{
+	return stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+}
