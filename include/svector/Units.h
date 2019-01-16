@@ -527,6 +527,24 @@ namespace sci
 		static const uint64_t basePowers = ENCODED_UNIT::basePowers;
 		static const int64_t exponent = ENCODED_UNIT::exponent;
 		typedef ENCODED_UNIT unit;
+		template <class U>
+		double value() const
+		{
+			//this should wouk whether U is a Physical or an Encoded Unit, because both
+			//have a unit typedef
+			return Physical<U::unit>(*this).mv;
+		}
+		template <>
+		double value<ENCODED_UNIT>() const
+		{
+			return m_v;
+		}
+		template <>
+		double value<Physical<ENCODED_UNIT>>() const
+		{
+			return m_v;
+		}
+	private:
 		double m_v;
 	};
 
