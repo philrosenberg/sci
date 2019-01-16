@@ -5,6 +5,7 @@
 #endif
 #include <vector>
 #include <locale>
+#include <wx/string.h>
 
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
 {
@@ -494,5 +495,9 @@ sci::string sci::fromUtf16(const std::u16string &string)
 sci::string sci::fromUtf32(const std::u32string &string)
 {
 	return utf32ToUtf16(string);
+}
+sci::string sci::fromWxString(const wxString &string)
+{
+	return sci::fromUtf8(std::string(string.utf8_str()));
 }
 

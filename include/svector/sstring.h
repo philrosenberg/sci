@@ -5,6 +5,8 @@
 #include<string>
 #include<sstream>
 
+class wxString;
+
 template <class T>
 std::string& operator << (std::string &lhs, const T &rhs)
 {
@@ -57,7 +59,7 @@ namespace sci
 	typedef std::basic_istringstream<sci::char_t> istringstream;
 	typedef std::basic_ostringstream<sci::char_t> ostringstream;
 #ifdef _WIN32
-	//On Windows the native unicode version is UTS-16 represented by std:::wstring
+	//On Windows the native unicode version is UCS-16 represented by std:::wstring
 	const std::wstring &nativeUnicode(const std::wstring &str);
 	std::wstring &nativeUnicode(std::wstring &str);
 	std::wstring nativeUnicode(const std::u16string &str);
@@ -118,6 +120,7 @@ namespace sci
 	sci::string fromUtf8(const std::string &string);
 	sci::string fromUtf16(const std::u16string &string);
 	sci::string fromUtf32(const std::u32string &string);
+	sci::string fromWxString(const wxString &string);
 }
 
 
