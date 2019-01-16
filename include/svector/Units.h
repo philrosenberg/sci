@@ -501,13 +501,49 @@ namespace sci
 		Physical(const Physical<U> &other)
 		{
 			static_assert(basePowers == U::basePowers, "Cannot create a physical value from another physical value with different powers for the base units.");
-			m_v = other.m_v*pow10<U::exponent - exponent>();
+			m_v = other.value<U>()*pow10<U::exponent - exponent>();
 		}
 		template<class U>
 		Physical<ENCODED_UNIT> &operator=(const U& other)
 		{
 			static_assert(basePowers == U::basePowers, "Cannot create a physical value from another physical value with different powers for the base units.");
-			m_v = other.m_v*pow10<U::exponent - exponent>();
+			m_v = other.value<U>()*pow10<U::exponent - exponent>();
+			return *this;
+		}
+
+		//+= operator
+		template <class U>
+		Physical<ENCODED_UNIT> &operator+=(const Physical<U> &second)
+		{
+			static_assert(ENCODED_UNIT::basePowers == U::basePowers, "Cannot add two physical values with different powers for the base units.");
+			m_v += second.value<ENCODED_UNIT>();
+			return *this;
+		}
+
+		//-= operator
+		template <class U>
+		Physical<ENCODED_UNIT> &operator-=(const Physical<U> &second)
+		{
+			static_assert(ENCODED_UNIT::basePowers == U::basePowers, "Cannot subtract two physical values with different powers for the base units.");
+			m_v -= second.value<ENCODED_UNIT>();
+			return *this;
+		}
+
+		// /= operator
+		template <class U>
+		Physical<ENCODED_UNIT> &operator/=(const Physical<U> &second)
+		{
+			static_assert(U::basePowers == 0, "Can only divide assign with a dimensionless quantity.");
+			m_v /= second.value<Unitless<>>();
+			return *this;
+		}
+
+		//*= operator
+		template <class U>
+		Physical<ENCODED_UNIT> &operator*=(const Physical<U> &second)
+		{
+			static_assert(U::basePowers == 0, "Can only multiply assign with a dimensionless quantity.");
+			m_v *= second.value<Unitless<>>();
 			return *this;
 		}
 		//although trying to set a Physical with a double causes a compile error with just
@@ -532,7 +568,7 @@ namespace sci
 		{
 			//this should wouk whether U is a Physical or an Encoded Unit, because both
 			//have a unit typedef
-			return Physical<U::unit>(*this).mv;
+			return Physical<U::unit>(*this).value<U::unit>();
 		}
 		template <>
 		double value<ENCODED_UNIT>() const
@@ -553,12 +589,21 @@ namespace sci
 	template<class REQUIRED_PHYSICAL, class U>
 	double physicalsToValues(const U &physical)
 	{
-		return REQUIRED_PHYSICAL(physical).m_v;
+		return physical.value<REQUIRED_PHYSICAL>();
 	}
 	//This is used to get the value of a vector of Physical with a different prefix, e.g. if you have
 	//a vector of Physical as mm, you can use it to get the values in km
 	template<class REQUIRED_PHYSICAL, class U>
 	auto physicalsToValues(const std::vector<U> &physicals) -> std::vector<decltype(physicalsToValues<REQUIRED_PHYSICAL>(physicals[0]))>
+	{
+		std::vector<decltype(physicalsToValues<REQUIRED_PHYSICAL>(physicals[0]))> result(physicals.size());
+		for (size_t i = 0; i < result.size(); ++i)
+			result[i] = physicals[i].value<REQUIRED_PHYSICAL>();
+		return result;
+	}
+
+	template<class REQUIRED_PHYSICAL, class U>
+	auto physicalsToValues(const std::vector<std::vector<U>> &physicals) -> std::vector<decltype(physicalsToValues<REQUIRED_PHYSICAL>(physicals[0]))>
 	{
 		std::vector<decltype(physicalsToValues<REQUIRED_PHYSICAL>(physicals[0]))> result(physicals.size());
 		for (size_t i = 0; i < result.size(); ++i)
@@ -570,14 +615,14 @@ namespace sci
 	template <class T, class U>
 	Physical<MultipliedEncodedUnit<T, U>> operator*(const Physical<T> &first, const Physical<U> &second)
 	{
-		return Physical<MultipliedEncodedUnit<T, U>>(first.m_v*second.m_v);
+		return Physical<MultipliedEncodedUnit<T, U>>(first.value<T>()*second.value<U>());
 	}
 
 	// / operator
 	template <class T, class U>
 	Physical<DividedEncodedUnit<T, U>> operator/(const Physical<T> &first, const Physical<U> &second)
 	{
-		return Physical <DividedEncodedUnit<T, U>>(first.m_v / second.m_v);
+		return Physical <DividedEncodedUnit<T, U>>(first.value<T>() / second.value<U>());
 	}
 
 	//Hopefully these make raising 10 to the power zero get
@@ -600,7 +645,7 @@ namespace sci
 	Physical<T> operator+(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot add two physical values with different powers for the base units.");
-		return Physical<T>(first.m_v + Physical<T>(second).m_v);
+		return Physical<T>(first.value<T>() + Physical<T>(second).value<U>());
 	}
 
 	//- operator
@@ -608,50 +653,14 @@ namespace sci
 	Physical<T> operator-(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot subtract two physical values with different powers for the base units.");
-		return Physical<T>(first.m_v - Physical<T>(second).m_v);
+		return Physical<T>(first.value<T>() - Physical<T>(second).value<U>);
 	}
 
 	//uniary- operator
 	template <class T>
 	Physical<T> operator-(const Physical<T> &val)
 	{
-		return Physical<T>(-val.m_val);
-	}
-
-	//+= operator
-	template <class T, class U>
-	Physical<T> &operator+=(Physical<T> &first, const Physical<U> &second)
-	{
-		static_assert(T::basePowers == U::basePowers, "Cannot add two physical values with different powers for the base units.");
-		first.m_v += Physical<T>(second).m_v;
-		return first;
-	}
-
-	//-= operator
-	template <class T, class U>
-	Physical<T> &operator-=(Physical<T> &first, const Physical<U> &second)
-	{
-		static_assert(T::basePowers == U::basePowers, "Cannot subtract two physical values with different powers for the base units.");
-		first.m_v -= Physical<T>(second).m_v;
-		return first;
-	}
-
-	// /= operator
-	template <class T, class U>
-	Physical<T> &operator/=(Physical<T> &first, const Physical<U> &second)
-	{
-		static_assert(U::basePowers == 0, "Can only divide assign with a dimensionless quantity.");
-		first.m_v /= second.m_v*pow10<U::exponent>();
-		return first;
-	}
-
-	//*= operator
-	template <class T, class U>
-	Physical<T> &operator*=(Physical<T> &first, const Physical<U> &second)
-	{
-		static_assert(U::basePowers == 0, "Can only multiply assign with a dimensionless quantity.");
-		first.m_v *= second.m_v*pow10<U::exponent>();
-		return first;
+		return Physical<T>(-val.value<T>());
 	}
 
 	//> operator
@@ -659,7 +668,7 @@ namespace sci
 	bool operator>(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v > Physical<T>(second).m_v;
+		return first.value<T>() > second.value<T>();
 	}
 
 	//< operator
@@ -667,7 +676,7 @@ namespace sci
 	bool operator<(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v < Physical<T>(second).m_v;
+		return first.value<T>() < second.value<T>();
 	}
 
 	//== operator
@@ -675,7 +684,7 @@ namespace sci
 	bool operator==(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v == Physical<T>(second).m_v;
+		return first.value<T>() == second.value<T>();
 	}
 
 	//!= operator
@@ -683,7 +692,7 @@ namespace sci
 	bool operator!=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v != Physical<T>(second).m_v;
+		return first.value<T>() != second.value<T>();
 	}
 
 	//>= operator
@@ -691,7 +700,7 @@ namespace sci
 	bool operator>=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v >= Physical<T>(second).m_v;
+		return first.value<T>() >= second.value<T>();
 	}
 
 	//<= operator
@@ -699,7 +708,7 @@ namespace sci
 	bool operator<=(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot compare two physical values with different powers for the base units.");
-		return first.m_v <= Physical<T>(second).m_v;
+		return first.value<T>() <= second.value<T>();
 	}
 
 	// power - this case deals with dimensionless exponents and bases
@@ -710,8 +719,8 @@ namespace sci
 		static_assert(T::basePowers == 0, "We can only raise a physical value to a non-integer power if it is dimensionless.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
-		Physical<Unitless> powerVal(power.m_v);
-		return Physical<T>(std::pow(base.m_v, powerVal.m_v)*std::pow(10, T::exponent*(powerVal.m_v - 1.0)));
+		double powerVal = power.value<Unitless<>>();
+		return Physical<T>(std::pow(base.value<T>(), powerVal)*std::pow(10, T::exponent*(powerVal - 1.0)));
 	}
 
 	// power - this case deals with raising to the power of an integer.
@@ -720,28 +729,28 @@ namespace sci
 	template <int POWER, class T>
 	Physical<PoweredEncodedUnit<T, POWER>> pow(const Physical<T> &base)
 	{
-		return Physical<PoweredEncodedUnit<T, POWER>>(std::pow(base.m_v, POWER));
+		return Physical<PoweredEncodedUnit<T, POWER>>(std::pow(base.value<T>(), POWER));
 	}
 
 	template <class T>
 	Physical<Unitless<>> log(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless>(std::log(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::log(value.value<Unitless<>>()));
 	}
 
 	template <class T>
 	Physical<Unitless<>> log10(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless>(std::log10(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::log10(value.value<T>()) + T::exponent); // make use of log laws to split this
 	}
 
 	template <class T>
 	Physical<Unitless<>> log2(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless>(std::log2(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::log2(value.value<Unitless<>>()));
 	}
 
 
@@ -749,42 +758,42 @@ namespace sci
 	Physical<Radian<>> asin(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only asin a dimensionless quantity.");
-		return Physical<Radian<>>(std::asin(value.m_v*pow10<T::exponent>()));
+		return Physical<Radian<>>(std::asin(value.value<Unitless<>>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> acos(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only acos a dimensionless quantity.");
-		return Physical<Radian<>>(std::acos(value.m_v*pow10<T::exponent>()));
+		return Physical<Radian<>>(std::acos(value.value<Unitless<>>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> atan(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only atan a dimensionless quantity.");
-		return Physical<Radian<>>(std::atan(value.m_v*pow10<T::exponent>()));
+		return Physical<Radian<>>(std::atan(value.value<Unitless<>>()));
 	}
 
 	template <class T>
 	Physical<Unitless<>> sin(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only sin a quantity in Radians.");
-		return Physical<Unitless>(std::sin(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::sin(value.value<Radian<>>()));
 	}
 
 	template <class T>
 	Physical<Unitless<>> cos(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only cos a quantity in Radians.");
-		return Physical<Unitless>(std::cos(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::cos(value.value<Radian<>>()));
 	}
 
 	template <class T>
 	Physical<Unitless<>> tan(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only tan a quantity in Radians.");
-		return Physical<Unitless>(std::atan(value.m_v*pow10<T::exponent>()));
+		return Physical<Unitless<>>(std::atan(value.value<Radian<>>()));
 	}
 
 	//This is used by averaging algorithms where simply casting size_t to the
@@ -806,13 +815,15 @@ std::istream & operator>> (std::istream &stream, sci::Physical<T> &physical)
 }
 
 template<class T>
-std::ostream & operator<< (std::istream &stream, sci::Physical<T> &physical)
+std::ostream & operator<< (std::istream &stream, const sci::Physical<T> &physical)
 {
-	return stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+	stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+	return stream;
 }
 
 template<class T>
-sci::ostringstream & operator<< (sci::ostringstream &stream, sci::Physical<T> &physical)
+sci::ostringstream & operator<< (sci::ostringstream &stream, const sci::Physical<T> &physical)
 {
-	return stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+	stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+	return stream;
 }
