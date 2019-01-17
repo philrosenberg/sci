@@ -234,7 +234,7 @@ public:
 	inline void autointervalson();
 	void setmajorinterval(double interval);
 	void setnsubticks(unsigned int nsubticks);
-	inline void settitle(std::string title){m_title=title; m_haschanged=true;};
+	inline void settitle(sci::string title){m_title=title; m_haschanged=true;};
 	inline void setrotatetitle(bool rotated){m_rotatetitle=rotated; m_haschanged=true;};
 	inline void settitlesize(double size){m_titlesize=size; m_haschanged=true;};
 	inline void settitlecolour(wxColour colour){m_titlecolour=colour; m_haschanged=true;};
@@ -262,8 +262,8 @@ public:
 
 private:
 	//private constructor so only friends can create splotaxis objects
-	splotaxis(double min=-1.0, double max=1.0, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
-	splotaxis(double min, double max, double majorinterval, double nsubticks, wxString title=wxT("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
+	splotaxis(double min=-1.0, double max=1.0, sci::string title=sU("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
+	splotaxis(double min, double max, double majorinterval, double nsubticks, sci::string title=sU("Axis Title"), wxString titlefont=wxEmptyString, PLUNICODE titlestyle=0, double titlesize=12.0, double titledistance=3.5, const wxColour &titlecolour=wxColour(0,0,0), double intersectpoint=0.0, wxColour colour=wxColour(0,0,0), int linethickness=1, bool logarithmic=false, bool time=false, double majorticklength=0.8, double minorticklength=0.5, bool tickspositive=false, bool ticksnegative=true, bool showlabels=true, bool labelpositionpositive=false, wxString labelfont=wxEmptyString, PLUNICODE labelstyle=0, bool labelsrotated=false, double labelsize=9.6, const wxColour &labelcolour=wxColour(0,0,0), bool autodecimalplaces=true, unsigned int ndecimalplaces=0, bool automaxndigits=true, int maxndigits=0);
 	
 	//keep track of if the axis has changed
 	bool m_haschanged;
@@ -306,7 +306,7 @@ private:
 	wxColour m_labelcolour;
 
 	//axis title
-	wxString m_title;
+	sci::string m_title;
 	bool m_rotatetitle;
 	double m_titlesize; //scale to be defined
 	wxString m_titlefont;

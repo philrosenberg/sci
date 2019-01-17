@@ -690,7 +690,7 @@ double splotsizescale::getSizeNormalisedScale(double value) const
 }
 
 
-splotaxis::splotaxis(double min, double max, wxString title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, sci::string title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_min=min;
 	m_max=max;
@@ -727,7 +727,7 @@ splotaxis::splotaxis(double min, double max, wxString title, wxString titlefont,
 
 	m_haschanged=true;
 }
-splotaxis::splotaxis(double min, double max, double majorinterval, double nsubticks, wxString title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, double majorinterval, double nsubticks, sci::string title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_min=min;
 	m_max=max;
@@ -3030,8 +3030,8 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	b=m_xaxis.m_titlecolour.Blue();
 	pl->scol0(1,r,g,b);
 	pl->col0(1);
-	if(m_xaxis.m_rotatetitle)pl->mtex("bv",m_xaxis.m_titledistance,0.5,0.5,m_xaxis.m_title.mb_str());
-	else pl->mtex("b",m_xaxis.m_titledistance,0.5,0.5,m_xaxis.m_title.mb_str());
+	if(m_xaxis.m_rotatetitle)pl->mtex("bv",m_xaxis.m_titledistance,0.5,0.5,sci::toUtf8(m_xaxis.m_title).c_str());
+	else pl->mtex("b",m_xaxis.m_titledistance,0.5,0.5, sci::toUtf8(m_xaxis.m_title).c_str());
 	//then the y axis
 	pl->sfci(m_yaxis.m_titlefci);
 	//pl->sfontf(m_yaxis.m_titlefont.mb_str());
@@ -3057,9 +3057,9 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	double scalefactor=(xmax-xmin)/(pagewidth)*(pageheight)/(ymax-ymin);
 	if(m_yaxis.m_rotatelabels)pl->mtex("lv",-m_yaxis.m_titledistance+(pagexmax-pagexmin)*vpxmin/charheight,0.5,0.5,m_yaxis.m_title.mb_str());
 	else pl->mtex("l",m_yaxis.m_titledistance*scalefactor,0.5,0.5,m_yaxis.m_title.mb_str());*/
-	if(m_yaxis.m_rotatetitle)pl->mtex("lv",m_yaxis.m_titledistance,0.5,0.5,m_yaxis.m_title.mb_str());
+	if(m_yaxis.m_rotatetitle)pl->mtex("lv",m_yaxis.m_titledistance,0.5,0.5, sci::toUtf8(m_yaxis.m_title).c_str());
 	//if(m_yaxis.m_rotatetitle)pl->mtex("lv",m_yaxis.m_titledistance,0.5,0.5,m_yaxis.m_title.mb_str());
-	else pl->mtex("l",m_yaxis.m_titledistance,0.5,0.5,m_yaxis.m_title.mb_str());
+	else pl->mtex("l",m_yaxis.m_titledistance,0.5,0.5, sci::toUtf8(m_yaxis.m_title).c_str());
 	
 
 
@@ -3207,12 +3207,12 @@ splot2d* splotwindow::addcanvas(double xpos, double ypos, double width, double h
 		canvas->setylimits(1.0,10.0);
 	else
 		canvas->setylimits(0.0,1.0);
-	canvas->getxaxis()->settitle("");
+	canvas->getxaxis()->settitle(sU(""));
 	canvas->getxaxis()->setlabelsize(0);
 	canvas->getxaxis()->setmajorticklength(0.0);
 	canvas->getxaxis()->setminorticklength(0.0);
 	canvas->getxaxis()->setlinethickness(0.0);
-	canvas->getyaxis()->settitle("");
+	canvas->getyaxis()->settitle(sU(""));
 	canvas->getyaxis()->setlabelsize(0);
 	canvas->getyaxis()->setmajorticklength(0.0);
 	canvas->getyaxis()->setminorticklength(0.0);
