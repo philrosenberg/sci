@@ -810,7 +810,7 @@ std::istream & operator>> (std::istream &stream, sci::Physical<T> &physical)
 {
 	double temp;
 	stream >> temp;
-	physical=Physical<T>(temp);
+	physical=sci::Physical<T>(temp);
 	return stream;
 }
 
@@ -826,7 +826,7 @@ std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t>, s
 {
 	double temp;
 	stream >> temp;
-	physical = Physical<T>(temp);
+	physical = sci::Physical<T>(temp);
 	return stream;
 }
 
