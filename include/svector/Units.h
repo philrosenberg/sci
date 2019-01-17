@@ -653,7 +653,7 @@ namespace sci
 	Physical<T> operator-(const Physical<T> &first, const Physical<U> &second)
 	{
 		static_assert(T::basePowers == U::basePowers, "Cannot subtract two physical values with different powers for the base units.");
-		return Physical<T>(first.value<T>() - Physical<T>(second).value<U>);
+		return Physical<T>(first.value<T>() - Physical<T>(second).value<U>());
 	}
 
 	//uniary- operator
