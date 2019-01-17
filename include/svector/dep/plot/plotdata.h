@@ -178,7 +178,7 @@ protected:
 
 
 template<class T, class U>
-class PhysicalPlotData1d
+class PhysicalPlotData
 {
 public:
 	sci::string getXAxisUnits(sci::string brace=sU("(")) const
@@ -271,7 +271,7 @@ private:
 };
 
 template<class T, class U>
-class PhysicalLineData : public PhysicalPlotData1d<T, U>, public LineData
+class PhysicalLineData : public PhysicalPlotData<T, U>, public LineData
 {
 public:
 	PhysicalLineData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
@@ -290,7 +290,7 @@ private:
 };
 
 template<class T, class U>
-class PhysicalPointData : public PhysicalPlotData1d<T, U>, public PointData
+class PhysicalPointData : public PhysicalPlotData<T, U>, public PointData
 {
 public:
 	PhysicalPointData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
@@ -372,6 +372,16 @@ private:
 	splotcolourscale m_colourscale;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
+};
+
+template <class T, class U, class V>
+class PhysicalGridData : public PhysicalPlotData<T,U>, public GridData
+{
+public:
+	PhysicalGridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0)
+		:GridData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), sci::physicalsToValues<sci::Physical<V>>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
+	{
+	}
 };
 
 class FillData : public PlotData1d
