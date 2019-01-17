@@ -270,12 +270,12 @@ private:
 	void plotData( plstream *pl, bool xLog, bool yLog ) const;
 };
 
-template<class T, class U>
-class PhysicalLineData : public PhysicalPlotData<T, U>, public LineData
+template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
+class PhysicalLineData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public LineData
 {
 public:
-	PhysicalLineData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: LineData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), lineStyle, transformer)
+	PhysicalLineData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), lineStyle, transformer)
 	{
 	}
 };
@@ -289,12 +289,12 @@ private:
 	void PointData::plotData(plstream *pl, bool xLog, bool yLog) const;
 };
 
-template<class T, class U>
-class PhysicalPointData : public PhysicalPlotData<T, U>, public PointData
+template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
+class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public PointData
 {
 public:
-	PhysicalPointData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: PointData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), symbol, transformer)
+	PhysicalPointData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), symbol, transformer)
 	{
 	}
 };
@@ -374,12 +374,12 @@ private:
 	bool m_fillOffscaleTop;
 };
 
-template <class T, class U, class V>
-class PhysicalGridData : public PhysicalPlotData<T,U>, public GridData
+template <class IN_X_UNIT, class IN_Y_UNIT, class IN_Z_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
+class PhysicalGridData : public PhysicalPlotData<TR_X_UNIT,TR_Y_UNIT>, public GridData
 {
 public:
-	PhysicalGridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0)
-		:GridData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), sci::physicalsToValues<sci::Physical<V>>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
+	PhysicalGridData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const std::vector<std::vector<sci::Physical<IN_Z_UNIT>>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0)
+		:GridData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), sci::physicalsToValues<sci::Physical<IN_Z_UNIT>>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
 	{
 	}
 };
