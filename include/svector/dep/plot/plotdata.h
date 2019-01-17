@@ -278,23 +278,15 @@ public:
 		: LineData(sci::physicalsToValues<sci::Physical<T>>(xs), sci::physicalsToValues<sci::Physical<U>>(ys), lineStyle, transformer)
 	{
 	}
-private:
-	LineStyle m_lineStyle;
-	void plotData(plstream *pl, bool xLog, bool yLog) const
-	{
-		m_lineStyle.setupLineStyle(pl, 1, m_scale);
-		const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-		const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-
-		pl->line(m_xData.size(), x, y);
-		m_lineStyle.resetLineStyle(pl, 1);
-	}
 };
 
 class PointData : public PlotData1d
 {
 public:
 	PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
+private:
+	Symbol m_symbol;
+	void PointData::plotData(plstream *pl, bool xLog, bool yLog) const;
 };
 
 template<class T, class U>
