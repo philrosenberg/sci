@@ -815,14 +815,23 @@ std::istream & operator>> (std::istream &stream, sci::Physical<T> &physical)
 }
 
 template<class T>
-std::ostream & operator<< (std::istream &stream, const sci::Physical<T> &physical)
+std::ostream & operator<< (std::ostream &stream, const sci::Physical<T> &physical)
 {
-	stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
+	stream << physical.value<T>() << " " << T::getShortRepresentation();
 	return stream;
 }
 
 template<class T>
-sci::ostringstream & operator<< (sci::ostringstream &stream, const sci::Physical<T> &physical)
+std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t>, sci::Physical<T> &physical)
+{
+	double temp;
+	stream >> temp;
+	physical = Physical<T>(temp);
+	return stream;
+}
+
+template<class T>
+std::basic_ostream<sci::char_t> & operator<< (std::basic_ostream<sci::char_t> &stream, const sci::Physical<T> &physical)
 {
 	stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
 	return stream;
