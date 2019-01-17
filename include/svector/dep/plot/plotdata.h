@@ -271,7 +271,7 @@ private:
 };
 
 template<class T, class U>
-class PhysicalLineData : public PhysicalPlotData1d<T, U>, LineData
+class PhysicalLineData : public PhysicalPlotData1d<T, U>, public LineData
 {
 public:
 	PhysicalLineData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
@@ -290,7 +290,7 @@ private:
 };
 
 template<class T, class U>
-class PhysicalPointData : public PhysicalPlotData1d<T, U>, PointData
+class PhysicalPointData : public PhysicalPlotData1d<T, U>, public PointData
 {
 public:
 	PhysicalPointData(const std::vector<sci::Physical<T>> &xs, const std::vector<sci::Physical<U>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
