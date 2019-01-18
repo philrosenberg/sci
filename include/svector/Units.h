@@ -795,6 +795,11 @@ namespace sci
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only tan a quantity in Radians.");
 		return Physical<Unitless<>>(std::atan(value.value<Radian<>>()));
 	}
+	template <class T>
+	Physical<T> abs(const Physical<T> &value)
+	{
+		return Physical<T>(std::abs(value.value<T>()));
+	}
 
 	//This is used by averaging algorithms where simply casting size_t to the
 	//same type as the type we are averaging doesn't work
