@@ -47,6 +47,7 @@ namespace sci
 		unsigned int getMinute() const;
 		double getSecond() const;
 		static UtcTime now();
+		static const UtcTime getPosixEpoch() { return UtcTime(1970, 1, 1, 0, 0, 0); }
 	private:
 		std::tm m_cTime;
 		std::time_t m_secsAfterPosixEpoch;
