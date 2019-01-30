@@ -14,13 +14,13 @@ class LineStyle
 {
 public:
 	LineStyle( double width = 1.0, const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<PLINT> &marks = std::vector<PLINT> ( 0 ), const std::vector<PLINT> &spaces = std::vector<PLINT> ( 0 ) );
-	LineStyle( double width, const rgbcolour &colour, std::string pattern );
+	LineStyle( double width, const rgbcolour &colour, sci::string pattern );
 	double getWidth() const;
 	void getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces ) const;
 	rgbcolour getColour() const;
 	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;
-	static void parseLineStyle( const std::string &pattern, std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
+	static void parseLineStyle( const sci::string &pattern, std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
 private:
 	double m_width;
 	rgbcolour m_colour;
@@ -33,18 +33,18 @@ const LineStyle noLine(0.0);
 class SymbolBase
 {
 public:
-	SymbolBase( std::string symbol, PLUNICODE fci );
-	std::string getSymbol() const;
+	SymbolBase( sci::string symbol, PLUNICODE fci );
+	sci::string getSymbol() const;
 	PLUNICODE getFci() const;
 private:
-	std::string m_symbol;
+	sci::string m_symbol;
 	PLUNICODE m_fci;
 };
 
 class Symbol : public SymbolBase
 {
 public:
-	Symbol ( std::string symbol = sym::filledCircle, double size = 4.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	Symbol ( sci::string symbol = sym::filledCircle, double size = 4.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
 	double getSize() const;
 	rgbcolour getColour() const;
 	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
@@ -56,7 +56,7 @@ private:
 class VaryingSymbol : public SymbolBase
 {
 public:
-	VaryingSymbol ( std::string symbol = sym::filledCircle );
+	VaryingSymbol ( sci::string symbol = sym::filledCircle );
 	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const = 0;
 	virtual bool isLogScaled() const = 0;
 private:
@@ -65,7 +65,7 @@ private:
 class VaryingSymbolTwoParam : public SymbolBase
 {
 public:
-	VaryingSymbolTwoParam ( std::string symbol = sym::filledCircle );
+	VaryingSymbolTwoParam ( sci::string symbol = sym::filledCircle );
 	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale1, bool useNormalisedScale2, double scale ) const = 0;
 	virtual bool isLogScaled1() const = 0;
 	virtual bool isLogScaled2() const = 0;
@@ -76,7 +76,7 @@ private:
 class ColourVaryingSymbol : public VaryingSymbol
 {
 public:
-	ColourVaryingSymbol ( std::string symbol = sym::filledCircle, double size = 4.0, splotcolourscale colourScale = splotcolourscale() );
+	ColourVaryingSymbol ( sci::string symbol = sym::filledCircle, double size = 4.0, splotcolourscale colourScale = splotcolourscale() );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
 	bool isLogScaled() const;
 private:
@@ -87,7 +87,7 @@ private:
 class SizeVaryingSymbol : public VaryingSymbol
 {
 public:
-	SizeVaryingSymbol ( std::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), splotsizescale sizeScale = splotsizescale() );
+	SizeVaryingSymbol ( sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), splotsizescale sizeScale = splotsizescale() );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
 	bool isLogScaled() const;
 	double getSize(double parameter, bool useNormalisedScale) const;
@@ -99,7 +99,7 @@ private:
 class ColourAndSizeVaryingSymbol : public SymbolBase
 {
 public:
-	ColourAndSizeVaryingSymbol ( std::string symbol = sym::filledCircle, splotcolourscale colourScale = splotcolourscale(), splotsizescale sizeScale = splotsizescale() );
+	ColourAndSizeVaryingSymbol ( sci::string symbol = sym::filledCircle, splotcolourscale colourScale = splotcolourscale(), splotsizescale sizeScale = splotsizescale() );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;

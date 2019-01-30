@@ -157,11 +157,11 @@ void polarradianstransform(const std::vector<double> &inputparams,std::vector<do
 }
 
 
-std::string loglonghand(double axisvalue)
+sci::string loglonghand(double axisvalue)
 {
-	std::string result;
+	sci::ostringstream result;
 	result<<std::pow(10.0,axisvalue);
-	return result;
+	return result.str();
 }
 
 void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,PLPointer function)
@@ -169,9 +169,9 @@ void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,P
 	if( length == 0 )
 		return;
 	customlabeler userfunction=( customlabeler )function;
-	std::string stdlabel=userfunction(value);
+	sci::string stdlabel=userfunction(value);
 	if(stdlabel.length()>(unsigned int)length) stdlabel.erase(length-1);
-	strcpy(label,stdlabel.c_str());
+	strcpy(label,sci::toUtf8(stdlabel).c_str());
 }
 
 hlscolour::hlscolour(double hue, double lightness, double saturation, double alpha)
@@ -690,7 +690,7 @@ double splotsizescale::getSizeNormalisedScale(double value) const
 }
 
 
-splotaxis::splotaxis(double min, double max, sci::string title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_min=min;
 	m_max=max;
@@ -698,7 +698,7 @@ splotaxis::splotaxis(double min, double max, sci::string title, wxString titlefo
 	m_autonsubticks=true;
 	m_intersect=intersectpoint;
 	m_logarithmic=logarithmic;
-	m_timeformat=wxEmptyString;
+	m_timeformat=sU("");
 	m_customlabelcreator=NULL;
 	m_colour=colour;
 	m_linethickness=linethickness;
@@ -727,7 +727,7 @@ splotaxis::splotaxis(double min, double max, sci::string title, wxString titlefo
 
 	m_haschanged=true;
 }
-splotaxis::splotaxis(double min, double max, double majorinterval, double nsubticks, sci::string title, wxString titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, wxString labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool logarithmic, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_min=min;
 	m_max=max;
@@ -737,7 +737,7 @@ splotaxis::splotaxis(double min, double max, double majorinterval, double nsubti
 	m_autonsubticks=false;
 	m_intersect=intersectpoint;
 	m_logarithmic=logarithmic;
-	m_timeformat=wxEmptyString;
+	m_timeformat=sU("");
 	m_customlabelcreator=NULL;
 	m_colour=colour;
 	m_linethickness=linethickness;
@@ -788,7 +788,7 @@ void splotaxis::setnsubticks(unsigned int nsubticks)
 	m_haschanged=true;
 }
 
-void splot2d::setallparams(bool logx, bool logy,sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+void splot2d::setallparams(bool logx, bool logy,sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//these aren't given in the constructor parameters but must be true for this constructor
 	m_xautointersect=true;
@@ -806,7 +806,7 @@ void splot2d::setallparams(bool logx, bool logy,sci::string title, double titles
 	m_title=title;
 	m_titlesize=titlesize;
 	m_titledistance=titledistance;
-	m_titlefont=wxString(titlefont.c_str(),wxConvUTF8);
+	m_titlefont=titlefont;
 	m_titlefci=titlestyle;
 	m_titlecolour=titlecolour;
 	m_haschanged=true;
@@ -814,7 +814,7 @@ void splot2d::setallparams(bool logx, bool logy,sci::string title, double titles
 	calculateautolimits();
 }
 
-splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//this is the default constructor so just set the all the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -822,7 +822,7 @@ splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, doub
 	m_yaxis.m_rotatelabels=true;
 }
 
-splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//set the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -839,7 +839,7 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, 
 	//use calculateautolimits to set new intersects
 	calculateautolimits();
 }
-splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
+splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//set the params to default values
 	setallparams(logx, logy, title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -857,7 +857,7 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xint
 }
 
 //scatter
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, double pointsize, sci::string pointsymbol, wxColour linecolour, double linewidth, sci::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -906,11 +906,11 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	//set the data properties as needed
 	m_pointcolour.back()=pointcolour;
 	m_pointsize.back()=pointsize;
-	m_pointchar.back()=wxString(pointsymbol.c_str(),wxConvUTF8);
-	m_pointfont.back()=wxT("plotsymbols");
+	m_pointchar.back()=pointsymbol;
+	m_pointfont.back()=sU("plotsymbols");
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	m_xerrcolour.back()=xerrcolour;
 	m_yerrcolour.back()=yerrcolour;
 	m_xerrthickness.back()=xerrwidth;
@@ -945,7 +945,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter varying colour
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, double pointsize, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, double pointsize, sci::string pointsymbol, wxColour linecolour, double linewidth, sci::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1019,11 +1019,11 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	}
 
 	m_pointsize.back()=pointsize;
-	m_pointchar.back()=wxString(pointsymbol.c_str(),wxConvUTF8);
-	m_pointfont.back()=wxT("plotsymbols");
+	m_pointchar.back()=pointsymbol;
+	m_pointfont.back()=sU("plotsymbols");
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	m_xerrcolour.back()=xerrcolour;
 	m_yerrcolour.back()=yerrcolour;
 	m_xerrthickness.back()=xerrwidth;
@@ -1036,7 +1036,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter varying size
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotsizescale &sizescale, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotsizescale &sizescale, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, wxColour pointcolour, sci::string pointsymbol, wxColour linecolour, double linewidth, sci::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1086,11 +1086,11 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 
 	//set the data properties as needed
 	m_pointcolour.back()=pointcolour;
-	m_pointchar.back()=wxString(pointsymbol.c_str(),wxConvUTF8);
-	m_pointfont.back()=wxT("plotsymbols");
+	m_pointchar.back()=pointsymbol;
+	m_pointfont.back()=sU("plotsymbols");
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	m_xerrcolour.back()=xerrcolour;
 	m_yerrcolour.back()=yerrcolour;
 	m_xerrthickness.back()=xerrwidth;
@@ -1116,7 +1116,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //scatter with varying point colour and size
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, const splotsizescale &sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, std::string pointsymbol, wxColour linecolour, double linewidth, std::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, const splotsizescale &sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels, const std::vector<double> &xposerrs, const std::vector<double> &xnegerrs, const std::vector<double> &yposerrs, const std::vector<double> &ynegerrs, sci::string pointsymbol, wxColour linecolour, double linewidth, sci::string linestyle, wxColour xerrcolour, wxColour yerrcolour, double xerrwidth, double yerrwidth, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=ys.size()) return;
@@ -1191,11 +1191,11 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	}
 
 	//set the data properties as needed
-	m_pointchar.back()=wxString(pointsymbol.c_str(),wxConvUTF8);
-	m_pointfont.back()=wxT("plotsymbols");
+	m_pointchar.back()=pointsymbol;
+	m_pointfont.back()=sU("plotsymbols");
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	m_xerrcolour.back()=xerrcolour;
 	m_yerrcolour.back()=yerrcolour;
 	m_xerrthickness.back()=xerrwidth;
@@ -1209,7 +1209,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //contour/colour
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, sci::string contourstyle, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=zs.size()) return;
@@ -1288,7 +1288,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 
 	m_linecolour.back()=contourcolour;
 	m_linethickness.back()=contourwidth;
-	m_linestyle.back()=wxString(contourstyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=contourstyle;
 	setupcolourscale(ncolourlevels,colourscale,filloffscaletop,filloffscalebottom,ncontourlevels,maxcontour,mincontour,contourlabelssize);
 
 	calculateautolimits();
@@ -1296,7 +1296,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 }
 
 //contour/colour with 2d x and y
-void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, std::string contourstyle, unsigned int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels, bool filloffscaletop, bool filloffscalebottom, wxColour contourcolour, double contourwidth, sci::string contourstyle, unsigned int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()!=zs.size()) return;
@@ -1328,7 +1328,7 @@ void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::
 
 	m_linecolour.back()=contourcolour;
 	m_linethickness.back()=contourwidth;
-	m_linestyle.back()=wxString(contourstyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=contourstyle;
 	setupcolourscale(ncolourlevels,colourscale,filloffscaletop,filloffscalebottom,ncontourlevels,maxcontour,mincontour,contourlabelssize);
 
 	calculateautolimits();
@@ -1336,7 +1336,7 @@ void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::
 }
 
 //bar chart
-void splot2d::adddata(const std::vector<double> &minedges, const std::vector<double> &maxedges, const std::vector<double> heights, wxColour fillcolour,wxColour linecolour, double linewidth, std::string linestyle, bool beginatzero)
+void splot2d::adddata(const std::vector<double> &minedges, const std::vector<double> &maxedges, const std::vector<double> heights, wxColour fillcolour,wxColour linecolour, double linewidth, sci::string linestyle, bool beginatzero)
 {
 
 	//checks
@@ -1354,7 +1354,7 @@ void splot2d::adddata(const std::vector<double> &minedges, const std::vector<dou
 	m_pointcolour.back()=fillcolour;
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	
 	if(m_xaxis.m_logarithmic) 
 	{
@@ -1376,7 +1376,7 @@ void splot2d::adddata(const std::vector<double> &minedges, const std::vector<dou
 //}
 
 //vector/arrow plot
-void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, sci::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()==0) return;
@@ -1402,6 +1402,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	//set properties as needed
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
+	m_linestyle.back() = linestyle;
 	m_arrowstyle.back()=arrowstyle;
 	m_transformers.back()=transformer;
 	
@@ -1409,7 +1410,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	m_haschanged=true;
 }
 //vector/arrow plot with 2d x/y
-void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
+void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour, double linewidth, const std::vector<double> &arrowstyle, sci::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//checks
 	if(xs.size()==0) return;
@@ -1440,6 +1441,7 @@ void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vec
 	//set properties as needed
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
+	m_linestyle.back() = linestyle;
 	m_arrowstyle.back()=arrowstyle;
 	
 	calculateautolimits();
@@ -1525,14 +1527,14 @@ void addShadedGrid(const std::vector< std::vector <double> > &xs, const std::vec
 	
 
 
-void splot2d::addmap(std::string map, wxColour linecolour, double linewidth, std::string linestyle, std::shared_ptr<splotTransformer> transformer)
+void splot2d::addmap(sci::string map, wxColour linecolour, double linewidth, sci::string linestyle, std::shared_ptr<splotTransformer> transformer)
 {
 	//increase the size of all data
 	incrementdatasize();
 
 	m_linecolour.back()=linecolour;
 	m_linethickness.back()=linewidth;
-	m_linestyle.back()=wxString(linestyle.c_str(),wxConvUTF8);
+	m_linestyle.back()=linestyle;
 	m_map.back()=map;
 	m_transformers.back()=transformer;
 
@@ -1588,11 +1590,11 @@ void splot2d::removeAllData()
 	splot::removeAllData();
 }
 
-void splot2d::addImage(std::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
+void splot2d::addImage(sci::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
 {
 	incrementdatasize();
 	wxInitAllImageHandlers();
-	m_images.back().LoadFile(wxString(image.c_str(),wxConvUTF8));
+	m_images.back().LoadFile(wxString(sci::nativeUnicode(image).c_str(),wxConvUTF8));
 	m_imageXBottomLefts.back()=xBottomLeft;
 	m_imageYBottomLefts.back()=yBottomLeft;
 	m_imageWidths.back()=width;
@@ -1612,7 +1614,7 @@ void splot2d::addImage(std::string image, double xBottomLeft, double yBottomLeft
 
 }
 
-void splot2d::addText(std::string text, double x1, double y1, double x2, double y2, double alignment, double size, const std::string &font, uint32_t style, wxColour colour)
+void splot2d::addText(sci::string text, double x1, double y1, double x2, double y2, double alignment, double size, const sci::string &font, uint32_t style, wxColour colour)
 {
 	incrementdatasize();
 	m_text.back()=text;
@@ -1629,11 +1631,11 @@ void splot2d::addText(std::string text, double x1, double y1, double x2, double 
 }
 
 
-void splot::adddatasetproperties(wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, wxString linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, std::string map, const std::vector<double> &arrowstyle)
+void splot::adddatasetproperties(wxColour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, wxColour linecolour, int linewidth, sci::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, sci::string map, const std::vector<double> &arrowstyle)
 {
 	m_pointcolour.push_back(pointcolour);
 	m_pointsize.push_back(pointsize);
-	m_pointchar.push_back(wxString(pointsymbol.c_str(),wxConvUTF8));
+	m_pointchar.push_back(pointsymbol);
 	m_pointfont.push_back(pointfont);
 	m_pointfci.push_back(pointstyle);
 	m_linecolour.push_back(linecolour);
@@ -1927,28 +1929,28 @@ void splot::incrementdatasize()
 	incrementsize(m_arrowstyle);
 }
 
-void splot::parselinestyle(wxString style, std::vector<PLINT> &marks, std::vector<PLINT> &spaces)
+void splot::parselinestyle(sci::string style, std::vector<PLINT> &marks, std::vector<PLINT> &spaces)
 {
 	//set outputs to zero size
 	marks.resize(0);
 	spaces.resize(0);
 
 	//remove any bad characters from the beginning of style
-	while(style.Len()>0 && !(style[0]==wxT(' ') || style[0]==wxT('\t') || style[0]==wxT('.') || style[0]==wxT('_'))) style=style.substr(1);
+	while(style.length()>0 && !(style[0]==sU(' ') || style[0]==sU('\t') || style[0]==sU('.') || style[0]==sU('_'))) style=style.substr(1);
 
 	//return empty vectors if style is empty
-	if(style.Len()==0) return;
+	if(style.length()==0) return;
 
 	//set up whether we are on a mark or space
 	bool onmark=true;
-	if(style[0]==wxT(' ') || style[0]==wxT('\t')) onmark=false;
+	if(style[0]==sU(' ') || style[0]==sU('\t')) onmark=false;
 
 	//initialise our current lengths to zero
 	int marklength=0;
 	int spacelength=0;
 
 	//work through each character of style
-	for(size_t i=0; i<style.Len(); ++i)
+	for(size_t i=0; i<style.length(); ++i)
 	{
 		//if we have changed between a space and mark record the length
 		if(onmark==true && (style[i]==wxT(' ') || style[i]==wxT('\t')))
@@ -2213,21 +2215,21 @@ void splot::calculateautolimits(splotaxis &axis, const std::vector<std::vector<d
 	}
 }
 
-wxString splot::createploptstring(const splotaxis &axis)
+std::string splot::createploptstring(const splotaxis &axis)
 {
-	wxString opt=wxT("bci");
-	if(axis.m_timeformat!=wxEmptyString)opt=opt+wxT("d");
-	if(axis.m_customlabelcreator!=NULL)opt=opt+wxT("o");
+	std::string opt="bci";
+	if(axis.m_timeformat!=sU(""))opt=opt+"d";
+	if(axis.m_customlabelcreator!=NULL)opt=opt+"o";
 	if(axis.m_showlabels)
 	{
-		if(axis.m_labelpositionpositive)opt=opt+wxT("m");
+		if(axis.m_labelpositionpositive)opt=opt+"m";
 		else opt=opt+wxT("n");
 	}
-	if(axis.m_logarithmic)opt=opt+wxT("l");
-	if(axis.m_majorticklength>0.0)opt=opt+wxT("t");
-	else opt=opt+wxT("x");
-	if(axis.m_minorticklength>0.0)opt=opt+wxT("s");
-	if(axis.m_rotatelabels)opt=opt+wxT("v");
+	if(axis.m_logarithmic)opt=opt+"l";
+	if(axis.m_majorticklength>0.0)opt=opt+"t";
+	else opt=opt+"x";
+	if(axis.m_minorticklength>0.0)opt=opt+"s";
+	if(axis.m_rotatelabels)opt=opt+"v";
 
 	return opt;
 }
@@ -2575,7 +2577,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 			}
 		}
 		//text
-		else if(m_text[i]!="")
+		else if(m_text[i]!=sU(""))
 		{
 			//pl->sfontf(m_textFont[i].c_str());
 			pl->sfci(m_textFci[i]);
@@ -2586,7 +2588,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 			b=m_pointcolour[i].Blue();
 			pl->scol0a(1,r,g,b,a);
 			pl->col0(1);
-			pl->ptex(x[0],y[0],x[1]-x[0],y[1]-y[0],0.0,m_text[i].c_str());
+			pl->ptex(x[0],y[0],x[1]-x[0],y[1]-y[0],0.0,sci::toUtf8(m_text[i]).c_str());
 		}
 		//points, errs, lines and bar
 		else if(m_structzs[i].size()==0)
@@ -2656,9 +2658,9 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				else 
 				{
 					if(m_transformers[i])
-						pl->map(NULL,m_map[i].c_str(),-360.0,360.0,-90.0,90.0);
+						pl->map(NULL, sci::toUtf8(m_map[i]).c_str(),-360.0,360.0,-90.0,90.0);
 					else
-						pl->map(NULL,m_map[i].c_str(),m_xaxis.m_min,m_xaxis.m_max,m_yaxis.m_min,m_yaxis.m_max);
+						pl->map(NULL, sci::toUtf8(m_map[i]).c_str(),m_xaxis.m_min,m_xaxis.m_max,m_yaxis.m_min,m_yaxis.m_max);
 				}
 				//set line style back to normal
 				pl->styl(0,NULL, NULL);
@@ -2730,7 +2732,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				}
 			}
 			//points
-			if(m_pointsize[i]>0.0 && m_pointchar[i].Len()>0)
+			if(m_pointsize[i]>0.0 && m_pointchar[i].length()>0)
 			{
 				pl->sfci(m_pointfci[i]);
 				pl->sfci(0);
@@ -2763,7 +2765,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 						pl->scol0a( 1, sci::round( rgb.r() * 255.0), sci::round( rgb.g() * 255.0), sci::round( rgb.b() * 255.0), rgb.a() );
 						pl->col0(1);
 						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
-						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
+						pl->string(1,x+j,y+j,sci::toUtf8(m_pointchar[i]).c_str());
 					}
 				}
 				else if(m_sizeunstructzs[i].size()>0)
@@ -2772,7 +2774,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 					for(size_t j=0; j<m_xs[i].size(); ++j)
 					{
 						pl->schr(1.0,m_sizescale[i].getsize(m_sizeunstructzs[i][j]) * linewidthmultiplier / 72.0 * 25.4 );
-						pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
+						pl->string(1,x+j,y+j,sci::toUtf8(m_pointchar[i]).c_str());
 					}
 				}
 				else if(m_colunstructzs[i].size()>0)
@@ -2797,7 +2799,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 								rgb=m_colourscale[i].getRgbOriginalScale( val );
 							pl->scol0a( 1, sci::round( rgb.r() * 255.0), sci::round( rgb.g() * 255.0), sci::round( rgb.b() * 255.0), rgb.a() );
 							pl->col0(1);
-							pl->string(1,x+j,y+j,m_pointchar[i].mb_str());
+							pl->string(1,x+j,y+j,sci::toUtf8(m_pointchar[i]).c_str());
 						}
 					}
 				}
@@ -2806,9 +2808,9 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 					//draw points with static size and colour
 					//pl->schr(0.0,m_pointsize[i]);
 					//pl->ssym(0.0,m_pointsize[i]);
-					if(m_pointchar[i].Len()>0)
+					if(m_pointchar[i].length()>0)
 						//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-						pl->string(m_xs[i].size(),x,y,m_pointchar[i].mb_str());
+						pl->string(m_xs[i].size(),x,y,sci::toUtf8(m_pointchar[i]).c_str());
 				}
 			}
 		}
@@ -2984,7 +2986,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//create a plplot option string for the axis
 	wxString xopt=createploptstring(m_xaxis);
 	//set up axes time formats - has no impact if not using time format
-	pl->timefmt(m_xaxis.m_timeformat.mb_str());
+	pl->timefmt(sci::toUtf8(m_xaxis.m_timeformat).c_str());
 	pl->slabelfunc(&customlabelinterpreter,(PLPointer)m_xaxis.m_customlabelcreator);
 	//draw the x axis
 	pl->box(xopt.mb_str(),xmajint,xnsub,"",0.0,0.0);
@@ -3011,7 +3013,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	//create a plplot option string for the axis
 	wxString yopt=createploptstring(m_yaxis);
 	//set up axes time formats - has no impact if not using time format
-	pl->timefmt(m_yaxis.m_timeformat.mb_str());
+	pl->timefmt(sci::toUtf8(m_yaxis.m_timeformat).c_str());
 	pl->slabelfunc(&customlabelinterpreter,(PLPointer)m_yaxis.m_customlabelcreator);
 	//draw the y axis
 	//to do: allow the labels to have different colour to the axis
@@ -3145,7 +3147,7 @@ void splotwindow::setautofitplots()
 }
 
 
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3158,7 +3160,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	return newplot;
 }
 
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(minx,maxx,miny,maxy,logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3170,7 +3172,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	Refresh();
 	return newplot;
 }
-splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, std::string titlefont, int32_t titlestyle, wxColour titlecolour)
+splot2d* splotwindow::addplot(double xpos, double ypos, double width, double height, double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour)
 {
 	splot2d *newplot=new splot2d(minx,maxx,miny,maxy,xintersect,yintersect,logx,logy,title,titlesize,titledistance,titlefont,titlestyle,titlecolour);
 	m_plots.push_back(newplot);
@@ -3183,7 +3185,7 @@ splot2d* splotwindow::addplot(double xpos, double ypos, double width, double hei
 	return newplot;
 }
 
-splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
+splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize, double titledistance, double titlespacing, sci::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
 {
 	splotlegend *newlegend=new splotlegend(title,titlesize,titledistance,titlespacing,titlefont,titlestyle,titlecolour,outlinecolour,outlinewidth);
 	m_legends.push_back(newlegend);
@@ -3329,10 +3331,10 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 //strings then png is used, although the given extension will still be used 
 //in the filename
 
-bool splotwindow::writetofile(wxString filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
+bool splotwindow::writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
 {
 	//get the extension
-	wxFileName fullfile=filename;
+	wxFileName fullfile=sci::nativeUnicode(filename);
 	wxString extension=fullfile.GetExt().Lower();
 	
 	bool result=true;
@@ -3341,7 +3343,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 	//to convert to the apropriate format - of course if we want an svg then no conversion is needed
 	if(extension=="svg")
 	{
-		wxSVGFileDC dc(filename, width, height, 72);
+		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
 		DrawPlots(&dc, width, height, linewidthmultiplier);
 	}
 	else if(preferInkscape)
@@ -3364,15 +3366,15 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 		if(!wxFileExists(inkscapePath))
 			return false;
 		if(extension=="ps")
-			wxExecute("\""+inkscapePath+"\" --export-ps \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+			wxExecute("\""+inkscapePath+"\" --export-ps \""+sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
 		else if(extension=="pdf")
-			wxExecute("\""+inkscapePath+"\" --export-pdf \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+			wxExecute("\""+inkscapePath+"\" --export-pdf \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
 		else if(extension=="eps")
-			wxExecute("\""+inkscapePath+"\" --export-eps \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+			wxExecute("\""+inkscapePath+"\" --export-eps \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
 		else if(extension=="png")
-			wxExecute("\""+inkscapePath+"\" --export-dpi 72 --export-png \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+			wxExecute("\""+inkscapePath+"\" --export-dpi 72 --export-png \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
 		else if(extension=="emf")
-			wxExecute("\""+inkscapePath+"\" --export-emf \""+filename+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+			wxExecute("\""+inkscapePath+"\" --export-emf \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
 		else
 			result=writetofile(filename,width,height,linewidthmultiplier,false);
 	}
@@ -3430,7 +3432,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			//here we redraw the plot like OnPaint but using a postscript DC.
 			wxPrintData setupdata;
 			setupdata.SetColour(true);
-			setupdata.SetFilename(filename);
+			setupdata.SetFilename(sci::nativeUnicode(filename));
 			//setupdata.SetPaperId(wxPAPER_A4);
 			setupdata.SetPaperId(wxPAPER_NONE);
 			//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
@@ -3441,7 +3443,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 			setupdata.SetPrintMode(wxPRINT_MODE_FILE);
 			//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
 			wxPostScriptDC psdc(setupdata);
-			result=psdc.StartDoc(wxT("Writing ")+filename);
+			result=psdc.StartDoc(sci::nativeUnicode(sU("Writing ")+filename));
 			if(result==false) return result;
 			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
 			psdc.EndDoc();
@@ -3450,7 +3452,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 		else if(extension=="emf")
 		{
 			//here we redraw the plot like OnPaint but using a wxMetafile DC.
-			wxMetafileDC metadc(filename,width,height);
+			wxMetafileDC metadc(sci::nativeUnicode(filename),width,height);
 			DrawPlots(&metadc,width,height,linewidthmultiplier);//0 gives vector output
 			//close the file - note this gives us a copy of the file in memory which we must delete
 			wxMetafile *metafile=metadc.Close();
@@ -3466,7 +3468,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 #endif
 		else if (extension=="svg")
 		{
-			wxSVGFileDC dc(filename, width, height, 72);
+			wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
 			DrawPlots(&dc, width, height, linewidthmultiplier);
 			result=true;
 		}
@@ -3494,7 +3496,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 				Update();
 				wxSafeYield();
 				//write the bitmap to file
-				result=m_bitmap->SaveFile(filename,type);
+				result=m_bitmap->SaveFile(sci::nativeUnicode(filename),type);
 			}
 			else
 			{
@@ -3527,7 +3529,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 				memdc.SelectObject(wxNullBitmap);
 
 				//write the bitmap to file
-				result=bitmap.SaveFile(filename,type);
+				result=bitmap.SaveFile(sci::nativeUnicode(filename),type);
 			}
 		}
 	}
@@ -3536,7 +3538,7 @@ bool splotwindow::writetofile(wxString filename, int width, int height, double l
 }
 
 //asabove, but the size will be a multiple of the window size
-bool splotwindow::writetofile(wxString filename, double sizemultiplier, bool preferInkscape)
+bool splotwindow::writetofile(sci::string filename, double sizemultiplier, bool preferInkscape)
 {
 	Refresh();
 	Update();
@@ -3548,12 +3550,12 @@ bool splotwindow::writetofile(wxString filename, double sizemultiplier, bool pre
 
 bool splotwindow::print( bool showDialog )
 {
-	return print (showDialog, "" );
+	return print (showDialog, sU("") );
 }
 
-bool splotwindow::print( bool showDialog, wxString printerName )
+bool splotwindow::print( bool showDialog, sci::string printerName )
 {
-	splotPrintout printout(this, printerName);
+	splotPrintout printout(this, sci::nativeUnicode(printerName));
 	//show page setup dialog
 	//if(!printout.setup(true, printerName))
 		//return false;
@@ -3655,13 +3657,13 @@ splotframe::splotframe(wxWindow* parent, bool antialiasing, wxWindowID id, const
 	SetSizer(sizer);
 }
 
-splotlegend::splotlegend(sci::string title, double titlesize, double titledistance, double titlespacing, std::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
+splotlegend::splotlegend(sci::string title, double titlesize, double titledistance, double titlespacing, sci::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
 {
 	m_title=title;
 	m_titlesize=titlesize;
 	m_titledistance=-titledistance;
 	m_titlespacing=titlespacing;
-	m_titlefont=wxString(titlefont.c_str(),wxConvUTF8);
+	m_titlefont=titlefont;
 	m_titlefci=titlestyle;
 	m_titlecolour=titlecolour;
 	m_outlinecolour=outlinecolour;
@@ -3684,51 +3686,51 @@ wxColour getWxColour(const hlscolour &colour)
 		rgbColour.a() == 1.0 ? 255 : floor(rgbColour.a() * 256));
 }
 
-void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, wxColour linecolour, int linewidth, std::string linestyle)
+void splotlegend::addentry(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, sci::string pointsymbol, wxColour linecolour, int linewidth, sci::string linestyle)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,pointsize,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),linecolour,linewidth,linestyle,splotcolourscale(),false,false,splotsizescale(),0,false,1,0.0, false);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,pointsize,pointsymbol,pl_SYMBOL,sU("plotsymbols"),linecolour,linewidth,linestyle,splotcolourscale(),false,false,splotsizescale(),0,false,1,0.0, false);
 }
-void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, rgbcolour textcolour, rgbcolour pointcolour, double pointsize, std::string pointsymbol, rgbcolour linecolour, int linewidth, std::string linestyle)
+void splotlegend::addentry(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, rgbcolour textcolour, rgbcolour pointcolour, double pointsize, sci::string pointsymbol, rgbcolour linecolour, int linewidth, sci::string linestyle)
 {
 	wxColour wxTextColour = getWxColour(textcolour);
 	wxColour wxPointColour = getWxColour(pointcolour);
 	wxColour wxLineColour = getWxColour(linecolour);
-	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, wxT("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
+	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, sU("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
 }
-void splotlegend::addentry(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing, hlscolour textcolour, hlscolour pointcolour, double pointsize, std::string pointsymbol, hlscolour linecolour, int linewidth, std::string linestyle)
+void splotlegend::addentry(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, hlscolour textcolour, hlscolour pointcolour, double pointsize, sci::string pointsymbol, hlscolour linecolour, int linewidth, sci::string linestyle)
 {
 	wxColour wxTextColour = getWxColour(textcolour);
 	wxColour wxPointColour = getWxColour(pointcolour);
 	wxColour wxLineColour = getWxColour(linecolour);
-	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, wxT("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
+	adddatasetproperties(text, textoffset, textsize, textfont, textstyle, textspacing, wxTextColour, wxPointColour, pointsize, pointsymbol, pl_SYMBOL, sU("plotsymbols"), wxLineColour, linewidth, linestyle, splotcolourscale(), false, false, splotsizescale(), 0, false, 1, 0.0, false);
 }
-void splotlegend::addentry(std::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, unsigned int ncolourlevels, bool contours, size_t height, bool horizontal)
+void splotlegend::addentry(sci::string text, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, unsigned int ncolourlevels, bool contours, size_t height, bool horizontal)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,wxColour(0,0,0),0.0,"",pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",colourscale,filloffscaletop,filloffscalebottom,splotsizescale(),ncolourlevels,contours,height,headingoffset, horizontal);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,wxColour(0,0,0),0.0,sU(""),pl_SYMBOL,sU("plotsymbols"),wxColour(0,0,0),0,sU(""),colourscale,filloffscaletop,filloffscalebottom,splotsizescale(),ncolourlevels,contours,height,headingoffset, horizontal);
 }
-void splotlegend::addentry(std::string text, const splotsizescale &sizescale, double headingoffset, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, std::string pointsymbol, size_t nlines)
+void splotlegend::addentry(sci::string text, const splotsizescale &sizescale, double headingoffset, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, sci::string pointsymbol, size_t nlines)
 {
-	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,0.0,pointsymbol,pl_SYMBOL,wxT("plotsymbols"),wxColour(0,0,0),0,"",splotcolourscale(),false,false,sizescale,0,false,nlines,headingoffset, false);
+	adddatasetproperties(text,textoffset,textsize,textfont,textstyle,textspacing,textcolour,pointcolour,0.0,pointsymbol,pl_SYMBOL,sU("plotsymbols"),wxColour(0,0,0),0,sU(""),splotcolourscale(),false,false,sizescale,0,false,nlines,headingoffset, false);
 }
 
-void splotlegend::adddatasetproperties(std::string text, double textoffset, double textsize, const std::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, double pointsize, std::string pointsymbol, uint32_t pointstyle, wxString pointfont, wxColour linecolour, int linewidth, std::string linestyle, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal)
+void splotlegend::adddatasetproperties(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing,wxColour textcolour, wxColour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, wxColour linecolour, int linewidth, sci::string linestyle, const splotcolourscale &colourscale, bool filloffscaletop, bool filloffscalebottom, const splotsizescale &sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal)
 {
 	m_headingoffset.push_back(headingoffset);
-	m_text.push_back(wxString(text.c_str(),wxConvUTF8));
+	m_text.push_back(text);
 	m_textoffset.push_back(textoffset);
 	m_textsize.push_back(textsize);
-	m_textfont.push_back(wxString(textfont.c_str(),wxConvUTF8));
+	m_textfont.push_back(textfont);
 	m_textfci.push_back(textstyle);
 	m_textspacing.push_back(textspacing);
 	m_textcolour.push_back(textcolour);
 	m_pointcolour.push_back(pointcolour);
 	m_pointsize.push_back(pointsize);
-	m_pointchar.push_back(wxString(pointsymbol.c_str(),wxConvUTF8));
+	m_pointchar.push_back(pointsymbol);
 	m_pointfont.push_back(pointfont);
 	m_pointfci.push_back(pointstyle);
 	m_linecolour.push_back(linecolour);
 	m_linethickness.push_back(linewidth);
-	m_linestyle.push_back(wxString(linestyle.c_str(),wxConvUTF8));
+	m_linestyle.push_back(linestyle);
 	m_colourscale.push_back(colourscale);
 	m_sizescale.push_back(sizescale);
 
@@ -3842,9 +3844,9 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 
 		if(m_sizescale[i].m_value.size()>1 || m_colourlevels[i].size()>0)
 		{
-			pl->ptex(m_headingoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,m_text[i].mb_str(wxConvUTF8));
+			pl->ptex(m_headingoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,sci::toUtf8(m_text[i]).c_str());
 		}
-		else pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,m_text[i].mb_str(wxConvUTF8));
+		else pl->ptex(m_textoffset[i],1.0-position*scaledcharheightworld,0.0,0.0,0.0,sci::toUtf8(m_text[i]).c_str());
 
 		//keep track of how high the line is
 		positionstep=std::max(m_textsize[i],m_pointsize[i])*(0.5*1.6+m_textspacing[i]);//The factor of 1.6 is because ys and gs overlap
@@ -3891,7 +3893,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
 			//pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8))
-			pl->string(1,&x,&y,m_pointchar[i].mb_str());
+			pl->string(1,&x,&y,sci::toUtf8(m_pointchar[i]).c_str());
 			//set text params back as they were
 			r=m_textcolour[i].Red();
 			g=m_textcolour[i].Green();
@@ -3909,7 +3911,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 		if(m_sizescale[i].m_value.size()>1)
 		{
 			rgbcolour colour(double(m_pointcolour[i].Red()) / 255.0, double(m_pointcolour[i].Green()) / 255.0, double(m_pointcolour[i].Blue()) / 255.0, double(m_pointcolour[i].Alpha()) / 255.0);
-			SizeVaryingSymbol sizeVaryingSymbol(m_pointchar[i].ToStdString(), colour, m_sizescale[i]);
+			SizeVaryingSymbol sizeVaryingSymbol(m_pointchar[i], colour, m_sizescale[i]);
 
 			std::vector< double> values(m_nlines[i]);
 			if (m_nlines[i] == 1)
@@ -3930,7 +3932,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			position+=positionstep+0.5*std::max(size*0.8,m_textsize[i]*1.6);
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
-			pl->ptex(x, y, 0.0, 0.0, 0.5, m_pointchar[i].mb_str(wxConvUTF8));
+			pl->ptex(x, y, 0.0, 0.0, 0.5, sci::toUtf8(m_pointchar[i]).c_str());
 			//pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
 			
 			//then the first label
@@ -3955,7 +3957,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				position+=std::max((size+lastSize)*0.8 /2.0,m_textsize[i]*1.6);
 				double x=m_textoffset[i]*0.5;
 				double y=1.0-position*scaledcharheightworld;
-				pl->ptex(x, y, 0.0, 0.0, 0.5, m_pointchar[i].mb_str(wxConvUTF8));
+				pl->ptex(x, y, 0.0, 0.0, 0.5, sci::toUtf8(m_pointchar[i]).c_str());
 				//pl->string(1,&x,&y,m_pointchar[i].mb_str(wxConvUTF8));
 				//labels
 				r=m_textcolour[i].Red();
