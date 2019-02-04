@@ -309,10 +309,68 @@ namespace sci
 		return SHORTNAME;\
 	}
 
-	template<int64_t EXPONENT = 0>
-	struct Unitless : public EncodedUnit<0, EXPONENT>
+	struct Unitless : public EncodedUnit<0, 0>
 	{
-		NAMEDEF(sU(""))
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			return getShortRepresentation(exponentPrefix, exponentSuffix, 1); 
+		}
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		{
+			return getShortName();
+		}
+		static sci::string getShortName()
+		{
+			return sU(""); 
+		}
+	};
+
+	struct Percent : public EncodedUnit<0, -2>
+	{
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		{
+			return getShortName();
+		}
+		static sci::string getShortName()
+		{
+			return sU("%");
+		}
+	};
+
+	struct PerMille : public EncodedUnit<0, -3>
+	{
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		{
+			return getShortName();
+		}
+		static sci::string getShortName()
+		{
+			return sU("\u2030");
+		}
+	};
+
+	struct BasisPoint : public EncodedUnit<0, -4>
+	{
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		{
+			return getShortName();
+		}
+		static sci::string getShortName()
+		{
+			return sU("\u2031");
+		}
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
@@ -538,7 +596,7 @@ namespace sci
 		Physical<ENCODED_UNIT> &operator/=(const Physical<U> &second)
 		{
 			static_assert(U::basePowers == 0, "Can only divide assign with a dimensionless quantity.");
-			m_v /= second.value<Unitless<>>();
+			m_v /= second.value<Unitless>();
 			return *this;
 		}
 
@@ -547,7 +605,7 @@ namespace sci
 		Physical<ENCODED_UNIT> &operator*=(const Physical<U> &second)
 		{
 			static_assert(U::basePowers == 0, "Can only multiply assign with a dimensionless quantity.");
-			m_v *= second.value<Unitless<>>();
+			m_v *= second.value<Unitless>();
 			return *this;
 		}
 		//although trying to set a Physical with a double causes a compile error with just
@@ -723,7 +781,7 @@ namespace sci
 		static_assert(T::basePowers == 0, "We can only raise a physical value to a non-integer power if it is dimensionless.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
-		double powerVal = power.value<Unitless<>>();
+		double powerVal = power.value<Unitless>();
 		return Physical<T>(std::pow(base.value<T>(), powerVal)*std::pow(10, T::exponent*(powerVal - 1.0)));
 	}
 
@@ -735,26 +793,50 @@ namespace sci
 	{
 		return Physical<PoweredEncodedUnit<T, POWER>>(std::pow(base.value<T>(), POWER));
 	}
-
-	template <class T>
-	Physical<Unitless<>> log(const Physical<T> &value)
+	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
+	template <int POWER>
+	Physical<Unitless> pow(const Physical<Unitless> &base)
 	{
-		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless<>>(std::log(value.value<Unitless<>>()));
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), POWER));
+	}
+	//same but for percent
+	template <int POWER>
+	Physical<Unitless> pow(const Physical<Percent> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), POWER));
+	}
+	//same but for per mille
+	template <int POWER>
+	Physical<Unitless> pow(const Physical<PerMille> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), POWER));
+	}
+	//same but for basis point
+	template <int POWER>
+	Physical<Unitless> pow(const Physical<BasisPoint> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), POWER));
 	}
 
 	template <class T>
-	Physical<Unitless<>> log10(const Physical<T> &value)
+	Physical<Unitless> log(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless<>>(std::log10(value.value<T>()) + T::exponent); // make use of log laws to split this
+		return Physical<Unitless>(std::log(value.value<Unitless>()));
 	}
 
 	template <class T>
-	Physical<Unitless<>> log2(const Physical<T> &value)
+	Physical<Unitless> log10(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
-		return Physical<Unitless<>>(std::log2(value.value<Unitless<>>()));
+		return Physical<Unitless>(std::log10(value.value<T>()) + T::exponent); // make use of log laws to split this
+	}
+
+	template <class T>
+	Physical<Unitless> log2(const Physical<T> &value)
+	{
+		static_assert(T::basePowers == 0, "We can only log a dimensionless quantity.");
+		return Physical<Unitless>(std::log2(value.value<Unitless>()));
 	}
 
 
@@ -762,43 +844,44 @@ namespace sci
 	Physical<Radian<>> asin(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only asin a dimensionless quantity.");
-		return Physical<Radian<>>(std::asin(value.value<Unitless<>>()));
+		return Physical<Radian<>>(std::asin(value.value<Unitless>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> acos(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only acos a dimensionless quantity.");
-		return Physical<Radian<>>(std::acos(value.value<Unitless<>>()));
+		return Physical<Radian<>>(std::acos(value.value<Unitless>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> atan(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == 0, "We can only atan a dimensionless quantity.");
-		return Physical<Radian<>>(std::atan(value.value<Unitless<>>()));
+		return Physical<Radian<>>(std::atan(value.value<Unitless>()));
 	}
 
 	template <class T>
-	Physical<Unitless<>> sin(const Physical<T> &value)
+	Physical<Unitless> sin(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only sin a quantity in Radians.");
-		return Physical<Unitless<>>(std::sin(value.value<Radian<>>()));
+		return Physical<Unitless>(std::sin(value.value<Radian<>>()));
 	}
 
 	template <class T>
-	Physical<Unitless<>> cos(const Physical<T> &value)
+	Physical<Unitless> cos(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only cos a quantity in Radians.");
-		return Physical<Unitless<>>(std::cos(value.value<Radian<>>()));
+		return Physical<Unitless>(std::cos(value.value<Radian<>>()));
 	}
 
 	template <class T>
-	Physical<Unitless<>> tan(const Physical<T> &value)
+	Physical<Unitless> tan(const Physical<T> &value)
 	{
 		static_assert(T::basePowers == Radian<>::basePowers, "We can only tan a quantity in Radians.");
-		return Physical<Unitless<>>(std::atan(value.value<Radian<>>()));
+		return Physical<Unitless>(std::atan(value.value<Radian<>>()));
 	}
+
 	template <class T>
 	Physical<T> abs(const Physical<T> &value)
 	{
