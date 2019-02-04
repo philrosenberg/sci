@@ -162,10 +162,14 @@ namespace sci
 	template<int64_t EXPONENT>
 	sci::string makeShortName(const sci::string &unit, int8_t power, const sci::string &powerPrefix, const sci::string &powerSuffix)
 	{
-		if (EXPONENT == 0)
+		if (power == 0)
 			return sU("");
-		if (EXPONENT == 1)
-			return unit;
+		if (power == 1)
+		{
+			sci::ostringstream stream;
+			stream << ExponentTraits<EXPONENT>::getPrefix() << unit;
+			return stream.str();
+		}
 
 		sci::ostringstream stream;
 		stream << ExponentTraits<EXPONENT>::getPrefix() << unit << powerPrefix << power << powerSuffix;
