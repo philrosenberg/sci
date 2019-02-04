@@ -430,6 +430,8 @@ namespace sci
 		m_hasId = false;
 		m_dimensionIds.push_back(dimension.getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
+		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, 1, &m_dimensionIds[0], &m_id));
+		m_hasId = true;
 		//int dimensionId = dimension.getId();
 		//sci::assertThrow(nc_def_var(ncFile.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, 1, &dimensionId, &m_id) == NC_NOERR, sci::err());
 		//m_hasId = true;
@@ -443,7 +445,10 @@ namespace sci
 		for (size_t i = 0; i < dimensions.size(); ++i)
 			m_dimensionIds.push_back(dimensions[i]->getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
+		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, 1, &m_dimensionIds[0], &m_id));
+		m_hasId = true;
 	}
+
 	/*
 	template<class T>
 	NcVariable<T>::NcVariable(sci::string name, const NcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension)
