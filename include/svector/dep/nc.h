@@ -7,6 +7,7 @@
 #include"../serr.h"
 #include"../svector.h"
 #include"../sstring.h"
+#include"../Units.h"
 
 namespace sci_internal
 {
@@ -280,6 +281,15 @@ namespace sci
 		//remove copy constructors
 		NcVariable(const NcVariable&);
 		NcVariable operator=(const NcVariable&);
+	};
+
+	template<class T>
+	class NcVariable<Physical<T>> : public NcVariable<double>
+	{
+	public:
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension) : NcVariable<double>(name, ncFile, dimension) {}
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions) : NcVariable<double>(name, ncFile, dimensions) {}
+		NcVariable(NcVariable &&) = default;
 	};
 
 	class OutputNcFile : public NcFileBase
