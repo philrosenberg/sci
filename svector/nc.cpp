@@ -498,17 +498,24 @@ template<>
 sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 {
 	m_name = name;
-	std::string utf8Value = sci::toUtf8(value);
-	m_nValues = utf8Value.length();
+	std::string utf8String = sci::toUtf8(value);
+	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
-	if (m_nValues == 0)
-		m_values = nullptr;
-	else
-	{
-		m_values = malloc(m_nBytes);
-		memcpy(m_values, utf8Value.data(), m_nBytes);
-	}
+	m_values = malloc(m_nBytes);
+	memcpy(m_values, utf8String.data(), m_nBytes);
+}
+
+template <>
+sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value)
+{
+	m_name = name;
+	std::string utf8String = sci::toUtf8(value);
+	m_nValues = utf8String.length() + 1;
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	m_values = malloc(m_nBytes);
+	memcpy(m_values, utf8String.data(), m_nBytes);
 }
 
 void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const

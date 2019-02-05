@@ -149,6 +149,8 @@ namespace sci
 
 	template<>
 	sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value);
+	template<>
+	sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value);
 
 	class AttributeContainer
 	{
@@ -264,6 +266,7 @@ namespace sci
 	//If you do this then you can call ncOutputFile::write with your custom data type. But note that
 	//this utilises template specialization, not inheritance via virtual functions, so you must use
 	//the derived class in the call to write
+	//See the NcVariable<Physical<T>> specialization below for an example.
 	template<class T>
 	class NcVariable
 	{
@@ -330,8 +333,6 @@ namespace sci
 		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
-		//template<class T>
-		//void write(const NcVariable<T> &variable, const std::vector<T> &data);
 		template<class T, class U>
 		void write(const NcVariable<T> &variable, const U &data);
 	private:
@@ -473,9 +474,6 @@ namespace sci
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
 		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, 1, &m_dimensionIds[0], &m_id));
 		m_hasId = true;
-		//int dimensionId = dimension.getId();
-		//sci::assertThrow(nc_def_var(ncFile.getId(), m_name.c_str(), sci_internal::NcTraits<T>::ncType, 1, &dimensionId, &m_id) == NC_NOERR, sci::err());
-		//m_hasId = true;
 	}
 
 	template<class T>
@@ -511,24 +509,6 @@ namespace sci
 		for (size_t i = 0; i < m_attributes.size(); ++i)
 			m_attributes[i].write(file, *this);
 	}
-
-	/*template<class T>
-	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data)
-	{
-		if (m_inDefineMode)
-		{
-			nc_enddef(getId());
-			m_inDefineMode = false;
-		}
-		sci::assertThrow(variable.getNDimensions() == 1, sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a multi-dimensional variable and single-dimensional data."));
-		size_t size = data.size();
-		if (data.size() > 0)
-		{
-			size_t start = 0;
-			checkNcCall(nc_put_vara(getId(), variable.getId(), &start, &size, &data[0]));
-		}
-			
-	}*/
 
 	template<class T, class U>
 	void OutputNcFile::write(const NcVariable<T> &variable, const U &data)
