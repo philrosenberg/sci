@@ -284,6 +284,7 @@ namespace sci
 			sci::flatten(flattenedData, data);
 			return flattenedData;
 		}
+		typedef T write_type;
 	private:
 		mutable bool m_hasId;
 		mutable int m_id;
@@ -532,7 +533,9 @@ namespace sci
 		std::vector<size_t> starts(variable.getNDimensions(), 0);
 		size_t size = sci::product(shape);
 		auto flattenedData = NcVariable<T>::flattenData(data);
-		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariabe::flattenData returned data of an unexpected size."));
+		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariable::flattenData returned data of an unexpected size."));
+		//Check we are getting the right kind of data back
+		static_assert(std::is_same<decltype(flattenedData)::value_type, NcVariable<T>::write_type>::value, "NcVariable::flattenData returned a vector of the incorrect type.");
 		if (flattenedData.size() > 0)
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
 	}
