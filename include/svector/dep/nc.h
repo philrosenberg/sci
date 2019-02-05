@@ -271,6 +271,19 @@ namespace sci
 		}
 		size_t getNDimensions() const { return m_dimensionIds.size(); }
 		bool hasId() const { return m_hasId; }
+		template<class U>
+		static std::vector<size_t> getDataShape(const U &data)
+		{
+			return sci::shape(data);
+		}
+		static std::vector<T> flattenData(const std::vector<T> & data) { return data; }
+		template<class U>
+		static std::vector<T> flattenData(const std::vector<std::vector<U>> & data)
+		{
+			std::vector<T> flattenedData;
+			sci::flatten(flattenedData, data);
+			return flattenedData;
+		}
 	private:
 		mutable bool m_hasId;
 		mutable int m_id;
@@ -290,6 +303,13 @@ namespace sci
 		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension) : NcVariable<double>(name, ncFile, dimension) {}
 		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions) : NcVariable<double>(name, ncFile, dimensions) {}
 		NcVariable(NcVariable &&) = default;
+		template<class U>
+		static std::vector<double> flattenData(const std::vector<Physical<U>> &data) { return sci::physicalsToValues<sci::Physical<T>>(data); }
+		template<class U>
+		static::std::vector<double> flattenData(const std::vector<std::vector<U>> &data)
+		{
+			return NcVariable<double>::flattenData(sci::physicalsToValues<sci::Physical<T>>(data));
+		}
 	};
 
 	class OutputNcFile : public NcFileBase
@@ -299,10 +319,10 @@ namespace sci
 		OutputNcFile();
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
-		template<class T>
-		void write(const NcVariable<T> &variable, const std::vector<T> &data);
+		//template<class T>
+		//void write(const NcVariable<T> &variable, const std::vector<T> &data);
 		template<class T, class U>
-		void write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data);
+		void write(const NcVariable<T> &variable, const U &data);
 	private:
 		bool m_inDefineMode;
 		//remove copy constructors
@@ -481,7 +501,7 @@ namespace sci
 			m_attributes[i].write(file, *this);
 	}
 
-	template<class T>
+	/*template<class T>
 	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<T> &data)
 	{
 		if (m_inDefineMode)
@@ -497,23 +517,23 @@ namespace sci
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &start, &size, &data[0]));
 		}
 			
-	}
+	}*/
 
 	template<class T, class U>
-	void OutputNcFile::write(const NcVariable<T> &variable, const std::vector<std::vector<U>> &data)
+	void OutputNcFile::write(const NcVariable<T> &variable, const U &data)
 	{
 		if (m_inDefineMode)
 		{
 			nc_enddef(getId());
 			m_inDefineMode = false;
 		};
-		std::vector<size_t> shape = sci::shape(data);
+		std::vector<size_t> shape = NcVariable<T>::getDataShape(data);
 		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions."));
 		std::vector<size_t> starts(variable.getNDimensions(), 0);
 		size_t size = sci::product(shape);
-		std::vector<T> flattenedData;
-		sci::flatten(flattenedData, data);
-		if (data.size() > 0)
+		auto flattenedData = NcVariable<T>::flattenData(data);
+		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariabe::flattenData returned data of an unexpected size."));
+		if (flattenedData.size() > 0)
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
 	}
 }
