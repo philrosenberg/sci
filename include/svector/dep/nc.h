@@ -254,6 +254,16 @@ namespace sci
 	template<>
 	std::vector<sci::string> InputNcFile::getGlobalAttribute<std::vector<sci::string>>(const sci::string &name);
 
+	//This class encapsulates a netcdf variable. If you want you can inherit from this class to allow
+	//you to write other types of data than just (multi-d) vectors or built in types.
+	//If you do this then you probably need to override the flattenData static method to convert
+	//data from your input format to a 1d vector of a type that netcdf can write. the vector type
+	//must match the write_type typedef of the NcVariable class you are inheriting from. If your
+	//data is not in multi-d vectors with one data point per element then you may need to override
+	//the static method getDataShape too.
+	//If you do this then you can call ncOutputFile::write with your custom data type. But note that
+	//this utilises template specialization, not inheritance via virtual functions, so you must use
+	//the derived class in the call to write
 	template<class T>
 	class NcVariable
 	{
