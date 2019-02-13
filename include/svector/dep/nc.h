@@ -484,7 +484,8 @@ namespace sci
 		for (size_t i = 0; i < dimensions.size(); ++i)
 			m_dimensionIds.push_back(dimensions[i]->getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
-		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
+		sci::assertThrow(m_dimensionIds.size() < std::numeric_limits<int>::max(), sci::err(SERR_NC, 0, "Attempted to create NEtCDF variable with more dimensions than supported."));
+		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, (int)m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
 		m_hasId = true;
 	}
 
