@@ -257,6 +257,7 @@ namespace sci
 		static const uint64_t basePowers = BASE_POWERS;
 		static const int64_t exponent = EXPONENT;
 		typedef EncodedUnit< basePowers, exponent > unit;
+		typedef unit baseClass;
 
 		template <class T>
 		static double convertTo(double value)
@@ -270,6 +271,18 @@ namespace sci
 		template <>
 		static double convertTo <EncodedUnit<BASE_POWERS, EXPONENT>>(double value)
 		{
+			return value;
+		}
+		template <int64_t BASE_EXPONENT>
+		static double convertFromBase(double value)
+		{
+			//for this type its base is itself, but with a different exponent
+			return value * sci::pow10<BASE_EXPONENT - EXPONENT>();
+		}
+		template <>
+		static double convertFromBase<EXPONENT>(double value)
+		{
+			//as above, but now the exponents are identical so no calculation is needed
 			return value;
 		}
 		static constexpr bool isUnitless()
@@ -330,6 +343,7 @@ namespace sci
 
 	struct Unitless : public EncodedUnit<0, 0>
 	{
+		static const int8_t power = 0;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1); 
@@ -346,6 +360,7 @@ namespace sci
 
 	struct Percent : public EncodedUnit<0, -2>
 	{
+		static const int8_t power = 0;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
@@ -362,6 +377,7 @@ namespace sci
 
 	struct PerMille : public EncodedUnit<0, -3>
 	{
+		static const int8_t power = 0;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
@@ -378,6 +394,7 @@ namespace sci
 
 	struct BasisPoint : public EncodedUnit<0, -4>
 	{
+		static const int8_t power = 0;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
@@ -395,53 +412,62 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Amp : public EncodedUnit<encodePower<POWER, 0>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("A"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Kelvin : public EncodedUnit<encodePower<POWER, 1>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("K"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Second : public EncodedUnit<encodePower<POWER, 2>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("s"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Metre : public EncodedUnit<encodePower<POWER, 3>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("m"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gram : public EncodedUnit<encodePower<POWER, 4>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("g"))
 	};
 
 	template<int8_t POWER = 1>
 	struct Kilogram : public Gram<POWER, 3>
 	{
+		static const int8_t power = POWER;
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Candela : public EncodedUnit<encodePower<POWER, 5>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("cd"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Mole : public EncodedUnit<encodePower<POWER, 6>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("mol"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Radian : public EncodedUnit<encodePower<POWER, 7>(), EXPONENT*POWER>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("rad"))
 	};
 
@@ -453,60 +479,70 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Steradian : public MultipliedEncodedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("sr"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Hz"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedEncodedUnit<MultipliedEncodedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("N"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Pa"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("J"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("W"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedEncodedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("C"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedEncodedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("V"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedEncodedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("F"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("\u2126"))
 	};
 
@@ -514,66 +550,187 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("S"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Wb"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("T"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("H"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedEncodedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("lm"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedEncodedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("lx"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Becquerel : public Second<-POWER, EXPONENT>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Bq"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Gy"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("Sv"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedEncodedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
+		static const int8_t power = POWER;
 		NAMEDEF(sU("kat"))
 	};
+
+
+	//A separate class for other units that are scaled versions of EncodedUnits.
+	//Note that these don't derive from EncodedUnits, but they conform to the same
+	//template as EncodedUnit, so can be used by Physical as a template parameter.
+/*#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
+	template<class BASE_NAME, int8_t POWER = 1, int64_t EXPONENT = 0>\
+	class CLASS_NAME\
+	{\
+	public:\
+		static const uint64_t basePowers = BASE_NAME::basePowers;\
+		static const int64_t exponent = BASE_NAME::exponent;\
+		typedef CLASS_NAME< BASE_NAME, POWER, EXPONENT > unit;\
+		template <class T>\
+		static double convertTo(double value)\
+		{\
+			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
+			return T::convertFromBase<EXPONENT>(convertTo<BASE_NAME<POWER, EXPONENT>>(value));\
+		}\
+		template <>\
+		static double convertTo <CLASS_NAME<BASE_NAME, POWER, EXPONENT>>(double value)\
+		{\
+			return value;\
+		}\
+		template <>\
+		static double convertTo <BASE_NAME<POWER, EXPONENT>>(double value)\
+		{\
+			return value / m_baseToScaledMultiplier;\
+		}\
+		template <int64_t BASE_EXPONENT>\
+		static double convertFromBase(double value)\
+		{\
+			return value * m_baseToScaledMultiplier * sci::pow10<BASE_EXPONENT - EXPONENT>();\
+		}\
+		static const double m_baseToScaledMultiplier;\
+	};\
+	template <int8_t POWER, int64_t EXPONENT>\
+	const double CLASS_NAME<BASE_NAME, POWER, EXPONENT>::m_baseToScaledMultiplier = std::pow(BASE_TO_SCALED_MULTIPLIER, POWER);*/
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
+	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
+	class CLASS_NAME\
+	{\
+	public:\
+		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseClass;\
+		typedef CLASS_NAME< POWER, EXPONENT > unit;\
+		static const uint64_t basePowers = baseClass::basePowers;\
+		static const int64_t baseExponent = baseClass::exponent;\
+		static const int64_t exponent = EXPONENT;\
+		static const int8_t power = POWER;\
+		static const sci::string shortName;\
+		template <class T>\
+		static double convertTo(double value)\
+		{\
+			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
+			return T::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
+		}\
+		template <>\
+		static double convertTo <unit>(double value)\
+		{\
+			return value;\
+		}\
+		template <>\
+		static double convertTo <baseClass>(double value)\
+		{\
+			return value / m_baseToScaledMultiplier;\
+		}\
+		template <int64_t BASE_EXPONENT>\
+		static double convertFromBase(double value)\
+		{\
+			return value * sci::pow10<(BASE_EXPONENT - baseExponent)>() * m_baseToScaledMultiplier;\
+		}\
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+		{\
+			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);\
+		}\
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+		{\
+			return makeShortName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+		}\
+		static sci::string getShortName()\
+		{\
+			return shortName;\
+		}\
+		static const double m_baseToScaledMultiplier;\
+	};\
+	template <int8_t POWER, int64_t EXPONENT>\
+	const double CLASS_NAME<POWER, EXPONENT>::m_baseToScaledMultiplier = std::pow(BASE_TO_SCALED_MULTIPLIER, POWER)*pow10<baseClass::exponent - exponent * power>();\
+	template <int8_t POWER, int64_t EXPONENT>\
+	const sci::string CLASS_NAME<POWER, EXPONENT>::shortName = SHORT_NAME;\
+
+
+	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, sU("degree"))
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, sU("\u8242"))
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, sU("\u8243"))
+	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, sU("tr"))
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, sU("quadrant"))
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, sU("sextant"))
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, sU("hexacontade"))
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, sU("binary degree"))
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"))
+	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"))
+	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"))
+
+
+
 
 	template < class ENCODED_UNIT >
 	class Physical;
 
+	//This class permits conversion to be performed by Physical.value<T>(), whether
+	//<T> is a Physical or a unit.
 	template<class FROM, class TO>
 	struct UnitConverter
 	{
