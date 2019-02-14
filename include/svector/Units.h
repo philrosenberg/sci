@@ -1125,3 +1125,90 @@ std::basic_ostream<sci::char_t> & operator<< (std::basic_ostream<sci::char_t> &s
 	stream << physical.value<T>() << sU(" ") << T::getShortRepresentation();
 	return stream;
 }
+
+namespace std
+{
+	template <class T>
+	class numeric_limits<sci::Physical<T>> : public numeric_limits<double>
+	{
+	public:
+		static constexpr sci::Physical<T>(min)() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::min());
+		}
+
+		static constexpr sci::Physical<T>(max)() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::max());
+		}
+
+		static constexpr sci::Physical<T> lowest() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::lowest());
+		}
+
+		static constexpr sci::Physical<T> epsilon() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::epsilon());
+		}
+
+		static constexpr sci::Physical<T> round_error() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::round_error());
+		}
+
+		static constexpr sci::Physical<T> denorm_min() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::denorm_min());
+		}
+
+		static constexpr sci::Physical<T> infinity() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::infinity());
+		}
+
+		static constexpr sci::Physical<T> quiet_NaN() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::quiet_NaN());
+		}
+
+		static constexpr sci::Physical<T> signaling_NaN() noexcept
+		{
+			return sci::Physical<T>(numeric_limits<double>::signaling_NaN());
+		}
+	};
+
+	template <class T>
+	class numeric_limits<const sci::Physical<T>> : public numeric_limits<sci::Physical<T>>
+	{
+	};
+	template <class T>
+	class numeric_limits<volatile sci::Physical<T>> : public numeric_limits<sci::Physical<T>>
+	{
+	};
+	template <class T>
+	class numeric_limits<const volatile sci::Physical<T>> : public numeric_limits<sci::Physical<T>>
+	{
+	};
+
+	template <class T>
+	inline bool isnan(sci::Physical<T> physical)
+	{
+		return isnan(physical.value<T>());
+	}
+	template <class T>
+	inline bool isinf(sci::Physical<T> physical)
+	{
+		return isinf(physical.value<T>());
+	}
+	template <class T>
+	inline bool isfinite(sci::Physical<T> physical)
+	{
+		return isfinite(physical.value<T>());
+	}
+	template <class T>
+	inline bool isnormal(sci::Physical<T> physical)
+	{
+		return isnormal(physical.value<T>());
+	}
+}
