@@ -770,7 +770,7 @@ namespace sci
 	{
 	public:
 		Physical() {}
-		Physical(double v) : m_v(v) {};
+		explicit Physical(double v) : m_v(v) {}; //explicit so we cannot accidentally create a Physical from a double
 		template<class U>
 		Physical(const Physical<U> &other)
 		{

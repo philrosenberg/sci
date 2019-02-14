@@ -562,7 +562,7 @@ namespace sci
 		{
 			*transposedi = &((*vi)[0]);
 		}
-		result = sci::makevector<T>(0.0, v[0].size(), v.size());
+		result = sci::makevector<T>(T(0.0), v[0].size(), v.size());
 
 		std::vector <T> *resultEnd = &result[0] + result.size();
 		for (std::vector <T> *resulti = &result[0]; resulti != resultEnd; ++resulti)
@@ -1891,7 +1891,7 @@ namespace sci
 	template<class T, class U, class V>
 	std::vector<T> boxcaraverage(const std::vector<T> &v, size_t period, U divider(V numerator, size_t denominator))
 	{
-		std::vector<T> result(v.size() / period, 0); //integer division so no need to round down
+		std::vector<T> result(v.size() / period, T(0)); //integer division so no need to round down
 		typename std::vector<T>::const_iterator vsubbegin = v.begin();
 		for (typename std::vector<T>::iterator resulti = result.begin(); resulti != result.end(); ++resulti)
 		{
