@@ -1061,6 +1061,22 @@ namespace sci
 		return Physical<Radian<>>(std::atan(value.value<Unitless>()));
 	}
 
+	template <class T, class U>
+	Physical<Radian<>> atan2(const Physical<T> &y, const Physical<U> &x)
+	{
+		static_assert(decltype(y/x)::isUnitless(), "We can only atan a dimensionless quantity.");
+		if(sci::abs(x)> sci::abs(y))
+			return Physical<Radian<>>(std::atan2((y/x).value<Unitless>(), 1.0));
+		else
+			return Physical<Radian<>>(1.0, std::atan2((x / y).value<Unitless>(), 1.0));
+
+	}
+	template <class T>
+	Physical<Radian<>> atan2(const Physical<T> &y, const Physical<T> &x)
+	{
+			return Physical<Radian<>>(std::atan2(y.value<T>(), x.value<T>()));
+	}
+
 	template <class T>
 	Physical<Unitless> sin(const Physical<T> &value)
 	{
