@@ -977,8 +977,8 @@ namespace sci
 	template <class T, class U>
 	Physical<T> pow(const Physical<T> &base, const Physical<U> &power)
 	{
-		static_assert(U::isDimensionless(), "We can only raise a physical value to the power of a dimensionless quantity.");
-		static_assert(T::isDimensionless(), "We can only raise a physical value to a non-integer power if it is dimensionless.");
+		static_assert(U::isUnitless(), "We can only raise a physical value to the power of a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
 		double powerVal = power.value<Unitless>();
@@ -1021,21 +1021,21 @@ namespace sci
 	template <class T>
 	Physical<Unitless> log(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only log a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless>(std::log(value.value<Unitless>()));
 	}
 
 	template <class T>
 	Physical<Unitless> log10(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only log a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless>(std::log10(value.value<T>()) + T::exponent); // make use of log laws to split this
 	}
 
 	template <class T>
 	Physical<Unitless> log2(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only log a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless>(std::log2(value.value<Unitless>()));
 	}
 
@@ -1043,21 +1043,21 @@ namespace sci
 	template <class T>
 	Physical<Radian<>> asin(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only asin a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only asin a dimensionless quantity.");
 		return Physical<Radian<>>(std::asin(value.value<Unitless>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> acos(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only acos a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only acos a dimensionless quantity.");
 		return Physical<Radian<>>(std::acos(value.value<Unitless>()));
 	}
 
 	template <class T>
 	Physical<Radian<>> atan(const Physical<T> &value)
 	{
-		static_assert(T::isDimensionless(), "We can only atan a dimensionless quantity.");
+		static_assert(T::isUnitless(), "We can only atan a dimensionless quantity.");
 		return Physical<Radian<>>(std::atan(value.value<Unitless>()));
 	}
 
