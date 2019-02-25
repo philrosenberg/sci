@@ -494,7 +494,6 @@ void sci::NcAttribute::setNull()
 	m_writeType = NC_NAT;
 }
 
-template<>
 sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 {
 	m_name = name;
@@ -506,7 +505,39 @@ sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 	memcpy(m_values, utf8String.data(), m_nBytes);
 }
 
-template <>
+sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<sci::string> &value)
+{
+	m_name = name;
+	sci::ostringstream stream;
+	if (value.size() > 0)
+		stream << value[0];
+	for (size_t i = 1; i < value.size(); ++i)
+		stream << sU(", ") << value[i];
+	std::string utf8String = sci::toUtf8(stream.str());
+	m_nValues = utf8String.length() + 1;
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	m_values = malloc(m_nBytes);
+	memcpy(m_values, utf8String.data(), m_nBytes);
+}
+
+
+sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<const char16_t *> &value)
+{
+	m_name = name;
+	sci::ostringstream stream;
+	if (value.size() > 0)
+		stream << value[0];
+	for (size_t i = 1; i < value.size(); ++i)
+		stream << sU(", ") << value[i];
+	std::string utf8String = sci::toUtf8(stream.str());
+	m_nValues = utf8String.length() + 1;
+	m_writeType = NC_CHAR;
+	m_nBytes = m_nValues;
+	m_values = malloc(m_nBytes);
+	memcpy(m_values, utf8String.data(), m_nBytes);
+}
+
 sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value)
 {
 	m_name = name;

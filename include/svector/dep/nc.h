@@ -125,6 +125,10 @@ namespace sci
 		NcAttribute(const sci::string& name, std::vector<T> values);
 		template<class T, class WRITETYPE>
 		NcAttribute(const sci::string& name, std::vector<T> values, const WRITETYPE &);
+		NcAttribute(const sci::string& name, sci::string value);
+		NcAttribute(const sci::string& name, const char16_t *value);
+		NcAttribute(const sci::string& name, const std::vector<sci::string> &value);
+		NcAttribute(const sci::string& name, const std::vector<const char16_t *> &value);
 		~NcAttribute()
 		{
 			if (m_values)
@@ -146,11 +150,6 @@ namespace sci
 
 		void setNull();
 	};
-
-	template<>
-	sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value);
-	template<>
-	sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value);
 
 	class AttributeContainer
 	{
@@ -276,11 +275,18 @@ namespace sci
 		NcVariable(NcVariable &&) = default;
 		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
 		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
-		void addAttribute(const NcAttribute &attribute) { m_attributes.push_back(attribute); }
+		void addAttribute(const NcAttribute &attribute, const OutputNcFile &file)
+		{
+			m_attributes.push_back(attribute);
+			//if we already have the ID (i.e. the variable has been written) then write the attribute
+			if(m_hasId)
+				attribute.write(file, *this);
+		}
 		void write(const OutputNcFile &file) const;
 		int getId() const
 		{
-			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written.")); return m_id;
+			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written."));
+			return m_id;
 		}
 		size_t getNDimensions() const { return m_dimensionIds.size(); }
 		bool hasId() const { return m_hasId; }
@@ -472,8 +478,7 @@ namespace sci
 		m_hasId = false;
 		m_dimensionIds.push_back(dimension.getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
-		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, 1, &m_dimensionIds[0], &m_id));
-		m_hasId = true;
+		write(ncFile);
 	}
 
 	template<class T>
@@ -485,8 +490,7 @@ namespace sci
 			m_dimensionIds.push_back(dimensions[i]->getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
 		sci::assertThrow(m_dimensionIds.size() < std::numeric_limits<int>::max(), sci::err(SERR_NC, 0, "Attempted to create NEtCDF variable with more dimensions than supported."));
-		checkNcCall(nc_def_var(ncFile.getId(), sci::toUtf8(name).c_str(), sci_internal::NcTraits<T>::ncType, (int)m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
-		m_hasId = true;
+		write(ncFile);
 	}
 
 	/*
