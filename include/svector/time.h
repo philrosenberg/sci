@@ -19,6 +19,7 @@ bool operator>(const sci::UtcTime &t1, const sci::UtcTime &t2);
 bool operator<=(const sci::UtcTime &t1, const sci::UtcTime &t2);
 bool operator>=(const sci::UtcTime &t1, const sci::UtcTime &t2);
 bool operator==(const sci::UtcTime &t1, const sci::UtcTime &t2);
+bool operator!=(const sci::UtcTime &t1, const sci::UtcTime &t2);
 
 namespace sci
 {
@@ -33,6 +34,7 @@ namespace sci
 		friend bool(::operator<=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
 		friend bool(::operator>=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
 		friend bool(::operator==)(const sci::UtcTime &t1, const sci::UtcTime &t2);
+		friend bool(::operator!=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
 	public:
 		UtcTime();
 		UtcTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second);

@@ -214,3 +214,8 @@ bool operator==(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	return t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction == t2.m_secondFraction;
 }
+
+bool operator!=(const sci::UtcTime &t1, const sci::UtcTime &t2)
+{
+	return t1.m_secsAfterPosixEpoch != t2.m_secsAfterPosixEpoch || t1.m_secondFraction != t2.m_secondFraction;
+}
