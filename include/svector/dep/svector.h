@@ -759,6 +759,19 @@ namespace sci
 		return std::vector<size_t>(1,v.size());
 	}
 
+	template<class T>
+	struct VectorTraits
+	{
+		typedef T baseType;
+		static const size_t nDimensions = 0;
+	};
+	template<class T>
+	struct VectorTraits <std::vector<T>>
+	{
+		typedef typename VectorTraits<T>::baseType baseType;
+		static const size_t nDimensions = VectorTraits<T>::nDimensions + 1;
+	};
+
 	//return the base type of a multi dimensional vector
 	template<class T>
 	inline sci::basetype getbasetype(const std::vector< std::vector< T > > &v)
