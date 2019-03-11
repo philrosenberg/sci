@@ -523,6 +523,7 @@ namespace sci
 	template<class T, class U>
 	void OutputNcFile::write(const NcVariable<T> &variable, const U &data)
 	{
+		static_assert(std::is_same<sci::VectorTraits<U>::baseType, T>::value, "The base type of the data must be the same as the NetCDF variable when writing");
 		if (m_inDefineMode)
 		{
 			nc_enddef(getId());
