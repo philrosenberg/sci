@@ -45,6 +45,11 @@ namespace sci_internal
 	{
 		const static nc_type ncType = NC_DOUBLE;
 	};
+	template <class T>
+	struct NcTraits<sci::Physical<T>>
+	{
+		const static nc_type ncType = NC_DOUBLE;
+	};
 
 	template<nc_type I>
 	struct NcTypeTraits
