@@ -16,22 +16,22 @@ sci::WindowsError::WindowsError(DWORD code)
 	m_message = GetWindowsErrorMessageFromCode(m_code);
 }
 
-std::string sci::WindowsError::GetWindowsErrorMessageFromCode( DWORD code)
+sci::string sci::WindowsError::GetWindowsErrorMessageFromCode( DWORD code)
 {
 	//Get the error message, if any.
 	if (code == 0)
-		return std::string(); //No error message has been recorded
+		return sci::string(); //No error message has been recorded
 
-	LPSTR messageBuffer = nullptr;
-	size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+	LPWSTR messageBuffer = nullptr;
+	size_t size = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
 
-	std::string message(messageBuffer, size);
+	std::wstring message(messageBuffer, size);
 
 	//Free the buffer.
 	LocalFree(messageBuffer);
 
-	return message;
+	return sci::fromNativeUnicode(message);
 }
 #endif
 
@@ -39,6 +39,9 @@ sci::err::err(errcategory category, long code)
 	: m_category(category), m_code(code)
 {}
 sci::err::err(errcategory category, long code, const std::string &message)
+	: m_category(category), m_code(code), m_message(sci::fromCodepage(message))
+{}
+sci::err::err(errcategory category, long code, const sci::string &message)
 	: m_category(category), m_code(code), m_message(message)
 {}
 /*
@@ -59,26 +62,26 @@ void sci::assertThrow(bool test, const sci::err &err)
 
 void sci::displayErrorDialogue(const sci::err &err)
 {
-	std::stringstream message;
-	message << "The following error occurred:\n\n" << err.getErrorMessage() << "\n\nError type: ";
+	sci::ostringstream message;
+	message << sU("The following error occurred:\n\n") << err.getErrorMessage() << sU("\n\nError type: ");
 	if (err.getErrorCategory() == SERR_NC)
-		message << "NetCdf library\n";
+		message << sU("NetCdf library\n");
 	if (err.getErrorCategory() == SERR_MEMMAP)
-		message << "Memory map error\n";
+		message << sU("Memory map error\n");
 	if (err.getErrorCategory() == SERR_PLOT)
-		message << "Plot error\n";
+		message << sU("Plot error\n");
 	if (err.getErrorCategory() == SERR_MINIMISER)
-		message << "Minimiser error\n";
+		message << sU("Minimiser error\n");
 	if (err.getErrorCategory() == SERR_VECTOR)
-		message << "Vector error\n";
+		message << sU("Vector error\n");
 	if (err.getErrorCategory() == SERR_DISTRIBUTIONS)
-		message << "Distributions error\n";
+		message << sU("Distributions error\n");
 	if (err.getErrorCategory() == SERR_ANALYSIS)
-		message << "Analysis error\n";
+		message << sU("Analysis error\n");
 	if (err.getErrorCategory() == SERR_ALG)
-		message << "ALG library error\n";
+		message << sU("ALG library error\n");
 
-	message << "Code: " << err.getErrorCode();
+	message << sU("Code: ") << err.getErrorCode();
 
-	wxMessageBox(message.str(), "sci::error");
+	wxMessageBox(nativeUnicode(message.str()), "sci::error");
 }
