@@ -98,7 +98,7 @@ unsigned int sci::UtcTime::getMinute() const
 }
 double sci::UtcTime::getSecond() const
 {
-	return sci::TimeInterval(m_cTime.tm_sec)+m_secondFraction;
+	return double(m_cTime.tm_sec)+m_secondFraction;
 }
 
 sci::UtcTime sci::UtcTime::now()
@@ -106,13 +106,13 @@ sci::UtcTime sci::UtcTime::now()
 	auto time = std::chrono::system_clock::now();
 	decltype(time) epoch = std::chrono::system_clock::from_time_t(0);
 	std::chrono::duration<float> secondsSinceEpoch = time - epoch;
-	UtcTime result = UtcTime(1970, 1, 1, 0, 0, 0.0)+secondsSinceEpoch.count();
+	UtcTime result = UtcTime(1970, 1, 1, 0, 0, 0.0) + sci::TimeInterval((double)secondsSinceEpoch.count());
 	return result;
 }
 
 sci::TimeInterval sci::UtcTime::getUnixTime() const
 {
-	return m_secsAfterPosixEpoch + m_secondFraction;
+	return sci::TimeInterval( m_secsAfterPosixEpoch + m_secondFraction );
 }
 
 sci::UtcTime::UtcTime(std::tm time, double secondFraction)
@@ -127,18 +127,18 @@ void sci::UtcTime::set(std::tm time, double secondFraction)
 	m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 }
 
-sci::TimeInterval operator-(const sci::UtcTime &t1, const sci::UtcTime &t2)
+sci::TimeInterval sci::operator-(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	//set up this way so that it should avoid rounding errors for very small time differences a long way from 1st Jan 1970
-	return sci::TimeInterval(t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch) + (t1.m_secondFraction - t2.m_secondFraction);
+	return sci::TimeInterval(t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch) + sci::TimeInterval(t1.m_secondFraction - t2.m_secondFraction);
 }
 
-sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interval)
+sci::UtcTime sci::operator+(const sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	std::tm cTime = time.m_cTime;
 	std::time_t integerSeconds = mkgmtime(cTime);
-	integerSeconds += (time_t)std::floor(interval);
-	double fraction = time.m_secondFraction+(interval-std::floor(interval));
+	integerSeconds += (time_t)std::floor(interval.value<sci::Second<>>());
+	double fraction = time.m_secondFraction+(interval.value<sci::Second<>>() - std::floor(interval.value<sci::Second<>>()));
 	if (fraction >= 1.0)
 	{
 		++integerSeconds;
@@ -151,12 +151,12 @@ sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interv
 	return sci::UtcTime(cTimeNew, fraction);
 }
 
-sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interval)
+sci::UtcTime sci::operator-(const sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	std::tm cTime = time.m_cTime;
 	std::time_t integerSeconds = mkgmtime(cTime);
-	integerSeconds -= (time_t)std::floor(interval);
-	double fraction = time.m_secondFraction - (interval - std::floor(interval));
+	integerSeconds -= (time_t)std::floor(interval.value<sci::Second<>>());
+	double fraction = time.m_secondFraction - (interval.value<sci::Second<>>() - std::floor(interval.value<sci::Second<>>()));
 	if (fraction < 0.0)
 	{
 		--integerSeconds;
@@ -169,53 +169,53 @@ sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interv
 	return sci::UtcTime(cTimeNew, fraction);
 }
 
-sci::UtcTime operator+(const sci::TimeInterval &interval, const sci::UtcTime &time)
+sci::UtcTime sci::operator+(const sci::TimeInterval &interval, const sci::UtcTime &time)
 {
 	return time + interval;
 }
 
-sci::UtcTime& operator-=(sci::UtcTime &time, const sci::TimeInterval &interval)
+sci::UtcTime& sci::operator-=(sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	time = time - interval;
 	return time;
 }
 
-sci::UtcTime& operator+=(sci::UtcTime &time, const sci::TimeInterval &interval)
+sci::UtcTime& sci::operator+=(sci::UtcTime &time, const sci::TimeInterval &interval)
 {
 	time = time + interval;
 	return time;
 }
 
-bool operator<(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator<(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	if (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch)
 		return (t1.m_secondFraction < t2.m_secondFraction);
 	return (t1.m_secsAfterPosixEpoch < t2.m_secsAfterPosixEpoch);
 }
 
-bool operator>(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator>(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	if (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch)
 		return (t1.m_secondFraction > t2.m_secondFraction);
 	return (t1.m_secsAfterPosixEpoch > t2.m_secsAfterPosixEpoch);
 }
 
-bool operator<=(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator<=(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	return !(t1 > t2);
 }
 
-bool operator>=(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator>=(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	return !(t1 < t2);
 }
 
-bool operator==(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator==(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	return t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction == t2.m_secondFraction;
 }
 
-bool operator!=(const sci::UtcTime &t1, const sci::UtcTime &t2)
+bool sci::operator!=(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	return t1.m_secsAfterPosixEpoch != t2.m_secsAfterPosixEpoch || t1.m_secondFraction != t2.m_secondFraction;
 }
