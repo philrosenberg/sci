@@ -245,6 +245,28 @@ namespace sci
 			encodePower<decodePower<VALUE, 7>() * POW, 7>();
 	}
 
+	template<uint64_t VALUE, int ROOT>
+	constexpr uint64_t rootPowers()
+	{
+		static_assert(decodePower<VALUE, 0>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 1>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 2>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 3>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 4>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 5>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 6>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		static_assert(decodePower<VALUE, 7>() % ROOT == 0, "When rooting a unit all dimensions must have powers that are multiples of the root");
+		return
+			encodePower<decodePower<VALUE, 0>() / ROOT, 0>() |
+			encodePower<decodePower<VALUE, 1>() / ROOT, 1>() |
+			encodePower<decodePower<VALUE, 2>() / ROOT, 2>() |
+			encodePower<decodePower<VALUE, 3>() / ROOT, 3>() |
+			encodePower<decodePower<VALUE, 4>() / ROOT, 4>() |
+			encodePower<decodePower<VALUE, 5>() / ROOT, 5>() |
+			encodePower<decodePower<VALUE, 6>() / ROOT, 6>() |
+			encodePower<decodePower<VALUE, 7>() / ROOT, 7>();
+	}
+
 	//This is the basic class that represents a unit. It takes two templated parameters
 	//The first is the powers. This is an encoded 64 bit number where the first byte is
 	//the power in the first dimension, the second byte is the power in the second
@@ -298,6 +320,18 @@ namespace sci
 	{
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
+			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
+		}
+	};
+
+	//This is a class that represents an encoded unit rooted. It is still an EncodedUnit
+	//by inheritance, so you can multiply, divide or raise to the power many units
+	template<class ENCODEDUNIT, int ROOT>
+	struct RootedEncodedUnit : public EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT>
+	{
+		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		{
+			static_assert(false, "Error - need to write code to do this for roots.");
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
 	};
@@ -722,6 +756,9 @@ namespace sci
 	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"))
 	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"))
 	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"))
+	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("minute"))
+	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0/3600.0, sU("hour"))
+	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"))
 
 
 
@@ -1016,6 +1053,46 @@ namespace sci
 	Physical<Unitless> pow(const Physical<BasisPoint> &base)
 	{
 		return Physical<Unitless>(std::pow(base.value<Unitless>(), POWER));
+	}
+	
+
+	// root - this case deals with geting an integer root.
+	//Note is has a templated argument otherwise we would not know at
+	//compile time what the return type would be.
+	template <int ROOT, class T>
+	Physical<RootedEncodedUnit<T, ROOT>> root(const Physical<T> &base)
+	{
+		return Physical<RootedEncodedUnit<T, ROOT>>(std::pow(base.value<T>(), 1.0/double(ROOT)));
+	}
+	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
+	template <int ROOT>
+	Physical<Unitless> root(const Physical<Unitless> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), 1.0/double(ROOT)));
+	}
+	//same but for percent
+	template <int ROOT>
+	Physical<Unitless> root(const Physical<Percent> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), 1.0 / double(ROOT)));
+	}
+	//same but for per mille
+	template <int ROOT>
+	Physical<Unitless> root(const Physical<PerMille> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), 1.0 / double(ROOT)));
+	}
+	//same but for basis point
+	template <int ROOT>
+	Physical<Unitless> root(const Physical<BasisPoint> &base)
+	{
+		return Physical<Unitless>(std::pow(base.value<Unitless>(), 1.0 / double(ROOT)));
+	}
+	//sqrt - uses root<2> function
+	template<class T>
+	Physical<RootedEncodedUnit<T, 2>> sqrt(const Physical<T> &base)
+	{
+		return Physical<RootedEncodedUnit<T, 2>>(std::sqrt(base.value<T>()));
 	}
 
 	template <class T>
