@@ -1,6 +1,7 @@
 #ifndef serr_H
 #define serr_H
 #include<string>
+#include"sstring.h"
 #ifdef _WIN32
 #include<Windows.h>
 #endif
@@ -35,11 +36,11 @@ namespace sci
 		WindowsError();
 		WindowsError(DWORD code);
 		DWORD getCode() const { return m_code; }
-		std::string getMessage() const { return m_message; }
-		static std::string GetWindowsErrorMessageFromCode(DWORD code);
+		sci::string getMessage() const { return m_message; }
+		static sci::string GetWindowsErrorMessageFromCode(DWORD code);
 	private:
 		DWORD m_code;
-		std::string m_message;
+		sci::string m_message;
 	};
 #endif
 
@@ -48,18 +49,19 @@ namespace sci
 	public:
 		err(errcategory category, long code);
 		err(errcategory category, long code, const std::string &message);
+		err(errcategory category, long code, const sci::string &message);
 		//err(const alglib::ap_error &err, long code);
 #ifdef _WIN32
 		err(errcategory category, const WindowsError &windowsError);
 #endif
 		errcategory getErrorCategory() const { return m_category; }
 		long getErrorCode() const { return m_code; }
-		std::string getErrorMessage() const { return m_message; }
+		sci::string getErrorMessage() const { return m_message; }
 		
 	private:
 		const errcategory m_category;
 		const long m_code;
-		const std::string m_message;
+		const sci::string m_message;
 	};
 		
 
