@@ -1178,6 +1178,23 @@ namespace sci
 		return Physical<T>(std::abs(value.value<T>()));
 	}
 
+
+	//declare a TypeTraits for Physicals we can use this to get a unitless type for dividing when averaging
+	//in templated functions
+
+	//pre declaration of the struct defined in svector.h
+	template<class T>
+	struct TypeTraits;
+
+	//the typetraits for Physicals
+	template<class T>
+	struct TypeTraits<Physical<T>>
+	{
+		typedef Physical<Unitless> unitlessType;
+		static unitlessType unitless(size_t v) { return unitlessType(double(v)); }
+		static auto sqrt(const Physical<T> &v) ->decltype(sqrt(v)) { return sci::sqrt(v); }
+	};
+
 	//This is used by averaging algorithms where simply casting size_t to the
 	//same type as the type we are averaging doesn't work
 	template <class T>
