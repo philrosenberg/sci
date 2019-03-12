@@ -1,4 +1,5 @@
 #include "../include/svector/sstring.h"
+#include "../include/svector/serr.h"
 #include <algorithm>
 #ifdef _WIN32
 #include <Windows.h>
@@ -488,6 +489,38 @@ sci::string sci::fromUtf8(const std::string &string)
 {
 	return utf8ToUtf16(string);
 }
+sci::string sci::fromCodepage(const std::string &string)
+{
+#ifdef _WIN32
+	if (string.length() == 0)
+		return sci::string();
+	size_t nCharsNeeded = MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, nullptr, 0);
+
+	sci::assertThrow(nCharsNeeded > 0, sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
+
+	std::vector<WCHAR> buffer(nCharsNeeded);
+	sci::assertThrow(MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, &buffer[0], nCharsNeeded) !=0,
+		sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
+	std::wstring wideString(&buffer[0]);
+	return fromNativeUnicode(wideString);
+	
+#else
+	return utf8ToUtf16(string);
+#endif
+}
+#ifdef _WIN32
+sci::string sci::fromNativeUnicode(const std::wstring &string)
+{
+	static_assert (sizeof(wchar_t) == sizeof(char16_t), "Wide string characters must be 2 bytes for the unicode conversion to work here.");
+	std::u16string u16String((char16_t*)string.c_str());
+	return fromUtf16(u16String);
+}
+#else
+sci::string sci::fromNativeUnicode(const std::string &string)
+{
+	return sci::fromUtf8(string);
+}
+#endif
 sci::string sci::fromUtf16(const std::u16string &string)
 {
 	return string;

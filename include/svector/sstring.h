@@ -118,6 +118,12 @@ namespace sci
 	std::u32string toUtf32(const sci::string &string);
 
 	sci::string fromUtf8(const std::string &string);
+	sci::string fromCodepage(const std::string &string);
+#ifdef _WIN32
+	sci::string fromNativeUnicode(const std::wstring &string);
+#else
+	sci::string fromNativeUnicode(const std::string &string)
+#endif
 	sci::string fromUtf16(const std::u16string &string);
 	sci::string fromUtf32(const std::u32string &string);
 	sci::string fromWxString(const wxString &string);

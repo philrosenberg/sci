@@ -25,7 +25,8 @@ namespace sci
 		SERR_ALG,
 		SERR_TIME,
 		SERR_USER,
-		SERR_KISSFFT
+		SERR_KISSFFT,
+		SERR_STRING
 	};
 	//error codes should be selected from this list based on their errcategory
 
