@@ -1064,6 +1064,12 @@ namespace sci
 	{
 		return Physical<RootedEncodedUnit<T, ROOT>>(std::pow(base.value<T>(), 1.0/double(ROOT)));
 	}
+	//This version undoes a powered unit
+	template <int ROOT, class T>
+	Physical<T> root(const Physical<PoweredEncodedUnit<T, ROOT>> &base)
+	{
+		return Physical<T>(std::pow(base.value<PoweredEncodedUnit<T, ROOT>>(), 1.0 / double(ROOT)));
+	}
 	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
 	template <int ROOT>
 	Physical<Unitless> root(const Physical<Unitless> &base)
@@ -1176,6 +1182,18 @@ namespace sci
 	Physical<T> abs(const Physical<T> &value)
 	{
 		return Physical<T>(std::abs(value.value<T>()));
+	}
+
+	//Only really makes sense to floor a unitless
+	inline Physical<Unitless> floor(const Physical<Unitless> &value)
+	{
+		return Physical<Unitless>(std::floor(value.value<Unitless>()));
+	}
+
+	//Only really makes sense to ceil a unitless
+	inline Physical<Unitless> ceil(const Physical<Unitless> &value)
+	{
+		return Physical<Unitless>(std::ceil(value.value<Unitless>()));
 	}
 
 
