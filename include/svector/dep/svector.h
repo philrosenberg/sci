@@ -64,7 +64,13 @@ namespace sci
 {
 	size_t randInt(size_t maxVal);
 	double round(double n);
-	double linearinterpolate(double x, double x1, double x2, double y1, double y2);
+
+	template<class T, class U>
+	U linearinterpolate(T x, T x1, T x2, U y1, U y2)
+	{
+		auto m = (y1 - y2) / (x1 - x2);
+		return m * (x - x1) + y1;
+	}
 	
 	//enumeration of base types
 	enum basetype
@@ -2101,28 +2107,33 @@ namespace sci
 	// otherwise empty vectors will be returned
 	void logspace(double xstart, double xinterval, std::vector<double> y, double newxinterval, double newxbase, std::vector<double> &logspacex, std::vector<double> &logspacey);
 
-	template <class T>
-	T integrate(const std::vector<T> &x, const std::vector<T> &y)
+	template <class T, class U>
+	auto integrate(const std::vector<T> &x, const std::vector<U> &y) -> decltype((x[0] - x[0])*y[0])
 	{
-		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
-		if(x.size()==0) return 0;
-		T result=0;
-		typename std::vector<T>::const_iterator yi=y.begin()+1;
+		typedef decltype((x[0] - x[0])*y[0]) returnType;
+		if(x.size()!=y.size())
+			return std::numeric_limits<returnType>::quiet_NaN();
+		if(x.size()==0)
+			return returnType(0);
+		returnType result(0);
+		typename std::vector<U>::const_iterator yi=y.begin()+1;
 		for(typename std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi)
 		{
 			result+=(*yi+*(yi-1))*(*xi-*(xi-1));
 			++yi;
 		}
-		result*=0.5;
+		result*=TypeTraits<returnType>::unitlessType(0.5);
 		return result;
 	}
 
-		template <class T>
-	T integrate(const std::vector<T> &x, const std::vector<T> &y, T minx, T maxx)
+	template <class T, class U>
+	auto integrate(const std::vector<T> &x, const std::vector<U> &y, T minx, T maxx) -> decltype((x[0] - x[0])*y[0])
 	{
-		if(x.size()!=y.size()) return std::numeric_limits<T>::quiet_NaN();
-		T result=0;
-		typename std::vector<T>::const_iterator yi=y.begin()+1;
+		typedef decltype((x[0] - x[0])*y[0]) returnType;
+		if(x.size()!=y.size())
+			return std::numeric_limits<returnType>::quiet_NaN();
+		returnType result(0);
+		typename std::vector<U>::const_iterator yi=y.begin()+1;
 		bool swappedLimits = false;
 		if( maxx < minx )
 		{
@@ -2133,26 +2144,16 @@ namespace sci
 		{
 			T x0=*(xi-1);
 			T x1=*xi;
-			T y0=*(yi-1);
-			T y1=*yi;
-			if(x1 && x0 < minx)
+			U y0=*(yi-1);
+			U y1=*yi;
+			if(x1 < minx)
 				continue;
-			if(x1 && x0 > maxx)
+			if(x0 > maxx)
 				continue;
 			if(x0<minx)
 			{
 				y0=sci::linearinterpolate(minx,x0,x1,y0,y1);
 				x0=minx;
-			}
-			if(x1<minx)
-			{
-				y1=sci::linearinterpolate(minx,x0,x1,y0,y1);
-				x1=minx;
-			}
-			if(x0>maxx)
-			{
-				y0=sci::linearinterpolate(maxx,x0,x1,y0,y1);
-				x0=maxx;
 			}
 			if(x1>maxx)
 			{
@@ -2162,9 +2163,9 @@ namespace sci
 
 			result+=(y0+y1)*(x1-x0);
 		}
-		result*=0.5;
-		if(swappedLimits)
-			result*=-1.0;
+		result*=TypeTraits<returnType>::unitless(0.5);
+		if (swappedLimits)
+			return -result;
 		return result;
 	}
 
@@ -2188,13 +2189,13 @@ namespace sci
 		deltaintegral=0.5*sqrt(deltaintegral);
 	}
 
-	template <class T>
-	T integrate(const std::vector<T> &data, T interval)
+	template <class T, class U>
+	auto integrate(const std::vector<T> &data, T interval) -> decltype(data[0]*interval)
 	{
-		T result=0;
-		for(typename std::vector<T>::const_iterator datai=data.begin()+1; datai!=data.end(); ++datai) result+=(*datai+*(datai-1));
-		result*=interval*0.5;
-		return result;
+		T sum(0);
+		for(typename std::vector<T>::const_iterator datai=data.begin()+1; datai!=data.end(); ++datai)
+			sum+=(*datai+*(datai-1));
+		return sum * interval * TypeTraits<decltype(data[0] * interval)>::unitless(0.5);
 	}
 
 	template <class T>

@@ -861,12 +861,6 @@ size_t sci::fitnonlinear(std::vector<double> &tunableparams, std::vector<double>
 	
 
 
-double sci::linearinterpolate(double x, double x1, double x2, double y1, double y2)
-{
-	double m=(y1-y2)/(x1-x2);
-	double y=m*(x-x1)+y1;
-	return y;
-}
 /*
 std::vector< std::vector<double> > sci::inverse(const std::vector< std::vector<double> > &mat, double conditionNumberLimit)
 {
