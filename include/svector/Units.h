@@ -1192,6 +1192,7 @@ namespace sci
 	{
 		typedef Physical<Unitless> unitlessType;
 		static unitlessType unitless(size_t v) { return unitlessType(double(v)); }
+		static unitlessType unitless(double v) { return unitlessType(double(v)); }
 		static auto sqrt(const Physical<T> &v) ->decltype(sqrt(v)) { return sci::sqrt(v); }
 	};
 
