@@ -450,7 +450,7 @@ namespace sci
 	std::vector<T> InputNcFile::getVariable(const sci::string &name, std::vector<size_t> &shape)
 	{
 		int varId;
-		checkNcCall(nc_inq_varid(getId(), name.c_str(), &varId));
+		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
 		int nDims;
 		checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
 		size_t nValues = 1;
