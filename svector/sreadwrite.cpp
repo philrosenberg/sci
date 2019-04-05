@@ -211,7 +211,7 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 		}
 		if(type[i]==rt_string)
 		{
-			text[datadest[i]].push_back(splitstring[i]);
+			text[textdest[i]].push_back(splitstring[i]);
 		}
 	}
 	//resize the results in case ncols was less than type.size()
@@ -237,7 +237,7 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 			}
 			if(type[i]==rt_string)
 			{
-				text[datadest[i]].push_back(splitstring[i]);
+				text[textdest[i]].push_back(splitstring[i]);
 			}
 		}
 		//set the data size to zero
@@ -262,7 +262,7 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 			}
 			if(type[i]==rt_string)
 			{
-				text[datadest[i]].push_back(splitstring[i]);
+				text[textdest[i]].push_back(splitstring[i]);
 			}
 		}
 	}
