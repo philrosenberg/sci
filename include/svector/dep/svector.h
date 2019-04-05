@@ -2140,6 +2140,8 @@ namespace sci
 			std::swap( minx, maxx );
 			swappedLimits = true;
 		}
+		sci::assertThrow(minx >= x[0], sci::err(sci::SERR_VECTOR, 0, sU("sci::integrate called with a min bound outside the data range.")));
+		sci::assertThrow(maxx <= x.back(), sci::err(sci::SERR_VECTOR, 0, sU("sci::integrate called with a max bound outside the data range.")));
 		for(typename std::vector<T>::const_iterator xi=x.begin()+1; xi!=x.end(); ++xi,++yi)
 		{
 			T x0=*(xi-1);
