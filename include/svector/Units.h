@@ -322,6 +322,25 @@ namespace sci
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
+		template <class T>
+		static double convertTo(double value)
+		{
+			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+			//At this point we know both base powers are the same, but we don't know if the from
+			//unit is a derived type. However, it's base type must be this, so we can call its
+			//convertFromBase method to to do the actual conversion.
+			return T::convertFromBase<exponent>(value*std::pow(ENCODEDUNIT::convertTo<ENCODEDUNIT::baseClass>(1.0), POW));
+		}
+		template <>
+		static double convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(double value)
+		{
+			return value;
+		}
+		template <int64_t BASE_EXPONENT>
+		static double convertFromBase(double value)
+		{
+			return value*std::pow(ENCODEDUNIT::convertFromBase<0>(1.0),POW)*sci::pow10<(BASE_EXPONENT-exponent)>();
+		}
 	};
 
 	//This is a class that represents an encoded unit rooted. It is still an EncodedUnit
@@ -334,6 +353,25 @@ namespace sci
 			static_assert(false, "Error - need to write code to do this for roots.");
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
+		template <class T>
+		static double convertTo(double value)
+		{
+			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+			//At this point we know both base powers are the same, but we don't know if the from
+			//unit is a derived type. However, it's base type must be this, so we can call its
+			//convertFromBase method to to do the actual conversion.
+			return T::convertFromBase<exponent>(value*std::pow(ENCODEDUNIT::convertTo<ENCODEDUNIT::baseClass>(1.0), 1.0/double(ROOT)));
+		}
+		template <>
+		static double convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(double value)
+		{
+			return value;
+		}
+		template <int64_t BASE_EXPONENT>
+		static double convertFromBase(double value)
+		{
+			return value * std::pow(ENCODEDUNIT::convertFromBase<0>(1.0), 1.0/double(ROOT))*sci::pow10<(BASE_EXPONENT - exponent)>();
+		}
 	};
 
 	//This is a class that represents two encoded units multiplied together. It is still an EncodedUnit
@@ -341,9 +379,28 @@ namespace sci
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
 	struct MultipliedEncodedUnit : public EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent>
 	{
+		typedef MultipliedEncodedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return ENCODEDUNIT1::getShortRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getShortRepresentation(exponentPrefix, exponentSuffix);
+		}
+		template <class T>
+		static double convertTo(double value)
+		{
+			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+			//Convert the value to the ENCODEDUNIT1::baseType and multiple by 1 converted to ENCODEDUNIT2::baseType, then call convertFromBase
+			return T::convertFromBase<exponent>(ENCODEDUNIT1::convertTo<ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::convertTo<ENCODEDUNIT2::baseClass>(1.0));
+		}
+		template <>
+		static double convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(double value)
+		{
+			return value;
+		}
+		template <int64_t BASE_EXPONENT>
+		static double convertFromBase(double value)
+		{
+			//Use each encodedUnit's convert from base function. The first one uses the exponent and the value, the second uses 1
+			return ENCODEDUNIT1::convertFromBase<BASE_EXPONENT>(value)*ENCODEDUNIT2::convertFromBase<0>(1.0);
 		}
 	};
 
@@ -352,6 +409,7 @@ namespace sci
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
 	struct DividedEncodedUnit : public MultipliedEncodedUnit<ENCODEDUNIT1, PoweredEncodedUnit<ENCODEDUNIT2, -1> >
 	{
+
 	};
 
 	//The base SI units, plus a couple of derived ones
