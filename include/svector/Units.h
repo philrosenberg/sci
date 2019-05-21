@@ -311,6 +311,11 @@ namespace sci
 		{
 			return basePowers == 0;
 		}
+		template<class OTHER_UNIT>
+		static constexpr bool compatibleWith()
+		{
+			return basePowers == OTHER_UNIT::basePowers;
+		}
 	};
 
 	//This is a class that represents an encoded unit to a power. It is still an EncodedUnit
@@ -944,6 +949,11 @@ namespace sci
 		double value<Physical<ENCODED_UNIT>>() const
 		{
 			return m_v;
+		}
+		template<class OTHER>
+		static constexpr bool compatibleWith()
+		{
+			return ENCODED_UNIT::basePowers == OTHER::unit::basePowers;
 		}
 	private:
 		double m_v;
