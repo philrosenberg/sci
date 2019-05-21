@@ -1190,6 +1190,19 @@ namespace sci
 		return Physical<Unitless>(std::log2(value.value<Unitless>()));
 	}
 
+	template <class T>
+	Physical<Unitless> ln(const Physical<T> &value)
+	{
+		return log(value);
+	}
+
+	template <class T>
+	Physical<Unitless> exp(const Physical<T> &value)
+	{
+		static_assert(T::isUnitless(), "We can only take the exponent of a dimensionless quantity.");
+		return Physical<Unitless>(std::exp(value.value<Unitless>()));
+	}
+
 
 	template <class T>
 	Physical<Radian<>> asin(const Physical<T> &value)
