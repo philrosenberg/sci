@@ -177,7 +177,7 @@ protected:
 };
 
 
-template<class T, class U>
+template<class X_UNIT, class Y_UNIT>
 class PhysicalPlotData
 {
 public:
@@ -192,7 +192,7 @@ public:
 			closeBrace = sU("}");
 		else if (closeBrace == sU("<"))
 			closeBrace = sU(">");
-		return brace + sci::Physical<T>::getShortUnitString(sU("#u"), sU("#d")) + closeBrace;
+		return brace + X_UNIT::getShortRepresentation(sU("#u"), sU("#d")) + closeBrace;
 	}
 	sci::string getYAxisUnits(sci::string brace = sU("(")) const
 	{
@@ -205,10 +205,10 @@ public:
 			closeBrace = sU("}");
 		else if (closeBrace == sU("<"))
 			closeBrace = sU(">");
-		return brace + sci::Physical<U>::getShortUnitString(sU("#u"), sU("#d")) + closeBrace;
+		return brace + Y_UNIT::getShortRepresentation(sU("#u"), sU("#d")) + closeBrace;
 	}
-	typedef T xUnitType;
-	typedef U yUnitType;
+	typedef X_UNIT xUnitType;
+	typedef Y_UNIT yUnitType;
 };
 
 class PlotData2dLinear : public PlotData1d
@@ -274,8 +274,8 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalLineData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public LineData
 {
 public:
-	PhysicalLineData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), lineStyle, transformer)
+	PhysicalLineData(const std::vector<sci::Physical<IN_X_UNIT, double>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT,double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), lineStyle, transformer)
 	{
 	}
 };
@@ -293,8 +293,8 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public PointData
 {
 public:
-	PhysicalPointData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), symbol, transformer)
+	PhysicalPointData(const std::vector<sci::Physical<IN_X_UNIT, double>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, double>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), symbol, transformer)
 	{
 	}
 };
@@ -378,8 +378,8 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class IN_Z_UNIT, class TR_X_UNIT = I
 class PhysicalGridData : public PhysicalPlotData<TR_X_UNIT,TR_Y_UNIT>, public GridData
 {
 public:
-	PhysicalGridData(const std::vector<sci::Physical<IN_X_UNIT>> &xs, const std::vector<sci::Physical<IN_Y_UNIT>> &ys, const std::vector<std::vector<sci::Physical<IN_Z_UNIT>>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0)
-		:GridData(sci::physicalsToValues<sci::Physical<IN_X_UNIT>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT>>(ys), sci::physicalsToValues<sci::Physical<IN_Z_UNIT>>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
+	PhysicalGridData(const std::vector<sci::Physical<IN_X_UNIT, double>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, double>> &ys, const std::vector<std::vector<sci::Physical<IN_Z_UNIT, double>>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0)
+		:GridData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), sci::physicalsToValues<sci::Physical<IN_Z_UNIT, double>>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
 	{
 	}
 };

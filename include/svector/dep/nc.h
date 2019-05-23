@@ -45,10 +45,10 @@ namespace sci_internal
 	{
 		const static nc_type ncType = NC_DOUBLE;
 	};
-	template <class T>
-	struct NcTraits<sci::Physical<T>>
+	template <class T, class VALUE_TYPE>
+	struct NcTraits<sci::Physical<T, VALUE_TYPE>>
 	{
-		const static nc_type ncType = NC_DOUBLE;
+		const static nc_type ncType = NcTraits<VALUE_TYPE>::ncType;
 	};
 
 	template<nc_type I>
@@ -322,18 +322,34 @@ namespace sci
 	};
 
 	template<class T>
-	class NcVariable<Physical<T>> : public NcVariable<double>
+	class NcVariable<Physical<T, double>> : public NcVariable<double>
 	{
 	public:
 		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension) : NcVariable<double>(name, ncFile, dimension) {}
 		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions) : NcVariable<double>(name, ncFile, dimensions) {}
 		NcVariable(NcVariable &&) = default;
 		template<class U>
-		static std::vector<double> flattenData(const std::vector<Physical<U>> &data) { return sci::physicalsToValues<sci::Physical<T>>(data); }
+		static std::vector<double> flattenData(const std::vector<Physical<U, double>> &data) { return sci::physicalsToValues<sci::Physical<T, double>>(data); }
 		template<class U>
 		static::std::vector<double> flattenData(const std::vector<std::vector<U>> &data)
 		{
-			return NcVariable<double>::flattenData(sci::physicalsToValues<sci::Physical<T>>(data));
+			return NcVariable<double>::flattenData(sci::physicalsToValues<sci::Physical<T, double>>(data));
+		}
+	};
+
+	template<class T>
+	class NcVariable<Physical<T, float>> : public NcVariable<float>
+	{
+	public:
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension) : NcVariable<float>(name, ncFile, dimension) {}
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions) : NcVariable<float>(name, ncFile, dimensions) {}
+		NcVariable(NcVariable &&) = default;
+		template<class U>
+		static std::vector<float> flattenData(const std::vector<Physical<U, float>> &data) { return sci::physicalsToValues<sci::Physical<T, float>>(data); }
+		template<class U>
+		static::std::vector<float> flattenData(const std::vector<std::vector<U>> &data)
+		{
+			return NcVariable<float>::flattenData(sci::physicalsToValues<sci::Physical<T, float>>(data));
 		}
 	};
 

@@ -130,7 +130,7 @@ void sci::UtcTime::set(std::tm time, double secondFraction)
 sci::TimeInterval sci::operator-(const sci::UtcTime &t1, const sci::UtcTime &t2)
 {
 	//set up this way so that it should avoid rounding errors for very small time differences a long way from 1st Jan 1970
-	return sci::TimeInterval(t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch) + sci::TimeInterval(t1.m_secondFraction - t2.m_secondFraction);
+	return sci::TimeInterval(double(t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch)) + sci::TimeInterval(t1.m_secondFraction - t2.m_secondFraction);
 }
 
 sci::UtcTime sci::operator+(const sci::UtcTime &time, const sci::TimeInterval &interval)

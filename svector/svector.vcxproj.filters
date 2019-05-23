@@ -194,5 +194,8 @@
     <ClInclude Include="..\include\svector\splot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\Traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

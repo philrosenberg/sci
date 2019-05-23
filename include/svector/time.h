@@ -6,7 +6,7 @@
 namespace sci
 {
 	class UtcTime;
-	typedef sci::Physical<Second<>> TimeInterval;
+	typedef sci::Physical<Second<>, double> TimeInterval;
 
 	sci::TimeInterval operator-(const sci::UtcTime &t1, const sci::UtcTime &t2);
 	sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interval);
