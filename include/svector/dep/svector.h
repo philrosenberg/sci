@@ -1188,7 +1188,7 @@ namespace sci
 			sum+=(*vi-meanval)*(*vi-meanval) * *weighti;
 			weight += *weighti;
 		}
-		return result/weight;
+		return sum/weight;
 	}
 
 	template<class T>
