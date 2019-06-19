@@ -2570,7 +2570,10 @@ namespace sci
 			return;
 		}
 		sci::setallvalues(counts,0);
-		sci::resize(counts,nlimits+(size_t)1);
+		std::vector<size_t> sizes = nlimits;
+		for (size_t i = 0; i < sizes.size(); ++i)
+			sizes[i] += 1;
+		sci::resize(counts,sizes);
 		//copy the sizes into a T vector
 		std::vector<T> nlimitsd(nlimits.size());
 		for(size_t i=0; i<nlimits.size(); ++i) nlimitsd[i]=(T)nlimits[i];
