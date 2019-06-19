@@ -231,7 +231,7 @@ namespace sci
 			//simply grab each one in turn
 
 			//resize our output to hold the correct number of variables
-			vars.resize(sci::max<size_t>(indices + size_t(1)));
+			vars.resize(sci::max<size_t>(indices) + size_t(1));
 			for (size_t i = 0; i < varlist.size(); ++i)
 			{
 				vars[indices[i]] = file.getVariable<T>(varlist[i]); 
