@@ -1,6 +1,11 @@
 #ifndef sstring_h
 #define sstring_h
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#define MUSTUNDEFNOMINMAX
+#endif
+
 //#include"svector.h"
 #include<string>
 #include<sstream>
@@ -129,6 +134,9 @@ namespace sci
 	sci::string fromWxString(const wxString &string);
 }
 
+#ifdef MUSTUNDEFNOMINMAX
+#undef NOMINMAX
+#endif
 
 #endif
 	

@@ -1,6 +1,12 @@
 #ifndef svectormath_h
 #define svectormath_h
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#define MUSTUNDEFNOMINMAX
+#endif
+
+
 #include<cmath>
 #include<vector>
 #include<utility>
@@ -573,4 +579,10 @@ namespace sci{
 	}
 
 }
+
+
+#ifdef MUSTUNDEFNOMINMAX
+#undef NOMINMAX
+#endif
+
 #endif

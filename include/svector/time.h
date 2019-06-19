@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#define MUSTUNDEFNOMINMAX
+#endif
+
 #include <ctime>
 #include "Units.h"
 
@@ -55,3 +60,7 @@ namespace sci
 		void set(std::tm time, double secondFraction);
 	};
 }
+
+#ifdef MUSTUNDEFNOMINMAX
+#undef NOMINMAX
+#endif
