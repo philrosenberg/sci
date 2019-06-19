@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+#include<cmath>
 namespace sci
 {
 	template<class T>
@@ -43,7 +44,7 @@ namespace sci
 		typedef T unitlessType;
 		static unitlessType unitless(size_t v) { return unitlessType(v); }
 		static unitlessType unitless(double v) { return unitlessType(v); }
-		static auto sqrt(const T &v) ->decltype(std::sqrt(v)) { return std::sqrt(v) }
+		static auto sqrt(const T &v) ->decltype(std::sqrt(v)) { return std::sqrt(v); }
 	};
 
 	template<class T, class U>
