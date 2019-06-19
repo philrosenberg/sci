@@ -18,12 +18,12 @@ namespace sci_internal
 	template <>
 	struct NcTraits<int8_t>
 	{
-		const static nc_type ncType = NC_BYTE;
+		const static nc_type ncType = NC_CHAR;
 	};
 	template <>
 	struct NcTraits<uint8_t>
 	{
-		const static nc_type ncType = NC_CHAR;
+		const static nc_type ncType = NC_BYTE;
 	};
 	template <>
 	struct NcTraits<int16_t>
