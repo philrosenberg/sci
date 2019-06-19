@@ -268,6 +268,15 @@ namespace sci
 			encodePower<decodePower<VALUE, 7>() / ROOT, 7>();
 	}
 
+	//Hopefully these make raising 10 to the power zero get
+	//determined at compile time as it will be a common operation
+	//when adding and subtracting
+	template <int pow, class VALUE_TYPE>
+	constexpr VALUE_TYPE pow10()
+	{
+		return pow == 0 ? VALUE_TYPE(1) : std::pow(VALUE_TYPE(10), pow);
+	}
+
 	//This is the basic class that represents a unit. It takes two templated parameters
 	//The first is the powers. This is an encoded 64 bit number where the first byte is
 	//the power in the first dimension, the second byte is the power in the second
@@ -288,11 +297,11 @@ namespace sci
 			template <class T>
 			static VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+				static_assert(basePowers == T::unit::basePowers, "Cannot convert between units with different powers or dimensions.");
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
-				return T::Converter<VALUE_TYPE>::convertFromBase<EXPONENT>(value);
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<EXPONENT>(value);
 			}
 			template <>
 			static VALUE_TYPE convertTo <EncodedUnit<BASE_POWERS, EXPONENT>>(VALUE_TYPE value)
@@ -338,11 +347,11 @@ namespace sci
 			template <class T>
 			static VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+				static_assert(EncodedUnit::basePowers == T::unit::basePowers, "Cannot convert between units with different powers or dimensions.");
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
-				return T::Converter<VALUE_TYPE>::convertFromBase<exponent>(value*std::pow(ENCODEDUNIT::Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<EncodedUnit::exponent>(value*std::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
 			}
 			template <>
 			static VALUE_TYPE convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(VALUE_TYPE value)
@@ -352,7 +361,7 @@ namespace sci
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
-				return value * std::pow(ENCODEDUNIT::Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), POW)*sci::pow10<(BASE_EXPONENT - exponent), VALUE_TYPE>();
+				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), POW)*sci::pow10<(BASE_EXPONENT - EncodedUnit::exponent), VALUE_TYPE>();
 			}
 		};
 	};
@@ -365,7 +374,7 @@ namespace sci
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			static_assert(false, "Error - need to write code to do this for roots.");
-			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
+			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, -ROOT);
 		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid haveing to partial specialize them
@@ -373,11 +382,11 @@ namespace sci
 			template <class T>
 			static VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+				static_assert(EncodedUnit::basePowers == T::unit::basePowers, "Cannot convert between units with different powers or dimensions.");
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
-				return T::Converter<VALUE_TYPE>::convertFromBase<exponent>(value*std::pow(ENCODEDUNIT::Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
+				return T::template Converter<VALUE_TYPE>::convertFromBase<EncodedUnit::exponent>(value*std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
 			}
 			template <>
 			static VALUE_TYPE convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(VALUE_TYPE value)
@@ -387,7 +396,7 @@ namespace sci
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
-				return value * std::pow(ENCODEDUNIT::Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT))*sci::pow10<(BASE_EXPONENT - exponent)>();
+				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT))*sci::pow10<(BASE_EXPONENT - EncodedUnit::exponent)>();
 			}
 		};
 	};
@@ -409,9 +418,9 @@ namespace sci
 			template <class T>
 			static VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");
+				static_assert(EncodedUnit::basePowers == T::unit::basePowers, "Cannot convert between units with different powers or dimensions.");
 				//Convert the value to the ENCODEDUNIT1::baseType and multiple by 1 converted to ENCODEDUNIT2::baseType, then call convertFromBase
-				return T::Converter<VALUE_TYPE>::convertFromBase<exponent>(ENCODEDUNIT1::Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT2::baseClass>(1.0));
+				return T::template Converter<VALUE_TYPE>::convertFromBase<EncodedUnit::exponent>(ENCODEDUNIT1::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT2::baseClass>(1.0));
 			}
 			template <>
 			static VALUE_TYPE convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(VALUE_TYPE value)
@@ -422,7 +431,7 @@ namespace sci
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
 				//Use each encodedUnit's convert from base function. The first one uses the exponent and the value, the second uses 1
-				return ENCODEDUNIT1::Converter<VALUE_TYPE>::convertFromBase<BASE_EXPONENT>(value)*ENCODEDUNIT2::Converter<VALUE_TYPE>::convertFromBase<0>(1.0);
+				return ENCODEDUNIT1::template Converter<VALUE_TYPE>::convertFromBase<BASE_EXPONENT>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::convertFromBase<0>(1.0);
 			}
 		};
 	};
@@ -792,7 +801,7 @@ namespace sci
 			static VALUE_TYPE convertTo(VALUE_TYPE value)\
 			{\
 				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
-				return T::Converter<VALUE_TYPE>::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
+				return T::template Converter<VALUE_TYPE>::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
 			}\
 			template <>\
 			static VALUE_TYPE convertTo <unit>(VALUE_TYPE value)\
@@ -853,46 +862,6 @@ namespace sci
 
 
 
-
-	template < class ENCODED_UNIT, class VALUE_TYPE >
-	class Physical;
-
-	//This class permits conversion to be performed by Physical.value<T>(), whether
-	//<T> is a Physical or a unit.
-	template<class FROM, class TO, class VALUE_TYPE>
-	struct UnitConverter
-	{
-		static VALUE_TYPE convert(VALUE_TYPE value)
-		{
-			return FROM::Converter<VALUE_TYPE>::convertTo<TO>(value);
-		}
-	};
-	//specialization when TO is a Physical
-	template<class FROM, class TO, class TO_VALUE_TYPE>
-	struct UnitConverter<FROM, Physical<TO, TO_VALUE_TYPE>, TO_VALUE_TYPE>
-	{
-		static TO_VALUE_TYPE convert(TO_VALUE_TYPE value)
-		{
-			return FROM::Converter<TO_VALUE_TYPE>::convertTo<TO>(value);
-		}
-	};
-	template<class FROM, class FROM_VALUE_TYPE, class TO>
-	struct UnitConverter<Physical<FROM, FROM_VALUE_TYPE>, TO, FROM_VALUE_TYPE>
-	{
-		static FROM_VALUE_TYPE convert(FROM_VALUE_TYPE value)
-		{
-			return FROM::Converter<FROM_VALUE_TYPE>::convertTo<TO>(value);
-		}
-	};
-	template<class FROM, class FROM_VALUE_TYPE, class TO, class TO_VALUE_TYPE>
-	struct UnitConverter<Physical<FROM, FROM_VALUE_TYPE>, Physical<TO, TO_VALUE_TYPE>, typename std::common_type<TO_VALUE_TYPE,FROM_VALUE_TYPE>::type>
-	{
-		typedef typename std::common_type<TO_VALUE_TYPE, FROM_VALUE_TYPE>::type valueType;
-		static typename valueType convert(typename valueType value)
-		{
-			return FROM::Converter<typename valueType>::convertTo<TO>(value);
-		}
-	};
 
 
 	template < class ENCODED_UNIT, class VALUE_TYPE>
@@ -970,9 +939,8 @@ namespace sci
 		template <class REQUIRED>
 		VALUE_TYPE value() const
 		{
-			//this should work whether REQUIRED is a Physical or an Encoded Unit - the converter
-			//struct deals with both types
-			return UnitConverter<ENCODED_UNIT, REQUIRED, VALUE_TYPE>::convert(m_v);
+			//this should work whether REQUIRED is a Physical or an Encoded Unit
+			return ENCODED_UNIT::template Converter<VALUE_TYPE>::convertTo<REQUIRED::unit>(m_v);
 		}
 		template <>
 		VALUE_TYPE value<ENCODED_UNIT>() const
@@ -993,30 +961,43 @@ namespace sci
 		VALUE_TYPE m_v;
 	};
 
+	namespace unitsPrivate
+	{
+		//This is used to get the value of a Physical with a different prefix, e.g. if you have
+		//a physical as mm, you can use it to get the value in km
+		template<class REQUIRED_UNIT, class IN_PHYSICAL, class OUT_VALUE_TYPE>
+		OUT_VALUE_TYPE physicalsToValues(const IN_PHYSICAL &physical, const OUT_VALUE_TYPE &dummy)
+		{
+			return (OUT_VALUE_TYPE)physical.value<REQUIRED_UNIT>();
+		}
+		//This is used to get the value of a vector of Physical with a different prefix, e.g. if you have
+		//a vector of Physical as mm, you can use it to get the values in km
+		template<class REQUIRED_UNIT, class U, class OUT_VALUE_TYPE>
+		auto physicalsToValues(const std::vector<U> &physicals, const OUT_VALUE_TYPE &dummy) -> std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))>
+		{
+			std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))> result(physicals.size());
+			for (size_t i = 0; i < result.size(); ++i)
+				result[i] = physicalsToValues<REQUIRED_UNIT>(physicals[i], dummy);
+			return result;
+		}
+	}
+
 	//This is used to get the value of a Physical with a different prefix, e.g. if you have
 	//a physical as mm, you can use it to get the value in km
-	template<class REQUIRED_UNIT, class U>
-	typename U::valueType physicalsToValues(const U &physical)
+	template<class REQUIRED_UNIT, class IN_PHYSICAL, class OUT_VALUE_TYPE= IN_PHYSICAL::valueType>
+	OUT_VALUE_TYPE physicalsToValues(const IN_PHYSICAL &physical)
 	{
-		return physical.value<REQUIRED_UNIT>();
+		return (OUT_VALUE_TYPE)physical.value<REQUIRED_UNIT>();
 	}
 	//This is used to get the value of a vector of Physical with a different prefix, e.g. if you have
 	//a vector of Physical as mm, you can use it to get the values in km
-	template<class REQUIRED_UNIT, class U>
-	auto physicalsToValues(const std::vector<U> &physicals) -> std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0]))>
+	template<class REQUIRED_UNIT, class U, class OUT_VALUE_TYPE= sci::VectorTraits<U>::baseType::valueType>
+	auto physicalsToValues(const std::vector<U> &physicals) -> std::vector<decltype(unitsPrivate::physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))>
 	{
-		std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0]))> result(physicals.size());
+		std::vector<decltype(unitsPrivate::physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))> result(physicals.size());
+		OUT_VALUE_TYPE dummy;
 		for (size_t i = 0; i < result.size(); ++i)
-			result[i] = physicals[i].value<REQUIRED_UNIT>();
-		return result;
-	}
-
-	template<class REQUIRED_UNIT, class U>
-	auto physicalsToValues(const std::vector<std::vector<U>> &physicals) -> std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0]))>
-	{
-		std::vector<decltype(physicalsToValues<REQUIRED_UNIT>(physicals[0]))> result(physicals.size());
-		for (size_t i = 0; i < result.size(); ++i)
-			result[i] = physicalsToValues<REQUIRED_UNIT>(physicals[i]);
+			result[i] = unitsPrivate::physicalsToValues<REQUIRED_UNIT>(physicals[i], dummy);
 		return result;
 	}
 
@@ -1032,15 +1013,6 @@ namespace sci
 	Physical<DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return Physical <DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.value<T>() / second.value<U>());
-	}
-
-	//Hopefully these make raising 10 to the power zero get
-	//determined at compile time as it will be a common operation
-	//when adding and subtracting
-	template <int pow, class VALUE_TYPE>
-	constexpr VALUE_TYPE pow10()
-	{
-		return pow==0 ? VALUE_TYPE(1) : std::pow(VALUE_TYPE(10), pow);
 	}
 
 	//+ operator
@@ -1358,7 +1330,7 @@ std::ostream & operator<< (std::ostream &stream, const sci::Physical<T, V> &phys
 }
 
 template<class T, class V>
-std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t>, sci::Physical<T, V> &physical)
+std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t> &stream, sci::Physical<T, V> &physical)
 {
 	V temp;
 	stream >> temp;
