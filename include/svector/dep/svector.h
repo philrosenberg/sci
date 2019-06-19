@@ -1,6 +1,10 @@
 #ifndef svector_h
 #define svector_h
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#define MUSTUNDEFNOMINMAX
+#endif
 
 //2*M_PI
 #define M_2PI     6.28318530717958647692
@@ -3335,5 +3339,8 @@ namespace sci
 }
 
 
+#ifdef MUSTUNDEFNOMINMAX
+#undef NOMINMAX
+#endif
 
 #endif
