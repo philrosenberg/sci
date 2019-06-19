@@ -505,14 +505,14 @@ sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 	memcpy(m_values, utf8String.data(), m_nBytes);
 }
 
-sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<sci::string> &value)
+sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<sci::string> &value, const sci::string &separator)
 {
 	m_name = name;
 	sci::ostringstream stream;
 	if (value.size() > 0)
 		stream << value[0];
 	for (size_t i = 1; i < value.size(); ++i)
-		stream << sU(", ") << value[i];
+		stream << separator << value[i];
 	std::string utf8String = sci::toUtf8(stream.str());
 	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;

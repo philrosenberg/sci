@@ -132,7 +132,7 @@ namespace sci
 		NcAttribute(const sci::string& name, std::vector<T> values, const WRITETYPE &);
 		NcAttribute(const sci::string& name, sci::string value);
 		NcAttribute(const sci::string& name, const char16_t *value);
-		NcAttribute(const sci::string& name, const std::vector<sci::string> &value);
+		NcAttribute(const sci::string& name, const std::vector<sci::string> &value, const sci::string &separator=sU(", "));
 		NcAttribute(const sci::string& name, const std::vector<const char16_t *> &value);
 		~NcAttribute()
 		{
