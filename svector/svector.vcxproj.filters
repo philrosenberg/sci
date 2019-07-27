@@ -22,6 +22,12 @@
     <Filter Include="Source Files\kiss_fft">
       <UniqueIdentifier>{f95e3320-0d48-4533-a6dd-ea57099504b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\eigeneng">
+      <UniqueIdentifier>{a1a9569f-40b5-4218-8480-2df78e2be56b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\eigeneng">
+      <UniqueIdentifier>{e97a957f-a720-44cf-b3d6-5b03c5bdc771}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="operators.cpp">
@@ -86,6 +92,9 @@
     </ClCompile>
     <ClCompile Include="nc.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eigeneng\eigeng.c">
+      <Filter>Source Files\eigeneng</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +205,9 @@
     </ClInclude>
     <ClInclude Include="..\include\svector\Traits.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eigeneng\eigeneng.h">
+      <Filter>Header Files\eigeneng</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

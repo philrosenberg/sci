@@ -2955,8 +2955,8 @@ namespace sci
 
 	bool pointinpolygon(std::vector<double> polygonx, std::vector<double> polygony, double pointx, double pointy);
 	void intersect(double xline1point1, double yline1point1, double xline1point2, double yline1point2, double xline2point1, double yline2point1, double xline2point2, double yline2point2, double &intersectx, double &intersecty, double &m1, double &m2);
-	void eigenvalues(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary);
-	void eigenvector(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary, std::vector<std::vector<double>> &eigenvectors);
+	void eigenvalues( const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary);
+	void eigenvectors( const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary, std::vector<std::vector<double>> &eigenvectorsReal, std::vector<std::vector<double>> &eigenvectorsImaginary);
 
 
 	template<class T>

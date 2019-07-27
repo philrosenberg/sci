@@ -295,6 +295,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="eigeneng\eigeng.c" />
     <ClCompile Include="kiss_fft\kiss_fft.c" />
     <ClCompile Include="kiss_fft\kiss_fftr.c" />
     <ClCompile Include="memorymap.cpp" />
@@ -356,6 +357,7 @@
     <ClInclude Include="..\include\svector\undoable.h" />
     <ClInclude Include="..\include\svector\Units.h" />
     <ClInclude Include="..\include\svector\wgdos.h" />
+    <ClInclude Include="eigeneng\eigeneng.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
