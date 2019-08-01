@@ -194,6 +194,16 @@ std::vector<int8_t> sci::InputNcFile::getVariableFromId<int8_t>(int id, size_t n
 }
 
 template<>
+std::vector<char> sci::InputNcFile::getVariableFromId<char>(int id, size_t nValues)
+{
+	std::vector<char> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_var_text(getId(), id, &result[0]));
+
+	return result;
+}
+
+template<>
 std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues)
 {
 	std::vector<uint8_t> result(nValues);
@@ -277,6 +287,19 @@ int8_t sci::InputNcFile::getGlobalAttribute<int8_t>(const sci::string &name)
 
 	int8_t result;
 	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+
+	return result;
+}
+
+template<>
+uint8_t sci::InputNcFile::getGlobalAttribute<uint8_t>(const sci::string &name)
+{
+	size_t nValues;
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+
+	uint8_t result;
+	checkNcCall(nc_get_att_ubyte(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }

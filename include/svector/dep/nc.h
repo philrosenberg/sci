@@ -224,6 +224,8 @@ namespace sci
 	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues);
 	template<>
 	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues);
+	template<>
+	std::vector<char> InputNcFile::getVariableFromId<char>(int id, size_t nValues);
 
 
 	template<>
