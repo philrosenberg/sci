@@ -1466,7 +1466,7 @@ namespace sci
 		U result=std::numeric_limits<U>::quiet_NaN();
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		typename std::vector<T>::const_iterator vi=v.begin();
-		while (result!=result && vi!=v.end() && !(*vi>limit))
+		while ((*vi != *vi || !(*vi > limit)) && vi!=v.end())
 		{
 			++vi;
 		}
@@ -1506,7 +1506,7 @@ namespace sci
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
 		typename std::vector<T>::const_iterator vi=v.begin();
-		while (result!=result && vi!=v.end() &&!(*vi>=limit))
+		while ((*vi!=*vi || !(*vi >= limit)) && vi!=v.end())
 		{
 			++vi;
 		}
@@ -1547,7 +1547,7 @@ namespace sci
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
 		typename std::vector<T>::const_iterator vi=v.begin();
-		while (result!=result && vi!=v.end() && !(*vi<limit))
+		while ((*vi != *vi || !(*vi < limit)) && vi!=v.end())
 		{
 			++vi;
 		}
@@ -1587,7 +1587,7 @@ namespace sci
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
 		U result=std::numeric_limits<U>::quiet_NaN();
 		typename std::vector<T>::const_iterator vi=v.begin();
-		while (result!=result && vi!=v.end() && !(*vi<=limit))
+		while ((*vi != *vi || !(*vi <= limit)) && vi!=v.end())
 		{
 			++vi;
 		}
