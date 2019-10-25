@@ -1,6 +1,6 @@
 #pragma once
 #include<vector>
-#include<svector/sstring.h>
+#include"sstring.h"
 #include"Traits.h"
 namespace sci
 {
