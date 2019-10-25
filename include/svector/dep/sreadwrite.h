@@ -303,12 +303,12 @@ namespace sci
 				//even when var is multi dimensional and this code isn't called
 				//it will still compile
 				std::vector<A> *varPtr = (std::vector<A> *)((void*)&var); 
-				*varPtr = file.getVariable<A>(varname);
+				*varPtr = file.getVariable<A>(sci::fromCodepage(varname));
 			}
 			else
 			{
 				std::vector<size_t> shape;
-				tempvar = file.getVariable<A>(varname, shape);
+				tempvar = file.getVariable<A>(sci::fromCodepage(varname), shape);
 				sci::assertThrow(shape.size() == sci::ndims(var), sci::err(SERR_NC, -9999, "readncvariable called with a vector with a number of dimensions which does not match the number of dimensions of the variable in the netcdf file."));
 				sci::reshape(var, tempvar, shape);
 			}
@@ -338,7 +338,7 @@ namespace sci
 	{
 		try
 		{
-			sci::InputNcFile file(filename);
+			sci::InputNcFile file(sci::fromNativeUnicode(filename));
 			return readncvariable(file, varname, var, tempvar);
 		}
 		catch (...)
