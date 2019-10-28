@@ -205,58 +205,102 @@ void sci::logspace(double xstart, double xinterval, std::vector<double> y, doubl
 	}
 }
 
-/*void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept)
+void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept)
 {
-	double varm;
-	double varc;
-	double covar;
-	sci::fitstraightline(x,y,grad,intercept,varm,varc,covar);
+	sci::assertThrow(x.size() == y.size(), sci::err(sci::SERR_VECTOR, 0));
+	sci::assertThrow(x.size() > 1, sci::err(sci::SERR_VECTOR, 0));
+	double meanX;
+	double varX;
+	double meanY;
+	double covarXY;
+
+	meanX = sci::mean(x);
+	varX = sci::variancenobessel(x, meanX);
+	meanY = sci::mean(y);
+	covarXY = 0.0;
+	const double* xIter = &x[0];
+	const double* yIter = &y[0];
+	const double* xEnd = xIter + x.size();
+	for (; xIter != xEnd; ++xIter, ++yIter)
+	{
+		covarXY += (*xIter - meanX) * (*yIter - meanY);
+	}
+	covarXY /= (double)(y.size());
+
+	grad = covarXY / varX;
+	intercept = meanY - grad * meanX;
 }
+
+//fits a straight line, removing any outliers with residuals bigger than maxresiduals
+//This is performed one at a time, removing the worst residual then fitting to the
+//remaining data set
+//Returns the number of data points used in the fit
+size_t sci::fitstraightlinewithoutlierremoval(const std::vector<double>& x, const std::vector<double>& y, double& grad, double& intercept, double maxresidual)
+{
+	sci::assertThrow(x.size() > 1, sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with 1 or fewer x values."));
+	sci::assertThrow(x.size() == y.size(), sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with a different number of x and y values."));
+	std::vector<double> fitx = x;
+	std::vector<double> fity = y;
+	double maxresidualsquared = maxresidual * maxresidual;
+	fitstraightline(fitx, fity, grad, intercept);
+	std::vector<double> residualssquared = (sci::pow(fity - fitx * grad - intercept, 2));
+	size_t maxindex = indexofmax(residualssquared);
+	double thismaxresidualsquared = residualssquared[maxindex];
+	while (thismaxresidualsquared > maxresidualsquared)
+	{
+		fitx.erase(fitx.begin() + maxindex);
+		fity.erase(fity.begin() + maxindex);
+		fitstraightline(fitx, fity, grad, intercept);
+		residualssquared = (sci::pow(fity - fitx * grad - intercept, 2));
+		maxindex = indexofmax(residualssquared);
+		thismaxresidualsquared = residualssquared[maxindex];
+	}
+
+	return fitx.size();
+}
+
 
 void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar)
 {
-	//fit y=mx+c
-	//Alglib needs us to separate our function into basis functions for linear fitting. Instead of submitting y, x
-	//and a function to fit we submit y, F0(x), F1(x), F2(x),... and alglib finds parameters Ci such to give least squares
-	//approximation of y=sum(Ci*Fi(x))
-	//For linear fit our basises are F0=x, F1=1; C0 will then be the gradient and C1 the intercept
-	sci::assertThrow(x.size()>1,sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with 1 or fewer x values."));
-	sci::assertThrow(x.size()==y.size(),sci::err(SERR_VECTOR, -999, "sci::fitstraightline called with a different number of x and y values."));
+	sci::assertThrow(x.size() == y.size(), sci::err(sci::SERR_VECTOR, 0));
+	sci::assertThrow(x.size() > 1, sci::err(sci::SERR_VECTOR, 0));
+	double meanX;
+	double varX;
+	double meanY;
+	double covarXY;
 
-	std::vector < std::vector<double> > basises;
-	basises.push_back(x);
-	basises.push_back(std::vector<double>(x.size(),1.0));
-	//convert vectors to alg arrays
-	alglib::real_1d_array algy;
-	alglib::real_2d_array algbasises;
-	svi::vectortoalg(y,algy);
-	svi::transposedvectortoalg(basises,algbasises);
-
-	//create output variables
-	alglib::ae_int_t info;
-	alglib::real_1d_array c;
-	alglib::lsfitreport report;
-
-	//run fit
-	try
+	meanX = sci::mean(x);
+	varX = sci::variancenobessel(x, meanX);
+	meanY = sci::mean(y);
+	covarXY = 0.0;
+	const double* xIter = &x[0];
+	const double* yIter = &y[0];
+	const double* xEnd = xIter + x.size();
+	for (; xIter != xEnd; ++xIter, ++yIter)
 	{
-		alglib::lsfitlinear(algy,algbasises,y.size(),2,info,c,report);
+		covarXY += (*xIter - meanX) * (*yIter - meanY);
 	}
-	catch(alglib::ap_error err)
+	covarXY /= (double)(y.size());
+
+	grad = covarXY / varX;
+	intercept = meanY - grad * meanX;
+
+	double varYResiduals = 0.0;
+	xIter = &x[0];
+	yIter = &y[0];
+	xEnd = xIter + x.size();
+	for (; xIter != xEnd; ++xIter, ++yIter)
 	{
-		assert(false);
-		throw(sci::err(SERR_ALG, -999, err.msg));
+		double residual = *yIter - (grad * *xIter + intercept);
+		varYResiduals += residual*residual;
 	}
+	varYResiduals /= (double)(y.size() - 2);
 
-
-	//put results in outputs
-	grad=c[0];
-	intercept=c[1];
-	vargrad=report.covpar[0][0];
-	varintercept=report.covpar[1][1];
-	covar=report.covpar[0][1];
+	vargrad = varYResiduals / varX / (double)y.size();
+	varintercept = varYResiduals / (double)y.size() * (1.0 + meanX * meanX / varX);
+	covar = -varYResiduals * meanX / varX * double(y.size() - 2) / double(y.size());
 }
-
+/*
 //fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
 // in both dimensions. The last element represents the covariance with the intercept.
 void sci::fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
@@ -400,34 +444,6 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	vargrad=report.covpar[0][0];
 	varintercept=report.covpar[1][1];
 	covar=report.covpar[0][1];
-}
-
-//fits a straight line, removing any outliers with residuals bigger than maxresiduals
-//This is performed one at a time, removing the worst residual then fitting to the
-//remaining data set
-//Returns the number of data points used in the fit
-size_t sci::fitstraightlinewithoutlierremoval(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double maxresidual)
-{
-	sci::assertThrow(x.size()>1, sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with 1 or fewer x values."));
-	sci::assertThrow(x.size()==y.size(), sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with a different number of x and y values."));
-	std::vector<double> fitx=x;
-	std::vector<double> fity=y;
-	double maxresidualsquared=maxresidual*maxresidual;
-	fitstraightline(fitx,fity,grad,intercept);
-	std::vector<double> residualssquared=(sci::pow(fity-fitx*grad-intercept,2));
-	size_t maxindex=indexofmax(residualssquared);
-	double thismaxresidualsquared=residualssquared[maxindex];
-	while(thismaxresidualsquared>maxresidualsquared)
-	{
-		fitx.erase(fitx.begin()+maxindex);
-		fity.erase(fity.begin()+maxindex);
-		fitstraightline(fitx,fity,grad,intercept);
-		residualssquared=(sci::pow(fity-fitx*grad-intercept,2));
-		maxindex=indexofmax(residualssquared);
-		thismaxresidualsquared=residualssquared[maxindex];
-	}
-	
-	return fitx.size();
 }
 
 

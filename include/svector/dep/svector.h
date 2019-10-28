@@ -1103,39 +1103,56 @@ namespace sci
 	}
 
 	template<class T>
+	void meanAndVariance(const std::vector<T>& v, T& mean, decltype((v[0] - v[0])* (v[0] - v[0]))& variance)
+	{
+		typedef decltype((v[0] - v[0])* (v[0] - v[0])) returnType;
+		if (v.size() == 0)
+			return std::numeric_limits<returnType>::quiet_NaN();
+		mean = sci::mean(v);
+		returnType result(0.0);
+		for (auto vi = v.begin(); vi != v.end(); ++vi)
+			result += (*vi - mean) * (*vi - mean);
+		return result / sci::TypeTraits<returnType>::unitless(v.size() - 1);
+	}
+
+	template<class T>
 	auto variance(const std::vector<T> &v) -> decltype((v[0] - v[0])*(v[0] - v[0]))
 	{
-		typedef decltype((v[0] - v[0])*(v[0] - v[0])) returnType;
-		if(v.size()==0) 
+		T mean;
+		decltype((v[0] - v[0]) * (v[0] - v[0])) variance;
+		meanAndVariance(v, mean, variance);
+		return variance;
+	}
+
+	template<class T>
+	void meanAndVarianceIgnoreNans(const std::vector<T>& v, T& mean, decltype((v[0] - v[0])* (v[0] - v[0]))& variance)
+	{
+		typedef decltype(variance(v)) returnType;
+		if (v.size() == 0)
 			return std::numeric_limits<returnType>::quiet_NaN();
-		T meanval=sci::mean(v);
+		mean = sci::meanIgnoreNans(v);
 		returnType result(0.0);
-		for(auto vi=v.begin(); vi!=v.end(); ++vi) 
-			result+=(*vi-meanval)*(*vi-meanval);
-		//std::accumulate(v.begin(), v.end(),result);
-		return result / sci::TypeTraits<returnType>::unitless(v.size() - 1);
+		auto vi = &vi[0];
+		auto vEnd = vi + v.size();
+		size_t count = 0;
+		for (; vi != vEnd; ++vi)
+		{
+			if (*vi == *vi)
+			{
+				result += (*vi - mean) * (*vi - mean);
+				++count;
+			}
+		}
+		return result / sci::TypeTraits<returnType>::unitless(count - 1);
 	}
 
 	template<class T>
 	auto varianceIgnoreNans(const std::vector<T> &v) -> decltype(variance(v))
 	{
-		typedef decltype(variance(v)) returnType;
-		if(v.size()==0) 
-			return std::numeric_limits<returnType>::quiet_NaN();
-		T meanval=sci::meanIgnoreNans(v);
-		returnType result(0.0);
-		auto vi = &vi[0];
-		auto vEnd =vi + v.size();
-		size_t count = 0;
-		for(; vi != vEnd; ++vi)
-		{
-			if( *vi == *vi )
-			{
-				result+=(*vi-meanval)*(*vi-meanval);
-				++count;
-			}
-		}
-		return result / sci::TypeTraits<returnType>::unitless(count - 1);
+		T mean;
+		decltype((v[0] - v[0]) * (v[0] - v[0])) variance;
+		meanAndVarianceIgnoreNans(v, mean, variance);
+		return variance;
 	}
 
 	template<class T>
@@ -2202,17 +2219,17 @@ namespace sci
 		return result;
 	}
 	
-	/*void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
+	size_t fitstraightlinewithoutlierremoval(const std::vector<double>& x, const std::vector<double>& y, double& grad, double& intercept, double maxresidual);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &weights, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar);
 	void fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept);
 	//fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
 	// in both dimensions. The last element represents the covariance with the intercept.
 	//void fitstraightline(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
 	//	std::vector<double> &grad, double &intercept, std::vector<std::vector<double>> &covar);*/
-	void fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
+	/*void fitProportional(const std::vector<std::vector<double>> &x, const std::vector<double> &y, 
 	std::vector<double> &grad, std::vector<std::vector<double>> &covar);
 	void fitpolynomial(const std::vector<double> &x, const std::vector<double> &y, size_t max_power, std::vector<double> &coefs, std::vector<std::vector<double>> &covariancematrix);
-	size_t fitstraightlinewithoutlierremoval(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double maxresidual);
 	void fitpowerlaw(double power, const std::vector<double> &x, const std::vector<double> &y, double &k, double &vark);
 	void crosscorr(const std::vector<double> &f, const std::vector<double> &g, std::vector<double> &r, std::vector<long> &fshifts, bool circular=false);
 	size_t minimise(std::vector<double> &tunableparams, const std::vector<double> &fixedparams, double (*functiontominimise)(const std::vector<double> &,const std::vector<double> &));
