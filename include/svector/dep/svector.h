@@ -5,6 +5,9 @@
 #define NOMINMAX
 #define MUSTUNDEFNOMINMAX
 #endif
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 
 //2*M_PI
 #define M_2PI     6.28318530717958647692
@@ -13,12 +16,12 @@
 //sqrt(2.0*M_PI)
 #define M_SQRT2PI 2.50662827463100050241
 
+#include<cmath>
 #include<vector>
 #include<limits>
 #include<algorithm>
 #include<numeric>
 #include<complex>
-#include<cmath>
 #include<type_traits>
 #include<random>
 #include"../serr.h"
