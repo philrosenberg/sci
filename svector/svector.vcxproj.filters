@@ -209,5 +209,8 @@
     <ClInclude Include="eigeneng\eigeneng.h">
       <Filter>Header Files\eigeneng</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

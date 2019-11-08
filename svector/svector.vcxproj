@@ -326,6 +326,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\algorithm.h" />
     <ClInclude Include="..\include\svector\apexWorkspace.h" />
+    <ClInclude Include="..\include\svector\array.h" />
     <ClInclude Include="..\include\svector\dep\nc.h" />
     <ClInclude Include="..\include\svector\dep\plot\plotdata.h" />
     <ClInclude Include="..\include\svector\dep\plot\splot.h" />
