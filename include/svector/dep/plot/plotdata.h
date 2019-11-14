@@ -286,7 +286,7 @@ public:
 	PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	Symbol m_symbol;
-	void PointData::plotData(plstream *pl, bool xLog, bool yLog) const;
+	void plotData(plstream *pl, bool xLog, bool yLog) const;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>

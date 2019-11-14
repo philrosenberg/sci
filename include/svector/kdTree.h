@@ -1,7 +1,7 @@
 #pragma once
-#include<svector/svector.h>
+#include"svector.h"
 #include<memory>
-#include<svector/serr.h>
+#include"serr.h"
 
 //This kdtree class splits data in half through each dimension. When constructing each dimension
 //will be split nSplit times.

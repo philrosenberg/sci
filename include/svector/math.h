@@ -18,6 +18,7 @@
 #include<algorithm>
 #include<limits>
 #include"algorithm.h"
+#include"serr.h"
 
 namespace sci_internal
 {

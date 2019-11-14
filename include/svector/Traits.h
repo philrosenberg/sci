@@ -8,35 +8,40 @@ namespace sci
 	{
 		typedef T baseType;
 		static const size_t nDimensions = 0;
-		template<size_t N>
-		struct OtherDimensionVersion
-		{
-			typedef std::vector<VectorTraits<T>::OtherDimensionVersion<N - 1>> type;
-		};
-		template<>
-		struct OtherDimensionVersion<0>
-		{
-			typedef T type;
-		};
-		template<class OTHER_BASE_TYPE>
-		struct Other
-		{
-			typedef OTHER_BASE_TYPE type;
-			static const bool sameBaseType = std::is_same<VectorTraits<T>::baseType, OTHER_BASE_TYPE>::value;
-		};
 	};
+
 	template<class T>
 	struct VectorTraits <std::vector<T>>
 	{
 		typedef typename VectorTraits<T>::baseType baseType;
 		static const size_t nDimensions = VectorTraits<T>::nDimensions + 1;
-		template<class OTHER_BASE_TYPE>
-		struct Other
-		{
-			typedef std::vector<typename VectorTraits<T>::Other<OTHER_BASE_TYPE>::type> type;
-			static const bool sameBaseType = std::is_same<VectorTraits<T>::baseType, OTHER_BASE_TYPE>::value;
-		};
 	};
+
+	template<class T, class OTHER_BASE_TYPE>
+	struct OtherBase
+	{
+		typedef OTHER_BASE_TYPE type;
+		static const bool sameBaseType = std::is_same<typename VectorTraits<T>::baseType, typename VectorTraits<OTHER_BASE_TYPE>::baseType>::value;
+	};
+
+	template<class T, class OTHER_BASE_TYPE>
+	struct OtherBase<std::vector<T>, OTHER_BASE_TYPE>
+	{
+		typedef typename std::vector<OtherBase<T, OTHER_BASE_TYPE>> type;
+		static const bool sameBaseType = std::is_same<typename VectorTraits<T>::baseType, typename VectorTraits<OTHER_BASE_TYPE>::baseType>::value;
+	};
+
+	template<class T, size_t N>
+	struct OtherDimensionVersion
+	{
+		typedef std::vector<OtherDimensionVersion<T, N - 1>> type;
+	};
+	template<class T>
+	struct OtherDimensionVersion<T, 0>
+	{
+		typedef typename VectorTraits<T>::baseType type;
+	};
+
 
 	template<class T>
 	struct TypeTraits
@@ -50,6 +55,6 @@ namespace sci
 	template<class T, class U>
 	struct Promoted
 	{
-		typename typedef decltype(T() + U()) type;
+		typedef decltype(T() + U()) type;
 	};
 }

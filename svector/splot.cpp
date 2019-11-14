@@ -3334,7 +3334,7 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 bool splotwindow::writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
 {
 	//get the extension
-	wxFileName fullfile=sci::nativeUnicode(filename);
+	wxFileName fullfile=wxString(sci::nativeUnicode(filename));
 	wxString extension=fullfile.GetExt().Lower();
 	
 	bool result=true;

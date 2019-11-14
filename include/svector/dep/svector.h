@@ -1325,25 +1325,25 @@ namespace sci
 	template<class T>
 	auto stdevIgnoreNans(const std::vector<T> &v, const T &mean) -> decltype(stdev(v))
 	{
-		return TypeTraits::sqrt( varianceIgnoreNans( v, mean ) );
+		return TypeTraits<T>::sqrt( varianceIgnoreNans( v, mean ) );
 	}
 
 	template<class T>
 	auto stdev(const std::vector<T> &v, const std::vector<T> &weights, const T &mean) -> decltype(stdev(v))
 	{
-		return TypeTraits::sqrt( variance( v, weights, mean ) );
+		return TypeTraits<T>::sqrt( variance( v, weights, mean ) );
 	}
 
 	template<class T>
 	auto stdevIgnoreNans(const std::vector<T> &v, const std::vector<T> &weights, const T &mean) -> decltype(stdev(v))
 	{
-		return TypeTraits::sqrt( varianceIgnoreNans( v, weights, mean ) );
+		return TypeTraits<T>::sqrt( varianceIgnoreNans( v, weights, mean ) );
 	}
 
 	template<class T>
 	auto stdevnobessel(const std::vector<T> &v, const T &mean) -> decltype(stdev(v))
 	{
-		return TypeTraits::sqrt( variancenobessel( v, mean ) );
+		return TypeTraits<T>::sqrt( variancenobessel( v, mean ) );
 	}
 
 	template<class T>

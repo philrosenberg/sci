@@ -127,7 +127,7 @@ namespace sci
 #ifdef _WIN32
 	sci::string fromNativeUnicode(const std::wstring &string);
 #else
-	sci::string fromNativeUnicode(const std::string &string)
+	sci::string fromNativeUnicode(const std::string &string);
 #endif
 	sci::string fromUtf16(const std::u16string &string);
 	sci::string fromUtf32(const std::u32string &string);
