@@ -308,25 +308,29 @@ namespace sci
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
+				if (std::is_same<T, unit>::value)
+					return value;
 				return T::template Converter<VALUE_TYPE>::template convertFromBase<EXPONENT>(value);
 			}
-			template <>
-			static VALUE_TYPE convertTo <EncodedUnit<BASE_POWERS, EXPONENT>>(VALUE_TYPE value)
-			{
-				return value;
-			}
+			//template <>
+			//static VALUE_TYPE convertTo <EncodedUnit<BASE_POWERS, EXPONENT>>(VALUE_TYPE value)
+			//{
+			//	return value;
+			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
 				//for this type its base is itself, but with a different exponent
+				if (EXPONENT == BASE_EXPONENT)
+					return value;
 				return value * sci::pow10<BASE_EXPONENT - EXPONENT, VALUE_TYPE>();
 			}
-			template <>
-			static VALUE_TYPE convertFromBase<EXPONENT>(VALUE_TYPE value)
-			{
-				//as above, but now the exponents are identical so no calculation is needed
-				return value;
-			}
+			//template <>
+			//static VALUE_TYPE convertFromBase<EXPONENT>(VALUE_TYPE value)
+			//{
+			//	//as above, but now the exponents are identical so no calculation is needed
+			//	return value;
+			//}
 		};
 		static constexpr bool isUnitless()
 		{
@@ -344,6 +348,7 @@ namespace sci
 	template<class ENCODEDUNIT, int POW>
 	struct PoweredEncodedUnit : public EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW>
 	{
+		typedef PoweredEncodedUnit< ENCODEDUNIT, POW> unit;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
@@ -358,13 +363,15 @@ namespace sci
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
+				if (std::is_same<T, unit>::value)
+					return value;
 				return T::template Converter<VALUE_TYPE>::template convertFromBase<EncodedUnit::exponent>(value*std::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
 			}
-			template <>
-			static VALUE_TYPE convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(VALUE_TYPE value)
-			{
-				return value;
-			}
+			//template <>
+			//static VALUE_TYPE convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(VALUE_TYPE value)
+			//{
+			//	return value;
+			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -378,6 +385,7 @@ namespace sci
 	template<class ENCODEDUNIT, int ROOT>
 	struct RootedEncodedUnit : public EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT>
 	{
+		typedef RootedEncodedUnit< ENCODEDUNIT, ROOT> unit;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, -ROOT);
@@ -392,13 +400,15 @@ namespace sci
 				//At this point we know both base powers are the same, but we don't know if the from
 				//unit is a derived type. However, it's base type must be this, so we can call its
 				//convertFromBase method to to do the actual conversion.
+				if (std::is_same<T, unit>::value)
+					return value;
 				return T::template Converter<VALUE_TYPE>::convertFromBase<EncodedUnit::exponent>(value*std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
 			}
-			template <>
-			static VALUE_TYPE convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(VALUE_TYPE value)
-			{
-				return value;
-			}
+			//template <>
+			//static VALUE_TYPE convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(VALUE_TYPE value)
+			//{
+			//	return value;
+			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -412,6 +422,7 @@ namespace sci
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
 	struct MultipliedEncodedUnit : public EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent>
 	{
+		typedef MultipliedEncodedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
 		typedef MultipliedEncodedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
@@ -425,14 +436,17 @@ namespace sci
 			static VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
 				static_assert(EncodedUnit::basePowers == T::unit::basePowers, "Cannot convert between units with different powers or dimensions.");
+
+				if (std::is_same<T, unit>::value)
+					return value;
 				//Convert the value to the ENCODEDUNIT1::baseType and multiple by 1 converted to ENCODEDUNIT2::baseType, then call convertFromBase
 				return T::template Converter<VALUE_TYPE>::convertFromBase<EncodedUnit::exponent>(ENCODEDUNIT1::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT2::baseClass>(1.0));
 			}
-			template <>
-			static VALUE_TYPE convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(VALUE_TYPE value)
-			{
-				return value;
-			}
+			//template <>
+			//static VALUE_TYPE convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(VALUE_TYPE value)
+			//{
+			//	return value;
+			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -807,17 +821,11 @@ namespace sci
 			static VALUE_TYPE convertTo(VALUE_TYPE value)\
 			{\
 				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
+				if (std::is_same<T, unit>::value)\
+					return value;\
+				if (std::is_same<T, baseClass>::value)\
+					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 				return T::template Converter<VALUE_TYPE>::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
-			}\
-			template <>\
-			static VALUE_TYPE convertTo <unit>(VALUE_TYPE value)\
-			{\
-				return value;\
-			}\
-			template <>\
-			static VALUE_TYPE convertTo <baseClass>(VALUE_TYPE value)\
-			{\
-				return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 			}\
 			template <int64_t BASE_EXPONENT, class VALUE_TYPE>\
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)\
