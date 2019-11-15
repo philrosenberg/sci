@@ -23,5 +23,9 @@ int main()
 
 	auto speed = dMetre(200.0) / dSecond(50.0);
 	assert(std::abs(speed.value<decltype(speed)>() - 4.0) < 0.001);
+
+	dSecondSquared squaredTime1 = sci::pow<2>(dnanoSecond(1e10));
+	dSecondSquared squaredTime2 = dnanoSecond(1e8) * dSecond(100.0);
+	dnanoSecond time1 = sci::sqrt(dSecondSquared(4.0));
 }
 
