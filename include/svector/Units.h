@@ -5,11 +5,18 @@
 namespace sci
 {
 	template<int64_t EXPONENT>
+	constexpr inline bool isMetricExponent()
+	{
+		return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT >-25 && EXPONENT < 25 && EXPONENT % 3 == 0 ); 
+	} 
+	template<int64_t EXPONENT>
 	struct ExponentTraits
 	{
 		const static bool valid = false;
-		static sci::string getName() { static_assert(false, "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static sci::string getPrefix() { static_assert(false, "Cannot have an exponent not represented by the standard metric prefixes"); }
+		//we can't just put false in the static_assert. Some compilers see there is no dependence on the
+		//template parameter and expand the static_assert even when this template is never instantiated
+		static sci::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static sci::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 	};
 	template<>
 	struct ExponentTraits<24>
