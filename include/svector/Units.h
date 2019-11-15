@@ -380,7 +380,6 @@ namespace sci
 	{
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
-			static_assert(false, "Error - need to write code to do this for roots.");
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, -ROOT);
 		}
 		template<class VALUE_TYPE>
@@ -932,7 +931,9 @@ namespace sci
 		//sensible
 		Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const VALUE_TYPE& other)
 		{
-			static_assert(false, "Cannot assign a physical value from a raw value type. Use the Physical constructor to create a Physical first.");
+			//use std::is_same to ensure we always fail the assert, but avoid a constant false that can be
+			//seen by some compilers as a reason to throw an error without the template being instantiated
+			static_assert(std::is_same<ENCODED_UNIT, VALUE_TYPE>, "Cannot assign a physical value from a raw value type. Use the Physical constructor to create a Physical first.");
 		}
 
 		static sci::string getShortUnitString(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
