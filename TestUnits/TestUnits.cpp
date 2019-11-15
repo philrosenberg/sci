@@ -8,6 +8,9 @@ typedef sci::Physical<sci::Metre<2>, double> dMetreSquared;
 typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
 typedef sci::Physical<sci::Metre<1,6>, double> dMegaMetre;
 typedef sci::Physical<sci::Second<1,-9>, double> dnanoSecond;
+typedef sci::Physical<sci::Degree<>, double> dDegree;
+typedef sci::Physical<sci::Degree<1, -6>, double> dmicroDegree;
+typedef sci::Physical<sci::Unitless, double> dUnitless;
 
 int main()
 {
@@ -27,5 +30,6 @@ int main()
 	dSecondSquared squaredTime1 = sci::pow<2>(dnanoSecond(1e10));
 	dSecondSquared squaredTime2 = dnanoSecond(1e8) * dSecond(100.0);
 	dnanoSecond time1 = sci::sqrt(dSecondSquared(4.0));
+	dDegree degree1 = dUnitless(100.0) * dmicroDegree(10.0);
 }
 

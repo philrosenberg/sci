@@ -830,7 +830,7 @@ namespace sci
 					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 				return T::template Converter<VALUE_TYPE>::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
 			}\
-			template <int64_t BASE_EXPONENT, class VALUE_TYPE>\
+			template <int64_t BASE_EXPONENT>\
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)\
 			{\
 				return value * sci::pow10<(BASE_EXPONENT - baseExponent), VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
