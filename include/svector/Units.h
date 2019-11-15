@@ -958,18 +958,12 @@ namespace sci
 		template <class REQUIRED>
 		VALUE_TYPE value() const
 		{
+			if (std::is_same< REQUIRED, ENCODED_UNIT>::value)
+				return m_v;
+			if (std::is_same< REQUIRED, Physical<ENCODED_UNIT, VALUE_TYPE>>::value)
+				return m_v;
 			//this should work whether REQUIRED is a Physical or an Encoded Unit
 			return ENCODED_UNIT::template Converter<VALUE_TYPE>::convertTo<REQUIRED::unit>(m_v);
-		}
-		template <>
-		VALUE_TYPE value<ENCODED_UNIT>() const
-		{
-			return m_v;
-		}
-		template <>
-		VALUE_TYPE value<Physical<ENCODED_UNIT, VALUE_TYPE>>() const
-		{
-			return m_v;
 		}
 		template<class OTHER>
 		static constexpr bool compatibleWith()
