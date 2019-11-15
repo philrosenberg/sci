@@ -997,14 +997,14 @@ namespace sci
 
 	//This is used to get the value of a Physical with a different prefix, e.g. if you have
 	//a physical as mm, you can use it to get the value in km
-	template<class REQUIRED_UNIT, class IN_PHYSICAL, class OUT_VALUE_TYPE= IN_PHYSICAL::valueType>
+	template<class REQUIRED_UNIT, class IN_PHYSICAL, class OUT_VALUE_TYPE = typename IN_PHYSICAL::valueType>
 	OUT_VALUE_TYPE physicalsToValues(const IN_PHYSICAL &physical)
 	{
 		return (OUT_VALUE_TYPE)physical.value<REQUIRED_UNIT>();
 	}
 	//This is used to get the value of a vector of Physical with a different prefix, e.g. if you have
 	//a vector of Physical as mm, you can use it to get the values in km
-	template<class REQUIRED_UNIT, class U, class OUT_VALUE_TYPE= sci::VectorTraits<U>::baseType::valueType>
+	template<class REQUIRED_UNIT, class U, class OUT_VALUE_TYPE = typename sci::VectorTraits<U>::baseType::valueType>
 	auto physicalsToValues(const std::vector<U> &physicals) -> std::vector<decltype(unitsPrivate::physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))>
 	{
 		std::vector<decltype(unitsPrivate::physicalsToValues<REQUIRED_UNIT>(physicals[0], OUT_VALUE_TYPE()))> result(physicals.size());
