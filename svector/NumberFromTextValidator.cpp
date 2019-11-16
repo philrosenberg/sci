@@ -1,4 +1,4 @@
-#include<svector/NumberFromTextValidator.h>
+#include"../include/svector/NumberFromTextValidator.h"
 template<>
 double NumberFromTextValidator<double>::textToNumber(const wxString &text) const
 {
