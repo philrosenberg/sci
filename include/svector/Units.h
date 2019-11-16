@@ -367,7 +367,7 @@ namespace sci
 				//convertFromBase method to to do the actual conversion.
 				if (std::is_same<T, unit>::value)
 					return value;
-				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
 			}
 			//template <>
 			//static VALUE_TYPE convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(VALUE_TYPE value)
@@ -377,7 +377,7 @@ namespace sci
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
-				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), POW)*sci::pow10<(BASE_EXPONENT - encodedUnitClass::exponent), VALUE_TYPE>();
+				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<0>(VALUE_TYPE(1.0)), POW)*sci::pow10<(BASE_EXPONENT - encodedUnitClass::exponent), VALUE_TYPE>();
 			}
 		};
 	};
@@ -405,7 +405,7 @@ namespace sci
 				//convertFromBase method to to do the actual conversion.
 				if (std::is_same<T, unit>::value)
 					return value;
-				return T::template Converter<VALUE_TYPE>::convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
 			}
 			//template <>
 			//static VALUE_TYPE convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(VALUE_TYPE value)
@@ -444,7 +444,7 @@ namespace sci
 				if (std::is_same<T, unit>::value)
 					return value;
 				//Convert the value to the ENCODEDUNIT1::baseType and multiple by 1 converted to ENCODEDUNIT2::baseType, then call convertFromBase
-				return T::template Converter<VALUE_TYPE>::convertFromBase<encodedUnitClass::exponent>(ENCODEDUNIT1::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::convertTo<ENCODEDUNIT2::baseClass>(1.0));
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(ENCODEDUNIT1::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT2::baseClass>(1.0));
 			}
 			//template <>
 			//static VALUE_TYPE convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(VALUE_TYPE value)
@@ -455,7 +455,7 @@ namespace sci
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
 				//Use each encodedUnit's convert from base function. The first one uses the exponent and the value, the second uses 1
-				return ENCODEDUNIT1::template Converter<VALUE_TYPE>::convertFromBase<BASE_EXPONENT>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::convertFromBase<0>(1.0);
+				return ENCODEDUNIT1::template Converter<VALUE_TYPE>::template convertFromBase<BASE_EXPONENT>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::template convertFromBase<0>(1.0);
 			}
 		};
 	};
@@ -829,7 +829,7 @@ namespace sci
 					return value;\
 				if (std::is_same<T, baseClass>::value)\
 					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
-				return T::template Converter<VALUE_TYPE>::convertFromBase<baseExponent>(convertTo<baseClass>(value));\
+				return T::template Converter<VALUE_TYPE>::template convertFromBase<baseExponent>(convertTo<baseClass>(value));\
 			}\
 			template <int64_t BASE_EXPONENT>\
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)\
@@ -964,7 +964,7 @@ namespace sci
 			if (std::is_same< REQUIRED, Physical<ENCODED_UNIT, VALUE_TYPE>>::value)
 				return m_v;
 			//this should work whether REQUIRED is a Physical or an Encoded Unit
-			return ENCODED_UNIT::template Converter<VALUE_TYPE>::convertTo<REQUIRED::unit>(m_v);
+			return ENCODED_UNIT::template Converter<VALUE_TYPE>::template convertTo<typename REQUIRED::unit>(m_v);
 		}
 		template<class OTHER>
 		static constexpr bool compatibleWith()
