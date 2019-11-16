@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+#include<limits>
 #include"sstring.h"
 #include"Traits.h"
 namespace sci
@@ -1406,7 +1407,7 @@ namespace std
 
 		static constexpr sci::Physical<T, V> signaling_NaN() noexcept
 		{
-			return sci::Physical<T>(numeric_limits<V>::signaling_NaN());
+			return sci::Physical<T, V>(numeric_limits<V>::signaling_NaN());
 		}
 	};
 
