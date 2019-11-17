@@ -178,6 +178,19 @@ void sci::trim(std::wstring &str)
 	}
 }
 
+
+
+//This is a simple class that can be used to inherit from code_cvt
+//we do this because on gcc code_cvt has a protected destructor
+//so we must inherit from it and provide a public destructor
+template<class code_cvt>
+struct sci_code_cvt : code_cvt
+{
+	template<class ...Args>
+	deletable_facet(Args&& ...args) : code_cvt(std::forward<Args>(args)...) {}
+	~deletable_facet() {}
+};
+
 #ifdef _WIN32
 //On Windows the native unicode version is UTF-16 represented by std:::wstring
 
@@ -301,17 +314,20 @@ std::string &sci::nativeUnicode(std::string &str)
 }
 std::string sci::nativeUnicode(const std::wstring &str)
 {
-	std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>, wchar_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt< std::codecvt<wchar_t, char, std::mbstate_t>, wchar_t> deletableCvt;
+	std::wstring_convert<deletableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.to_bytes(str);
 }
 std::string sci::nativeUnicode(const std::u16string &str)
 {
-	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> deletableCvt;
+	std::wstring_convert<deletableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.to_bytes(str);
 }
 std::string sci::nativeUnicode(const std::u32string &str)
 {
-	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> deletableCvt;
+	std::wstring_convert<deletableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.to_bytes(str);
 }
 #endif
@@ -345,11 +361,13 @@ std::string sci::utf16ToUtf8(const std::u16string &string)
 {
 #ifdef _WIN32
 	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
-	std::wstring_convert<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> converter;
+	typedef sci_code_cvt<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter;
 	auto p = reinterpret_cast<const int16_t *>(string.data());
 	return converter.to_bytes(p, p + string.length());
 #else
-	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.to_bytes(string);
 #endif
 }
@@ -358,11 +376,13 @@ std::string sci::utf32ToUtf8(const std::u32string &string)
 {
 #ifdef _WIN32
 	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
-	std::wstring_convert<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> converter;
+	typedef sci_code_cvt<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter;
 	auto p = reinterpret_cast<const int32_t *>(string.data());
 	return converter.to_bytes(p, p + string.length());
 #else
-	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt< std::codecvt<char32_t, char, std::mbstate_t>, char32_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.to_bytes(string);
 #endif
 }
@@ -371,12 +391,14 @@ std::u16string sci::utf8ToUtf16(const std::string &string)
 {
 #ifdef _WIN32
 	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
-	std::wstring_convert<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> converter;
+	typedef sci_code_cvt<std::codecvt<int16_t, char, std::mbstate_t>, int16_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter;
 	std::basic_string<int16_t> resultInt = converter.from_bytes(string);
 	auto p = reinterpret_cast<const char16_t *>(resultInt.data());
 	return std::u16string(p, p + resultInt.length());
 #else
-	std::wstring_convert<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	tyepdef sci_code_cvt<std::codecvt<char16_t, char, std::mbstate_t>, char16_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.from_bytes(string);
 #endif
 }
@@ -415,13 +437,15 @@ std::u16string sci::utf32ToUtf16(const std::u32string &string)
 std::u32string sci::utf8ToUtf32(const std::string &string)
 {
 #ifdef _WIN32
+	typedef sci_code_cvt<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> deleteableCvt;
 	//there is a bug in vs 2015 and 17, that means we must use int16_t, not char16_t
-	std::wstring_convert<std::codecvt<int32_t, char, std::mbstate_t>, int32_t> converter;
+	std::wstring_convert<deleteableCvt> converter;
 	std::basic_string<int32_t> resultInt = converter.from_bytes(string);
 	auto p = reinterpret_cast<const char32_t *>(resultInt.data());
 	return std::u32string(p, p + resultInt.length());
 #else
-	std::wstring_convert<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
+	typedef sci_code_cvt<std::codecvt<char32_t, char, std::mbstate_t>, char32_t> deleteableCvt;
+	std::wstring_convert<deleteableCvt> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
 	return converter.from_bytes(string);
 #endif
 }
