@@ -1105,20 +1105,20 @@ namespace sci
 
 	template<class T>
 	auto centralMoment(int moment, const std::vector<T> &v, const T &mean)
-		-> decltype (sum(sci::pow(v-mean, moment))/TypeTraits<typename decltype(v-mean)::unitlessType>::unity)
+		-> decltype (sum(sci::pow(v-mean, moment))/TypeTraits<typename TypeTraits<decltype(v[0]-mean)>::unitlessType>::unity)
 	{
 		if(v.size() == 0)
-                        return sum(sci::pow(v-mean, moment))/TypeTraits<typename decltype(v-mean)::unitlessType>::zero;
-		typedef decltype (sci::pow(sum(v-mean), moment)/TypeTraits<typename decltype(v-mean)::unitlessType>::unity) resultType;
+                        return sum(sci::pow(v-mean, moment))/TypeTraits<typename TypeTraits<decltype(v[0]-mean)>::unitlessType>::zero;
+		typedef decltype (sci::pow(sum(v-mean), moment)/TypeTraits<typename TypeTraits<decltype(v[0]-mean)>::unitlessType>::unity) resultType;
 		resultType result = TypeTraits<resultType>::zero;
 		const T* vEnd=&v[0]+v.size;
-		for(const T* vi=&v[0]; vi!=v.end(); ++vi) 
+		for(const T* vi=&v[0]; vi!=vEnd; ++vi) 
 			result+=sci::pow((*vi-mean), moment);
-		return result/TypeTraits<typename decltype(v-mean)::unitlessType>(v.size()-1);
+		return result/typename TypeTraits<decltype(v[0]-mean)>::unitlessType(v.size()-1);
 	}
 
 	template<class T>
-	auto centralMomentNoBessel(int moment, const std::vector<T> &v, const T &mean) ->decltype (centralmoment(moment, v, mean))
+	auto centralMomentNoBessel(int moment, const std::vector<T> &v, const T &mean) ->decltype (centralMoment(moment, v, mean))
 	{
                typedef decltype (sum(sci::pow(v-mean, moment))/TypeTraits<typename decltype(v-mean)::unitlessType>::unity) resultType;
                 resultType result = TypeTraits<resultType>::zero;
@@ -1128,33 +1128,32 @@ namespace sci
                 return result/TypeTraits<typename decltype(v-mean)::unitlessType>(v.size());
 	}
 
-        template<int MOMENT, class T>
-        auto centralMoment(const std::vector<T> &v, const T &mean)
-                -> decltype (sum(sci::pow<MOMENT>(v-mean))/TypeTraits<typename decltype(v-mean)::unitlessType>::unity)
-        {
+	template<int MOMENT, class T>
+	auto centralMoment(const std::vector<T> &v, const T &mean) -> decltype (pow<2>(v[0] - mean) / TypeTraits<typename TypeTraits<decltype(v[0] - mean)>::unitlessType>::unity)
+	{
 		if(v.size() == 0)
-			return sum(sci::pow<MOMENT>(v-mean))/TypeTraits<typename decltype(v-mean)::unitlessType>::zero;
-                typedef decltype (sci::pow<MOMENT>(sum(v-mean))/TypeTraits<typename decltype(v-mean)::unitlessType>::unity) resultType;
-                resultType result = TypeTraits<resultType>::zero;
-                const T* vEnd=&v[0]+v.size;
-                for(const T* vi=&v[0]; vi!=v.end(); ++vi)
-                        result+=sci::pow<MOMENT>((*vi-mean));
-                return result/TypeTraits<typename decltype(v-mean)::unitlessType>(v.size()-1);
+			return sum(sci::pow<MOMENT>(v-mean))/TypeTraits<typename TypeTraits<decltype(v[0]-mean)>::unitlessType>::zero;
+		typedef decltype (pow<2>(v[0] - mean) / TypeTraits<typename TypeTraits<decltype(v[0] - mean)>::unitlessType>::unity) resultType;
+		resultType result = TypeTraits<resultType>::zero;
+		const T* vEnd=&v[0]+v.size();
+		for(const T* vi=&v[0]; vi!=vEnd; ++vi)
+			result+=sci::pow<MOMENT>((*vi-mean));
+		return result/ typename TypeTraits<decltype(v[0] - mean)>::unitlessType(v.size()-1);
         }
 
-        template<int MOMENT, class T>
-        auto centralMomentNoBessel(const std::vector<T> &v, const T &mean)
-                -> decltype(centralMoment<MOMENT>(v, mean))
-        {
+		template<int MOMENT, class T>
+		auto centralMomentNoBessel(const std::vector<T> &v, const T &mean)
+				-> decltype(centralMoment<MOMENT>(v, mean))
+		{
 		if(v.size() == 0)
-                        return centralMoment<MOMENT>(v, mean);
-                typedef decltype(centralMoment<MOMENT>) resultType;
-                resultType result = TypeTraits<resultType>::zero;
-                const T* vEnd=&v[0]+v.size;
-                for(const T* vi=&v[0]; vi!=v.end(); ++vi)
-                        result+=sci::pow<MOMENT>((*vi-mean));
-                return result/TypeTraits<typename decltype(v-mean)::unitlessType>(v.size());
-        }
+			return centralMoment<MOMENT>(v, mean);
+		typedef decltype(centralMoment<MOMENT>(v, mean)) resultType;
+		resultType result = TypeTraits<resultType>::zero;
+		const T* vEnd=&v[0]+v.size();
+		for(const T* vi=&v[0]; vi!=vEnd; ++vi)
+			result+=sci::pow<MOMENT>((*vi-mean));
+		return result/typename TypeTraits<decltype(v[0]-mean)>::unitlessType(v.size());
+		}
 
 	template<class T>
 	void meanAndVariance(const std::vector<T>& v, T& mean, decltype(centralMoment<2>(v, mean))& variance)

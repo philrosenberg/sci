@@ -584,6 +584,59 @@ namespace sci{
 		}
 	}
 
+	template<int POW>
+	double inline pow(double base)
+	{
+		return std::pow(base, POW);
+	}
+
+	template<int POW>
+	float inline pow(float base)
+	{
+		return std::pow(base, POW);
+	}
+
+	template<int POW, class T>
+	std::vector<T> inline pow(const std::vector<T> &base)
+	{
+		return sci::pow(base, POW);
+	}
+
+	template<int POW, class T>
+	std::vector<std::vector<T>> inline pow(const std::vector<std::vector<T>>& base)
+	{
+		return sci::pow(base, POW);
+	}
+
+	double inline pow(double base, double power)
+	{
+		return std::pow(base, power);
+	}
+
+	float inline pow(float base, float power)
+	{
+		return std::pow(base, power);
+	}
+
+	double inline pow(double base, int power)
+	{
+		return std::pow(base, power);
+	}
+
+	float inline pow(float base, int power)
+	{
+		return std::pow(base, power);
+	}
+
+	double inline sqrt(double value)
+	{
+		return std::sqrt(value);
+	}
+
+	float inline sqrt(float value)
+	{
+		return std::sqrt(value);
+	}
 }
 
 
