@@ -215,7 +215,7 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	double covarXY;
 
 	meanX = sci::mean(x);
-	varX = sci::variancenobessel(x, meanX);
+	varX = sci::varianceNoBessel(x, meanX);
 	meanY = sci::mean(y);
 	covarXY = 0.0;
 	const double* xIter = &x[0];
@@ -270,7 +270,7 @@ void sci::fitstraightline(const std::vector<double> &x, const std::vector<double
 	double covarXY;
 
 	meanX = sci::mean(x);
-	varX = sci::variancenobessel(x, meanX);
+	varX = sci::varianceNoBessel(x, meanX);
 	meanY = sci::mean(y);
 	covarXY = 0.0;
 	const double* xIter = &x[0];
