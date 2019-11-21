@@ -989,7 +989,7 @@ namespace sci
 			return sci::TypeTraits<T>::unity;
 		T result=v[0];
 		for(typename std::vector<T>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
-			result *= vi;
+			result *= *vi;
 		return result;
 	}
 
@@ -1000,7 +1000,7 @@ namespace sci
 			return sci::TypeTraits<typename sci::VectorTraits<T>::baseType>::unity;
 		auto result = product(v[0]);
 		for(typename std::vector<std::vector<T>>::const_iterator vi=v.begin()+1; vi!=v.end(); ++vi)
-			result*=product(*vi);
+			result *= product(*vi);
 		return result;
 	}
 
