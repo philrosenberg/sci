@@ -1316,9 +1316,13 @@ namespace sci
 		static constexpr unitlessType unitless(size_t v) { return unitlessType(V(v)); }
 		static constexpr unitlessType unitless(double v) { return unitlessType(V(v)); }
 		static constexpr auto sqrt(const Physical<T, V> &v) ->decltype(sqrt(v)) { return sci::sqrt(v); }
-		constexpr static const Physical<T, V> unity = Physical<T, V>(V(1));
-		constexpr static const Physical<T, V> zero = Physical<T, V>(V(0));
+		static const Physical<T, V> unity;
+		static const Physical<T, V> zero;
 	};
+	template<class T, class V>
+	const Physical<T, V> TypeTraits<Physical<T, V>>::unity = Physical<T, V>(V(1));
+	template<class T, class V>
+	const Physical<T, V> TypeTraits<Physical<T, V>>::zero = Physical<T, V>(V(0));
 
 	//This is used by averaging algorithms where simply casting size_t to the
 	//same type as the type we are averaging doesn't work
