@@ -6,12 +6,14 @@
 #define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #endif
 
+#pragma warning(push, 0)
 #include<vector>
 #include<wx/colour.h>
 #include<plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>
+#pragma warning(pop)
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #undef _CRT_SECURE_NO_WARNINGS

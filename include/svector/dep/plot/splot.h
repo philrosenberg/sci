@@ -6,6 +6,7 @@
 #define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #endif
 
+#pragma warning(push, 0)
 #include<vector>
 #include<wx/colour.h>
 #include<plplot/plstream.h>
@@ -14,7 +15,10 @@
 #include<limits>
 #include<wx/print.h>
 #include<wx/printdlg.h>
+#pragma warning(pop)
 #include"../../sstring.h"
+#include"../../serr.h"
+#include"../../svector.h"
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #undef _CRT_SECURE_NO_WARNINGS
@@ -187,7 +191,14 @@ class splot2dmatrix : public Contourable_Data
 {
 public:
 	PLFLT operator()(PLINT i, PLINT j ) const {return (*m_z)[i][j];};
-	splot2dmatrix(std::vector< std::vector<double> > *z):Contourable_Data(z->size(),z->at(0).size()){m_z=z;};
+	splot2dmatrix(std::vector< std::vector<double> > *z):Contourable_Data((int)z->size(),(int)z->at(0).size())
+	{
+		sci::assertThrow(sci::rectangular(*z), sci::err(sci::SERR_PLOT, 0, sU("splot2dmatrix data is not rectangular.")));
+		sci::assertThrow(z->size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
+		if( z->size() > 0)
+			sci::assertThrow(z->at(0).size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
+		m_z=z;
+	};
 	splot2dmatrix():Contourable_Data(0,0){m_z=NULL;};
 	void changepointerleavingsizethesame(std::vector< std::vector<double> > *z){m_z=z;}
 private:

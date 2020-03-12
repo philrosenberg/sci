@@ -1,7 +1,9 @@
 #ifndef TRANSFORMS_H
 #define TRANSFORMS_H
 
+#pragma warning(push, 0)
 #include <plplot/plstream.h>
+#pragma warning(pop)
 #include <vector>
 
 void splotmapform(void *userp, int npoints, double *x, double *y);
