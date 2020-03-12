@@ -74,32 +74,32 @@ namespace sci
 	double round(double n);
 
 	template<class T, class U>
-	U linearinterpolate(T x, T x1, T x2, U y1, U y2)
+	auto linearinterpolate(T x, T x1, T x2, U y1, U y2) -> decltype((y1 - y2) / (x1 - x2) * (x - x1) + y1)
 	{
 		auto m = (y1 - y2) / (x1 - x2);
 		return m * (x - x1) + y1;
 	}
 	
 	//enumeration of base types
-	enum basetype
-	{
-		SBASE_UNKNOWN=0,
-		SBASE_DOUBLE=1,
-		SBASE_FLOAT=2,
-		SBASE_LONGDOUBLE=3,
-		SBASE_BOOL=4,
-		SBASE_SIGNEDCHAR=5,
-		SBASE_UNSIGNEDCHAR=6,
-		SBASE_WCHAR=7,
-		SBASE_SIGNEDSHORT=8,
-		SBASE_UNSIGNEDSHORT=9,
-		SBASE_SIGNEDINT=10,
-		SBASE_UNSIGNEDINT=11,
-		SBASE_SIGNEDLONG=13,
-		SBASE_UNSIGNEDLONG=14,
-		SBASE_COMPLEX=15,
-		SBASE_STRING=16
-	};
+	//enum class basetype
+	//{
+	//	SBASE_UNKNOWN=0,
+	//	SBASE_DOUBLE=1,
+	//	SBASE_FLOAT=2,
+	//	SBASE_LONGDOUBLE=3,
+	//	SBASE_BOOL=4,
+	//	SBASE_SIGNEDCHAR=5,
+	//	SBASE_UNSIGNEDCHAR=6,
+	//	SBASE_WCHAR=7,
+	//	SBASE_SIGNEDSHORT=8,
+	//	SBASE_UNSIGNEDSHORT=9,
+	//	SBASE_SIGNEDINT=10,
+	//	SBASE_UNSIGNEDINT=11,
+	//	SBASE_SIGNEDLONG=13,
+	//	SBASE_UNSIGNEDLONG=14,
+	//	SBASE_COMPLEX=15,
+	//	SBASE_STRING=16
+	//};
 
 	//quick iterator
 	template<class T>
@@ -773,97 +773,97 @@ namespace sci
 		return std::vector<size_t>(1,v.size());
 	}
 
-	//return the base type of a multi dimensional vector
-	template<class T>
-	inline sci::basetype getbasetype(const std::vector< std::vector< T > > &v)
-	{
-		if(v.size()>0 && v[0].size()>0) return getbasetype(v[0]);//use the zeroth element and get the basetype of that
-		//note we don't use v[0][0] as this might mean we miss calling the 1d vector version
-		else return getbasetype (std::vector<T>()); //else create a new vector of Ts and check the base type of that
-	}
-	//return the base type of a vector, if this function gets called and not a specialisation then
-	//we have an unknown type, return 0;
-	template<class T>
-	inline sci::basetype getbasetype(const std::vector< T > &v)
-	{
-		return sci::SBASE_UNKNOWN;
-	}
-	//specialisations of the 1d version 
+	////return the base type of a multi dimensional vector
 	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< double > &v)
-	{
-		return sci::SBASE_DOUBLE;
-	}
+	//inline sci::basetype getbasetype(const std::vector< std::vector< T > > &v)
+	//{
+	//	if(v.size()>0 && v[0].size()>0) return getbasetype(v[0]);//use the zeroth element and get the basetype of that
+	//	//note we don't use v[0][0] as this might mean we miss calling the 1d vector version
+	//	else return getbasetype (std::vector<T>()); //else create a new vector of Ts and check the base type of that
+	//}
+	////return the base type of a vector, if this function gets called and not a specialisation then
+	////we have an unknown type, return 0;
 	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< float > &v)
-	{
-		return sci::SBASE_FLOAT;
-	}
+	//inline sci::basetype getbasetype(const std::vector< T > &v)
+	//{
+	//	return sci::SBASE_UNKNOWN;
+	//}
+	////specialisations of the 1d version 
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< double > &v)
+	//{
+	//	return sci::SBASE_DOUBLE;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< float > &v)
+	//{
+	//	return sci::SBASE_FLOAT;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< long double > &v)
+	//{
+	//	return sci::SBASE_LONGDOUBLE;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< bool > &v)
+	//{
+	//	return sci::SBASE_BOOL;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< signed char > &v)
+	//{
+	//	return sci::SBASE_SIGNEDCHAR;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< unsigned char > &v)
+	//{
+	//	return sci::SBASE_UNSIGNEDCHAR;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< wchar_t > &v)
+	//{
+	//	return sci::SBASE_WCHAR;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< signed short > &v)
+	//{
+	//	return sci::SBASE_SIGNEDSHORT;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< unsigned short > &v)
+	//{
+	//	return sci::SBASE_UNSIGNEDSHORT;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< signed int > &v)
+	//{
+	//	return sci::SBASE_SIGNEDINT;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< unsigned int > &v)
+	//{
+	//	return sci::SBASE_UNSIGNEDINT;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< signed long > &v)
+	//{
+	//	return sci::SBASE_SIGNEDLONG;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< unsigned long > &v)
+	//{
+	//	return sci::SBASE_UNSIGNEDLONG;
+	//}
 	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< long double > &v)
-	{
-		return sci::SBASE_LONGDOUBLE;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< bool > &v)
-	{
-		return sci::SBASE_BOOL;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< signed char > &v)
-	{
-		return sci::SBASE_SIGNEDCHAR;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< unsigned char > &v)
-	{
-		return sci::SBASE_UNSIGNEDCHAR;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< wchar_t > &v)
-	{
-		return sci::SBASE_WCHAR;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< signed short > &v)
-	{
-		return sci::SBASE_SIGNEDSHORT;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< unsigned short > &v)
-	{
-		return sci::SBASE_UNSIGNEDSHORT;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< signed int > &v)
-	{
-		return sci::SBASE_SIGNEDINT;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< unsigned int > &v)
-	{
-		return sci::SBASE_UNSIGNEDINT;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< signed long > &v)
-	{
-		return sci::SBASE_SIGNEDLONG;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< unsigned long > &v)
-	{
-		return sci::SBASE_UNSIGNEDLONG;
-	}
-	template<class T>
-	inline sci::basetype getbasetype(const std::vector< std::complex<T> > &v)
-	{
-		return sci::SBASE_COMPLEX;
-	}
-	//template<class T>
-	inline sci::basetype getbasetype(const std::vector< std::string > &v)
-	{
-		return sci::SBASE_STRING;
-	}
+	//inline sci::basetype getbasetype(const std::vector< std::complex<T> > &v)
+	//{
+	//	return sci::SBASE_COMPLEX;
+	//}
+	////template<class T>
+	//inline sci::basetype getbasetype(const std::vector< std::string > &v)
+	//{
+	//	return sci::SBASE_STRING;
+	//}
 
 	//recast one vector type to another. The destination vector will be resized
 	//to the same size as source if needed
@@ -2217,16 +2217,16 @@ namespace sci
 				continue;
 			if(x0<minx)
 			{
-				y0=sci::linearinterpolate(minx,x0,x1,y0,y1);
+				y0=U(sci::linearinterpolate(minx,x0,x1,y0,y1));
 				x0=minx;
 			}
 			if(x1>maxx)
 			{
-				y1=sci::linearinterpolate(maxx,x0,x1,y0,y1);
+				y1=U(sci::linearinterpolate(maxx,x0,x1,y0,y1));
 				x1=maxx;
 			}
 
-			result+=(y0+y1)*(x1-x0);
+			result+=returnType((y0+y1)*(x1-x0));
 		}
 		result*=TypeTraits<returnType>::unitless(0.5);
 		if (swappedLimits)
