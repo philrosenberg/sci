@@ -887,16 +887,20 @@ namespace sci
 	{
 	public:
 		typedef VALUE_TYPE valueType;
-		Physical() {}
-		explicit Physical(VALUE_TYPE v) : m_v(v) {} //explicit so we cannot accidentally create a Physical from a VALUE_TYPE
+
+#pragma warning(push)
+#pragma warning(disable : 26495)
+		constexpr Physical() {}
+#pragma warning(pop)
+		constexpr explicit Physical(VALUE_TYPE v) : m_v(v) {} //explicit so we cannot accidentally create a Physical from a VALUE_TYPE
 		template<class U, class V>
-		Physical(const Physical<U, V> &other)
+		constexpr Physical(const Physical<U, V> &other)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only convert between units with the same dimensions.");
-			m_v = other.template value<ENCODED_UNIT>();
+			m_v = (VALUE_TYPE)other.template value<ENCODED_UNIT>();
 		}
 		template<class U, class V>
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const Physical<U, V>& other)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const Physical<U, V>& other)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only convert between units with the same dimensions.");
 			m_v = other.template value<ENCODED_UNIT>();
@@ -905,7 +909,7 @@ namespace sci
 
 		//+= operator
 		template <class U, class V>
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only add assign units with the same dimensions.");
 			m_v += second.template value<ENCODED_UNIT>();
@@ -914,7 +918,7 @@ namespace sci
 
 		//-= operator
 		template <class U, class V>
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only minus assign units with the same dimensions.");
 			m_v -= second.template value<ENCODED_UNIT>();
@@ -923,7 +927,7 @@ namespace sci
 
 		// /= operator
 		template <class U, class V>
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only divide assign with a dimensionless quantity.");
 			m_v /= second.template value<Unitless>();
@@ -932,7 +936,7 @@ namespace sci
 
 		//*= operator
 		template <class U, class V>
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only multiply assign with a dimensionless quantity.");
 			m_v *= second.template value<Unitless>();
@@ -957,7 +961,7 @@ namespace sci
 		//static const int64_t exponent = ENCODED_UNIT::exponent;
 		typedef ENCODED_UNIT unit;
 		template <class REQUIRED>
-		VALUE_TYPE value() const
+		constexpr VALUE_TYPE value() const
 		{
 			if (std::is_same< REQUIRED, ENCODED_UNIT>::value)
 				return m_v;
@@ -966,6 +970,7 @@ namespace sci
 			//this should work whether REQUIRED is a Physical or an Encoded Unit
 			return ENCODED_UNIT::template Converter<VALUE_TYPE>::template convertTo<typename REQUIRED::unit>(m_v);
 		}
+
 		template<class OTHER>
 		static constexpr bool compatibleWith()
 		{
@@ -1097,11 +1102,13 @@ namespace sci
 	Physical<T, typename sci::Promoted<V,W>::type> pow(const Physical<T, V> &base, const Physical<U, W> &power)
 	{
 		static_assert(U::isUnitless(), "We can only raise a physical value to the power of a dimensionless quantity.");
-		static_assert(T::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless.");
+		static_assert(T::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless, try pow<POWER>(base) instead.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
-		W powerVal = power.template value<Unitless>();
-		return Physical<T, typename sci::Promoted<V, W>::type>(std::pow(base.template value<T>(), powerVal)*std::pow(10, T::exponent*(powerVal - W(1.0))));
+		typedef sci::Promoted<V, W>::type promotedType;
+		promotedType powerVal = power.template value<Unitless>();
+		promotedType baseVal = base.template value<T>();
+		return Physical<T, promotedType>(std::pow(baseVal, powerVal)*std::pow(promotedType(10), T::exponent*(powerVal - promotedType(1.0))));
 	}
 
 	// power - this case deals with raising to the power of an integer.
