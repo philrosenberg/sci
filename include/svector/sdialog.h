@@ -1,11 +1,13 @@
 #ifndef sdialog_h
 #define sdialog_h
 
+#pragma warning(push, 0)
 #include<wx/filedlg.h>
 #include<wx/textctrl.h>
-#include"NumberFromTextValidator.h"
 #include<wx/frame.h>
 #include<wx/timer.h>
+#pragma warning(pop)
+#include"NumberFromTextValidator.h"
 
 wxArrayString wxMultipleFileSelector(const wxString &message, const wxString &default_path=wxT(""), const wxString &default_filename=wxT(""), const wxString &wildcard=wxT("*.*"), int flags=0, wxWindow *parent=NULL, int x=-1,int y=-1);
 

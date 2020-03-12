@@ -50,9 +50,13 @@ namespace sci
 		static constexpr unitlessType unitless(size_t v) { return unitlessType(v); }
 		static constexpr unitlessType unitless(double v) { return unitlessType(v); }
 		static constexpr auto sqrt(const T &v) ->decltype(std::sqrt(v)) { return std::sqrt(v); }
-		constexpr static const T unity = T(1);
-		constexpr static const T zero = T(0);
+		static const T unity;
+		static const T zero;
 	};
+	template<class T>
+	const T TypeTraits<T>::unity = T(1);
+	template<class T>
+	const T TypeTraits<T>::zero = T(0);
 
 	template<class T, class U>
 	struct Promoted
