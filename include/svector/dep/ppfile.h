@@ -474,12 +474,15 @@ public:
 		{
 			return m_dataBytes;
 		}
+#pragma warning(push)
+#pragma warning(disable : 26495)
 		Section32()
 		{
 			m_dataStart = 0;
 			m_dataBytes = 0;
 			m_parent = nullptr;
 		}
+#pragma warning(pop)
 		PpHeader32 getHeader() {return m_header;}
 
 	};
@@ -522,6 +525,9 @@ public:
 		{
 			return m_dataBytes;
 		}
+
+#pragma warning(push)
+#pragma warning(disable : 26495)
 		Section64( const Section32 &section32 )
 		{
 			//*this = section32;
@@ -539,6 +545,7 @@ public:
 			m_dataBytes = 0;
 			m_parent = nullptr;
 		}
+#pragma warning (pop)
 		PpHeader64 getHeader() {return m_header;}
 	};
 

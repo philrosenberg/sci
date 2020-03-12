@@ -169,7 +169,10 @@ namespace sci
 	class NcFileBase
 	{
 	public:
+#pragma warning(push)
+#pragma warning(disable : 26495)
 		NcFileBase() { m_open = false; }
+#pragma warning(pop)
 		virtual ~NcFileBase() { close(); };
 		void openReadOnly(const sci::string &fileName);
 		void openWritable(const sci::string &fileName);
@@ -403,7 +406,11 @@ namespace sci
 		m_writeType = sci_internal::NcTraits<T>::ncType;
 		m_nBytes = m_nValues * sizeof(T);
 		T *v = (T*) malloc(m_nBytes);
+		sci::assertThrow(v, sci::err(sci::SERR_NC, 0, sU("Error allocating memory for a netcdf attribute.")));
+#pragma warning(push)
+#pragma warning(disable : 6011)
 		v[0] = value;
+#pragma warning (pop)
 		m_values = v;
 	}
 
@@ -416,7 +423,11 @@ namespace sci
 		m_writeType = sci_internal::NcTraits<WRITETYPE>::ncType;
 		m_nBytes = m_nValues * sizeof(WRITETYPE);
 		WRITETYPE *v = malloc(m_nBytes);
+		sci::assertThrow(v, sci::err(sci::SERR_NC, 0, sU("Error allocating memory for a netcdf attribute.")));
+#pragma warning(push)
+#pragma warning(disable : 6011)
 		v[0] = (WRITETYPE)value;
+#pragma warning (pop)
 		m_values = v;
 	}
 
@@ -432,7 +443,11 @@ namespace sci
 		else
 		{
 			m_values = malloc(m_nBytes);
+			sci::assertThrow(m_values, sci::err(sci::SERR_NC, 0, sU("Error allocating memory for a netcdf attribute.")));
+#pragma warning(push)
+#pragma warning(disable : 6387)
 			memcpy(m_values, &values[0], m_nBytes);
+#pragma warning (pop)
 		}
 	}
 
@@ -449,10 +464,14 @@ namespace sci
 		else
 		{
 			WRITETYPE *v = malloc(m_nBytes);
+			sci::assertThrow(v, sci::err(sci::SERR_NC, 0, sU("Error allocating memory for a netcdf attribute.")));
+#pragma warning(push)
+#pragma warning(disable : 6011)
 			WRITETYPE *vEnd = v + m_nValues;
 			T *v2i = &values[0];
 			for (WRITETYPE *vi = v; vi != vEnd; ++vi, ++v2i)
 				*vi = *v2i;
+#pragma warning(pop)
 			m_values = v;
 		}
 	}
