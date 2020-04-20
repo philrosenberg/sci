@@ -156,16 +156,6 @@ namespace sci
 		void setNull();
 	};
 
-	class AttributeContainer
-	{
-	public:
-		void writeAttributes(OutputNcFile *outputNcFile);
-		void addAttribute(const NcAttribute &attribute);
-		virtual int getId() = 0;
-	private:
-		std::vector<NcAttribute> m_attributes;
-	};
-
 	class NcFileBase
 	{
 	public:
@@ -188,8 +178,8 @@ namespace sci
 		int m_id;
 
 		//remove copy constructors
-		NcFileBase(const NcFileBase&);
-		NcFileBase operator=(const NcFileBase&);
+		NcFileBase(const NcFileBase&) = delete;
+		NcFileBase operator=(const NcFileBase&) = delete;
 	};
 
 	class InputNcFile : public NcFileBase
@@ -204,13 +194,19 @@ namespace sci
 		template<class T>
 		T getGlobalAttribute(const sci::string &name);
 		std::vector<sci::string> getGlobalAttributeList();
+		template<class T>
+		T getVariableAttribute(const sci::string& variableName, const sci::string& attributeName);
+		std::vector<sci::string> getVariableAttributeList(const sci::string& variableName);
+		std::vector<sci::string> getVariableDimensions(const sci::string& variableName);
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
+		template<class T>
+		//T getVariableAttributeFromId(int variableId, const sci::string& AttributeName);
 
 		//remove copy constructors
-		InputNcFile(const InputNcFile&);
-		InputNcFile operator=(const InputNcFile&);
+		InputNcFile(const InputNcFile&) = delete;
+		InputNcFile operator=(const InputNcFile&) = delete;
 	};
 
 	template<>
@@ -264,6 +260,40 @@ namespace sci
 	std::vector<uint8_t> InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const sci::string &name);
 	template<>
 	std::vector<sci::string> InputNcFile::getGlobalAttribute<std::vector<sci::string>>(const sci::string &name);
+
+	template<>
+	double InputNcFile::getVariableAttribute<double>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	float InputNcFile::getVariableAttribute<float>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	short InputNcFile::getVariableAttribute<short>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	int InputNcFile::getVariableAttribute<int>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	long InputNcFile::getVariableAttribute<long>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	int8_t InputNcFile::getVariableAttribute<int8_t>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	uint8_t InputNcFile::getVariableAttribute<uint8_t>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	sci::string InputNcFile::getVariableAttribute<sci::string>(const sci::string& variableName, const sci::string& attributeName);
+
+	template<>
+	std::vector<double> InputNcFile::getVariableAttribute<std::vector<double>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<float> InputNcFile::getVariableAttribute<std::vector<float>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<short> InputNcFile::getVariableAttribute<std::vector<short>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<int> InputNcFile::getVariableAttribute<std::vector<int>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<long> InputNcFile::getVariableAttribute<std::vector<long>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<int8_t> InputNcFile::getVariableAttribute<std::vector<int8_t>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<uint8_t> InputNcFile::getVariableAttribute<std::vector<uint8_t>>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	std::vector<sci::string> InputNcFile::getVariableAttribute<std::vector<sci::string>>(const sci::string& variableName, const sci::string& attributeName);
 
 	//This class encapsulates a netcdf variable. If you want you can inherit from this class to allow
 	//you to write other types of data than just (multi-d) vectors or built in types.
@@ -322,8 +352,8 @@ namespace sci
 		sci::string m_name;
 
 		//remove copy constructors
-		NcVariable(const NcVariable&);
-		NcVariable operator=(const NcVariable&);
+		NcVariable(const NcVariable&) = delete;
+		NcVariable operator=(const NcVariable&) = delete;
 	};
 
 	template<class T>
@@ -370,8 +400,8 @@ namespace sci
 	private:
 		bool m_inDefineMode;
 		//remove copy constructors
-		OutputNcFile(const OutputNcFile&);
-		OutputNcFile operator=(const OutputNcFile&);
+		OutputNcFile(const OutputNcFile&) = delete;
+		OutputNcFile operator=(const OutputNcFile&) = delete;
 	};
 
 	class NcDimension
@@ -394,8 +424,8 @@ namespace sci
 		mutable bool m_hasId;
 
 		//remove copy constructors
-		NcDimension(const NcDimension&);
-		NcDimension operator=(const NcDimension&);
+		NcDimension(const NcDimension&) = delete;
+		NcDimension operator=(const NcDimension&) = delete;
 	};
 
 	template <class T>

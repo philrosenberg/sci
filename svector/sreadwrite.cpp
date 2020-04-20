@@ -841,9 +841,55 @@ void sci::splitstring(const std::string &datastring, const std::string &separato
 	splitstring.push_back( datastring.substr(separatorlocations.back()+1) );
 }
 
-std::vector<std::string> sci::splitstring(const std::string &datastring, const std::string &separators, bool mergeadjacentseparators)
+std::vector<std::string> sci::splitstring(const std::string& datastring, const std::string& separators, bool mergeadjacentseparators)
 {
 	std::vector< std::string > result;
+	sci::splitstring(datastring, separators, mergeadjacentseparators, result);
+	return result;
+}
+
+void sci::splitstring(const sci::string& datastring, const sci::string& separators, bool mergeadjacentseparators, std::vector<sci::string>& splitstring)
+{
+	splitstring.resize(0);
+	if (datastring.size() == 0)
+	{
+		return;
+	}
+
+	//count how many separators we have and set their locations
+	std::vector<size_t> separatorlocations(1, -1);
+	separatorlocations.reserve(datastring.length());
+	for (size_t i = 0; i < datastring.length(); ++i)
+	{
+		for (size_t j = 0; j < separators.length(); ++j)
+		{
+			if (datastring[i] == separators[j])
+			{
+				separatorlocations.push_back(i);
+				break;
+			}
+		}
+	}
+	//size our vector appropriately
+	splitstring.reserve(separatorlocations.size());
+
+	//if we have no separators then just push back the string as is
+	if (separatorlocations.size() == 0)
+	{
+		splitstring.push_back(datastring);
+		return;
+	}
+	for (size_t i = 1; i < separatorlocations.size(); ++i)
+	{
+		if (separatorlocations[i - 1] != separatorlocations[i] - 1 || !mergeadjacentseparators)
+			splitstring.push_back(datastring.substr(separatorlocations[i - 1] + 1, separatorlocations[i] - separatorlocations[i - 1] - 1));
+	}
+	splitstring.push_back(datastring.substr(separatorlocations.back() + 1));
+}
+
+std::vector<sci::string> sci::splitstring(const sci::string &datastring, const sci::string &separators, bool mergeadjacentseparators)
+{
+	std::vector< sci::string > result;
 	sci::splitstring( datastring, separators, mergeadjacentseparators, result );
 	return result;
 }
