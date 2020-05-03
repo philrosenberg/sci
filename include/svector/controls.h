@@ -3,6 +3,9 @@
 #include<tuple>
 #include<wx/string.h>
 #include<wx/dialog.h>
+#include<wx/panel.h>
+#include<wx/textctrl.h>
+#include<wx/sizer.h>
 
 namespace sci
 {
@@ -101,11 +104,11 @@ namespace sci
 	};
 
 	template<class TUPLE>
-	class InputDialog : public wxDialog
+	class InputPanel : public wxPanel
 	{
 	public:
-		InputDialog(wxWindow* parent, int id, wxString title, const std::vector<wxString>& labels, TUPLE& defaultValues)
-			:wxDialog(parent, id, title)
+		InputPanel(wxWindow* parent, int id, const std::vector<wxString>& labels, const TUPLE& defaultValues, bool okayButton, bool applyButton, bool cancelButton)
+			:wxPanel(parent, id)
 		{
 			size_t nItems = std::tuple_size<TUPLE>::value;
 			wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
@@ -113,12 +116,53 @@ namespace sci
 			m_values = defaultValues;
 			addControls(m_values, controlSizer, labels);
 			topSizer->Add(controlSizer);
-			wxSizer* buttonSizer = CreateButtonSizer(wxOK | wxCANCEL);
-			if (buttonSizer)
+			if (okayButton || applyButton || cancelButton)
+			{
+				wxStdDialogButtonSizer* buttonSizer = new wxStdDialogButtonSizer();
+				if (okayButton)
+					buttonSizer->AddButton(new wxButton(this, wxID_OK));
+				if (applyButton)
+					buttonSizer->AddButton(new wxButton(this, wxID_APPLY));
+				if (cancelButton)
+					buttonSizer->AddButton(new wxButton(this, wxID_CANCEL));
+				buttonSizer->Realize();
 				topSizer->Add(buttonSizer);
+			}
 			SetSizer(topSizer);
 
-			Bind(wxEVT_BUTTON, &InputDialog::OnOk, this, wxID_OK);
+			Bind(wxEVT_BUTTON, &InputPanel::OnOk, this, wxID_OK);
+			Bind(wxEVT_BUTTON, &InputPanel::OnCancel, this, wxID_CANCEL);
+			Bind(wxEVT_BUTTON, &InputPanel::OnApply, this, wxID_APPLY);
+		}
+		InputPanel(wxWindow* parent, int id, const std::vector<wxString>& labels, const TUPLE& defaultValues, const std::vector<int> &buttonIds, const std::vector<wxString> &buttonLabels)
+			:wxPanel(parent, id)
+		{
+			size_t nItems = std::tuple_size<TUPLE>::value;
+			wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
+			wxFlexGridSizer* controlSizer = new wxFlexGridSizer(2, 5, 5);
+			m_values = defaultValues;
+			addControls(m_values, controlSizer, labels);
+			topSizer->Add(controlSizer);
+			if (buttonLabels.size() > 0)
+			{
+				sci::assertThrow(buttonLabels.size() == buttonIds.size());
+				wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+				for(size_t i=0; i< buttonLabels.size(); ++i)
+					buttonSizer->AddButton(new wxButton(this, buttonIds[i], buttonLabels[i]));
+				topSizer->Add(buttonSizer);
+			}
+			SetSizer(topSizer);
+		}
+		InputPanel(wxWindow* parent, int id, const std::vector<wxString>& labels, const TUPLE& defaultValues)
+			:wxPanel(parent, id)
+		{
+			size_t nItems = std::tuple_size<TUPLE>::value;
+			wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
+			wxFlexGridSizer* controlSizer = new wxFlexGridSizer(2, 5, 5);
+			m_values = defaultValues;
+			addControls(m_values, controlSizer, labels);
+			topSizer->Add(controlSizer);
+			SetSizer(topSizer);
 		}
 
 		template<size_t I = 0, typename... Tp>
@@ -132,9 +176,43 @@ namespace sci
 			if constexpr (I + 1 != sizeof...(Tp))
 				addControls<I + 1>(defaultValues, sizer, labels);
 		}
+
 		TUPLE getValues()
 		{
 			return m_values;
+		}
+
+		bool validateInputs()
+		{
+			TUPLE values;
+			std::vector<bool> success;
+			parseControls(values, m_inputControls, success);
+			bool allOkay = true;
+			for (size_t i = 0; i < success.size(); ++i)
+			{
+				allOkay = allOkay && success[i];
+				if (!success[i])
+					m_inputControls[i]->SetBackgroundColour(wxColour(255, 160, 160));
+				else
+					m_inputControls[i]->SetBackgroundColour(wxColour(255, 255, 255));
+			}
+			return allOkay;
+		}
+
+		bool acceptInputs()
+		{
+			if (!validateInputs())
+				return false;
+			TUPLE values;
+			std::vector<bool> success;
+			parseControls(values, m_inputControls, success);
+			m_values = values;
+		}
+
+		void resetInputs()
+		{
+			for (size_t i = 0; i < m_inputControls.size(); ++i)
+				m_inputControls[i]->SetBackgroundColour(wxColour(255, 255, 255));
 		}
 
 	private:
@@ -151,31 +229,42 @@ namespace sci
 		}
 		void OnOk(wxCommandEvent& event)
 		{
-			TUPLE values;
-			std::vector<bool> success;
-			parseControls(values, m_inputControls, success);
-			bool allOkay = true;
-			for (size_t i = 0; i < success.size(); ++i)
-			{
-				allOkay = allOkay && success[i];
-				if (!success[i])
-					m_inputControls[i]->SetBackgroundColour(wxColour(255, 160, 160));
-				else
-					m_inputControls[i]->SetBackgroundColour(wxColour(255, 255, 255));
-			}
-			if (allOkay)
-			{
-				m_values = values;
+			if (acceptInputs())
 				event.Skip();
-			}
+		}
+		void OnApply(wxCommandEvent& event)
+		{
+			acceptInputs();
+			event.Skip();
 		}
 		void OnCancel(wxCommandEvent& event)
 		{
-			for (size_t i = 0; i < m_inputControls.size(); ++i)
-				m_inputControls[i]->SetBackgroundColour(wxColour(255, 255, 255));
+			resetInputs();
 			event.Skip();
 		}
 		std::vector<wxTextCtrl*> m_inputControls;
 		TUPLE m_values;
+	};
+
+	template<class TUPLE>
+	class InputDialog : public wxDialog
+	{
+	public:
+		InputDialog(wxWindow* parent, int id, wxString title, const std::vector<wxString>& labels, TUPLE& defaultValues)
+			:wxDialog(parent, id, title)
+		{
+			size_t nItems = std::tuple_size<TUPLE>::value;
+			wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
+			m_panel = new InputPanel<TUPLE>(this, wxID_ANY, labels, defaultValues, true, false, true);
+			topSizer->Add(m_panel);
+			SetSizer(topSizer);
+		}
+		TUPLE getValues()
+		{
+			return m_panel->getValues();
+		}
+
+	private:
+		InputPanel<TUPLE>* m_panel;
 	};
 }
