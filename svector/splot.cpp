@@ -3270,15 +3270,17 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 			{
 				m_bitmap = new wxBitmap(width,height,32);
 				memdc.SelectObject(*m_bitmap);
-				//fill the bitmap with white giving a white background for plplot
-				//or to show blank if there are no plots
-				memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
 			}
 		}
 		else if ( m_bitmap )
 		{
 			memdc.SelectObject(*m_bitmap);
 		}
+		//fill the bitmap with white giving a white background for plplot
+		//or to show blank if there are no plots
+		memdc.SetBackground(*wxWHITE_BRUSH);
+		memdc.Clear();
+		memdc.SetBackground(wxNullBrush);
 
 		//remember the new size, so that on the next refresh we can check if the size has changed
 		m_bitmapwidth=width;
@@ -3632,6 +3634,7 @@ void splotwindow::removeplot(splot *plot)
 			m_plotyloc.erase(m_plotyloc.begin()+i);
 			m_plotwidth.erase(m_plotwidth.begin()+i);
 			m_plotheight.erase(m_plotheight.begin()+i);
+			m_plotsupdated = true;
 		}
 	}
 	for (size_t i=0; i<m_legends.size(); ++i)
@@ -3644,6 +3647,7 @@ void splotwindow::removeplot(splot *plot)
 			m_legendyloc.erase(m_legendyloc.begin()+i);
 			m_legendwidth.erase(m_legendwidth.begin()+i);
 			m_legendheight.erase(m_legendheight.begin()+i);
+			m_plotsupdated = true;
 		}
 	}
 }
