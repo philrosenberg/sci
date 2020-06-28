@@ -218,9 +218,19 @@ std::wstring sci::nativeUnicode(const std::u16string &str)
 	return std::wstring(str.begin(), str.end());
 }
 
-std::wstring sci::nativeUnicode(const std::u32string &str)
+std::wstring sci::nativeUnicode(const std::u32string& str)
 {
 	return sci::nativeUnicode(utf32ToUtf16(str));
+}
+
+std::wstring sci::nativeUnicode(const wxString& str)
+{
+	return str.wc_str(wxMBConvUTF16());
+}
+
+wxString& sci::operator<<(wxString& str1, const sci::string& str2)
+{
+	return str1 << nativeUnicode(str2);
 }
 
 std::string sci::nativeCodepage(const std::wstring &str)

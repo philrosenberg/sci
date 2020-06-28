@@ -69,6 +69,7 @@ namespace sci
 	std::wstring &nativeUnicode(std::wstring &str);
 	std::wstring nativeUnicode(const std::u16string &str);
 	std::wstring nativeUnicode(const std::u32string &str);
+	std::wstring nativeUnicode(const wxString& str);
 	std::string ucs16ToUtf8(const std::wstring &string);
 	std::wstring utf8ToUcs16(const std::string &string);
 
@@ -81,6 +82,8 @@ namespace sci
 	std::string nativeCodepage(const std::wstring &str, char replacementCharacter, bool &usedReplacement);
 	std::string nativeCodepage(const std::u16string &str, char replacementCharacter, bool &usedReplacement);
 	std::string nativeCodepage(const std::u32string &str, char replacementCharacter, bool &usedReplacement);
+
+	wxString& operator<<(wxString& str1, const sci::string& str2);
 #else
 	//On Linux the native unicode version is UTS-8 represented by std:::string
 	const std::string &nativeUnicode(const std::string &str);
@@ -88,6 +91,7 @@ namespace sci
 	std::string nativeUnicode(const std::wstring &str);
 	std::string nativeUnicode(const std::u16string &str);
 	std::string nativeUnicode(const std::u32string &str);
+	std::string nativeUnicode(const wxString& str);
 
 	//On linux we don't use codepage encoding, it's the same as utf8
 	const std::string &nativeCodepage(const std::string &str) { return str; }
