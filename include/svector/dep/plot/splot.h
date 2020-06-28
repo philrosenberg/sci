@@ -506,6 +506,7 @@ public:
 	void setdatasetproperties(size_t setindex, wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), int linewidth=1.0, wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), int xerrwidth=1, int yerrwidth=1);
 
 	void removeAllData();
+	void removeData(std::shared_ptr<DrawableItem> drawableItem);
 
 private:
 	//private constructor so only friends can create a plot

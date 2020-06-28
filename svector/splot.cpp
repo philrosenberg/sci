@@ -1588,6 +1588,17 @@ void splot2d::removeAllData()
 	m_drawableItems.resize(0);
 
 	splot::removeAllData();
+
+	m_haschanged = true;
+}
+
+void splot2d::removeData(std::shared_ptr<DrawableItem> drawableItem)
+{
+	for (size_t i = 0; i < m_drawableItems.size(); ++i)
+		if (m_drawableItems[i] == drawableItem)
+			m_drawableItems[i] = nullptr;
+
+	m_haschanged = true;
 }
 
 void splot2d::addImage(sci::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
