@@ -157,7 +157,7 @@ protected:
 	std::vector<double> m_yDataLogged;
 private:
 	double m_padLimitsAmount;
-	static void getLimits(const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
+	static void getLimits(const std::vector<double> &xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
 	mutable double m_xMin;
 	mutable double m_xMax;
 	mutable double m_yMin;

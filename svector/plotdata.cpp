@@ -320,7 +320,7 @@ void DrawableItem::draw( plstream *pl, bool xLog, bool yLog )
 	plotData( pl, xLog, yLog );
 }
 
-void XYAxisData::getLimits(  const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
+void XYAxisData::getLimits(  const std::vector<double> &xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
 {
 	xMin = std::numeric_limits<double>::max();
 	yMin = std::numeric_limits<double>::max();
