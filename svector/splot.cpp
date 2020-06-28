@@ -287,7 +287,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 	m_hls=false;
 
 	//remove any nans and infinities - in particular they can be created by the logging
-	std::vector<SBOOL> filter=sci::isEq(m_value,m_value) && m_value!=std::numeric_limits<double>::infinity() && m_value!=-std::numeric_limits<double>::infinity();
+	std::vector<SBOOL> filter=sci::isEq(m_value,m_value) && sci::notEq(m_value,std::numeric_limits<double>::infinity()) && sci::notEq(m_value,-std::numeric_limits<double>::infinity());
 	m_value=sci::subvector(m_value, filter);
 	m_colour1=sci::subvector(m_colour1, filter);
 	m_colour2=sci::subvector(m_colour2, filter);

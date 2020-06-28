@@ -454,28 +454,24 @@ PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::ve
 
 }
 
-PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:XYAxisData( xs, ys, transformer, autoLimitsPadAmount )
+PlotData2dZ::PlotData2dZ(const std::vector<std::vector<double>>& zs)
 {
-
 	m_zData = zs;
 	m_zDataLogged = sci:: log10( zs );
-	m_transformer = transformer;
 
-	
 	m_minZ = std::numeric_limits<double>::infinity();
 	m_maxZ = -std::numeric_limits<double>::infinity();
 	m_minZLogged = std::numeric_limits<double>::infinity();
 	m_maxZLogged = -std::numeric_limits<double>::infinity();
-	double *z;
-	double *zEnd;
+	double* z;
+	double* zEnd;
 	for (size_t i = 0; i < m_zData.size(); ++i)
 	{
 		z = &m_zData[i][0];
 		zEnd = z + m_zData[i].size();
-		for (;z < zEnd;++z)
+		for (; z < zEnd; ++z)
 		{
-			if (*z > m_maxZ && *z != std::numeric_limits<double>::infinity())
+			if (*z > m_maxZ&&* z != std::numeric_limits<double>::infinity())
 				m_maxZ = *z;
 			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
 				m_minZ = *z;
@@ -485,15 +481,15 @@ PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const
 	{
 		z = &m_zDataLogged[i][0];
 		zEnd = z + m_zData[i].size();
-		for (;z < zEnd;++z)
+		for (; z < zEnd; ++z)
 		{
-			if (*z > m_maxZ && *z != std::numeric_limits<double>::infinity())
+			if (*z > m_maxZ&&* z != std::numeric_limits<double>::infinity())
 				m_maxZLogged = *z;
 			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
 				m_minZLogged = *z;
 		}
 	}
-	if(m_minZ == std::numeric_limits<double>::infinity())
+	if (m_minZ == std::numeric_limits<double>::infinity())
 		m_minZ = std::numeric_limits<double>::quiet_NaN();
 	if (m_maxZ == -std::numeric_limits<double>::infinity())
 		m_maxZ = std::numeric_limits<double>::quiet_NaN();
@@ -501,46 +497,373 @@ PlotData2dStructured::PlotData2dStructured( const std::vector<double> &xs, const
 		m_minZLogged = std::numeric_limits<double>::quiet_NaN();
 	if (m_maxZLogged == -std::numeric_limits<double>::infinity())
 		m_maxZLogged = std::numeric_limits<double>::quiet_NaN();
+
 }
-void PlotData2dStructured::getZLimits(double &min, double &max) const
+void PlotData2dZ::getZLimits(double &min, double &max) const
 {
 	min = m_minZ;
 	max = m_maxZ;
 }
-void PlotData2dStructured::getLogZLimits(double &min, double &max) const
+void PlotData2dZ::getLogZLimits(double &min, double &max) const
 {
 	min = m_minZLogged;
 	max = m_maxZLogged;
 }
 
-void getXYValues(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
+PlotData2dRectilinear::PlotData2dRectilinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
+	:XYAxisData( xs, ys, transformer, autoLimitsPadAmount ), PlotData2dZ(zs)
 {
-	PlotData2dStructured *plotData2DStructured = (PlotData2dStructured*)data;
-	plotData2DStructured->getXYValues(xIndex, yIndex, *xOutput, *yOutput);
+	m_transformer = transformer;
 }
 
-void PlotData2dStructured::getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const
+template<bool LOGX, bool LOGY>
+void getXYValuesRectilinear(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
+{
+	PlotData2dRectilinear* plotData2dRectilinear = (PlotData2dRectilinear*)data;
+	plotData2dRectilinear->getXYValues<LOGX, LOGY>(xIndex, yIndex, *xOutput, *yOutput);
+}
+
+template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
+void getXYValuesCurvilinear(double xIndex, double yIndex, double* xOutput, double* yOutput, void* data)
+{
+	PlotData2dCurvilinear* plotData2dCurvilinear = (PlotData2dCurvilinear*)data;
+	plotData2dCurvilinear->getXYValues<LOGX, LOGY, X1D, Y1D>(xIndex, yIndex, *xOutput, *yOutput);
+}
+
+template<bool LOGX, bool LOGY>
+void PlotData2dRectilinear::getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const
 {
 	size_t xI = size_t(xIndex);
 	size_t yI = size_t(yIndex);
 	double xRemainder = xIndex - xI;
 	double yRemainder = yIndex - yI;
 
-	if (xRemainder == 0.0)
-		xOutput = m_xData[xI];
+	if constexpr (LOGX)
+	{
+		if (xRemainder == 0.0)
+			xOutput = m_xDataLogged[xI];
+		else
+			xOutput = (m_xDataLogged[xI + 1] - m_xDataLogged[xI]) * xRemainder + m_xDataLogged[xI];
+	}
 	else
-		xOutput = (m_xData[xI + 1] - m_xData[xI])*xRemainder + m_xData[xI];
+	{
+		if (xRemainder == 0.0)
+			xOutput = m_xData[xI];
+		else
+			xOutput = (m_xData[xI + 1] - m_xData[xI]) * xRemainder + m_xData[xI];
+	}
 
-	if (yRemainder == 0.0)
-		yOutput = m_yData[yI];
+	if constexpr (LOGY)
+	{
+		if (yRemainder == 0.0)
+			yOutput = m_yData[yI];
+		else
+			yOutput = (m_yData[yI + 1] - m_yData[yI]) * yRemainder + m_yData[yI];
+	}
 	else
-		yOutput = (m_yData[yI + 1] - m_yData[yI])*yRemainder + m_yData[yI];
+	{
+		if (yRemainder == 0.0)
+			yOutput = m_yDataLogged[yI];
+		else
+			yOutput = (m_yDataLogged[yI + 1] - m_yDataLogged[yI]) * yRemainder + m_yDataLogged[yI];
+	}
+}
+
+PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:DrawableItem(transformer), PlotData2dZ(zs)
+{
+	m_xData = xs;
+	m_yData = ys;
+	m_transformer = transformer;
+	m_padLimitsAmount = autoLimitsPadAmount;
+	m_x1d = false;
+	m_y1d = false;
+	m_calculatedLimits = false;
+	m_calculatedLogLimits = false;
+}
+
+PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:DrawableItem(transformer), PlotData2dZ(zs)
+{
+	m_xData1d = xs;
+	m_yData = ys;
+	m_transformer = transformer;
+	m_padLimitsAmount = autoLimitsPadAmount;
+	m_x1d = true;
+	m_y1d = false;
+	m_calculatedLimits = false;
+	m_calculatedLogLimits = false;
+}
+
+PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:DrawableItem(transformer), PlotData2dZ(zs)
+{
+	m_xData = xs;
+	m_yData1d = ys;
+	m_transformer = transformer;
+	m_padLimitsAmount = autoLimitsPadAmount;
+	m_x1d = false;
+	m_y1d = true;
+	m_calculatedLimits = false;
+	m_calculatedLogLimits = false;
+}
+
+template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
+void PlotData2dCurvilinear::getXYValues(double xIndex, double yIndex, double& xOutput, double& yOutput) const
+{
+	size_t xI = size_t(xIndex);
+	size_t yI = size_t(yIndex);
+	double xRemainder = xIndex - xI;
+	double yRemainder = yIndex - yI;
+
+	if constexpr (X1D)
+	{
+		if constexpr (LOGX)
+		{
+			if (xRemainder == 0.0)
+				xOutput = m_xDataLogged1d[xI];
+			else
+				xOutput = (m_xDataLogged1d[xI + 1] - m_xDataLogged1d[xI]) * xRemainder + m_xDataLogged1d[xI];
+		}
+		else
+		{
+			if (xRemainder == 0.0)
+				xOutput = m_xData1d[xI];
+			else
+				xOutput = (m_xData1d[xI + 1] - m_xData1d[xI]) * xRemainder + m_xData1d[xI];
+		}
+	}
+	else
+	{
+		if constexpr (LOGX)
+		{
+			if (xRemainder == 0.0)
+			{
+				if (yRemainder == 0.0)
+					xOutput = m_xDataLogged[xI][yI];
+				else
+					xOutput = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
+			}
+			else
+			{
+				if (yRemainder == 0.0)
+				{
+					xOutput = (m_xDataLogged[xI + 1][yI] - m_xDataLogged[xI][yI]) * xRemainder + m_xDataLogged[xI][yI];
+				}
+				else
+				{
+					double x0 = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
+					double x1 = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
+
+					xOutput = (x1 - x0) * xRemainder + x0;
+				}
+			}
+		}
+		else
+		{
+			if (xRemainder == 0.0)
+			{
+				if (yRemainder == 0.0)
+					xOutput = m_xData[xI][yI];
+				else
+					xOutput = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
+			}
+			else
+			{
+				if (yRemainder == 0.0)
+				{
+					xOutput = (m_xData[xI + 1][yI] - m_xData[xI][yI]) * xRemainder + m_xData[xI][yI];
+				}
+				else
+				{
+					double x0 = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
+					double x1 = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
+
+					xOutput = (x1 - x0) * xRemainder + x0;
+				}
+			}
+		}
+	}
+
+	if constexpr (Y1D)
+	{
+		if constexpr (LOGY)
+		{
+			if (yRemainder == 0.0)
+				yOutput = m_yDataLogged1d[yI];
+			else
+				yOutput = (m_yDataLogged1d[yI + 1] - m_yDataLogged1d[yI]) * yRemainder + m_yDataLogged1d[yI];
+		}
+		else
+		{
+			if (yRemainder == 0.0)
+				yOutput = m_yData1d[yI];
+			else
+				yOutput = (m_yData1d[yI + 1] - m_yData1d[yI]) * yRemainder + m_yData1d[yI];
+		}
+	}
+	else
+	{
+		if constexpr (LOGY)
+		{
+			if (xRemainder == 0.0)
+			{
+				if (yRemainder == 0.0)
+					yOutput = m_yDataLogged[xI][yI];
+				else
+					yOutput = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
+			}
+			else
+			{
+				if (yRemainder == 0.0)
+				{
+					yOutput = (m_yDataLogged[xI + 1][yI] - m_yDataLogged[xI][yI]) * xRemainder + m_yDataLogged[xI][yI];
+				}
+				else
+				{
+					double y0 = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
+					double y1 = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
+
+					yOutput = (y1 - y0) * xRemainder + y0;
+				}
+			}
+		}
+		else
+		{
+			if (xRemainder == 0.0)
+			{
+				if (yRemainder == 0.0)
+					yOutput = m_yData[xI][yI];
+				else
+					yOutput = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
+			}
+			else
+			{
+				if (yRemainder == 0.0)
+				{
+					yOutput = (m_yData[xI + 1][yI] - m_yData[xI][yI]) * xRemainder + m_yData[xI][yI];
+				}
+				else
+				{
+					double y0 = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
+					double y1 = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
+
+					yOutput = (y1 - y0) * xRemainder + y0;
+				}
+			}
+		}
+	}
+}
+
+void PlotData2dCurvilinear::getLimits(const std::vector<std::vector<double>>& axisValues, double& min, double& max, double padAmount)
+{
+	min = std::numeric_limits<double>::max();
+	max = std::numeric_limits<double>::min();
+
+	if (axisValues.size() > 0)
+	{
+		for (size_t i = 0; i < axisValues.size(); ++i)
+		{
+			if (axisValues[i].size() > 0)
+			{
+				const double* valuesi = &axisValues[i][0];
+				const double* valuesEnd = valuesi + axisValues[i].size();
+				for (; valuesi != valuesEnd; valuesi++)
+				{
+					if (*valuesi != std::numeric_limits<double>::infinity() && *valuesi != -std::numeric_limits<double>::infinity())
+					{
+						if (*valuesi < min)
+							min = *valuesi;
+						if (*valuesi > max)
+							max = *valuesi;
+					}
+				}
+			}
+		}
+	}
+
+	if (max < min)
+		max = min = std::numeric_limits<double>::quiet_NaN();
+
+	double diff = max - min;
+	max += diff * padAmount;
+	min -= diff * padAmount;
+}
+void PlotData2dCurvilinear::getLimits(const std::vector<double>& axisValues, double& min, double& max, double padAmount)
+{
+
+	min = std::numeric_limits<double>::max();
+	min = std::numeric_limits<double>::max();
+
+	if (axisValues.size() > 0)
+	{
+		const double* valuesi = &axisValues[0];
+		const double* valuesEnd = valuesi + axisValues.size();
+		for (; valuesi != valuesEnd; valuesi++)
+		{
+			if (*valuesi != std::numeric_limits<double>::infinity() && *valuesi != -std::numeric_limits<double>::infinity())
+			{
+				if (*valuesi < min)
+					min = *valuesi;
+				if (*valuesi > max)
+					max = *valuesi;
+			}
+		}
+	}
+
+	if (max < min)
+		max = min = std::numeric_limits<double>::quiet_NaN();
+
+	double diff = max - min;
+	max += diff * padAmount;
+	min -= diff * padAmount;
+}
+
+void PlotData2dCurvilinear::getLimits(double& xMin, double& xMax, double& yMin, double& yMax) const
+{
+	if (!m_calculatedLimits)
+	{
+		if (m_x1d)
+			getLimits(m_xData1d, m_xMin, m_xMax, m_padLimitsAmount);
+		else
+			getLimits(m_xData, m_xMin, m_xMax, m_padLimitsAmount);
+		if (m_y1d)
+			getLimits(m_yData1d, m_yMin, m_yMax, m_padLimitsAmount);
+		else
+			getLimits(m_yData, m_yMin, m_yMax, m_padLimitsAmount);
+		m_calculatedLimits = true;
+	}
+	xMin = m_xMin;
+	xMax = m_xMax;
+	yMin = m_yMin;
+	yMax = m_yMax;
+}
+
+void PlotData2dCurvilinear::getLogLimits(double& xMin, double& xMax, double& yMin, double& yMax) const
+{
+	if (!m_calculatedLogLimits)
+	{
+		if (m_x1d)
+			getLimits(m_xDataLogged1d, m_xMinLogged, m_xMaxLogged, m_padLimitsAmount);
+		else
+			getLimits(m_xDataLogged, m_xMinLogged, m_xMaxLogged, m_padLimitsAmount);
+		if (m_y1d)
+			getLimits(m_yDataLogged1d, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount);
+		else
+			getLimits(m_yDataLogged, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount);
+		m_calculatedLogLimits = true;
+	}
+	xMin = m_xMinLogged;
+	xMax = m_xMaxLogged;
+	yMin = m_yMinLogged;
+	yMax = m_yMaxLogged;
 }
 
 LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
 	: PlotData1d( xs, ys, transformer ), m_lineStyle( lineStyle )
 {
 }
+
 void LineData::plotData( plstream *pl, bool xLog, bool yLog ) const
 {
 	m_lineStyle.setupLineStyle( pl, 1, m_scale );
@@ -804,7 +1127,7 @@ void VerticalBars::getLogLimits( double &xMin, double &xMax, double &yMin, doubl
 }
 
 GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:PlotData2dStructured(xs, ys, zs, transformer, autoLimitsPadAmount)
+	:PlotData2dRectilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
 {
 	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	if (zs.size() == 0)
@@ -827,31 +1150,164 @@ GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys,
 
 void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
 {
-	if (m_zData.size() == 0 || m_zData[0].size() == 0)
+	if (getZData().size() == 0 || getZData()[0].size() == 0)
 		return;
 
 	//set up a 2d double ** style array for the z data
-	std::vector<const double*> zs(m_zData.size());
+	std::vector<const double*> zs(getZData().size());
 	if (m_colourscale.isLogarithmic())
 	{
 		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(m_zDataLogged[i][0]);
+			zs[i] = &(getZDataLogged()[i][0]);
 	}
 	else
 	{
 		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(m_zData[i][0]);
+			zs[i] = &(getZData()[i][0]);
 	}
 
 	//set up the colourscale
 	m_colourscale.setup(pl);
 
-	m_plotLogX = xLog;
-	m_plotLogY = yLog;
+	PLTRANSFORM_callback getXY;
+	if (xLog)
+	{
+		if (yLog)
+			getXY = &(::getXYValuesRectilinear<true, true>);
+		else
+			getXY = &(::getXYValuesRectilinear<true, false>);
+	}
+	else
+	{
+		if (yLog)
+			getXY = &(::getXYValuesRectilinear<false, true>);
+		else
+			getXY = &(::getXYValuesRectilinear<false, false>);
+	}
+
 	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
 	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
-	pl->imagefr(&zs[0], m_zData.size(), m_zData[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
-		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), &(::getXYValues), (void*)this);
+	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
+		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
+}
+
+GridDataCurvilinear::GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
+	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
+	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
+	
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular xs"));
+	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular ys"));
+
+	m_colourscale = colourScale;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+}
+
+GridDataCurvilinear::GridDataCurvilinear(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
+	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
+
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular ys"));
+
+	m_colourscale = colourScale;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+}
+
+GridDataCurvilinear::GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
+	:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
+	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
+
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular xs"));
+
+	m_colourscale = colourScale;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+}
+
+void GridDataCurvilinear::plotData(plstream* pl, bool xLog, bool yLog) const
+{
+	if (getZData().size() == 0 || getZData()[0].size() == 0)
+		return;
+
+	//set up a 2d double ** style array for the z data
+	std::vector<const double*> zs(getZData().size());
+	if (m_colourscale.isLogarithmic())
+	{
+		for (size_t i = 0; i < zs.size(); ++i)
+			zs[i] = &(getZDataLogged()[i][0]);
+	}
+	else
+	{
+		for (size_t i = 0; i < zs.size(); ++i)
+			zs[i] = &(getZData()[i][0]);
+	}
+
+	//set up the colourscale
+	m_colourscale.setup(pl);
+
+	//select the correct callback
+	PLTRANSFORM_callback getXY;
+	if (xLog && yLog && m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, true, true, true>);
+	else if (xLog && yLog && m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, true, true, false>);
+	else if (xLog && yLog && !m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, true, false, true>);
+	else if (xLog && yLog && !m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, true, false, false>);
+	else if (xLog && !yLog && m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, false, true, true>);
+	else if (xLog && !yLog && m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, false, true, false>);
+	else if (xLog && !yLog && !m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, false, false, true>);
+	else if (xLog && !yLog && !m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<true, false, false, false>);
+	else if (!xLog && yLog && m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, true, true, true>);
+	else if (!xLog && yLog && m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, true, true, false>);
+	else if (!xLog && yLog && !m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, true, false, true>);
+	else if (!xLog && yLog && !m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, true, false, false>);
+	else if (!xLog && !yLog && m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, false, true, true>);
+	else if (!xLog && !yLog && m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, false, true, false>);
+	else if (!xLog && !yLog && !m_x1d && m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, false, false, true>);
+	else if (!xLog && !yLog && !m_x1d && !m_y1d)
+		getXY = &(::getXYValuesCurvilinear<false, false, false, false>);
+		
+
+	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
+	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
+	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
+		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
 }
 
 FillData::FillData(const std::vector<double> &xs, const std::vector<double> &ys, const FillStyle &fillStyle, const LineStyle &outlineStyle, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
