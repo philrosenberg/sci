@@ -3663,6 +3663,32 @@ void splotwindow::removeplot(splot *plot)
 	}
 }
 
+void splotwindow::moveplot(splot* plot, double xpos, double ypos, double width, double height)
+{
+	for (size_t i = 0; i < m_plots.size(); ++i)
+	{
+		if (m_plots[i] == plot)
+		{
+			m_plotxloc[i]=xpos;
+			m_plotyloc[i]=ypos;
+			m_plotwidth[i]=width;
+			m_plotheight[i]=height;
+			m_plotsupdated = true;
+		}
+	}
+	for (size_t i = 0; i < m_legends.size(); ++i)
+	{
+		if (m_legends[i] == plot)
+		{
+			m_legendxloc[i] = xpos;
+			m_legendyloc[i] = ypos;
+			m_legendwidth[i] = width;
+			m_legendheight[i] = height;
+			m_plotsupdated = true;
+		}
+	}
+}
+
 splotframe::splotframe(wxWindow* parent, bool antialiasing, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 :wxFrame(parent,id,title,pos,size,style,name)
 {

@@ -604,6 +604,7 @@ public:
 	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
 	bool print( bool showDialog );
 	void removeplot(splot *plot);
+	void moveplot(splot* plot, double xpos, double ypos, double width, double height);
 private:
 	bool print( bool showDialog, sci::string printerName );
 	//vector of plots
