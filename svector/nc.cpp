@@ -213,6 +213,26 @@ std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t
 	return result;
 }
 
+std::vector<size_t> sci::InputNcFile::getVariableShape(const sci::string& name)
+{
+	int varId;
+	checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+	int nDims;
+	checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
+	std::vector<size_t> shape(nDims);
+	if (nDims > 0)
+	{
+		std::vector<int> dimIds(nDims);
+		checkNcCall(nc_inq_vardimid(getId(), varId, &dimIds[0]));
+		for (int i = 0; i < nDims; ++i)
+		{
+			checkNcCall(nc_inq_dimlen(getId(), dimIds[i], &shape[i]));
+		}
+	}
+
+	return shape;
+}
+
 template<>
 double sci::InputNcFile::getGlobalAttribute<double>(const sci::string &name)
 {
