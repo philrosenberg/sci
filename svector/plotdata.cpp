@@ -1187,7 +1187,8 @@ void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
 
 	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
 	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
-	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
+	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), std::numeric_limits<double>::quiet_NaN(),
+		std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
 		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
 }
 
@@ -1306,7 +1307,8 @@ void GridDataCurvilinear::plotData(plstream* pl, bool xLog, bool yLog) const
 
 	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
 	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
-	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), 0, m_xData.size() - 1, 0, m_yData.size() - 1,
+	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), std::numeric_limits<double>::quiet_NaN(),
+		std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
 		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
 }
 
