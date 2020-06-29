@@ -556,16 +556,16 @@ void PlotData2dRectilinear::getXYValues(double xIndex, double yIndex, double &xO
 	if constexpr (LOGY)
 	{
 		if (yRemainder == 0.0)
-			yOutput = m_yData[yI];
+			yOutput = m_yDataLogged[yI];
 		else
-			yOutput = (m_yData[yI + 1] - m_yData[yI]) * yRemainder + m_yData[yI];
+			yOutput = (m_yDataLogged[yI + 1] - m_yDataLogged[yI]) * yRemainder + m_yDataLogged[yI];
 	}
 	else
 	{
 		if (yRemainder == 0.0)
-			yOutput = m_yDataLogged[yI];
+			yOutput = m_yData[yI];
 		else
-			yOutput = (m_yDataLogged[yI + 1] - m_yDataLogged[yI]) * yRemainder + m_yDataLogged[yI];
+			yOutput = (m_yData[yI + 1] - m_yData[yI]) * yRemainder + m_yData[yI];
 	}
 }
 
