@@ -2142,6 +2142,98 @@ namespace sci
 		std::reverse(v.begin(), v.end());
 	}
 
+	//puta all values less than or equal to the last element at the beginning
+	//of the container and all those bigger to the right of the container
+	//values passed in must be iterator types
+	//result is an iterator to the first element with a value bigger than the
+	//pivot value.
+	template <class T>
+	T partitionOnLastElement(T containerBegin, T containerEnd)
+	{
+		T result = containerBegin;
+		auto pivotValue = *(containerEnd - 1);
+		for (T iter = containerBegin; iter != containerEnd-1; ++iter)
+		{
+			if (*iter <= pivotValue)
+			{
+				std::swap(*iter, *result);
+				++result;
+			}
+		}
+		std::swap(*result, *(containerEnd - 1));
+		return result;
+	}
+
+	//find the kth Biggest element. k=0 is the smallest element
+	template<class T>
+	T findKthBiggestValue(std::vector<T> v, size_t k)
+	{
+		sci::assertThrow(v.size() > k, sci::err(sci::SERR_VECTOR, 0, sU("Attempt to find the kth smallest element of a vector, but k was too large for the vector")));
+		
+		T partitionValue = *(v.end() - 1);
+		auto begin = v.begin();
+		auto end = v.end();
+		auto partitionPoint = partitionOnLastElement(begin, end);
+		while (begin + k != partitionPoint)
+		{
+			if (begin + k < partitionPoint)
+			{
+				end = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+			else
+			{
+				k -= partitionPoint - begin;
+				begin = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+		}
+		return *partitionPoint;
+	}
+
+	//find the median of a vector
+	template<class T>
+	T median(std::vector<T> v)
+	{
+		if (v.size() % 2 == 1)
+			return findKthBiggestValue(v, v.size() / 2);
+
+		if (v.size() == 0)
+			return std::numeric_limits<T>::quiet_NaN();
+
+		//find the larger of the two values needed to caculate the median
+
+		size_t k = v.size() / 2;
+
+		auto begin = v.begin();
+		auto end = v.end();
+		auto partitionPoint = partitionOnLastElement(begin, end);
+		while (begin + k != partitionPoint)
+		{
+			if (begin + k < partitionPoint)
+			{
+				end = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+			else
+			{
+				k -= partitionPoint - begin;
+				begin = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+		}
+		auto value1 = *partitionPoint;
+
+		//now find the smaller - because we have already partitioned the array around the larger
+		//value, this is just the max of the values before the partition point
+		auto value2 = v.front();
+		for (auto iter = v.begin(); iter != partitionPoint; ++iter)
+			if (*iter > value2)
+				value2 = *iter;
+
+		return (value1 + value2) / sci::TypeTraits<T>::unitlessType(2.0);
+	}
+
 
 	//********************************************************
 	//*******Specialized function with external support*******
