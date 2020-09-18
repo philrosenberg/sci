@@ -874,8 +874,8 @@ namespace sci
 	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"))
 	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"))
 	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"))
-	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("minute"))
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0/3600.0, sU("hour"))
+	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("min"))
+	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0/3600.0, sU("hr"))
 	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"))
 
 
