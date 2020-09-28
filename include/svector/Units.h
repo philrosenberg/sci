@@ -279,10 +279,37 @@ namespace sci
 	//Hopefully these make raising 10 to the power zero get
 	//determined at compile time as it will be a common operation
 	//when adding and subtracting
+	template <class VALUE_TYPE>
+	constexpr VALUE_TYPE pow10(int pow)
+	{
+		if (pow == 0)
+			return VALUE_TYPE(1.);
+		if (pow == 1)
+			return VALUE_TYPE(10.);
+		if (pow == 2)
+			return VALUE_TYPE(100.);
+		if (pow == 3)
+			return VALUE_TYPE(1000.);
+		if (pow == -1)
+			return VALUE_TYPE(0.1);
+		if (pow == -2)
+			return VALUE_TYPE(0.01);
+		if (pow == -3)
+			return VALUE_TYPE(0.001);
+
+		VALUE_TYPE temp = pow10<VALUE_TYPE>(pow / 2);
+		if (pow % 2 == 0)
+			return temp * temp;
+		if(pow > 0)
+			return temp * temp * 10;
+		return temp * temp * 0.1;
+	}
 	template <int pow, class VALUE_TYPE>
 	constexpr VALUE_TYPE pow10()
 	{
-		return pow == 0 ? VALUE_TYPE(1) : std::pow(VALUE_TYPE(10), pow);
+		if (pow == 0)
+			return VALUE_TYPE(1);
+		return sci::pow10<VALUE_TYPE>(pow);
 	}
 
 	//This is the basic class that represents a unit. It takes two templated parameters
@@ -415,7 +442,7 @@ namespace sci
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
-				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT))*sci::pow10<(BASE_EXPONENT - encodedUnitClass::exponent)>();
+				return value * std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::convertFromBase<0>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT))*sci::pow10<(BASE_EXPONENT - encodedUnitClass::exponent), VALUE_TYPE>();
 			}
 		};
 	};
@@ -1022,84 +1049,84 @@ namespace sci
 
 	//* operator
 	template <class T, class U, class V, class W>
-	Physical<MultipliedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator*(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<MultipliedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator*(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return Physical<MultipliedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>()*second.template value<U>());
 	}
 
 	// / operator
 	template <class T, class U, class V, class W>
-	Physical<DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return Physical <DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>() / second.template value<U>());
 	}
 
 	//+ operator
 	template <class T, class U, class V, class W>
-	Physical<T, typename sci::Promoted<V, W>::type> operator+(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<T, typename sci::Promoted<V, W>::type> operator+(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return Physical<T, typename sci::Promoted<V, W>::type>(first.template value<T>() + second.template value<T>());
 	}
 
 	//- operator
 	template <class T, class U, class V, class W>
-	Physical<T, typename sci::Promoted<V, W>::type> operator-(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<T, typename sci::Promoted<V, W>::type> operator-(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return Physical<T, typename sci::Promoted<V, W>::type>(first.template value<T>() - second.template value<T>());
 	}
 
 	//uniary- operator
 	template <class T, class V>
-	Physical<T, V> operator-(const Physical<T, V> &val)
+	constexpr Physical<T, V> operator-(const Physical<T, V> &val)
 	{
 		return Physical<T, V>(-val.template value<T>());
 	}
 
 	//> operator
 	template <class T, class U, class V, class W>
-	bool operator>(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator>(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() > second.template value<T>();
 	}
 
 	//< operator
 	template <class T, class U, class V, class W>
-	bool operator<(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator<(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() < second.template value<T>();
 	}
 
 	//== operator
 	template <class T, class U, class V, class W>
-	bool operator==(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator==(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() == second.template value<T>();
 	}
 
 	//!= operator
 	template <class T, class U, class V, class W>
-	bool operator!=(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator!=(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() != second.template value<T>();
 	}
 
 	//>= operator
 	template <class T, class U, class V, class W>
-	bool operator>=(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator>=(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() >= second.template value<T>();
 	}
 
 	//<= operator
 	template <class T, class U, class V, class W>
-	bool operator<=(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr bool operator<=(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
 		return first.template value<T>() <= second.template value<T>();
 	}
 
 	// power - this case deals with dimensionless exponents and bases
 	template <class T, class U, class V, class W>
-	Physical<T, typename sci::Promoted<V,W>::type> pow(const Physical<T, V> &base, const Physical<U, W> &power)
+	constexpr Physical<T, typename sci::Promoted<V,W>::type> pow(const Physical<T, V> &base, const Physical<U, W> &power)
 	{
 		static_assert(U::isUnitless(), "We can only raise a physical value to the power of a dimensionless quantity.");
 		static_assert(T::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless, try pow<POWER>(base) instead.");
@@ -1115,32 +1142,32 @@ namespace sci
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
 	template <int POWER, class T, class V>
-	Physical<PoweredEncodedUnit<T, POWER>, V> pow(const Physical<T, V> &base)
+	constexpr Physical<PoweredEncodedUnit<T, POWER>, V> pow(const Physical<T, V> &base)
 	{
 		static_assert(!T::isUnitless(), "When raising a unitless quantity to a power, please explicitly cast it to sci::Physical<sci::Unitless, VALUE_TYPE>, where VALUE_TYPE is some value type. This ensures the output is not Unitless to some power, which makes no physical sense. You may also use sci::Percent, sci::PerMille and sci::BasisPoint, which will be converted to sci::Unitless for you.");
 		return Physical<PoweredEncodedUnit<T, POWER>, V>(std::pow(base.template value<T>(), POWER));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
 	template <int POWER, class V>
-	Physical<Unitless, V> pow(const Physical<Unitless, V> &base)
+	constexpr Physical<Unitless, V> pow(const Physical<Unitless, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
 	}
 	//same but for percent
 	template <int POWER, class V>
-	Physical<Unitless, V> pow(const Physical<Percent, V> &base)
+	constexpr Physical<Unitless, V> pow(const Physical<Percent, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
 	}
 	//same but for per mille
 	template <int POWER, class V>
-	Physical<Unitless, V> pow(const Physical<PerMille, V> &base)
+	constexpr Physical<Unitless, V> pow(const Physical<PerMille, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
 	}
 	//same but for basis point
 	template <int POWER, class V>
-	Physical<Unitless, V> pow(const Physical<BasisPoint, V> &base)
+	constexpr Physical<Unitless, V> pow(const Physical<BasisPoint, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
 	}
@@ -1150,76 +1177,76 @@ namespace sci
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
 	template <int ROOT, class T, class V>
-	Physical<RootedEncodedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
+	constexpr Physical<RootedEncodedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
 	{
 		return Physical<RootedEncodedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
 	}
 	//This version undoes a powered unit
 	template <int ROOT, class T, class V>
-	Physical<T, V> root(const Physical<PoweredEncodedUnit<T, ROOT>, V> &base)
+	constexpr Physical<T, V> root(const Physical<PoweredEncodedUnit<T, ROOT>, V> &base)
 	{
 		return Physical<T, V>(std::pow(base.template value<PoweredEncodedUnit<T, ROOT>>(), V(1.0) / V(ROOT)));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
 	template <int ROOT, class V>
-	Physical<Unitless, V> root(const Physical<Unitless, V> &base)
+	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0)/V(ROOT)));
 	}
 	//same but for percent
 	template <int ROOT, class V>
-	Physical<Unitless, V> root(const Physical<Percent, V> &base)
+	constexpr Physical<Unitless, V> root(const Physical<Percent, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
 	//same but for per mille
 	template <int ROOT, class V>
-	Physical<Unitless, V> root(const Physical<PerMille, V> &base)
+	constexpr Physical<Unitless, V> root(const Physical<PerMille, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
 	//same but for basis point
 	template <int ROOT, class V>
-	Physical<Unitless, V> root(const Physical<BasisPoint, V> &base)
+	constexpr Physical<Unitless, V> root(const Physical<BasisPoint, V> &base)
 	{
 		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
 	//sqrt - uses root<2> function
 	template<class T, class V>
-	Physical<RootedEncodedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
+	constexpr Physical<RootedEncodedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
 	{
 		return Physical<RootedEncodedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
 	}
 
 	template <class T, class V>
-	Physical<Unitless, V> log(const Physical<T, V> &value)
+	constexpr Physical<Unitless, V> log(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless, V>(std::log(value.template value<Unitless>()));
 	}
 
 	template <class T, class V>
-	Physical<Unitless, V> log10(const Physical<T, V> &value)
+	constexpr Physical<Unitless, V> log10(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless, V>(std::log10(value.template value<T>()) + T::exponent); // make use of log laws to split this
 	}
 
 	template <class T, class V>
-	Physical<Unitless, V> log2(const Physical<T, V> &value)
+	constexpr Physical<Unitless, V> log2(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
 		return Physical<Unitless, V>(std::log2(value.template value<Unitless>()));
 	}
 
 	template <class T, class V>
-	Physical<Unitless, V> ln(const Physical<T, V> &value)
+	constexpr Physical<Unitless, V> ln(const Physical<T, V> &value)
 	{
 		return log(value);
 	}
 
 	template <class T, class V>
-	Physical<Unitless, V> exp(const Physical<T, V> &value)
+	constexpr Physical<Unitless, V> exp(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only take the exponent of a dimensionless quantity.");
 		return Physical<Unitless, V>(std::exp(value.template value<Unitless>()));
@@ -1227,21 +1254,21 @@ namespace sci
 
 
 	template <class T, class V>
-	Physical<Radian<>, V> asin(const Physical<T, V> &value)
+	constexpr Physical<Radian<>, V> asin(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only asin a dimensionless quantity.");
 		return Physical<Radian<>, V>(std::asin(value.template value<Unitless>()));
 	}
 
 	template <class T, class V>
-	Physical<Radian<>, V> acos(const Physical<T, V> &value)
+	constexpr Physical<Radian<>, V> acos(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only acos a dimensionless quantity.");
 		return Physical<Radian<>, V>(std::acos(value.template value<Unitless>()));
 	}
 
 	template <class T, class V>
-	Physical<Radian<>, V> atan(const Physical<T, V> &value)
+	constexpr Physical<Radian<>, V> atan(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only atan a dimensionless quantity.");
 		return Physical<Radian<>, V>(std::atan(value.template value<Unitless>()));
