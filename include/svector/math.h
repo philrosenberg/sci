@@ -597,7 +597,7 @@ namespace sci{
 	}
 
 	template<int POW, class T>
-	std::vector<T> inline pow(const std::vector<T> &base)
+	auto inline pow(const std::vector<T> &base) -> std::vector<decltype(pow<POW>(base[0]))>
 	{
 		std::vector<decltype(pow<POW>(base[0]))> result(base.size());
 		for (size_t i = 0; i < result.size(); ++i)
@@ -606,7 +606,7 @@ namespace sci{
 	}
 
 	template<int POW, class T>
-	std::vector<std::vector<T>> inline pow(const std::vector<std::vector<T>>& base)
+	auto inline pow(const std::vector<std::vector<T>>& base) -> std::vector<decltype(pow<POW>(base[0]))>
 	{
 		std::vector<decltype(pow<POW>(base[0]))> result(base.size());
 		for (size_t i = 0; i < result.size(); ++i)
