@@ -55,9 +55,9 @@ namespace sci_internal
 	template<class T, class U, class V>
 	inline V remainder(T &a, U &b){return a%b;}
 	template<class T, class U, class V>
-	inline V preincrement( T &a, U &){return ++a;}
+	inline V& preincrement( T &a, U &){return ++a;}
 	template<class T, class U, class V>
-	inline V predecrement( T &a, U &){return --a;}
+	inline V& predecrement( T &a, U &){return --a;}
 	template<class T, class U, class V>
 	inline V postincrement( T &a, U &){return a++;}
 	template<class T, class U, class V>
@@ -88,27 +88,27 @@ namespace sci_internal
 	inline V bitwiserightshift(T &a, U &b){return a>>b;}
 	
 	template<class T, class U, class V>
-	inline V addass(T &a, U &b){return a+=b;}
+	inline V& addass(T &a, U &b){return a+=b;}
 	template<class T, class U, class V>
-	inline V subtractass(T &a, U &b){return a-=b;}
+	inline V& subtractass(T &a, U &b){return a-=b;}
 	template<class T, class U, class V>
-	inline V multiplyass(T &a, U &b){return a*=b;}
+	inline V& multiplyass(T &a, U &b){return a*=b;}
 	template<class T, class U, class V>
-	inline V divideass(T &a, U &b){return a/=b;}
+	inline V& divideass(T &a, U &b){return a/=b;}
 	
 	template<class T, class U, class V>
-	inline V remainderass(T &a, U&b){return a%=b;}
+	inline V& remainderass(T &a, U&b){return a%=b;}
 	
 	template<class T, class U, class V>
-	inline V bitwiseandass(T &a, const U &b){return a&=b;}
+	inline V& bitwiseandass(T &a, const U &b){return a&=b;}
 	template<class T, class U, class V>
-	inline V bitwiseorass(T &a, const U &b){return a|=b;}
+	inline V& bitwiseorass(T &a, const U &b){return a|=b;}
 	template<class T, class U, class V>
-	inline V bitwisexorass(T &a, const U &b){return a^=b;}
+	inline V& bitwisexorass(T &a, const U &b){return a^=b;}
 	template<class T, class U, class V>
-	inline V bitwiseleftshiftass(T &a, const U &b){return a<<=b;}
+	inline V& bitwiseleftshiftass(T &a, const U &b){return a<<=b;}
 	template<class T, class U, class V>
-	inline V bitwiserightshiftass(T &a, const U &b){return a>>=b;}
+	inline V& bitwiserightshiftass(T &a, const U &b){return a>>=b;}
 
 	//deals with +, -, *, /, etc for two vectors
 	template <class T, class U, class V, V FUNC ( const T &, const U & ) > 
@@ -130,27 +130,26 @@ namespace sci_internal
 		return result;
 	}
 
-	//deals with +=, -=, *=, /=, etc for two vectors - note here the first vector is not const
-	template <class T, class U, class V, V FUNC ( T &, const U & ) > 
-	std::vector<V> operate(std::vector<T> &a, const std::vector<U> &b)
+	//deals with +=, -=, *=, /=, etc for two vectors - note here the first vector is not const and we return a reference to a
+	template <class T, class U, class V, V &FUNC ( T &, const U & ) > 
+	std::vector<V> &operate(std::vector<T> &a, const std::vector<U> &b)
 	{
-		std::vector<V> result;
 		//sci::assertThrow( a.size() == b.size(), sci::err() )
 		size_t len=a.size();
-		result.resize( len );
 		if(len==0)
-			return result;
+			return a;
 		auto ai=&a[0];
 		auto bi=&b[0];
-		auto resulti=&result[0];
 		auto aiend=ai;
 		aiend+=len;
-		for( ; ai != aiend; ++ai, ++bi, ++resulti )
-			*resulti=FUNC(*ai,*bi);
-		return result;
+		for( ; ai != aiend; ++ai, ++bi )
+			FUNC(*ai,*bi); //no need for assignment, these functions do assignment themselves
+		return a;
 	}
 
 	//deals with +, -, *, /, etc when the second parameter is a scalar
+	//this will also deal with unary operators where the vector is const
+	//as these use a dummy const int as the second parameter
 	template <class T, class U, class V, V FUNC ( const T &, const U & ) > 
 	std::vector<V> operate(const std::vector<T> &a, const U &b)
 	{
@@ -166,6 +165,27 @@ namespace sci_internal
 		aiend+=len;
 		for( ; ai != aiend; ++ai, ++resulti )
 			*resulti=FUNC(*ai,b);
+		return result;
+	}
+	//this version is basically here for postfix ++ and -- operators
+	//It is for unary operators (or vector then scalar operators)
+	//where the vector is modified, but the return value is not a
+	//reference.
+	template <class T, class U, class V, V FUNC(T&, const U&) >
+	std::vector<V> operate(std::vector<T>& a, const U& b)
+	{
+		std::vector<V> result;
+		//sci::assertThrow( a.size() == b.size(), sci::err() )
+		size_t len = a.size();
+		result.resize(len);
+		if (len == 0)
+			return result;
+		auto ai = &a[0];
+		auto resulti = &result[0];
+		auto aiend = ai;
+		aiend += len;
+		for (; ai != aiend; ++ai, ++resulti)
+			*resulti = FUNC(*ai, b);
 		return result;
 	}
 	//deals with +, -, *, /, etc when the first parameter is a scalar
@@ -187,24 +207,23 @@ namespace sci_internal
 		return result;
 	}
 
-	//deals with +=, -=, *=, /=, etc when the second parameter is a scalar and ++, --, ! unary -, ~ etc
-	//where there is only the vector used, in which case a dummy variable is passed for the scalar
-	template <class T, class U, class V, V FUNC ( T &, const U & ) > 
-	std::vector<V> operate(std::vector<T> &a, const U &b)
+	//deals with +=, -=, *=, /=, etc when the second parameter is a scalar.
+	//Note here that the vector is not const and we return a reference to the vector itself
+	//this will also deal with unary operators where the vector is not const
+	//as these use a dummy const int as the second parameter
+	template <class T, class U, class V, V &FUNC ( T &, const U & ) > 
+	std::vector<V> &operate(std::vector<T> &a, const U &b)
 	{
-		std::vector<V> result;
 		//sci::assertThrow( a.size() == b.size(), sci::err() )
 		size_t len=a.size();
-		result.resize( len );
 		if(len ==0)
-			return result;
+			return a;
 		auto ai=&a[0];
-		auto resulti=&result[0];
 		auto aiend=ai;
 		aiend+=len;
-		for( ; ai != aiend; ++ai, ++resulti )
-			*resulti=FUNC(*ai,b);
-		return result;
+		for( ; ai != aiend; ++ai )
+			FUNC(*ai,b); //no need for assignment, these functions do assignment themselves
+		return a;
 	}
 
 	template< class ORIGVECT, class NEW >
@@ -292,14 +311,23 @@ namespace sci_internal
 #define VECVECFUNC(FUNC, CONST, TYPE)(CONST std::vector<T> &a, const std::vector<U> &b) -> std::vector<TYPE>\
 {return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< CONST T, const U, TYPE> >(a, b);}
 
+#define VECVECFUNCREFRETURN(FUNC, CONST, TYPE)(CONST std::vector<T> &a, const std::vector<U> &b) -> std::vector<TYPE>&\
+{return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< CONST T, const U, TYPE> >(a, b);}
+
 #define SCALVECFUNC(FUNC, TYPE)(const T &a, const std::vector<U> &b) -> std::vector<TYPE>\
 {return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< const T, const U, TYPE > >(a, b);}
 
 #define VECSCALFUNC(FUNC, CONST, TYPE) (CONST std::vector<T> &a, const U &b) -> std::vector<TYPE>\
 {return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< CONST T, const U, TYPE > >(a, b);}
 
+#define VECSCALFUNCREFRETURN(FUNC, CONST, TYPE) (CONST std::vector<T> &a, const U &b) -> std::vector<TYPE>&\
+{return sci_internal::operate< T, U, TYPE, sci_internal::FUNC< CONST T, const U, TYPE > >(a, b);}
+
 #define VECFUNC(FUNC, CONST, TYPE) (std::vector<T> &a) -> std::vector<TYPE>\
-{return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
+{return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< CONST T, const int, TYPE> >(a, 0);}
+
+#define VECFUNCREFRETURN(FUNC, CONST, TYPE) (std::vector<T> &a) -> std::vector<TYPE>&\
+{return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< CONST T, const int, TYPE> >(a, 0);}
 
 #define VECINTFUNC(FUNC, TYPE) (std::vector<T> &a, int) -> std::vector<TYPE>\
 {return sci_internal::operate< T, int, TYPE, sci_internal::FUNC< T, const int, TYPE> >(a, 0);}
@@ -319,14 +347,14 @@ OPPREFIX-SCALVECFUNC(subtract, decltype(T()-U()))
 OPPREFIX*SCALVECFUNC(multiply, decltype(T()*U()))
 OPPREFIX/SCALVECFUNC(divide, decltype(T()/U()))
 
-OPPREFIX+=VECVECFUNC(addass, , T)
-OPPREFIX-=VECVECFUNC(subtractass, , T)
-OPPREFIX*=VECVECFUNC(multiplyass, , T)
-OPPREFIX/=VECVECFUNC(divideass, , T)
-OPPREFIX+=VECSCALFUNC(addass, , T)
-OPPREFIX-=VECSCALFUNC(subtractass, , T)
-OPPREFIX*=VECSCALFUNC(multiplyass, , T)
-OPPREFIX/=VECSCALFUNC(divideass, , T)
+OPPREFIX+=VECVECFUNCREFRETURN(addass, , T)
+OPPREFIX-=VECVECFUNCREFRETURN(subtractass, , T)
+OPPREFIX*=VECVECFUNCREFRETURN(multiplyass, , T)
+OPPREFIX/=VECVECFUNCREFRETURN(divideass, , T)
+OPPREFIX+=VECSCALFUNCREFRETURN(addass, , T)
+OPPREFIX-=VECSCALFUNCREFRETURN(subtractass, , T)
+OPPREFIX*=VECSCALFUNCREFRETURN(multiplyass, , T)
+OPPREFIX/=VECSCALFUNCREFRETURN(divideass, , T)
 
 //OPPREFIX==VECVECFUNC(iseq, const, SBOOL)// - already defined by std::vector
 //OPPREFIX<VECVECFUNC(lt, const, SBOOL)
@@ -372,9 +400,9 @@ OPPREFIX%SCALVECFUNC(remainder, decltype(T()%U()))
 OPPREFIX%=VECVECFUNC(remainder, , T)
 OPPREFIX%=VECSCALFUNC(remainder, , T)
 
-OPPREFIXSINGLE++VECFUNC( preincrement, , T )
+OPPREFIXSINGLE++VECFUNCREFRETURN( preincrement, , T )
 OPPREFIXSINGLE++VECINTFUNC( postincrement, T )
-OPPREFIXSINGLE--VECFUNC( predecrement, , T )
+OPPREFIXSINGLE--VECFUNCREFRETURN( predecrement, , T )
 OPPREFIXSINGLE--VECINTFUNC( postdecrement, T )
 OPPREFIXSINGLE-VECFUNC( unaryminus, const, T )
 
