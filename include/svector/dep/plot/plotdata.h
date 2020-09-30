@@ -324,7 +324,8 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalLineData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public LineData
 {
 public:
-	PhysicalLineData(const std::vector<sci::Physical<IN_X_UNIT, double>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+	template<class X, class Y>
+	PhysicalLineData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT,double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), lineStyle, transformer)
 	{
 	}
@@ -343,9 +344,9 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public PointData
 {
 public:
-	template<class X_VALUE_TYPE, class Y_VALUE_TYPE>
-	PhysicalPointData(const std::vector<sci::Physical<IN_X_UNIT, X_VALUE_TYPE>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, Y_VALUE_TYPE>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: PointData(sci::physicalsToValues<IN_X_UNIT, sci::Physical<IN_X_UNIT, X_VALUE_TYPE>, double>(xs), sci::physicalsToValues<IN_Y_UNIT, sci::Physical<IN_Y_UNIT, Y_VALUE_TYPE>, double>(ys), symbol, transformer)
+	template<class X, class Y>
+	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), symbol, transformer)
 	{
 	}
 };
