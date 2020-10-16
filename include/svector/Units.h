@@ -276,11 +276,11 @@ namespace sci
 			encodePower<decodePower<VALUE, 7>() / ROOT, 7>();
 	}
 
-	//Hopefully these make raising 10 to the power zero get
+	//These enable raising 10 to the power zero get
 	//determined at compile time as it will be a common operation
 	//when adding and subtracting
 	template <class VALUE_TYPE>
-	constexpr VALUE_TYPE pow10(int pow)
+	constexpr VALUE_TYPE pow10(int64_t pow)
 	{
 		if (pow == 0)
 			return VALUE_TYPE(1.);
@@ -304,7 +304,7 @@ namespace sci
 			return temp * temp * 10;
 		return temp * temp * 0.1;
 	}
-	template <int pow, class VALUE_TYPE>
+	template <int64_t pow, class VALUE_TYPE>
 	constexpr VALUE_TYPE pow10()
 	{
 		if (pow == 0)
