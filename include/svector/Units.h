@@ -5,6 +5,28 @@
 #include"Traits.h"
 namespace sci
 {
+	//declarations and definitions of prefixes
+	const int64_t yotta = 24;
+	const int64_t zetta = 21;
+	const int64_t exa = 18;
+	const int64_t peta = 15;
+	const int64_t tera = 12;
+	const int64_t giga = 9;
+	const int64_t mega = 6;
+	const int64_t kilo = 3;
+	const int64_t hecto = 2;
+	const int64_t deca = 1;
+	const int64_t deci = -1;
+	const int64_t centi = -2;
+	const int64_t milli = -3;
+	const int64_t micro = -6;
+	const int64_t nano = -9;
+	const int64_t pico = -12;
+	const int64_t femto = -15;
+	const int64_t atto = -18;
+	const int64_t zepto = -21;
+	const int64_t yocto = -24;
+
 	template<int64_t EXPONENT>
 	constexpr inline bool isMetricExponent()
 	{
