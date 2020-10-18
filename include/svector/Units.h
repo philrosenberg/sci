@@ -207,6 +207,36 @@ namespace sci
 		return stream.str();
 	}
 
+	//build a string showing the unit. Note that exponent must be before multiplying by power
+	template<int64_t EXPONENT>
+	sci::string makeLongName(const sci::string& unit, int8_t power)
+	{
+		if (power == 0)
+			return sU("");
+		if (power == 1)
+		{
+			sci::ostringstream stream;
+			stream << ExponentTraits<EXPONENT>::getName() << unit;
+			return stream.str();
+		}
+		if (power == 2)
+		{
+			sci::ostringstream stream;
+			stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" squared");
+			return stream.str();
+		}
+		if (power == 3)
+		{
+			sci::ostringstream stream;
+			stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" cubed");
+			return stream.str();
+		}
+
+		sci::ostringstream stream;
+		stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" to the power ") << power;
+		return stream.str();
+	}
+
 
 
 	//This function encodes the power variable for the EncodedUnit class
@@ -400,9 +430,13 @@ namespace sci
 	{
 		typedef PoweredEncodedUnit< ENCODEDUNIT, POW> unit;
 		typedef EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW> encodedUnitClass;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		static sci::string getShortRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return ENCODEDUNIT::getLongRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid haveing to partial specialize them
@@ -442,6 +476,10 @@ namespace sci
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, -ROOT);
 		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return ENCODEDUNIT::getLongRepresentation(exponentPrefix, exponentSuffix, -ROOT);
+		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid haveing to partial specialize them
 		{
@@ -480,6 +518,10 @@ namespace sci
 		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return ENCODEDUNIT1::getShortRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getShortRepresentation(exponentPrefix, exponentSuffix);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return ENCODEDUNIT1::getLongRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getLongRepresentation(exponentPrefix, exponentSuffix);
 		}
 
 		template<class VALUE_TYPE>
@@ -524,7 +566,7 @@ namespace sci
 	//so for a mm^2 you would use metre<2,-3>
 
 	//This is a macro used to shrthand the definition of functions in each of the SI units
-#define NAMEDEF(SHORTNAME)\
+#define NAMEDEF(SHORTNAME, LONGNAME)\
 	static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
 	{\
 		return getShortRepresentation(exponentPrefix, exponentSuffix, 1);\
@@ -533,9 +575,21 @@ namespace sci
 	{\
 		return makeShortName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
 	}\
+	static sci::string getLongRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+	{\
+		return getLongRepresentation(exponentPrefix, exponentSuffix, 1);\
+	}\
+	static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+	{\
+		return makeLongName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+	}\
 	static sci::string getShortName()\
 	{\
 		return SHORTNAME;\
+	}\
+	static sci::string getLongName()\
+	{\
+		return LONGNAME; \
 	}
 
 	struct Unitless : public EncodedUnit<0, 0>
@@ -549,9 +603,21 @@ namespace sci
 		{
 			return getShortName();
 		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		{
+			return getLongName();
+		}
 		static sci::string getShortName()
 		{
 			return sU(""); 
+		}
+		static sci::string getLongName()
+		{
+			return sU("");
 		}
 	};
 
@@ -566,9 +632,21 @@ namespace sci
 		{
 			return getShortName();
 		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		{
+			return getLongName();
+		}
 		static sci::string getShortName()
 		{
 			return sU("%");
+		}
+		static sci::string getLongName()
+		{
+			return sU("percent");
 		}
 	};
 
@@ -583,9 +661,21 @@ namespace sci
 		{
 			return getShortName();
 		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		{
+			return getLongName();
+		}
 		static sci::string getShortName()
 		{
 			return sU("\u2030");
+		}
+		static sci::string getLongName()
+		{
+			return sU("per mille");
 		}
 	};
 
@@ -600,9 +690,21 @@ namespace sci
 		{
 			return getShortName();
 		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
+		}
+		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		{
+			return getLongName();
+		}
 		static sci::string getShortName()
 		{
 			return sU("\u2031");
+		}
+		static sci::string getLongName()
+		{
+			return sU("basis point");
 		}
 	};
 
@@ -610,35 +712,35 @@ namespace sci
 	struct Amp : public EncodedUnit<encodePower<POWER, 0>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("A"))
+		NAMEDEF(sU("A"), sU("ampere"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Kelvin : public EncodedUnit<encodePower<POWER, 1>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("K"))
+		NAMEDEF(sU("K"), sU("kelvin"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Second : public EncodedUnit<encodePower<POWER, 2>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("s"))
+		NAMEDEF(sU("s"), sU("second"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Metre : public EncodedUnit<encodePower<POWER, 3>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("m"))
+		NAMEDEF(sU("m"), sU("metre"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gram : public EncodedUnit<encodePower<POWER, 4>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("g"))
+		NAMEDEF(sU("g"), sU("gram"))
 	};
 
 	template<int8_t POWER = 1>
@@ -651,21 +753,21 @@ namespace sci
 	struct Candela : public EncodedUnit<encodePower<POWER, 5>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("cd"))
+		NAMEDEF(sU("cd"), sU("candela"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Mole : public EncodedUnit<encodePower<POWER, 6>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("mol"))
+		NAMEDEF(sU("mol"), sU("mole"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Radian : public EncodedUnit<encodePower<POWER, 7>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("rad"))
+		NAMEDEF(sU("rad"), sU("radian"))
 	};
 
 	//When defining these derived units we simply pass the exponent to a
@@ -677,70 +779,70 @@ namespace sci
 	struct Steradian : public MultipliedEncodedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("sr"))
+		NAMEDEF(sU("sr"), sU("steradian"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Hz"))
+		NAMEDEF(sU("Hz"), sU("hertz"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedEncodedUnit<MultipliedEncodedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("N"))
+		NAMEDEF(sU("N"), sU("newton"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Pa"))
+		NAMEDEF(sU("Pa"), sU("pascal"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("J"))
+		NAMEDEF(sU("J"), sU("joule"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("W"))
+		NAMEDEF(sU("W"), sU("watt"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedEncodedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("C"))
+		NAMEDEF(sU("C"), sU("coulomb"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedEncodedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("V"))
+		NAMEDEF(sU("V"), sU("volt"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedEncodedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("F"))
+		NAMEDEF(sU("F"), sU("farad"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("\u2126"))
+		NAMEDEF(sU("\u2126"), sU("ohm"))
 	};
 
 
@@ -748,70 +850,70 @@ namespace sci
 	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("S"))
+		NAMEDEF(sU("S"), sU("seimens"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Wb"))
+		NAMEDEF(sU("Wb"), sU("weber"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("T"))
+		NAMEDEF(sU("T"), sU("tesla"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("H"))
+		NAMEDEF(sU("H"), sU("henry"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedEncodedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("lm"))
+		NAMEDEF(sU("lm"), sU("lumen"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedEncodedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("lx"))
+		NAMEDEF(sU("lx"), sU("lux"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Becquerel : public Second<-POWER, EXPONENT>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Bq"))
+		NAMEDEF(sU("Bq"), sU("baquerel"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Gy"))
+		NAMEDEF(sU("Gy"), sU("grey"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Sv"))
+		NAMEDEF(sU("Sv"), sU("seivert"))
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedEncodedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("kat"))
+		NAMEDEF(sU("kat"), sU("katal"))
 	};
 
 
@@ -855,7 +957,7 @@ namespace sci
 #define M_PI 3.14159265358979323846
 #endif
 
-#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME, LONG_NAME)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
 	class CLASS_NAME\
 	{\
@@ -894,9 +996,21 @@ namespace sci
 		{\
 			return makeShortName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
 		}\
+		static sci::string getLongRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+		{\
+			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);\
+		}\
+		static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+		{\
+			return makeLongName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+		}\
 		static sci::string getShortName()\
 		{\
 			return shortName;\
+		}\
+		static sci::string getLongName()\
+		{\
+			return longName;\
 		}\
 		static constexpr bool isUnitless()\
 		{\
@@ -913,61 +1027,61 @@ namespace sci
 
 
 	//angle units
-	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, sU("degree"))
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, sU("\u8242"))
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, sU("\u8243"))
-	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, sU("tr"))
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, sU("quadrant"))
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, sU("sextant"))
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, sU("hexacontade"))
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, sU("binary degree"))
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"))
+	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, sU("degree"), sU("degree"))
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, sU("\u8242"), sU("arcminute"))
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, sU("\u8243"), sU("arcsecond"))
+	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, sU("tr"), sU("turn"))
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, sU("quadrant"), sU("quadrant"))
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, sU("sextant"), sU("sextant"))
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, sU("hexacontade"), sU("hexacontade"))
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, sU("binary degree"), sU("binary degree"))
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"), sU("gradian"))
 
 	//Farenheit equivalent of kelvin unit
-	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, sU("\u00b0Ra"))
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, sU("\u00b0Ra"), sU("rankine"))
 
 	//alternative metric and scientific units
-	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, sU("\u212B"))
-	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, sU("AU"))
-	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, sU("ly"))
-	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, sU("pc"))
-	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"))
-	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"))
-	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, sU("t"))
-	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, sU("L"))
-	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, sU("AMU"))
-	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, sU("sidereal day"))
-	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, sU("e"))
-	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, sU("eV"))
+	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, sU("\u212B"), sU("\u00e5ngstrom"))
+	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, sU("AU"), sU("astronomical unit"))
+	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, sU("ly"), sU("lightyear"))
+	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, sU("pc"), sU("parsec"))
+	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"), sU("nautical mile"))
+	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"), sU("hectare"))
+	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, sU("t"), sU("tonne"))
+	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, sU("L"), sU("litre"))
+	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, sU("AMU"), sU("atomic mass unit"))
+	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, sU("sidereal day"), sU("sidereal day"))
+	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, sU("e"), sU("elementary charge"))
+	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, sU("eV"), sU("electron volt"))
 
 	//time units
-	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("min"))
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, sU("hr"))
-	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"))
+	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("min"), sU("minute"))
+	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, sU("hr"), sU("hour"))
+	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"), sU("day"))
 
 	//imperial units
 	//length units are all based on the international yard which is exactly 0.9144 m
-	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, sU("mi"))
-	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, sU("fur"))
-	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, sU("ch"))
-	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, sU("rd"))
-	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, sU("ftm"))
-	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, sU("yd"))
-	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, sU("'"))
-	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, sU("\""))
-	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, sU("ac"))
-	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, sU("imp gal"))
-	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, sU("US gal"))
-	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, sU("imp fl oz"))
-	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, sU("US fl oz"))
-	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, sU("imp pt"))
-	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, sU("US pt"))
+	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, sU("mi"), sU("mile"))
+	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, sU("fur"), sU("furlong"))
+	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, sU("ch"), sU("chain"))
+	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, sU("rd"), sU("rod"))
+	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, sU("ftm"), sU("fathom"))
+	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, sU("yd"), sU("yard"))
+	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, sU("'"), sU("foot"))
+	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, sU("\""), sU("inch"))
+	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, sU("ac"), sU("acre"))
+	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, sU("imp gal"), sU("imperial gallon"))
+	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, sU("US gal"), sU("US gallon"))
+	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, sU("imp fl oz"), sU("imperial fluid ounce"))
+	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, sU("US fl oz"), sU("US fluid ounce"))
+	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, sU("imp pt"), sU("imperial pint"))
+	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, sU("US pt"), sU("US pint"))
 	//weight units are defined from the definition of a pound being 453.59237 g
-	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, sU("mi"))
-	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, sU("cwt"))
-	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, sU("st"))
-	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"))
-	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, sU("oz"))
+	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, sU("t"), sU("ton"))
+	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, sU("cwt"), sU("hundredweight"))
+	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, sU("st"), sU("stone"))
+	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"), su("pound"))
+	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, sU("oz"), sU("ounce"))
 
 
 	template < class ENCODED_UNIT, class VALUE_TYPE>
@@ -1043,6 +1157,11 @@ namespace sci
 		static sci::string getShortUnitString(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
 		{
 			return ENCODED_UNIT::getShortRepresentation(exponentPrefix, exponentSuffix);
+		}
+
+		static sci::string getLongUnitString(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		{
+			return ENCODED_UNIT::getLongRepresentation(exponentPrefix, exponentSuffix);
 		}
 
 		//static const uint64_t basePowers = ENCODED_UNIT::basePowers;
