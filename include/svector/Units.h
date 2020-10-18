@@ -912,6 +912,7 @@ namespace sci
 	const sci::string CLASS_NAME<POWER, EXPONENT>::shortName = SHORT_NAME;\
 
 
+	//angle units
 	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, sU("degree"))
 	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, sU("\u8242"))
 	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, sU("\u8243"))
@@ -921,14 +922,52 @@ namespace sci
 	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, sU("hexacontade"))
 	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, sU("binary degree"))
 	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"))
+
+	//Farenheit equivalent of kelvin unit
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, sU("\u00b0Ra"))
+
+	//alternative metric and scientific units
+	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, sU("\u212B"))
+	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, sU("AU"))
+	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, sU("ly"))
+	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, sU("pc"))
 	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"))
 	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"))
+	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, sU("t"))
+	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, sU("L"))
+	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, sU("AMU"))
+	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, sU("sidereal day"))
+	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, sU("e"))
+	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, sU("eV"))
+
+	//time units
 	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("min"))
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0/3600.0, sU("hr"))
+	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, sU("hr"))
 	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"))
 
-
-
+	//imperial units
+	//length units are all based on the international yard which is exactly 0.9144 m
+	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, sU("mi"))
+	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, sU("fur"))
+	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, sU("ch"))
+	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, sU("rd"))
+	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, sU("ftm"))
+	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, sU("yd"))
+	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, sU("'"))
+	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, sU("\""))
+	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, sU("ac"))
+	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, sU("imp gal"))
+	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, sU("US gal"))
+	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, sU("imp fl oz"))
+	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, sU("US fl oz"))
+	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, sU("imp pt"))
+	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, sU("US pt"))
+	//weight units are defined from the definition of a pound being 453.59237 g
+	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, sU("mi"))
+	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, sU("cwt"))
+	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, sU("st"))
+	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"))
+	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, sU("oz"))
 
 
 	template < class ENCODED_UNIT, class VALUE_TYPE>
