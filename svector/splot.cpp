@@ -287,7 +287,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 	m_hls=false;
 
 	//remove any nans and infinities - in particular they can be created by the logging
-	std::vector<SBOOL> filter=sci::isEq(m_value,m_value) && m_value!=std::numeric_limits<double>::infinity() && m_value!=-std::numeric_limits<double>::infinity();
+	std::vector<SBOOL> filter=sci::isEq(m_value,m_value) && sci::notEq(m_value,std::numeric_limits<double>::infinity()) && sci::notEq(m_value,-std::numeric_limits<double>::infinity());
 	m_value=sci::subvector(m_value, filter);
 	m_colour1=sci::subvector(m_colour1, filter);
 	m_colour2=sci::subvector(m_colour2, filter);
@@ -1588,6 +1588,17 @@ void splot2d::removeAllData()
 	m_drawableItems.resize(0);
 
 	splot::removeAllData();
+
+	m_haschanged = true;
+}
+
+void splot2d::removeData(std::shared_ptr<DrawableItem> drawableItem)
+{
+	for (size_t i = 0; i < m_drawableItems.size(); ++i)
+		if (m_drawableItems[i] == drawableItem)
+			m_drawableItems[i] = nullptr;
+
+	m_haschanged = true;
 }
 
 void splot2d::addImage(sci::string image, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0, int cropY0, int cropWidth, int cropHeight, double brightnessCorrection, double contrastCorrection)
@@ -3270,15 +3281,17 @@ void splotwindow::OnPaint(wxPaintEvent &event)
 			{
 				m_bitmap = new wxBitmap(width,height,32);
 				memdc.SelectObject(*m_bitmap);
-				//fill the bitmap with white giving a white background for plplot
-				//or to show blank if there are no plots
-				memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
 			}
 		}
 		else if ( m_bitmap )
 		{
 			memdc.SelectObject(*m_bitmap);
 		}
+		//fill the bitmap with white giving a white background for plplot
+		//or to show blank if there are no plots
+		memdc.SetBackground(*wxWHITE_BRUSH);
+		memdc.Clear();
+		memdc.SetBackground(wxNullBrush);
 
 		//remember the new size, so that on the next refresh we can check if the size has changed
 		m_bitmapwidth=width;
@@ -3632,6 +3645,7 @@ void splotwindow::removeplot(splot *plot)
 			m_plotyloc.erase(m_plotyloc.begin()+i);
 			m_plotwidth.erase(m_plotwidth.begin()+i);
 			m_plotheight.erase(m_plotheight.begin()+i);
+			m_plotsupdated = true;
 		}
 	}
 	for (size_t i=0; i<m_legends.size(); ++i)
@@ -3644,6 +3658,33 @@ void splotwindow::removeplot(splot *plot)
 			m_legendyloc.erase(m_legendyloc.begin()+i);
 			m_legendwidth.erase(m_legendwidth.begin()+i);
 			m_legendheight.erase(m_legendheight.begin()+i);
+			m_plotsupdated = true;
+		}
+	}
+}
+
+void splotwindow::moveplot(splot* plot, double xpos, double ypos, double width, double height)
+{
+	for (size_t i = 0; i < m_plots.size(); ++i)
+	{
+		if (m_plots[i] == plot)
+		{
+			m_plotxloc[i]=xpos;
+			m_plotyloc[i]=ypos;
+			m_plotwidth[i]=width;
+			m_plotheight[i]=height;
+			m_plotsupdated = true;
+		}
+	}
+	for (size_t i = 0; i < m_legends.size(); ++i)
+	{
+		if (m_legends[i] == plot)
+		{
+			m_legendxloc[i] = xpos;
+			m_legendyloc[i] = ypos;
+			m_legendwidth[i] = width;
+			m_legendheight[i] = height;
+			m_plotsupdated = true;
 		}
 	}
 }

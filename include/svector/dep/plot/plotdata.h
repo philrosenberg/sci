@@ -157,7 +157,7 @@ protected:
 	std::vector<double> m_yDataLogged;
 private:
 	double m_padLimitsAmount;
-	static void getLimits(const std::vector<double> xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
+	static void getLimits(const std::vector<double> &xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
 	mutable double m_xMin;
 	mutable double m_xMax;
 	mutable double m_yMin;
@@ -237,28 +237,78 @@ protected:
 	std::vector<double> m_zDataLoggedNormalised2;
 };
 
-void getXYValues(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data);
-
-class PlotData2dStructured : public XYAxisData
+class PlotData2dZ
 {
 public:
-	PlotData2dStructured( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
-	void getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const;
-	void getZLimits(double &min, double &max) const;
-	void getLogZLimits(double &min, double &max) const;
-protected:
+	PlotData2dZ(const std::vector<std::vector<double>>& zs);
+	void getZLimits(double& min, double& max) const;
+	void getLogZLimits(double& min, double& max) const;
+	const std::vector<std::vector<double>>& getZData() const { return m_zData; }
+	const std::vector<std::vector<double>>& getZDataLogged() const { return m_zDataLogged; }
+	const std::vector<std::vector<double>>& getZDataNormalised() const { return m_zDataNormalised; }
+	const std::vector<std::vector<double>>& getZDataLoggedNormalised() const { return m_zDataLoggedNormalised; }
+	double getMinZ() const { return m_minZ; }
+	double getMaxZ() const { return m_maxZ; }
+	double getMinZLogged() const { return m_minZLogged; }
+	double getMaxZLogged() const { return m_maxZLogged; }
+private:
 	std::vector<std::vector<double>> m_zData;
 	std::vector<std::vector<double>> m_zDataLogged;
 	std::vector<std::vector<double>> m_zDataNormalised;
 	std::vector<std::vector<double>> m_zDataLoggedNormalised;
-	mutable bool m_plotLogX;
-	mutable bool m_plotLogY;
-private:
-	std::shared_ptr<splotTransformer> m_transformer;
 	double m_minZ;
 	double m_maxZ;
 	double m_maxZLogged;
 	double m_minZLogged;
+};
+
+class PlotData2dRectilinear : public XYAxisData, public PlotData2dZ
+{
+public:
+	PlotData2dRectilinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
+	template<bool LOGX, bool LOGY>
+	void getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const;
+protected:
+private:
+	std::shared_ptr<splotTransformer> m_transformer;
+};
+
+class PlotData2dCurvilinear : public DrawableItem, public PlotData2dZ
+{
+public:
+	PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	PlotData2dCurvilinear(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
+	void getXYValues(double xIndex, double yIndex, double& xOutput, double& yOutput) const;
+	virtual void getLimits(double& xMin, double& xMax, double& yMin, double& yMax) const override;
+	virtual void getLogLimits(double& xMin, double& xMax, double& yMin, double& yMax) const override;
+	static void getLimits(const std::vector<std::vector<double>>& axisValues, double& min, double& max, double padAmount);
+	static void getLimits(const std::vector<double> &axisValues, double& min, double& max, double padAmount);
+protected:
+	std::vector<std::vector<double>> m_xData;
+	std::vector<std::vector<double>> m_yData;
+	std::vector<std::vector<double>> m_xDataLogged;
+	std::vector<std::vector<double>> m_yDataLogged;
+	std::vector<double> m_xData1d;
+	std::vector<double> m_yData1d;
+	std::vector<double> m_xDataLogged1d;
+	std::vector<double> m_yDataLogged1d;
+	bool m_x1d;
+	bool m_y1d;
+private:
+	double m_padLimitsAmount;
+	std::shared_ptr<splotTransformer> m_transformer;
+	mutable double m_xMin;
+	mutable double m_xMax;
+	mutable double m_yMin;
+	mutable double m_yMax;
+	mutable double m_xMinLogged;
+	mutable double m_xMaxLogged;
+	mutable double m_yMinLogged;
+	mutable double m_yMaxLogged;
+	mutable bool m_calculatedLimits;
+	mutable bool m_calculatedLogLimits;
 };
 
 class LineData : public PlotData1d
@@ -274,7 +324,8 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalLineData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public LineData
 {
 public:
-	PhysicalLineData(const std::vector<sci::Physical<IN_X_UNIT, double>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+	template<class X, class Y>
+	PhysicalLineData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT,double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), lineStyle, transformer)
 	{
 	}
@@ -293,9 +344,9 @@ template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class T
 class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public PointData
 {
 public:
-	template<class X_VALUE_TYPE, class Y_VALUE_TYPE>
-	PhysicalPointData(const std::vector<sci::Physical<IN_X_UNIT, X_VALUE_TYPE>> &xs, const std::vector<sci::Physical<IN_Y_UNIT, Y_VALUE_TYPE>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-		: PointData(sci::physicalsToValues<IN_X_UNIT, sci::Physical<IN_X_UNIT, X_VALUE_TYPE>, double>(xs), sci::physicalsToValues<IN_Y_UNIT, sci::Physical<IN_Y_UNIT, Y_VALUE_TYPE>, double>(ys), symbol, transformer)
+	template<class X, class Y>
+	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), symbol, transformer)
 	{
 	}
 };
@@ -364,7 +415,7 @@ private:
 	double m_padLimitsAmount;
 };
 
-class GridData : public PlotData2dStructured
+class GridData : public PlotData2dRectilinear
 {
 public:
 	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
@@ -389,6 +440,20 @@ public:
 		:GridData(sci::physicalsToValues<IN_X_UNIT>(xs), sci::physicalsToValues<IN_Y_UNIT>(ys), sci::physicalsToValues<IN_Z_UNIT>(zs), colourScale, fillOffScaleBottom, fillOffScaleTop, transformer, autoLimitsPadAmount)
 	{
 	}*/
+};
+
+
+class GridDataCurvilinear : public PlotData2dCurvilinear
+{
+public:
+	GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	GridDataCurvilinear(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
+	void plotData(plstream* pl, bool xLog, bool yLog) const;
+private:
+	splotcolourscale m_colourscale;
+	bool m_fillOffscaleBottom;
+	bool m_fillOffscaleTop;
 };
 
 class FillData : public PlotData1d

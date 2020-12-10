@@ -173,6 +173,19 @@ namespace sci
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
+		//add move constructors
+		NcFileBase(NcFileBase&& other)
+		{
+			m_open = other.m_open;
+			m_id = other.m_id;
+			other.m_open = false;
+		}
+		NcFileBase operator=(NcFileBase&& other)
+		{
+			m_open = other.m_open;
+			m_id = other.m_id;
+			other.m_open = false;
+		}
 	private:
 		bool m_open;
 		int m_id;
@@ -190,6 +203,7 @@ namespace sci
 		std::vector<T> getVariable(const sci::string &name);
 		template<class T>
 		std::vector<T> getVariable(const sci::string &name, std::vector<size_t> &shape);
+		std::vector<size_t> getVariableShape(const sci::string& name);
 		std::vector<sci::string>getVariableNames();
 		template<class T>
 		T getGlobalAttribute(const sci::string &name);
@@ -201,12 +215,8 @@ namespace sci
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
-		template<class T>
+		//template<class T>
 		//T getVariableAttributeFromId(int variableId, const sci::string& AttributeName);
-
-		//remove copy constructors
-		InputNcFile(const InputNcFile&) = delete;
-		InputNcFile operator=(const InputNcFile&) = delete;
 	};
 
 	template<>
@@ -399,9 +409,6 @@ namespace sci
 		void write(const NcVariable<T> &variable, const U &data);
 	private:
 		bool m_inDefineMode;
-		//remove copy constructors
-		OutputNcFile(const OutputNcFile&) = delete;
-		OutputNcFile operator=(const OutputNcFile&) = delete;
 	};
 
 	class NcDimension

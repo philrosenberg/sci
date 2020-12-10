@@ -44,10 +44,16 @@ void sci::resample(const std::vector<float> &input, float factor, std::vector<fl
 }
 
 #include"kiss_fft/kiss_fftr.h"
-void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output)
+//Fast Fourier Transform. The input is real, so the output will only include the amplitude for positive frequencies. You can choose to normalise
+//the output for the number of points and for the missing amplitude in the negative frequencies. If you wish to do this yourself then to normalise
+//for the number of points divide the outputs by the number of points and to normalise for the missing negative frequencies multiply all elements
+//of the output except the first and last by 2.
+void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output, bool normaliseForNumberOfPoints, bool performNegativeFrequencyAmplitudedoubling)
 {
 	sci::assertThrow(re_input.size() % 2 == 0, sci::err(SERR_KISSFFT, 1, "Can only do a FFT with an even number of points."));
 	sci::assertThrow(re_input.size() <= std::numeric_limits<int>::max(), sci::err(SERR_KISSFFT, 3, "Too many points for fft"));
+
+	size_t n = re_input.size();
 
 	//set up the state
 	kiss_fftr_cfg myCfg = NULL;
@@ -65,10 +71,33 @@ void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_outpu
 		//copy the data to the output
 		re_output.resize(re_input.size()/2+1);
 		im_output.resize(re_input.size() / 2 + 1);
-		for (size_t i = 0; i < re_output.size(); ++i)
+		if (normaliseForNumberOfPoints || performNegativeFrequencyAmplitudedoubling)
 		{
-			re_output[i] = result[i].r;
-			im_output[i] = result[i].i;
+			double normalisationConstant = performNegativeFrequencyAmplitudedoubling ? 2.0 : 1.0;
+			double endNormalisationConstant = 1.0;
+			if (normaliseForNumberOfPoints)
+			{
+				normalisationConstant /= n;
+				endNormalisationConstant /= n;
+			}
+
+			re_output[0] = result[0].r * endNormalisationConstant;
+			im_output[0] = result[0].i * endNormalisationConstant;
+			for (size_t i = 1; i < re_output.size()-1; ++i)
+			{
+				re_output[i] = result[i].r * normalisationConstant;
+				im_output[i] = result[i].i * normalisationConstant;
+			}
+			re_output.back() = result.back().r * endNormalisationConstant;
+			im_output.back() = result.back().i * endNormalisationConstant;
+		}
+		else
+		{
+			for (size_t i = 0; i < re_output.size(); ++i)
+			{
+				re_output[i] = result[i].r;
+				im_output[i] = result[i].i;
+			}
 		}
 	}
 	catch (...)
@@ -79,8 +108,13 @@ void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_outpu
 	kiss_fftr_free(myCfg);
 }
 
-//You can only use this version if you know the output will be real
-void sci::ifft(const std::vector<double> &re_input, std::vector<double> &im_input, std::vector<double> &re_output)
+//This assumes that the input is just the positive frequencies, hence it will provide a real output. Unlike the fft function this implementation outputs results which
+//are normalised for the number of points by default. This means if you are using this function to undo a sci::fft call, the undoNormalisedNumberOfPoints parameter
+//here, must be the opposite of the normaliseForNumberOfPoints parameter of sci::fft. However, if you have doubled the positive frequency values to account for
+//the negative frequencies, then you must pass true for normaliseForNegativeFrequencies. Hence the following two function calls will undo each other
+//sci::fft(wave, freqReal, freqIm, true, true);
+//sci::ifft(freqReal, freqIm, wave, false, true);
+void sci::ifft(const std::vector<double> &re_input, std::vector<double> &im_input, std::vector<double> &re_output, bool undoNormaliseForNumberOfPoints, bool performNegativeFrequencyAmplitudedoubling)
 {
 	size_t nOutputPoints = (re_input.size() - 1) * 2;
 
@@ -96,14 +130,38 @@ void sci::ifft(const std::vector<double> &re_input, std::vector<double> &im_inpu
 	{
 		//copy the input
 		std::vector<kiss_fft_cpx> intermediate(re_input.size());
-		for (size_t i = 0; i < re_input.size(); ++i)
+		//The normalisation is done by default in the ifft, so we need to undo it 
+		if (undoNormaliseForNumberOfPoints || performNegativeFrequencyAmplitudedoubling)
 		{
-			intermediate[i].r = re_input[i];
-			intermediate[i].i = im_input[i];
+			double normalisationConstant = performNegativeFrequencyAmplitudedoubling ? 0.5 : 1.0;
+			double endNormalisationConstant = 1.0;
+			if (undoNormaliseForNumberOfPoints)
+			{
+				normalisationConstant /= nOutputPoints;
+				endNormalisationConstant /= nOutputPoints;
+			}
+			intermediate[0].r = re_input[0] * endNormalisationConstant;
+			intermediate[0].i = im_input[0] * endNormalisationConstant;
+			for (size_t i = 0; i < re_input.size(); ++i)
+			{
+				intermediate[i].r = re_input[i] * normalisationConstant;
+				intermediate[i].i = im_input[i] * normalisationConstant;
+			}
+			intermediate.back().r = re_input.back() * endNormalisationConstant;
+			intermediate.back().i = im_input.back() * endNormalisationConstant;
+		}
+		else
+		{
+			for (size_t i = 0; i < re_input.size(); ++i)
+			{
+				intermediate[i].r = re_input[i];
+				intermediate[i].i = im_input[i];
+			}
 		}
 		//do ifft
 		re_output.resize(nOutputPoints);
 		kiss_fftri(myCfg, &intermediate[0], &re_output[0]);
+		
 	}
 	catch (...)
 	{

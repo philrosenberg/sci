@@ -506,6 +506,7 @@ public:
 	void setdatasetproperties(size_t setindex, wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), int linewidth=1.0, wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), int xerrwidth=1, int yerrwidth=1);
 
 	void removeAllData();
+	void removeData(std::shared_ptr<DrawableItem> drawableItem);
 
 private:
 	//private constructor so only friends can create a plot
@@ -603,6 +604,7 @@ public:
 	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
 	bool print( bool showDialog );
 	void removeplot(splot *plot);
+	void moveplot(splot* plot, double xpos, double ypos, double width, double height);
 private:
 	bool print( bool showDialog, sci::string printerName );
 	//vector of plots
