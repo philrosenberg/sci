@@ -297,6 +297,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="controls.cpp" />
     <ClCompile Include="eigeneng\eigeng.c" />
     <ClCompile Include="kiss_fft\kiss_fft.c" />
     <ClCompile Include="kiss_fft\kiss_fftr.c" />
@@ -327,6 +328,7 @@
     <ClInclude Include="..\include\svector\algorithm.h" />
     <ClInclude Include="..\include\svector\apexWorkspace.h" />
     <ClInclude Include="..\include\svector\array.h" />
+    <ClInclude Include="..\include\svector\controls.h" />
     <ClInclude Include="..\include\svector\dep\nc.h" />
     <ClInclude Include="..\include\svector\dep\plot\plotdata.h" />
     <ClInclude Include="..\include\svector\dep\plot\splot.h" />
