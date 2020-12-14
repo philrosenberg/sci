@@ -43,156 +43,55 @@ namespace sci
 		const static bool valid = false;
 		//we can't just put false in the static_assert. Some compilers see there is no dependence on the
 		//template parameter and expand the static_assert even when this template is never instantiated
-		static sci::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static sci::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::wstring getNameW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::basic_string<char8_t> getName8() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::u16string getName16() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::u32string getName32() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::string getPrefixW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::basic_string<char8_t> getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::u16string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		static std::u32string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 	};
-	template<>
-	struct ExponentTraits<24>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("yotta"); }
-		static sci::string getPrefix() { return sU("Y"); }
-	};
-	template<>
-	struct ExponentTraits<21>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("zetta"); }
-		static sci::string getPrefix() { return sU("Z"); }
-	};
-	template<>
-	struct ExponentTraits<18>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("exa"); }
-		static sci::string getPrefix() { return sU("E"); }
-	};
-	template<>
-	struct ExponentTraits<15>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("peta"); }
-		static sci::string getPrefix() { return sU("P"); }
-	};
-	template<>
-	struct ExponentTraits<12>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("tera"); }
-		static sci::string getPrefix() { return sU("T"); }
-	};
-	template<>
-	struct ExponentTraits<9>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("giga"); }
-		static sci::string getPrefix() { return sU("G"); }
-	};
-	template<>
-	struct ExponentTraits<6>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("mega"); }
-		static sci::string getPrefix() { return sU("M"); }
-	};
-	template<>
-	struct ExponentTraits<3>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("kilo"); }
-		static sci::string getPrefix() { return sU("k"); }
-	};
-	template<>
-	struct ExponentTraits<2>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("hecto"); }
-		static sci::string getPrefix() { return sU("h"); }
-	};
-	template<>
-	struct ExponentTraits<1>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("deca"); }
-		static sci::string getPrefix() { return sU("da"); }
-	};
-	template<>
-	struct ExponentTraits<0>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU(""); }
-		static sci::string getPrefix() { return sU(""); }
-	};
-	template<>
-	struct ExponentTraits<-1>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("deci"); }
-		static sci::string getPrefix() { return sU("d"); }
-	};
-	template<>
-	struct ExponentTraits<-2>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("centi"); }
-		static sci::string getPrefix() { return sU("c"); }
-	};
-	template<>
-	struct ExponentTraits<-3>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("milli"); }
-		static sci::string getPrefix() { return sU("m"); }
-	};
-	template<>
-	struct ExponentTraits<-6>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("micro"); }
-		static sci::string getPrefix() { return sU("\u00b5"); }
-	};
-	template<>
-	struct ExponentTraits<-9>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("nano"); }
-		static sci::string getPrefix() { return sU("n"); }
-	};
-	template<>
-	struct ExponentTraits<-12>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("pico"); }
-		static sci::string getPrefix() { return sU("p"); }
-	};
-	template<>
-	struct ExponentTraits<-15>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("femto"); }
-		static sci::string getPrefix() { return sU("f"); }
-	};
-	template<>
-	struct ExponentTraits<-18>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("atto"); }
-		static sci::string getPrefix() { return sU("a"); }
-	};
-	template<>
-	struct ExponentTraits<-21>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("zepto"); }
-		static sci::string getPrefix() { return sU("z"); }
-	};
-	template<>
-	struct ExponentTraits<-24>
-	{
-		const static bool valid = true;
-		static sci::string getName() { return sU("yocto"); }
-		static sci::string getPrefix() { return sU("y"); }
-	};
+
+#define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
+template<>\
+struct ExponentTraits<VALUE>\
+{\
+	const static bool valid = true;\
+	static std::string getName() { return LONG_NAME; }\
+	static std::wstring getNameW() { return L##LONG_NAME; }\
+	static std::basic_string<char8_t> getName8() { return u8##LONG_NAME; }\
+	static std::u16string getName16() { return u##LONG_NAME; }\
+	static std::u32string getName32() { return U#LONG_NAME; }\
+	static std::string getPrefix() { return ABBREVIATION; }\
+	static std::wstring getPrefixW() { return L##ABBREVIATION; }\
+	static std::basic_string<char8_t> getPrefix8() { return u8##ABBREVIATION; }\
+	static std::u16string getPrefix16() { return u##ABBREVIATION; }\
+	static std::u32string getPrefix32() { return U##ABBREVIATION; }\
+};
+	MAKE_EXPONENT_TRAITS(24, "yotta", "Y");
+	MAKE_EXPONENT_TRAITS(21, "zetta", "Z");
+	MAKE_EXPONENT_TRAITS(18, "exa", "E");
+	MAKE_EXPONENT_TRAITS(15, "peta", "P");
+	MAKE_EXPONENT_TRAITS(12, "tera", "T");
+	MAKE_EXPONENT_TRAITS(9, "giga", "G");
+	MAKE_EXPONENT_TRAITS(6, "mega", "M");
+	MAKE_EXPONENT_TRAITS(3, "kilo", "k");
+	MAKE_EXPONENT_TRAITS(2, "hecto", "h");
+	MAKE_EXPONENT_TRAITS(1, "deca", "da");
+	MAKE_EXPONENT_TRAITS(0, "", "");
+	MAKE_EXPONENT_TRAITS(-1, "deci", "d");
+	MAKE_EXPONENT_TRAITS(-2, "centi", "c");
+	MAKE_EXPONENT_TRAITS(-3, "milli", "m");
+	MAKE_EXPONENT_TRAITS(-6, "micro", "\u03bc");
+	MAKE_EXPONENT_TRAITS(-9, "nano", "n");
+	MAKE_EXPONENT_TRAITS(-12, "pico", "p");
+	MAKE_EXPONENT_TRAITS(-15, "femto", "f");
+	MAKE_EXPONENT_TRAITS(-18, "atto", "a");
+	MAKE_EXPONENT_TRAITS(-21, "zepto", "z");
+	MAKE_EXPONENT_TRAITS(-24, "yocto", "y");
 
 	//build a string showing the unit. Note that exponent must be before multiplying by power
 	template<int64_t EXPONENT>
@@ -203,12 +102,12 @@ namespace sci
 		if (power == 1)
 		{
 			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getPrefix() << unit;
+			stream << ExponentTraits<EXPONENT>::getPrefix16() << unit;
 			return stream.str();
 		}
 
 		sci::ostringstream stream;
-		stream << ExponentTraits<EXPONENT>::getPrefix() << unit << powerPrefix << power << powerSuffix;
+		stream << ExponentTraits<EXPONENT>::getPrefix16() << unit << powerPrefix << power << powerSuffix;
 		return stream.str();
 	}
 
@@ -221,24 +120,24 @@ namespace sci
 		if (power == 1)
 		{
 			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName() << unit;
+			stream << ExponentTraits<EXPONENT>::getName16() << unit;
 			return stream.str();
 		}
 		if (power == 2)
 		{
 			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" squared");
+			stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" squared");
 			return stream.str();
 		}
 		if (power == 3)
 		{
 			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" cubed");
+			stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" cubed");
 			return stream.str();
 		}
 
 		sci::ostringstream stream;
-		stream << ExponentTraits<EXPONENT>::getName() << unit << sU(" to the power ") << power;
+		stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" to the power ") << power;
 		return stream.str();
 	}
 
@@ -570,7 +469,7 @@ namespace sci
 	//FOR ALL THESE THE EXPONENT IS NOT PREMULTIPLIED as it is in EncodedUnit - it's as you would write it
 	//so for a mm^2 you would use metre<2,-3>
 
-	//This is a macro used to shrthand the definition of functions in each of the SI units
+	//This is a macro used to shorthand the definition of functions in each of the SI units
 #define NAMEDEF(SHORTNAME, LONGNAME)\
 	static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
 	{\
