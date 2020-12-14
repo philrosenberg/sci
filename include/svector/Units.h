@@ -1,4 +1,9 @@
 #pragma once
+//Copyright 2020 Philip Rosenberg https://science.cplusplus.engineering
+//This source code is provided under the Science.cplusplus.engineering Code license v1.
+//A copy of this license should have been provided with this code or can be downloaded
+//from https://science.cplusplus.engineering/science-cplusplus-engineering-code-license-v1/
+
 #include<vector>
 #include<limits>
 #include"sstring.h"
@@ -581,7 +586,7 @@ namespace sci
 	}\
 	static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
 	{\
-		return makeLongName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+		return makeLongName<EXPONENT>(getLongName(), POWER*raisedByPower);\
 	}\
 	static sci::string getShortName()\
 	{\
@@ -969,6 +974,7 @@ namespace sci
 		static const int64_t exponent = EXPONENT;\
 		static const int8_t power = POWER;\
 		static const sci::string shortName;\
+		static const sci::string longName;\
 		template <class VALUE_TYPE>\
 		struct Converter\
 		{\
@@ -1002,7 +1008,7 @@ namespace sci
 		}\
 		static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
 		{\
-			return makeLongName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+			return makeLongName<EXPONENT>(getLongName(), POWER*raisedByPower);\
 		}\
 		static sci::string getShortName()\
 		{\
@@ -1024,6 +1030,8 @@ namespace sci
 	};\
 	template <int8_t POWER, int64_t EXPONENT>\
 	const sci::string CLASS_NAME<POWER, EXPONENT>::shortName = SHORT_NAME;\
+	template <int8_t POWER, int64_t EXPONENT>\
+	const sci::string CLASS_NAME<POWER, EXPONENT>::longName = LONG_NAME;\
 
 
 	//angle units
@@ -1080,7 +1088,7 @@ namespace sci
 	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, sU("t"), sU("ton"))
 	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, sU("cwt"), sU("hundredweight"))
 	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, sU("st"), sU("stone"))
-	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"), su("pound"))
+	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"), sU("pound"))
 	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, sU("oz"), sU("ounce"))
 
 
@@ -1559,9 +1567,18 @@ std::istream & operator>> (std::istream &stream, sci::Physical<T, V> &physical)
 template<class T, class V>
 std::ostream & operator<< (std::ostream &stream, const sci::Physical<T, V> &physical)
 {
-	stream << physical.template value<T>() << " " << T::getShortRepresentation();
+	stream << physical.template value<T>() << " " << sci::nativeCodepage(T::getShortRepresentation());
 	return stream;
 }
+
+#ifdef _WIN32
+template<class T, class V>
+std::wostream& operator<< (std::wostream& stream, const sci::Physical<T, V>& physical)
+{
+	stream << physical.template value<T>() << " " << sci::nativeUnicode(T::getShortRepresentation());
+	return stream;
+}
+#endif
 
 template<class T, class V>
 std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t> &stream, sci::Physical<T, V> &physical)
