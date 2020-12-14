@@ -6,7 +6,9 @@
 #endif
 #include <vector>
 #include <locale>
+#ifdef __WXWINDOWS__
 #include <wx/string.h>
+#endif
 
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
 {
@@ -223,6 +225,8 @@ std::wstring sci::nativeUnicode(const std::u32string& str)
 	return sci::nativeUnicode(utf32ToUtf16(str));
 }
 
+
+#ifdef __WXWINDOWS__
 std::wstring sci::nativeUnicode(const wxString& str)
 {
 	return str.wc_str(wxMBConvUTF16());
@@ -232,6 +236,7 @@ wxString& sci::operator<<(wxString& str1, const sci::string& str2)
 {
 	return str1 << nativeUnicode(str2);
 }
+#endif
 
 std::string sci::nativeCodepage(const std::wstring &str)
 {
@@ -563,8 +568,11 @@ sci::string sci::fromUtf32(const std::u32string &string)
 {
 	return utf32ToUtf16(string);
 }
+
+
+#ifdef __WXWINDOWS__
 sci::string sci::fromWxString(const wxString &string)
 {
 	return sci::fromUtf8(std::string(string.utf8_str()));
 }
-
+#endif
