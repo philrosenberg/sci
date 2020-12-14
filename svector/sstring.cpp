@@ -576,3 +576,8 @@ sci::string sci::fromWxString(const wxString &string)
 	return sci::fromUtf8(std::string(string.utf8_str()));
 }
 #endif
+
+#ifdef _WIN32
+//needed for the definition of the numpunct<char16_t>::id variable
+__PURE_APPDOMAIN_GLOBAL std::locale::id std::numpunct<char16_t>::id;
+#endif
