@@ -16,6 +16,7 @@ int main()
 {
 	//to do
 	//check long representations for scaled and SI units
+	//check what unit we get when we raise to the power 0
 
 	dMetre length1(1.0);
 	dMegaMetre length2(0.1);

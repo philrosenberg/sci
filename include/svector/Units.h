@@ -60,16 +60,18 @@ template<>\
 struct ExponentTraits<VALUE>\
 {\
 	const static bool valid = true;\
-	static std::string getName() { return LONG_NAME; }\
-	static std::wstring getNameW() { return L##LONG_NAME; }\
-	static std::basic_string<char8_t> getName8() { return u8##LONG_NAME; }\
-	static std::u16string getName16() { return u##LONG_NAME; }\
-	static std::u32string getName32() { return U#LONG_NAME; }\
-	static std::string getPrefix() { return ABBREVIATION; }\
-	static std::wstring getPrefixW() { return L##ABBREVIATION; }\
-	static std::basic_string<char8_t> getPrefix8() { return u8##ABBREVIATION; }\
-	static std::u16string getPrefix16() { return u##ABBREVIATION; }\
-	static std::u32string getPrefix32() { return U##ABBREVIATION; }\
+	template<class STRING> static STRING getName(){}\
+	template<> static std::string getName<std::string>() { return LONG_NAME; }\
+	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
+	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
+	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
+	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
+	template<class STRING> static STRING getPrefix(){}\
+	template<> static std::string getPrefix<std::string>() { return ABBREVIATION; }\
+	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
+	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\
+	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
+	template<> static std::u32string getPrefix<std::u32string>() { return U##ABBREVIATION; }\
 };
 	MAKE_EXPONENT_TRAITS(24, "yotta", "Y");
 	MAKE_EXPONENT_TRAITS(21, "zetta", "Z");
@@ -93,52 +95,83 @@ struct ExponentTraits<VALUE>\
 	MAKE_EXPONENT_TRAITS(-21, "zepto", "z");
 	MAKE_EXPONENT_TRAITS(-24, "yocto", "y");
 
-	//build a string showing the unit. Note that exponent must be before multiplying by power
-	template<int64_t EXPONENT>
-	sci::string makeShortName(const sci::string &unit, int8_t power, const sci::string &powerPrefix, const sci::string &powerSuffix)
+	template<class STRING>
+	STRING powerToTextShort(int8_t power)
 	{
-		if (power == 0)
-			return sU("");
-		if (power == 1)
-		{
-			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getPrefix16() << unit;
-			return stream.str();
-		}
-
-		sci::ostringstream stream;
-		stream << ExponentTraits<EXPONENT>::getPrefix16() << unit << powerPrefix << power << powerSuffix;
-		return stream.str();
+		//the basic latin numbers all have the same representation of all sensible encodings
+		//so we can use the same function irrespective of the string type
+		if (power < 0)
+			return STRING({ STRING::value_type(45) }) + powerToTextShort<STRING>(-power);
+		if (power < 10)
+			return STRING({ STRING::value_type(48 + power) });
+		else
+			return powerToTextShort<STRING>(power / 10) + STRING({ STRING::value_type(48 + power % 10) });
 	}
-
-	//build a string showing the unit. Note that exponent must be before multiplying by power
-	template<int64_t EXPONENT>
-	sci::string makeLongName(const sci::string& unit, int8_t power)
+	template<class STRING>
+	STRING powerToTextLong(int8_t power)
 	{
-		if (power == 0)
-			return sU("");
-		if (power == 1)
-		{
-			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName16() << unit;
-			return stream.str();
-		}
 		if (power == 2)
 		{
-			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" squared");
-			return stream.str();
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return " squared";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L" squared";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8" squared";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u" squared";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U" squared";
 		}
 		if (power == 3)
 		{
-			sci::ostringstream stream;
-			stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" cubed");
-			return stream.str();
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return " cubed";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L" cubed";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8" cubed";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u" cubed";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U" cubed";
 		}
+		if constexpr (std::is_same<STRING, std::string>::value)
+			return " to the power " + powerToTextShort<STRING>(power);
+		if constexpr (std::is_same<STRING, std::wstring>::value)
+			return L" to the power " + powerToTextShort<STRING>(power);
+		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+			return u8" to the power " + powerToTextShort<STRING>(power);
+		if constexpr (std::is_same<STRING, std::u16string>::value)
+			return u" to the power " + powerToTextShort<STRING>(power);
+		if constexpr (std::is_same<STRING, std::u32string>::value)
+			return U" to the power " + powerToTextShort<STRING>(power);
+	}
 
-		sci::ostringstream stream;
-		stream << ExponentTraits<EXPONENT>::getName16() << unit << sU(" to the power ") << power;
-		return stream.str();
+	//build a string showing the unit. Note that exponent must be before multiplying by power
+	template<int64_t EXPONENT, class STRING>
+	STRING makeShortName(const STRING &unit, int8_t power, const STRING &powerPrefix, const STRING &powerSuffix)
+	{
+		if (power == 0)
+			return STRING();
+
+		if (power == 1)
+			return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit;
+
+		return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit + powerPrefix + powerToTextShort<STRING>(power) + powerSuffix;
+	}
+
+	//build a string showing the unit. Note that exponent must be before multiplying by power
+	template<int64_t EXPONENT, class STRING>
+	STRING makeLongName(const STRING& unit, int8_t power)
+	{
+		if (power == 0)
+			return STRING();
+
+		if (power == 1)
+			return ExponentTraits<EXPONENT>::template getName<STRING>() + unit;
+		
+		return ExponentTraits<EXPONENT>::template getName<STRING>() + unit + powerToTextLong<STRING>(power);
 	}
 
 
