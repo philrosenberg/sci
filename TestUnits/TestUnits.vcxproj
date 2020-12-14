@@ -155,8 +155,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\svector\serr.cpp" />
-    <ClCompile Include="..\svector\sstring.cpp" />
     <ClCompile Include="TestUnits.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

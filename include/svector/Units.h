@@ -6,7 +6,6 @@
 
 #include<vector>
 #include<limits>
-#include"sstring.h"
 #include"Traits.h"
 namespace sci
 {
@@ -367,11 +366,13 @@ struct ExponentTraits<VALUE>\
 	{
 		typedef PoweredEncodedUnit< ENCODEDUNIT, POW> unit;
 		typedef EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW> encodedUnitClass;
-		static sci::string getShortRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return ENCODEDUNIT::getLongRepresentation(exponentPrefix, exponentSuffix, POW);
 		}
@@ -409,11 +410,13 @@ struct ExponentTraits<VALUE>\
 	{
 		typedef RootedEncodedUnit< ENCODEDUNIT, ROOT> unit;
 		typedef EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT> encodedUnitClass;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return ENCODEDUNIT::getShortRepresentation(exponentPrefix, exponentSuffix, -ROOT);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING, const STRING& exponentSuffix = STRING)
 		{
 			return ENCODEDUNIT::getLongRepresentation(exponentPrefix, exponentSuffix, -ROOT);
 		}
@@ -452,13 +455,17 @@ struct ExponentTraits<VALUE>\
 		typedef MultipliedEncodedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
 		typedef EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent> encodedUnitClass;
 		typedef MultipliedEncodedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
-			return ENCODEDUNIT1::getShortRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getShortRepresentation(exponentPrefix, exponentSuffix);
+			//for all sensible encodings a space is represented by value of 32, so we don't need to do any encoding conversion
+			return ENCODEDUNIT1::getShortRepresentation(exponentPrefix, exponentSuffix) + STRING{STRING::value_type(32)} + ENCODEDUNIT2::getShortRepresentation(exponentPrefix, exponentSuffix);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODEDUNIT1::getLongRepresentation(exponentPrefix, exponentSuffix) + sU(" ") + ENCODEDUNIT2::getLongRepresentation(exponentPrefix, exponentSuffix);
+			//for all sensible encodings a space is represented by value of 32, so we don't need to do any encoding conversion
+			return ENCODEDUNIT1::getLongRepresentation(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getLongRepresentation(exponentPrefix, exponentSuffix);
 		}
 
 		template<class VALUE_TYPE>
@@ -504,144 +511,246 @@ struct ExponentTraits<VALUE>\
 
 	//This is a macro used to shorthand the definition of functions in each of the SI units
 #define NAMEDEF(SHORTNAME, LONGNAME)\
-	static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+	template<class STRING>\
+	static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
 	{\
 		return getShortRepresentation(exponentPrefix, exponentSuffix, 1);\
 	}\
-	static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+	template<class STRING>\
+	static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)\
 	{\
-		return makeShortName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+		return makeShortName<EXPONENT>(getShortName<STRING>(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
 	}\
-	static sci::string getLongRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+	template<class STRING>\
+	static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
 	{\
 		return getLongRepresentation(exponentPrefix, exponentSuffix, 1);\
 	}\
-	static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+	template<class STRING>\
+	static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)\
 	{\
-		return makeLongName<EXPONENT>(getLongName(), POWER*raisedByPower);\
+		return makeLongName<EXPONENT>(getLongName<STRING>(), POWER*raisedByPower);\
 	}\
-	static sci::string getShortName()\
+	template<class STRING>\
+	static STRING getShortName()\
 	{\
-		return SHORTNAME;\
+		if constexpr (std::is_same<STRING, std::string>::value)\
+			return SHORTNAME;\
+		if constexpr (std::is_same<STRING, std::wstring>::value)\
+			return L##SHORTNAME;\
+		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+			return u8##SHORTNAME;\
+		if constexpr (std::is_same<STRING, std::u16string>::value)\
+			return u##SHORTNAME;\
+		if constexpr (std::is_same<STRING, std::u32string>::value)\
+			return U##SHORTNAME;\
 	}\
-	static sci::string getLongName()\
+	template<class STRING>\
+	static STRING getLongName()\
 	{\
-		return LONGNAME; \
+		if constexpr (std::is_same<STRING, std::string>::value)\
+			return LONGNAME;\
+		if constexpr (std::is_same<STRING, std::wstring>::value)\
+			return L##LONGNAME;\
+		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+			return u8##LONGNAME;\
+		if constexpr (std::is_same<STRING, std::u16string>::value)\
+			return u##LONGNAME;\
+		if constexpr (std::is_same<STRING, std::u32string>::value)\
+			return U##LONGNAME;\
 	}
 
 	struct Unitless : public EncodedUnit<0, 0>
 	{
 		static const int8_t power = 0;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1); 
 		}
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)
 		{
-			return getShortName();
+			return getShortName<STRING>();
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix, int raisedByPower)
 		{
-			return getLongName();
+			return getLongName<STRING>();
 		}
-		static sci::string getShortName()
+		template<class STRING>
+		static STRING getShortName()
 		{
-			return sU(""); 
+			return STRING(); 
 		}
-		static sci::string getLongName()
+		template<class STRING>
+		static STRING getLongName()
 		{
-			return sU("");
+			return STRING();
 		}
 	};
 
 	struct Percent : public EncodedUnit<0, -2>
 	{
 		static const int8_t power = 0;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)
 		{
-			return getShortName();
+			return getShortName<STRING>();
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix, int raisedByPower)
 		{
-			return getLongName();
+			return getLongName<STRING>();
 		}
-		static sci::string getShortName()
+		template<class STRING>
+		static STRING getShortName()
 		{
-			return sU("%");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "%"; 
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"%"; 
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"%";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"%";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"%";
 		}
-		static sci::string getLongName()
+		template<class STRING>
+		static STRING getLongName()
 		{
-			return sU("percent");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "percent";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"percent";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"percent";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"percent";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"percent";
 		}
 	};
 
 	struct PerMille : public EncodedUnit<0, -3>
 	{
 		static const int8_t power = 0;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)
 		{
-			return getShortName();
+			return getShortName<STRING>();
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix, int raisedByPower)
 		{
-			return getLongName();
+			return getLongName<STRING>();
 		}
-		static sci::string getShortName()
+		template<class STRING>
+		static STRING getShortName()
 		{
-			return sU("\u2030");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "\u2030";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"\u2030";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"\u2030";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"\u2030";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"\u2030";
 		}
-		static sci::string getLongName()
+		template<class STRING>
+		static STRING getLongName()
 		{
-			return sU("per mille");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "per mille";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"per mille";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"per mille";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"per mille";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"per mille";
 		}
 	};
 
 	struct BasisPoint : public EncodedUnit<0, -4>
 	{
 		static const int8_t power = 0;
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)
 		{
-			return getShortName();
+			return getShortName<STRING>();
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);
 		}
-		static sci::string getLongRepresentation(const sci::string& exponentPrefix, const sci::string& exponentSuffix, int raisedByPower)
+		template<class STRING>
+		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix, int raisedByPower)
 		{
-			return getLongName();
+			return getLongName<STRING>();
 		}
-		static sci::string getShortName()
+		template<class STRING>
+		static STRING getShortName()
 		{
-			return sU("\u2031");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "\u2031";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"\u2031";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"\u2031";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"\u2031";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"\u2031";
 		}
-		static sci::string getLongName()
+		template<class STRING>
+		static STRING getLongName()
 		{
-			return sU("basis point");
+			if constexpr (std::is_same<STRING, std::string>::value)
+				return "basis point";
+			if constexpr (std::is_same<STRING, std::wstring>::value)
+				return L"basis point";
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+				return u8"basis point";
+			if constexpr (std::is_same<STRING, std::u16string>::value)
+				return u"basis point";
+			if constexpr (std::is_same<STRING, std::u32string>::value)
+				return U"basis point";
 		}
 	};
 
@@ -649,35 +758,35 @@ struct ExponentTraits<VALUE>\
 	struct Amp : public EncodedUnit<encodePower<POWER, 0>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("A"), sU("ampere"))
+		NAMEDEF("A", "ampere")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Kelvin : public EncodedUnit<encodePower<POWER, 1>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("K"), sU("kelvin"))
+		NAMEDEF("K", "kelvin")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Second : public EncodedUnit<encodePower<POWER, 2>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("s"), sU("second"))
+		NAMEDEF("s", "second")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Metre : public EncodedUnit<encodePower<POWER, 3>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("m"), sU("metre"))
+		NAMEDEF("m", "metre")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gram : public EncodedUnit<encodePower<POWER, 4>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("g"), sU("gram"))
+		NAMEDEF("g", "gram")
 	};
 
 	template<int8_t POWER = 1>
@@ -690,21 +799,21 @@ struct ExponentTraits<VALUE>\
 	struct Candela : public EncodedUnit<encodePower<POWER, 5>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("cd"), sU("candela"))
+		NAMEDEF("cd", "candela")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Mole : public EncodedUnit<encodePower<POWER, 6>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("mol"), sU("mole"))
+		NAMEDEF("mol", "mole")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Radian : public EncodedUnit<encodePower<POWER, 7>(), EXPONENT*POWER>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("rad"), sU("radian"))
+		NAMEDEF("rad", "radian")
 	};
 
 	//When defining these derived units we simply pass the exponent to a
@@ -716,70 +825,70 @@ struct ExponentTraits<VALUE>\
 	struct Steradian : public MultipliedEncodedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("sr"), sU("steradian"))
+		NAMEDEF("sr", "steradian")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Hz"), sU("hertz"))
+		NAMEDEF("Hz", "hertz")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedEncodedUnit<MultipliedEncodedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("N"), sU("newton"))
+		NAMEDEF("N", "newton")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Pa"), sU("pascal"))
+		NAMEDEF("Pa", "pascal")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("J"), sU("joule"))
+		NAMEDEF("J", "joule")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("W"), sU("watt"))
+		NAMEDEF("W", "watt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedEncodedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("C"), sU("coulomb"))
+		NAMEDEF("C", "coulomb")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedEncodedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("V"), sU("volt"))
+		NAMEDEF("V", "volt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedEncodedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("F"), sU("farad"))
+		NAMEDEF("F", "farad")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("\u2126"), sU("ohm"))
+		NAMEDEF("\u2126", "ohm")
 	};
 
 
@@ -787,70 +896,70 @@ struct ExponentTraits<VALUE>\
 	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("S"), sU("seimens"))
+		NAMEDEF("S", "seimens")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Wb"), sU("weber"))
+		NAMEDEF("Wb", "weber")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("T"), sU("tesla"))
+		NAMEDEF("T", "tesla")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("H"), sU("henry"))
+		NAMEDEF("H", "henry")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedEncodedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("lm"), sU("lumen"))
+		NAMEDEF("lm", "lumen")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedEncodedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("lx"), sU("lux"))
+		NAMEDEF("lx", "lux")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Becquerel : public Second<-POWER, EXPONENT>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Bq"), sU("baquerel"))
+		NAMEDEF("Bq", "baquerel")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Gy"), sU("grey"))
+		NAMEDEF("Gy", "grey")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("Sv"), sU("seivert"))
+		NAMEDEF("Sv", "seivert")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedEncodedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
-		NAMEDEF(sU("kat"), sU("katal"))
+		NAMEDEF("kat", "katal")
 	};
 
 
@@ -894,7 +1003,7 @@ struct ExponentTraits<VALUE>\
 #define M_PI 3.14159265358979323846
 #endif
 
-#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME, LONG_NAME)\
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
 	class CLASS_NAME\
 	{\
@@ -905,8 +1014,6 @@ struct ExponentTraits<VALUE>\
 		static const int64_t baseExponent = baseClass::exponent;\
 		static const int64_t exponent = EXPONENT;\
 		static const int8_t power = POWER;\
-		static const sci::string shortName;\
-		static const sci::string longName;\
 		template <class VALUE_TYPE>\
 		struct Converter\
 		{\
@@ -926,29 +1033,53 @@ struct ExponentTraits<VALUE>\
 				return value * sci::pow10<(BASE_EXPONENT - baseExponent), VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 			}\
 		};\
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+		template<class STRING>\
+		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
 		{\
 			return getShortRepresentation(exponentPrefix, exponentSuffix, 1);\
 		}\
-		static sci::string getShortRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+		template<class STRING>\
+		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)\
 		{\
-			return makeShortName<EXPONENT>(getShortName(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
+			return makeShortName<EXPONENT>(getShortName<STRING>(), POWER*raisedByPower, exponentPrefix, exponentSuffix);\
 		}\
-		static sci::string getLongRepresentation(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))\
+		template<class STRING>\
+		static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
 		{\
 			return getLongRepresentation(exponentPrefix, exponentSuffix, 1);\
 		}\
-		static sci::string getLongRepresentation(const sci::string &exponentPrefix, const sci::string &exponentSuffix, int raisedByPower)\
+		template<class STRING>\
+		static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix, int raisedByPower)\
 		{\
-			return makeLongName<EXPONENT>(getLongName(), POWER*raisedByPower);\
+			return makeLongName<EXPONENT>(getLongName<STRING>(), POWER*raisedByPower);\
 		}\
-		static sci::string getShortName()\
+		template<class STRING>\
+		static STRING getShortName()\
 		{\
-			return shortName;\
+			if constexpr (std::is_same<STRING, std::string>::value)\
+				return SHORTNAME;\
+			if constexpr (std::is_same<STRING, std::wstring>::value)\
+				return L##SHORTNAME;\
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+				return u8##SHORTNAME;\
+			if constexpr (std::is_same<STRING, std::u16string>::value)\
+				return u##SHORTNAME;\
+			if constexpr (std::is_same<STRING, std::u32string>::value)\
+				return U##SHORTNAME;\
 		}\
-		static sci::string getLongName()\
+		template<class STRING>\
+		static STRING getLongName()\
 		{\
-			return longName;\
+			if constexpr (std::is_same<STRING, std::string>::value)\
+				return LONGNAME;\
+			if constexpr (std::is_same<STRING, std::wstring>::value)\
+				return L##LONGNAME;\
+			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+				return u8##LONGNAME;\
+			if constexpr (std::is_same<STRING, std::u16string>::value)\
+				return u##LONGNAME;\
+			if constexpr (std::is_same<STRING, std::u32string>::value)\
+				return U##LONGNAME;\
 		}\
 		static constexpr bool isUnitless()\
 		{\
@@ -959,69 +1090,65 @@ struct ExponentTraits<VALUE>\
 		{\
 			return basePowers == OTHER_UNIT::basePowers;\
 		}\
-	};\
-	template <int8_t POWER, int64_t EXPONENT>\
-	const sci::string CLASS_NAME<POWER, EXPONENT>::shortName = SHORT_NAME;\
-	template <int8_t POWER, int64_t EXPONENT>\
-	const sci::string CLASS_NAME<POWER, EXPONENT>::longName = LONG_NAME;\
+	};
 
 
 	//angle units
-	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, sU("degree"), sU("degree"))
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, sU("\u8242"), sU("arcminute"))
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, sU("\u8243"), sU("arcsecond"))
-	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, sU("tr"), sU("turn"))
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, sU("quadrant"), sU("quadrant"))
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, sU("sextant"), sU("sextant"))
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, sU("hexacontade"), sU("hexacontade"))
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, sU("binary degree"), sU("binary degree"))
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, sU("gon"), sU("gradian"))
+	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, "degree", "degree")
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, "\u8242", "arcminute")
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, "\u8243", "arcsecond")
+	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, "tr", "turn")
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, "quadrant", "quadrant")
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, "sextant", "sextant")
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, "hexacontade", "hexacontade")
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, "binary degree", "binary degree")
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, "gon", "gradian")
 
 	//Farenheit equivalent of kelvin unit
-	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, sU("\u00b0Ra"), sU("rankine"))
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, "\u00b0Ra", "rankine")
 
 	//alternative metric and scientific units
-	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, sU("\u212B"), sU("\u00e5ngstrom"))
-	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, sU("AU"), sU("astronomical unit"))
-	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, sU("ly"), sU("lightyear"))
-	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, sU("pc"), sU("parsec"))
-	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, sU("NM"), sU("nautical mile"))
-	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, sU("ha"), sU("hectare"))
-	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, sU("t"), sU("tonne"))
-	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, sU("L"), sU("litre"))
-	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, sU("AMU"), sU("atomic mass unit"))
-	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, sU("sidereal day"), sU("sidereal day"))
-	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, sU("e"), sU("elementary charge"))
-	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, sU("eV"), sU("electron volt"))
+	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", "\u00e5ngstrom")
+	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, "AU", "astronomical unit")
+	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, "ly", "lightyear")
+	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, "pc", "parsec")
+	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, "NM", "nautical mile")
+	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, "ha", "hectare")
+	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, "t", "tonne")
+	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, "L", "litre")
+	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, "AMU", "atomic mass unit")
+	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, "sidereal day", "sidereal day")
+	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, "e", "elementary charge")
+	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, "eV", "electron volt")
 
 	//time units
-	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, sU("min"), sU("minute"))
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, sU("hr"), sU("hour"))
-	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, sU("day"), sU("day"))
+	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, "min", "minute")
+	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, "hr", "hour")
+	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, "day", "day")
 
 	//imperial units
 	//length units are all based on the international yard which is exactly 0.9144 m
-	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, sU("mi"), sU("mile"))
-	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, sU("fur"), sU("furlong"))
-	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, sU("ch"), sU("chain"))
-	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, sU("rd"), sU("rod"))
-	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, sU("ftm"), sU("fathom"))
-	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, sU("yd"), sU("yard"))
-	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, sU("'"), sU("foot"))
-	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, sU("\""), sU("inch"))
-	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, sU("ac"), sU("acre"))
-	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, sU("imp gal"), sU("imperial gallon"))
-	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, sU("US gal"), sU("US gallon"))
-	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, sU("imp fl oz"), sU("imperial fluid ounce"))
-	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, sU("US fl oz"), sU("US fluid ounce"))
-	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, sU("imp pt"), sU("imperial pint"))
-	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, sU("US pt"), sU("US pint"))
+	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, "mi", "mile")
+	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, "fur", "furlong")
+	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, "ch", "chain")
+	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, "rd", "rod")
+	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, "ftm", "fathom")
+	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, "yd", "yard")
+	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, "'", "foot")
+	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, "\"", "inch")
+	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, "ac", "acre")
+	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, "imp gal", "imperial gallon")
+	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, "US gal", "US gallon")
+	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, "imp fl oz", "imperial fluid ounce")
+	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, "US fl oz", "US fluid ounce")
+	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, "imp pt", "imperial pint")
+	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, "US pt", "US pint")
 	//weight units are defined from the definition of a pound being 453.59237 g
-	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, sU("t"), sU("ton"))
-	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, sU("cwt"), sU("hundredweight"))
-	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, sU("st"), sU("stone"))
-	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, sU("lb"), sU("pound"))
-	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, sU("oz"), sU("ounce"))
+	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, "t", "ton")
+	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, "cwt", "hundredweight")
+	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, "st", "stone")
+	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, "lb", "pound")
+	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, "oz", "ounce")
 
 
 	template < class ENCODED_UNIT, class VALUE_TYPE>
@@ -1094,12 +1221,14 @@ struct ExponentTraits<VALUE>\
 			static_assert(std::is_same<ENCODED_UNIT, VALUE_TYPE>::value, "Cannot assign a physical value from a raw value type. Use the Physical constructor to create a Physical first.");
 		}
 
-		static sci::string getShortUnitString(const sci::string &exponentPrefix = sU(""), const sci::string &exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getShortUnitString(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
 			return ENCODED_UNIT::getShortRepresentation(exponentPrefix, exponentSuffix);
 		}
 
-		static sci::string getLongUnitString(const sci::string& exponentPrefix = sU(""), const sci::string& exponentSuffix = sU(""))
+		template<class STRING>
+		static STRING getLongUnitString(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
 			return ENCODED_UNIT::getLongRepresentation(exponentPrefix, exponentSuffix);
 		}
@@ -1485,46 +1614,39 @@ struct ExponentTraits<VALUE>\
 	{
 		return numerator / unitless((V)denominator);
 	}
+
+	//this struct can be used to get the unitless type
+	//for either a Physical or another value type (e.g.
+	//a double or float). This is useful for averaging
+	//where we may will need to divide by a unitless
+	//count. 
+
+	template<class T>
+	struct UnitlessType
+	{
+		typedef T type;
+	};
+	template<class T, class U>
+	struct UnitlessType<Physical<T, U>>
+	{
+		typedef Physical<Unitless, U> type;
+	};
+
 }
 
-template<class T, class V>
-std::istream & operator>> (std::istream &stream, sci::Physical<T, V> &physical)
+template<class T, class V, class CHAR_TYPE>
+std::basic_ostream<CHAR_TYPE>& operator<< (std::basic_ostream<CHAR_TYPE>& stream, const sci::Physical<T, V>& physical)
 {
-	V temp;
-	stream >> temp;
-	physical=sci::Physical<T, V>(temp);
+	stream << physical.template value<T>() << " " << T::template getShortRepresentation<std::basic_string<CHAR_TYPE>>();
 	return stream;
 }
 
-template<class T, class V>
-std::ostream & operator<< (std::ostream &stream, const sci::Physical<T, V> &physical)
-{
-	stream << physical.template value<T>() << " " << sci::nativeCodepage(T::getShortRepresentation());
-	return stream;
-}
-
-#ifdef _WIN32
-template<class T, class V>
-std::wostream& operator<< (std::wostream& stream, const sci::Physical<T, V>& physical)
-{
-	stream << physical.template value<T>() << " " << sci::nativeUnicode(T::getShortRepresentation());
-	return stream;
-}
-#endif
-
-template<class T, class V>
-std::basic_istream<sci::char_t> & operator>> (std::basic_istream<sci::char_t> &stream, sci::Physical<T, V> &physical)
+template<class T, class V, class CHAR_TYPE>
+std::basic_istream<CHAR_TYPE> & operator>> (std::basic_istream<CHAR_TYPE> &stream, sci::Physical<T, V> &physical)
 {
 	V temp;
 	stream >> temp;
 	physical = sci::Physical<T, V>(temp);
-	return stream;
-}
-
-template<class T, class V>
-std::basic_ostream<sci::char_t> & operator<< (std::basic_ostream<sci::char_t> &stream, const sci::Physical<T, V> &physical)
-{
-	stream << physical.template value<T>() << sU(" ") << T::getShortRepresentation();
 	return stream;
 }
 
