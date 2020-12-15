@@ -11,6 +11,8 @@ typedef sci::Physical<sci::Second<1,-9>, double> dnanoSecond;
 typedef sci::Physical<sci::Degree<>, double> dDegree;
 typedef sci::Physical<sci::Degree<1, -6>, double> dmicroDegree;
 typedef sci::Physical<sci::Unitless, double> dUnitless;
+typedef sci::Physical<sci::Newton<>, double> dNewton;
+typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double> dnewtonMetre;
 
 int main()
 {
@@ -19,6 +21,7 @@ int main()
 	//check what unit we get when we raise to the power 0
 	//check what I get with m2 s-4 all squared for long and short unit text
 	//remove long/shor name variables from scaled units. Use literals instead like in metric units
+	//test if I can get a fractional power and what happens if so
 
 	dMetre length1(1.0);
 	dMegaMetre length2(0.1);
@@ -33,9 +36,21 @@ int main()
 	assert(std::abs(length3.value<dMetre>() - expectedSumLengthMegaMetre.value<dMetre>()) < 0.001);
 	assert(std::abs(length3.value<dMegaMetre>() - expectedSumLengthMegaMetre.value<dMegaMetre>()) < 0.001);
 
+	//test dividing two physicals
 	auto speed = dMetre(200.0) / dSecond(50.0);
 	std::cout << "speed = " << speed << "\n";
+	std::wcout << "speed = " << speed << "\n";
+	std::cout << "speed = 40 m s-1\n\n";
+
+	//test multiplying two physicals
+	auto torque = dMetre(200.0) / dSecond(50.0);
+	std::cout << "speed = " << speed << "\n";
+	std::wcout << "speed = " << speed << "\n";
+	std::cout << "speed = 40 m s-1\n\n";
+
 	std::wcout << speed.getShortUnitString<std::wstring>() << L" " << speed.getLongUnitString<std::wstring>() << "\n";
+	std::cout << speed.getShortUnitString<std::string>() << " " << speed.getLongUnitString<std::string>() << "\n";
+	std::cout << "m s-1 metre second to the power -1\n\n";
 	assert(std::abs(speed.value<decltype(speed)>() - 4.0) < 0.001);
 
 	dSecondSquared squaredTime1 = sci::pow<2>(dnanoSecond(1e10));

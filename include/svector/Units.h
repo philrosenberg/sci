@@ -362,9 +362,9 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents an encoded unit to a power. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT, int POW>
-	struct PoweredEncodedUnit : public EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW>
+	struct PoweredUnit : public EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW>
 	{
-		typedef PoweredEncodedUnit< ENCODEDUNIT, POW> unit;
+		typedef PoweredUnit< ENCODEDUNIT, POW> unit;
 		typedef EncodedUnit<powPowers<ENCODEDUNIT::basePowers, POW>(), ENCODEDUNIT::exponent * POW> encodedUnitClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
@@ -390,11 +390,6 @@ struct ExponentTraits<VALUE>\
 					return value;
 				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW));
 			}
-			//template <>
-			//static VALUE_TYPE convertTo < PoweredEncodedUnit<ENCODEDUNIT, POW>>(VALUE_TYPE value)
-			//{
-			//	return value;
-			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -406,9 +401,9 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents an encoded unit rooted. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT, int ROOT>
-	struct RootedEncodedUnit : public EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT>
+	struct RootedUnit : public EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT>
 	{
-		typedef RootedEncodedUnit< ENCODEDUNIT, ROOT> unit;
+		typedef RootedUnit< ENCODEDUNIT, ROOT> unit;
 		typedef EncodedUnit<rootPowers<ENCODEDUNIT::basePowers, ROOT>(), ENCODEDUNIT::exponent * ROOT> encodedUnitClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
@@ -434,11 +429,6 @@ struct ExponentTraits<VALUE>\
 					return value;
 				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(value*std::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), VALUE_TYPE(1.0) / VALUE_TYPE(ROOT)));
 			}
-			//template <>
-			//static VALUE_TYPE convertTo < RootedEncodedUnit<ENCODEDUNIT, ROOT>>(VALUE_TYPE value)
-			//{
-			//	return value;
-			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -450,11 +440,11 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents two encoded units multiplied together. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units.
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
-	struct MultipliedEncodedUnit : public EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent>
+	struct MultipliedUnit : public EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent>
 	{
-		typedef MultipliedEncodedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
+		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
 		typedef EncodedUnit<multiplyPowers<ENCODEDUNIT1::basePowers, ENCODEDUNIT2::basePowers>(), ENCODEDUNIT1::exponent + ENCODEDUNIT2::exponent> encodedUnitClass;
-		typedef MultipliedEncodedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
+		typedef MultipliedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -481,11 +471,6 @@ struct ExponentTraits<VALUE>\
 				//Convert the value to the ENCODEDUNIT1::baseType and multiple by 1 converted to ENCODEDUNIT2::baseType, then call convertFromBase
 				return T::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponent>(ENCODEDUNIT1::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT1::baseClass>(value)*ENCODEDUNIT2::template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT2::baseClass>(1.0));
 			}
-			//template <>
-			//static VALUE_TYPE convertTo < MultipliedEncodedUnit<ENCODEDUNIT1, ENCODEDUNIT2>>(VALUE_TYPE value)
-			//{
-			//	return value;
-			//}
 			template <int64_t BASE_EXPONENT>
 			static VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
@@ -498,7 +483,7 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents two encoded units divided by each other. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
-	struct DividedEncodedUnit : public MultipliedEncodedUnit<ENCODEDUNIT1, PoweredEncodedUnit<ENCODEDUNIT2, -1> >
+	struct DividedUnit : public MultipliedUnit<ENCODEDUNIT1, PoweredUnit<ENCODEDUNIT2, -1> >
 	{
 
 	};
@@ -822,7 +807,7 @@ struct ExponentTraits<VALUE>\
 
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Steradian : public MultipliedEncodedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
+	struct Steradian : public MultipliedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("sr", "steradian")
@@ -836,56 +821,56 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Newton : public MultipliedEncodedUnit<MultipliedEncodedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
+	struct Newton : public MultipliedUnit<MultipliedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("N", "newton")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Pascal : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
+	struct Pascal : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("Pa", "pascal")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Joule : public MultipliedEncodedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
+	struct Joule : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("J", "joule")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Watt : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
+	struct Watt : public MultipliedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("W", "watt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Coulomb : public MultipliedEncodedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
+	struct Coulomb : public MultipliedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("C", "coulomb")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Volt : public MultipliedEncodedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
+	struct Volt : public MultipliedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("V", "volt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Farad : public MultipliedEncodedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
+	struct Farad : public MultipliedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("F", "farad")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Ohm : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
+	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("\u2126", "ohm")
@@ -900,35 +885,35 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Weber : public MultipliedEncodedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
+	struct Weber : public MultipliedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("Wb", "weber")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Tesla : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
+	struct Tesla : public MultipliedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("T", "tesla")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Henry : public MultipliedEncodedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
+	struct Henry : public MultipliedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("H", "henry")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Lumen : public MultipliedEncodedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
+	struct Lumen : public MultipliedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("lm", "lumen")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Lux : public MultipliedEncodedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
+	struct Lux : public MultipliedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("lx", "lux")
@@ -942,21 +927,21 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Gray : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
+	struct Gray : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("Gy", "grey")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Seivert : public MultipliedEncodedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
+	struct Seivert : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("Sv", "seivert")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Katal : public MultipliedEncodedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
+	struct Katal : public MultipliedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
 		static const int8_t power = POWER;
 		NAMEDEF("kat", "katal")
@@ -1298,16 +1283,16 @@ struct ExponentTraits<VALUE>\
 
 	//* operator
 	template <class T, class U, class V, class W>
-	constexpr Physical<MultipliedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator*(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<MultipliedUnit<T, U>, typename sci::Promoted<V, W>::type> operator*(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
-		return Physical<MultipliedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>()*second.template value<U>());
+		return Physical<MultipliedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>()*second.template value<U>());
 	}
 
 	// / operator
 	template <class T, class U, class V, class W>
-	constexpr Physical<DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
+	constexpr Physical<DividedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
 	{
-		return Physical <DividedEncodedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>() / second.template value<U>());
+		return Physical <DividedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>() / second.template value<U>());
 	}
 
 	//+ operator
@@ -1391,12 +1376,12 @@ struct ExponentTraits<VALUE>\
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
 	template <int POWER, class T, class V>
-	constexpr Physical<PoweredEncodedUnit<T, POWER>, V> pow(const Physical<T, V> &base)
+	constexpr Physical<PoweredUnit<T, POWER>, V> pow(const Physical<T, V> &base)
 	{
 		static_assert(!T::isUnitless(), "When raising a unitless quantity to a power, please explicitly cast it to sci::Physical<sci::Unitless, VALUE_TYPE>, where VALUE_TYPE is some value type. This ensures the output is not Unitless to some power, which makes no physical sense. You may also use sci::Percent, sci::PerMille and sci::BasisPoint, which will be converted to sci::Unitless for you.");
-		return Physical<PoweredEncodedUnit<T, POWER>, V>(std::pow(base.template value<T>(), POWER));
+		return Physical<PoweredUnit<T, POWER>, V>(std::pow(base.template value<T>(), POWER));
 	}
-	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
+	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int POWER, class V>
 	constexpr Physical<Unitless, V> pow(const Physical<Unitless, V> &base)
 	{
@@ -1426,17 +1411,17 @@ struct ExponentTraits<VALUE>\
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
 	template <int ROOT, class T, class V>
-	constexpr Physical<RootedEncodedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
+	constexpr Physical<RootedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
 	{
-		return Physical<RootedEncodedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
+		return Physical<RootedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
 	}
 	//This version undoes a powered unit
 	template <int ROOT, class T, class V>
-	constexpr Physical<T, V> root(const Physical<PoweredEncodedUnit<T, ROOT>, V> &base)
+	constexpr Physical<T, V> root(const Physical<PoweredUnit<T, ROOT>, V> &base)
 	{
-		return Physical<T, V>(std::pow(base.template value<PoweredEncodedUnit<T, ROOT>>(), V(1.0) / V(ROOT)));
+		return Physical<T, V>(std::pow(base.template value<PoweredUnit<T, ROOT>>(), V(1.0) / V(ROOT)));
 	}
-	//same but for Unitless - we can't have a Physical<PoweredEncodedUnit<Unitless, POWER>>
+	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
 	{
@@ -1462,9 +1447,9 @@ struct ExponentTraits<VALUE>\
 	}
 	//sqrt - uses root<2> function
 	template<class T, class V>
-	constexpr Physical<RootedEncodedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
+	constexpr Physical<RootedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
 	{
-		return Physical<RootedEncodedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
+		return Physical<RootedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
 	}
 
 	template <class T, class V>
