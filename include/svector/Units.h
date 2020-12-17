@@ -414,7 +414,7 @@ struct ExponentTraits<VALUE>\
 			twoToTheN /= 2;
 		}
 		VALUE_TYPE currentGuess = (0.5 + 0.5 * a) * twoToTheN;
-		VALUE_TYPE nextGuess = 0.5(currentGuess + value / currentGuess);
+		VALUE_TYPE nextGuess = 0.5*(currentGuess + value / currentGuess);
 		VALUE_TYPE err;
 		if (currentGuess > nextGuess)
 			err = currentGuess / nextGuess - VALUE_TYPE(1.0);
@@ -423,7 +423,7 @@ struct ExponentTraits<VALUE>\
 		while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
 		{
 			currentGuess = nextGuess;
-			VALUE_TYPE nextGuess = 0.5(currentGuess + value / currentGuess);
+			nextGuess = 0.5*(currentGuess + value / currentGuess);
 			if (currentGuess > nextGuess)
 				err = currentGuess / nextGuess - VALUE_TYPE(1.0);
 			else
@@ -467,7 +467,7 @@ struct ExponentTraits<VALUE>\
 			twoToTheN /= 2;
 		}
 		VALUE_TYPE currentGuess = (VALUE_TYPE(1)+(a-VALUE_TYPE(1))/(maxVal-VALUE_TYPE(1))) * twoToTheN;
-		VALUE_TYPE nextGuess = (1.0/VALUE_TYPE(root))*(currentGuess + value / pow(currentGuess,root-1));
+		VALUE_TYPE nextGuess = (1.0 / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess,root-1));
 		VALUE_TYPE err;
 		if (currentGuess > nextGuess)
 			err = currentGuess / nextGuess - VALUE_TYPE(1.0);
@@ -476,7 +476,7 @@ struct ExponentTraits<VALUE>\
 		while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
 		{
 			currentGuess = nextGuess;
-			VALUE_TYPE nextGuess = 0.5*(currentGuess + value / currentGuess);
+			nextGuess = (1.0 / VALUE_TYPE(root)) * (currentGuess * (root - 1 ) + value / pow(currentGuess, root - 1));
 			if (currentGuess > nextGuess)
 				err = currentGuess / nextGuess - VALUE_TYPE(1.0);
 			else
@@ -1665,43 +1665,43 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 	template <int ROOT, class T, class V>
 	constexpr Physical<RootedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
 	{
-		return Physical<RootedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
+		return Physical<RootedUnit<T, ROOT>, V>(rt(base.template value<T>(), V(ROOT)));
 	}
 	//This version undoes a powered unit
 	template <int ROOT, class T, class V>
 	constexpr Physical<T, V> root(const Physical<PoweredUnit<T, ROOT>, V> &base)
 	{
-		return Physical<T, V>(std::pow(base.template value<PoweredUnit<T, ROOT>>(), V(1.0) / V(ROOT)));
+		return Physical<T, V>(rt(base.template value<PoweredUnit<T, ROOT>>(), V(ROOT)));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0)/V(ROOT)));
+		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
 	}
 	//same but for percent
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Percent, V> &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
+		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
 	}
 	//same but for per mille
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<PerMille, V> &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
+		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
 	}
 	//same but for basis point
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<BasisPoint, V> &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
+		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
 	}
 	//sqrt - uses root<2> function
 	template<class T, class V>
 	constexpr Physical<RootedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
 	{
-		return Physical<RootedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
+		return Physical<RootedUnit<T, 2>, V>(sqrt(base.template value<T>()));
 	}
 
 	template <class T, class V>

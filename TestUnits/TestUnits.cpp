@@ -69,6 +69,11 @@ int main()
 	std::cout << sqrtSpeed << " " << sqrtSpeed.getLongUnitString<std::string>() << "\n";
 	std::cout << "2 m1/2 s-1/2 metre to the power 1/2 per second to the power 1/2\n\n";
 
+	auto cuberootSpeed = sci::root<3>(dMetre(27)/dSecond(1));
+	std::wcout << cuberootSpeed << L" " << cuberootSpeed.getLongUnitString<std::wstring>() << "\n";
+	std::cout << cuberootSpeed << " " << cuberootSpeed.getLongUnitString<std::string>() << "\n";
+	std::cout << "3 m1/3 s-1/3 metre to the power 1/3 per second to the power 1/3\n\n";
+
 	auto acceleration = dMetre(50) / sci::pow<2>(dSecond(1));
 	std::wcout << acceleration.getShortUnitString<std::wstring>() << L" " << acceleration.getLongUnitString<std::wstring>() << "\n";
 	std::cout << acceleration.getShortUnitString<std::string>() << " " << acceleration.getLongUnitString<std::string>() << "\n";
