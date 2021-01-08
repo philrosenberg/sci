@@ -3512,6 +3512,24 @@ namespace sci
 		MultivariateInverseCumulativeDistributionFunction *m_inverseCumulativeDistributionFunction;
 	};
 
+
+	template <class RESULT_TYPE, class T, class U, class V>
+	constexpr std::pair<RESULT_TYPE, RESULT_TYPE> solveQuadratic(T a, U b, V c)
+	{
+		std::pair<RESULT_TYPE, RESULT_TYPE> result;
+		decltype(sci::pow<-2>(RESULT_TYPE())) aLocal = a / c;
+		decltype(sci::pow<-1>(RESULT_TYPE())) bLocal = b / c;
+		auto twoA = aLocal + aLocal;
+		auto firstTerm = -bLocal;
+		auto secondTerm = bLocal * bLocal - twoA - twoA; 
+		auto rootedTerm = sci::TypeTraits <decltype(secondTerm)>::sqrt(secondTerm);
+		auto denominator = twoA;
+		result.first = (firstTerm + rootedTerm) / denominator;
+		result.second = (firstTerm - rootedTerm) / denominator;
+		return result;
+	}
+
+
 	//end of namespace sci
 }
 
