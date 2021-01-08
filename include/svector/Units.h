@@ -1515,6 +1515,19 @@ namespace sci
 	}
 
 
+	template< class UNIT, class T, class V>
+	Physical<UNIT, V> floor(const Physical<T, V>& value)
+	{
+		return Physical<UNIT::unit, V>(std::floor(value.template value<UNIT::unit>()));
+	}
+
+	template< class UNIT, class T, class V>
+	Physical<UNIT, V> ceil(const Physical<T, V>& value)
+	{
+		return Physical<UNIT::unit, V>(std::ceil(value.template value<UNIT::unit>()));
+	}
+
+
 	//declare a TypeTraits for Physicals we can use this to get a unitless type for dividing when averaging
 	//in templated functions
 
