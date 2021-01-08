@@ -1,6 +1,8 @@
 #include"../include/svector/serr.h"
 #include<assert.h>
+#ifdef __WXWINDOWS__
 #include<wx/wx.h>
+#endif
 #include<sstream>
 //#include<alg/ap.h>
 
@@ -60,6 +62,7 @@ void sci::assertThrow(bool test, const sci::err &err)
 		throw err;
 }
 
+#ifdef __WXWINDOWS__
 void sci::displayErrorDialogue(const sci::err &err)
 {
 	sci::ostringstream message;
@@ -85,3 +88,4 @@ void sci::displayErrorDialogue(const sci::err &err)
 
 	wxMessageBox(nativeUnicode(message.str()), "sci::error");
 }
+#endif

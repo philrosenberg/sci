@@ -9,6 +9,7 @@
 #include<wx/checkbox.h>
 #include<wx/combobox.h>
 #include"sstring.h"
+#include<vector>
 
 namespace sci
 {
