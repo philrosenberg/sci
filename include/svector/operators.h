@@ -14,7 +14,7 @@
 
 
 #ifndef SBOOL
-#define SBOOL char
+#define SBOOL uint8_t
 #endif
 
 template<class T, class U, class V>
