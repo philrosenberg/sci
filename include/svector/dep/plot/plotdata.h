@@ -192,7 +192,7 @@ public:
 			closeBrace = sU("}");
 		else if (closeBrace == sU("<"))
 			closeBrace = sU(">");
-		return brace + X_UNIT::getShortRepresentation(sU("#u"), sU("#d")) + closeBrace;
+		return brace + X_UNIT::getShortRepresentation(sci::string(sU("#u")), sci::string(sU("#d"))) + closeBrace;
 	}
 	sci::string getYAxisUnits(sci::string brace = sU("(")) const
 	{
@@ -205,7 +205,7 @@ public:
 			closeBrace = sU("}");
 		else if (closeBrace == sU("<"))
 			closeBrace = sU(">");
-		return brace + Y_UNIT::getShortRepresentation(sU("#u"), sU("#d")) + closeBrace;
+		return brace + Y_UNIT::getShortRepresentation(sci::string(sU("#u")), sci::string(sU("#d"))) + closeBrace;
 	}
 	typedef X_UNIT xUnitType;
 	typedef Y_UNIT yUnitType;
