@@ -44,21 +44,16 @@ namespace sci
 		//template parameter and expand the static_assert even when this template is never instantiated
 		static std::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 		static std::wstring getNameW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-#if (__cplusplus > 201402L)
 		static std::basic_string<char8_t> getName8() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-#endif
 		static std::u16string getName16() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 		static std::u32string getName32() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 		static std::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 		static std::string getPrefixW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-#if (__cplusplus > 201402L)
 		static std::basic_string<char8_t> getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-#endif
 		static std::u16string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 		static std::u32string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
 	};
 
-#if (__cplusplus > 201402L)
 #define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
 template<>\
 struct ExponentTraits<VALUE>\
@@ -77,24 +72,6 @@ struct ExponentTraits<VALUE>\
 	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
 	template<> static std::u32string getPrefix<std::u32string>() { return U##ABBREVIATION; }\
 };
-#else
-#define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
-template<>\
-struct ExponentTraits<VALUE>\
-{\
-	const static bool valid = true;\
-	template<class STRING> static STRING getName(){}\
-	template<> static std::string getName<std::string>() { return LONG_NAME; }\
-	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
-	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
-	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
-	template<class STRING> static STRING getPrefix(){}\
-	template<> static std::string getPrefix<std::string>() { return ABBREVIATION; }\
-	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
-	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
-	template<> static std::u32string getPrefix<std::u32string>() { return U##ABBREVIATION; }\
-};
-#endif
 	MAKE_EXPONENT_TRAITS(24, "yotta", "Y");
 	MAKE_EXPONENT_TRAITS(21, "zetta", "Z");
 	MAKE_EXPONENT_TRAITS(18, "exa", "E");
