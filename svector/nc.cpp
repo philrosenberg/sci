@@ -213,6 +213,76 @@ std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t
 	return result;
 }
 
+template<>
+std::vector<double> sci::InputNcFile::getVariableFromId<double>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<double> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_double(getId(), id, &start[0], &shape[0],&result[0]));
+	return result;
+}
+
+template<>
+std::vector<float> sci::InputNcFile::getVariableFromId<float>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<float> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_float(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
+template<>
+std::vector<short> sci::InputNcFile::getVariableFromId<short>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<short> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_short(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
+template<>
+std::vector<int> sci::InputNcFile::getVariableFromId<int>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<int> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_int(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
+template<>
+std::vector<long> sci::InputNcFile::getVariableFromId<long>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<long> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_long(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
+template<>
+std::vector<int8_t> sci::InputNcFile::getVariableFromId<int8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<int8_t> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_schar(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
+template<>
+std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
+{
+	size_t nValues = sci::product(shape);
+	std::vector<uint8_t> result(nValues);
+	if (nValues > 0)
+		checkNcCall(nc_get_vara_uchar(getId(), id, &start[0], &shape[0], &result[0]));
+	return result;
+}
+
 std::vector<size_t> sci::InputNcFile::getVariableShape(const sci::string& name)
 {
 	int varId;
@@ -335,6 +405,18 @@ sci::string sci::InputNcFile::getGlobalAttribute<sci::string>(const sci::string 
 	std::string utf8String(&characters[0]);
 
 	return sci::fromUtf8(utf8String);
+}
+
+template<>
+sci::RawAttributeData sci::InputNcFile::getGlobalAttribute<sci::RawAttributeData>(const sci::string& name)
+{
+	sci::RawAttributeData result;
+	checkNcCall(nc_inq_atttype(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result.type));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result.nValues));
+	result.data.resize(result.nValues*getNcDataSize(result.type));
+	checkNcCall(nc_get_att(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), (void*)&result.data[0]));
+
+	return result;
 }
 
 template<>
@@ -570,6 +652,20 @@ sci::string sci::InputNcFile::getVariableAttribute<sci::string>(const sci::strin
 		checkNcCall(nc_get_att_text(getId(), id, sci::toUtf8(attributeName).c_str(), &utf8String[0]));
 		result = sci::fromUtf8(std::string(&utf8String[0]));
 	}
+
+	return result;
+}
+
+template<>
+sci::RawAttributeData sci::InputNcFile::getVariableAttribute<sci::RawAttributeData>(const sci::string& variableName, const sci::string& attributeName)
+{
+	sci::RawAttributeData result;
+	int id;
+	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_atttype(getId(), id, sci::toUtf8(variableName).c_str(), &result.type));
+	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(variableName).c_str(), &result.nValues));
+	result.data.resize(result.nValues*getNcDataSize(result.type));
+	checkNcCall(nc_get_att(getId(), id, sci::toUtf8(variableName).c_str(), (void*)&result.data[0]));
 
 	return result;
 }
@@ -890,6 +986,16 @@ sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value)
 	m_nBytes = m_nValues;
 	m_values = malloc(m_nBytes);
 	memcpy(m_values, utf8String.data(), m_nBytes);
+}
+
+sci::NcAttribute::NcAttribute(const sci::string& name, const sci::RawAttributeData& value)
+{
+	m_name = name;
+	m_nValues = value.nValues;
+	m_writeType = value.type;
+	m_nBytes = value.data.size();
+	m_values = malloc(m_nBytes);
+	memcpy(m_values, &value.data[0], m_nBytes);
 }
 
 void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const
