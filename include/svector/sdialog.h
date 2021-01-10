@@ -23,6 +23,14 @@ namespace sci
 	public:
 		NumberTextCtrl(wxWindow *parent, wxWindowID id, wxString outputFormat, T *valPtr, const wxString &value = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxTextCtrlNameStr);
 		NumberTextCtrl(wxWindow *parent, wxWindowID id, wxString outputFormat, T minVal, T maxVal, T *valPtr, const wxString &value = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxTextCtrlNameStr);
+		void TransferDataFromControl()
+		{
+			GetValidator()->TransferFromWindow();
+		}
+		void TransferDataToControl()
+		{
+			GetValidator()->TransferToWindow();
+		}
 		virtual ~NumberTextCtrl() {}
 	};
 
@@ -49,13 +57,13 @@ namespace sci
 
 	template<class T>
 	DecimalNumberTextCtrl<T>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, T *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-		:NumberTextCtrl<T>(parent, id, "%d", valPtr, value, pos, size, style, name)
+		:NumberTextCtrl<T>(parent, id, "", valPtr, value, pos, size, style, name)
 	{
 	}
 
 	template<class T>
 	DecimalNumberTextCtrl<T>::DecimalNumberTextCtrl(wxWindow *parent, wxWindowID id, T minVal, T maxVal, T *valPtr, const wxString &value, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-		: NumberTextCtrl<T>(parent, id, "%d", minVal, maxVal, valPtr, value, pos, size, style, name)
+		: NumberTextCtrl<T>(parent, id, "", minVal, maxVal, valPtr, value, pos, size, style, name)
 	{
 	}
 

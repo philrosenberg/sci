@@ -321,6 +321,7 @@
     <ClCompile Include="kiss_fft\kiss_fftr.c" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="nc.cpp" />
+    <ClCompile Include="NumberFromTextValidator.cpp" />
     <ClCompile Include="operators.cpp" />
     <ClCompile Include="plotdata.cpp" />
     <ClCompile Include="ppfile.cpp" />

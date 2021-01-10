@@ -110,6 +110,42 @@ namespace sci
 		const long m_code;
 	};
 
+	inline size_t getNcDataSize(nc_type type)
+	{
+		if (type == NC_NAT)
+			return 0;
+		else if (type == NC_BYTE || type == NC_CHAR || type == NC_UBYTE || type == NC_STRING)
+			return 1;
+		else if (type == NC_SHORT || type == NC_USHORT)
+			return 2;
+		else if (type == NC_INT || type == NC_UINT)
+			return 4;
+		else if (type == NC_INT64 || type == NC_UINT64)
+			return 8;
+		else if (type == NC_FLOAT)
+			return 4;
+		else if (type == NC_DOUBLE)
+			return 8;
+
+		return 0;
+	}
+
+
+	struct RawAttributeData
+	{
+		RawAttributeData(nc_type t = NC_NAT, const std::vector<uint8_t>& d = std::vector<uint8_t>(0))
+			:type(t), data(d)
+		{
+			if (type == NC_NAT)
+				nValues = 0;
+			else
+				nValues = data.size() / getNcDataSize(type);
+		}
+		nc_type type;
+		std::vector<uint8_t> data;
+		size_t nValues;
+	};
+
 	class NcAttribute
 	{
 	public:
@@ -133,7 +169,8 @@ namespace sci
 		NcAttribute(const sci::string& name, sci::string value);
 		NcAttribute(const sci::string& name, const char16_t *value);
 		NcAttribute(const sci::string& name, const std::vector<sci::string> &value, const sci::string &separator=sU(", "));
-		NcAttribute(const sci::string& name, const std::vector<const char16_t *> &value);
+		NcAttribute(const sci::string& name, const std::vector<const char16_t*>& value);
+		NcAttribute(const sci::string& name, const RawAttributeData &value);
 		~NcAttribute()
 		{
 			if (m_values)
@@ -203,6 +240,8 @@ namespace sci
 		std::vector<T> getVariable(const sci::string &name);
 		template<class T>
 		std::vector<T> getVariable(const sci::string &name, std::vector<size_t> &shape);
+		template<class T>
+		std::vector<T> getVariable(const sci::string& name, const std::vector<size_t> &start, const std::vector<size_t> &shape);
 		std::vector<size_t> getVariableShape(const sci::string& name);
 		std::vector<sci::string>getVariableNames();
 		template<class T>
@@ -215,6 +254,8 @@ namespace sci
 	private:
 		template<class T>
 		std::vector<T> getVariableFromId(int id, size_t nValues);
+		template<class T>
+		std::vector<T> getVariableFromId(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
 		//template<class T>
 		//T getVariableAttributeFromId(int variableId, const sci::string& AttributeName);
 	};
@@ -238,6 +279,22 @@ namespace sci
 
 
 	template<>
+	std::vector<double> InputNcFile::getVariableFromId<double>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<float> InputNcFile::getVariableFromId<float>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<short> InputNcFile::getVariableFromId<short>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<int> InputNcFile::getVariableFromId<int>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<long> InputNcFile::getVariableFromId<long>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+	template<>
+	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
+
+
+	template<>
 	double InputNcFile::getGlobalAttribute<double>(const sci::string &name);
 	template<>
 	float InputNcFile::getGlobalAttribute<float>(const sci::string &name);
@@ -253,6 +310,8 @@ namespace sci
 	uint8_t InputNcFile::getGlobalAttribute<uint8_t>(const sci::string &name);
 	template<>
 	sci::string InputNcFile::getGlobalAttribute<sci::string>(const sci::string &name);
+	template<>
+	RawAttributeData InputNcFile::getGlobalAttribute<RawAttributeData>(const sci::string& name);
 
 	template<>
 	std::vector<double> InputNcFile::getGlobalAttribute<std::vector<double>>(const sci::string &name);
@@ -287,6 +346,8 @@ namespace sci
 	uint8_t InputNcFile::getVariableAttribute<uint8_t>(const sci::string& variableName, const sci::string& attributeName);
 	template<>
 	sci::string InputNcFile::getVariableAttribute<sci::string>(const sci::string& variableName, const sci::string& attributeName);
+	template<>
+	RawAttributeData InputNcFile::getVariableAttribute<RawAttributeData>(const sci::string& variableName, const sci::string& attributeName);
 
 	template<>
 	std::vector<double> InputNcFile::getVariableAttribute<std::vector<double>>(const sci::string& variableName, const sci::string& attributeName);
@@ -548,6 +609,20 @@ namespace sci
 	{
 		std::vector<size_t> shape;
 		return getVariable<T>(name, shape);
+	}
+
+	template<class T>
+	std::vector<T> InputNcFile::getVariable(const sci::string& name, const std::vector<size_t>& start, const std::vector<size_t> &shape)
+	{
+		int varId;
+		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+		sci::assertThrow(start.size() == shape.size(), sci::err(sci::SERR_NC, 0, sU("Attempted to read a part of a netcdf file with the start having a different number of elements to the lengths.")));
+		std::vector<size_t> variableShape = getVariableShape(name);
+		sci::assertThrow(start.size() == variableShape.size(), sci::err(sci::SERR_NC, 0, sU("Attempted to read a part of a netcdf file with the start having a different number of elements to the variable shape.")));
+		for(size_t i=0; i<start.size(); ++i)
+			sci::assertThrow(start[i]+shape[i]<=variableShape[i], sci::err(sci::SERR_NC, 0, sU("Attempted to read past the end of a netcdf variable")));
+
+		return getVariableFromId<T>(varId, start, shape);
 	}
 
 	template<class T>

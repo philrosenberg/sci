@@ -97,7 +97,10 @@ template<class T>
 bool NumberFromTextValidator<T>::TransferToWindow()
 {
 	wxString text;
-	text.Printf(m_outputFormat, *m_valPtr);
+	if(m_outputFormat.length()==0)
+		text << *m_valPtr;
+	else
+		text.Printf(m_outputFormat, *m_valPtr);
 	dynamic_cast<wxTextCtrl*>(GetWindow())->SetValue(text);
 	return true;
 }
