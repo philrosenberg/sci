@@ -5,6 +5,7 @@
 typedef sci::Physical<sci::Metre<>, double> dMetre;
 typedef sci::Physical<sci::Second<>, double> dSecond;
 typedef sci::Physical<sci::Metre<2>, double> dMetreSquared;
+typedef sci::Physical<sci::Metre<1, -2>, double> dCentimetre;
 typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
 typedef sci::Physical<sci::Metre<1,6>, double> dMegaMetre;
 typedef sci::Physical<sci::Second<1,-9>, double> dnanoSecond;
@@ -14,8 +15,130 @@ typedef sci::Physical<sci::Unitless, double> dUnitless;
 typedef sci::Physical<sci::Newton<>, double> dNewton;
 typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double> dnewtonMetre;
 
+constexpr float sumsci()
+{
+	float sum = 0.0;
+	for (size_t i = 0; i < 10000000; ++i)
+		sum += sci::unitsPrivate::sqrt((float)i);
+	return sum;
+}
+float sumstd()
+{
+	float sum = 0.0;
+	for (size_t i = 0; i < 10000000; ++i)
+		sum += std::sqrt((float)i);
+	return sum;
+}
+
 int main()
 {
+
+	int seed;
+	std::cout << "double epsilon " << std::numeric_limits<double>::epsilon() << "\n";
+	std::cout << "float epsilon " << std::numeric_limits<float>::epsilon() << "\n";
+	std::cout << "sqrt 10 accuracy subtract d " << sci::unitsPrivate::sqrt(10.0) - std::sqrt(10.0) << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 10 accuracy subtract f " << sci::unitsPrivate::sqrt(10.0f) - std::sqrt(10.0f) << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 10 accuracy ratio d " << sci::unitsPrivate::sqrt(10.0) / std::sqrt(10.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 10 accuracy ratio f " << sci::unitsPrivate::sqrt(10.0f) / std::sqrt(10.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 1000 accuracy ratio d " << sci::unitsPrivate::sqrt(1000.0) / std::sqrt(1000.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 1000 accuracy ratio f " << sci::unitsPrivate::sqrt(1000.0f) / std::sqrt(1000.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 100000 accuracy ratio d " << sci::unitsPrivate::sqrt(100000.0) / std::sqrt(100000.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 100000 accuracy ratio f " << sci::unitsPrivate::sqrt(100000.0f) / std::sqrt(100000.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 0.1 accuracy ratio d " << sci::unitsPrivate::sqrt(0.1) / std::sqrt(0.1) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "sqrt 0.1 accuracy ratio f " << sci::unitsPrivate::sqrt(0.1f) / std::sqrt(0.1f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	
+	std::cout << "root3 10 accuracy ratio d " << sci::unitsPrivate::root(10.0, 3) / std::pow(10.0, 1.0 / 3.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 10 accuracy ratio f " << sci::unitsPrivate::root(10.0f, 3) / std::pow(10.0f, 1.0f / 3.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 1000 accuracy ratio d " << sci::unitsPrivate::root(1000.0, 3) / std::pow(1000.0, 1.0 / 3.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 1000 accuracy ratio f " << sci::unitsPrivate::root(1000.0f, 3) / std::pow(1000.0f, 1.0f / 3.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 100000 accuracy ratio d " << sci::unitsPrivate::root(100000.0, 3) / std::pow(100000.0, 1.0 / 3.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 100000 accuracy ratio f " << sci::unitsPrivate::root(100000.0f, 3) / std::pow(100000.0f, 1.0f / 3.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 0.1 accuracy ratio d " << sci::unitsPrivate::root(0.1, 3) / std::pow(0.1, 1.0 / 3.0) - 1.0 << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+	std::cout << "root3 0.1 accuracy ratio f " << sci::unitsPrivate::root(0.1f, 3) / std::pow(0.1f, 1.0f / 3.0f) - 1.0f << "\n"; // 1 and 10 (or 10 * 100^n) give the worst case scenario accuracy for our initial guess
+
+																								   //return 0;
+	std::cout << "Enter seed\n";
+	std::cin >> seed;
+	srand(seed);
+	size_t n = 10000000;
+	float max = 1e6;
+
+	float sum = 0;
+	auto start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += (float)rand() / (float)RAND_MAX * max;
+	auto end = clock();
+	std::cout << "Sum " << sum << " duration " << end - start << std::endl;
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += (float)rand() / (float)RAND_MAX * max;
+	end = clock();
+	std::cout << "Sum " << sum << " duration " << end - start << std::endl;
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += sci::unitsPrivate::sqrt((float)rand() / (float)RAND_MAX * max);
+	end = clock();
+	std::cout << "Sum sci::sqrt " << sum << " duration " << end - start << std::endl;
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += std::sqrt((float)rand() / (float)RAND_MAX * max);
+	end = clock();
+	std::cout << "Sum std::sqrt " << sum << " duration " << end - start << std::endl;
+
+	/*sum = 0;
+	start = clock();
+	if constexpr (sumsci() > 100000.0)
+	{
+		end = clock();
+		std::cout << "Sum sci::sqrtfunc first duration " << end - start << std::endl;
+	}
+	else
+	{
+		end = clock();
+		std::cout << "Sum sci::sqrtfunc second duration " << end - start << std::endl;
+	}
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += std::sqrt((float)i / (float)RAND_MAX * max);
+	end = clock();
+	std::cout << "Sum std::sqrt func " << sum << " duration " << end - start << std::endl;*/
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += sci::unitsPrivate::root((float)rand() / (float)RAND_MAX * max, 3);
+	end = clock();
+	std::cout << "Sum sci::root 3 " << sum << " duration " << end - start << std::endl;
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += std::pow((float)rand() / (float)RAND_MAX * max, float(1.0/3.0));
+	end = clock();
+	std::cout << "Sum std::pow 1/3 " << sum << " duration " << end - start << std::endl;
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += sci::unitsPrivate::pow((float)rand() / (float)RAND_MAX * max,3);
+	end = clock();
+	std::cout << "Sum sci::pow 3 " << sum << " duration " << end - start << std::endl;
+
+	sum = 0;
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+		sum += std::pow((float)rand() / (float)RAND_MAX * max, float(3.0));
+	end = clock();
+	std::cout << "Sum std::pow 3 " << sum << " duration " << end - start << std::endl;
+
+
 	//to do
 	//check long representations for scaled and SI units
 	//check what unit we get when we raise to the power 0
@@ -24,6 +147,8 @@ int main()
 	//test if I can get a fractional power and what happens if so
 	//check unit string for unitless types squared
 	//check power and root functions work as they should
+	//check 20 cm *20 cm = 0.04 m^2
+	//check the constexpr functions can actually be determined at compile time by using them in an if constexpr or template parameter
 
 	dMetre length1(1.0);
 	dMegaMetre length2(0.1);
@@ -73,6 +198,10 @@ int main()
 	std::wcout << cuberootSpeed << L" " << cuberootSpeed.getLongUnitString<std::wstring>() << "\n";
 	std::cout << cuberootSpeed << " " << cuberootSpeed.getLongUnitString<std::string>() << "\n";
 	std::cout << "3 m1/3 s-1/3 metre to the power 1/3 per second to the power 1/3\n\n";
+
+	std::wcout << dMetreSquared(dCentimetre(20) * dCentimetre(20)) << "\n";
+	std::wcout << dMetreSquared(sci::pow<2>(dCentimetre(20))) << "\n";
+	std::cout << "0.04 m2\n\n";
 
 	auto acceleration = dMetre(50) / sci::pow<2>(dSecond(1));
 	std::wcout << acceleration.getShortUnitString<std::wstring>() << L" " << acceleration.getLongUnitString<std::wstring>() << "\n";
