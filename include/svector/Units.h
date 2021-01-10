@@ -4,6 +4,27 @@
 //A copy of this license should have been provided with this code or can be downloaded
 //from https://science.cplusplus.engineering/science-cplusplus-engineering-code-license-v1/
 
+
+//if you intend utilising windows codepage text (i.e. not unicode), then you may
+//wish to #define the following in your code before #invlude<units.h>
+//#define ALTERNATE_MICRO "u"
+//CP-1253 "Western Latin" characters for unicode symbols
+//you may wish to create your own versions of these #defines
+//if you are not in a region using CP-1253 or you want to
+//use your own unicode alternatives
+#if (defined _WIN32 && !defined UNITS_H_NOT_CP1253) || defined UNITS_H_FORCE_CP1253
+#define ALTERNATE_MICRO "\xe6"
+#define ALTERNATE_OMEGA "\xea"
+#define ALTERNATE_PER_MILLE "0/00"
+#define ALTERNATE_BASIS_POINT "0/000"
+#define ALTERNATE_DEGREE "\xf8"
+#define ALTERNATE_ARCMINUTE "'"
+#define ALTERNATE_ARCSECOND "\""
+#define ALTERNATE_ANGSTROM_SHORT "\x8e"
+#define ALTERNATE_ANGSTROM_LONG "\x8e" "ngstrom"
+#define ALTERNATE_RANKINE "\xf8" "Ra"
+#endif
+
 #include<vector>
 #include<limits>
 #include"Traits.h"
@@ -72,6 +93,8 @@ struct ExponentTraits<VALUE>\
 	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
 	template<> static std::u32string getPrefix<std::u32string>() { return U##ABBREVIATION; }\
 };
+	//this allows expansion of the alternate abbreviation before ##,. e.g giving L"u" rather than LALTERNATE_MICRO
+#define MAKE_ALTERNATE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION) MAKE_EXPONENT_TRAITS(-6, "micro", ABBREVIATION)
 	MAKE_EXPONENT_TRAITS(24, "yotta", "Y");
 	MAKE_EXPONENT_TRAITS(21, "zetta", "Z");
 	MAKE_EXPONENT_TRAITS(18, "exa", "E");
@@ -86,7 +109,11 @@ struct ExponentTraits<VALUE>\
 	MAKE_EXPONENT_TRAITS(-1, "deci", "d");
 	MAKE_EXPONENT_TRAITS(-2, "centi", "c");
 	MAKE_EXPONENT_TRAITS(-3, "milli", "m");
+#ifdef ALTERNATE_MICRO
+	MAKE_ALTERNATE_EXPONENT_TRAITS(-6, "micro", ALTERNATE_MICRO);
+#else
 	MAKE_EXPONENT_TRAITS(-6, "micro", "\u03bc");
+#endif
 	MAKE_EXPONENT_TRAITS(-9, "nano", "n");
 	MAKE_EXPONENT_TRAITS(-12, "pico", "p");
 	MAKE_EXPONENT_TRAITS(-15, "femto", "f");
@@ -94,445 +121,488 @@ struct ExponentTraits<VALUE>\
 	MAKE_EXPONENT_TRAITS(-21, "zepto", "z");
 	MAKE_EXPONENT_TRAITS(-24, "yocto", "y");
 
-	template <int8_t N1, int8_t N2>
-	int8_t constexpr greatestCommonDenominator8()
+	namespace unitsPrivate
 	{
-
-		if constexpr (N1 < 0)
-			return greatestCommonDenominator8<-N1, N2>();
-		if constexpr (N2 < 0)
-			return greatestCommonDenominator8<N1, -N2>();
-		if constexpr (N1 < N2)
-			return greatestCommonDenominator8<N2, N1>();
-
-		if constexpr(N2 == 0)
-			return N1;
-		else
-			return greatestCommonDenominator8<N2, N1%N2>();
-	}
-
-	template <int64_t N1, int64_t N2>
-	int64_t constexpr greatestCommonDenominator64()
-	{
-
-		if constexpr (N1 < 0)
-			return greatestCommonDenominator64<-N1, N2>();
-		if constexpr (N2 < 0)
-			return greatestCommonDenominator64<N1, -N2>();
-		if constexpr (N1 < N2)
-			return greatestCommonDenominator64<N2, N1>();
-
-		if constexpr (N2 == 0)
-			return N1;
-		else
-			return greatestCommonDenominator64<N2, N1% N2>();
-	}
-
-
-	//convert a number to text
-	template<class STRING>
-	STRING unitNumberToText(int8_t number)
-	{
-		STRING result;
-		if (number < 0)
+		template <int8_t N1, int8_t N2>
+		int8_t constexpr greatestCommonDenominator8()
 		{
-			result = result + STRING({ STRING::value_type(45) });
-			number = -number;
+
+			if constexpr (N1 < 0)
+				return greatestCommonDenominator8<-N1, N2>();
+			if constexpr (N2 < 0)
+				return greatestCommonDenominator8<N1, -N2>();
+			if constexpr (N1 < N2)
+				return greatestCommonDenominator8<N2, N1>();
+
+			if constexpr (N2 == 0)
+				return N1;
+			else
+				return greatestCommonDenominator8<N2, N1% N2>();
 		}
-		//max 3 digits for a signed 8 bit number
-		if (number < 10)
-			result = result + STRING({ STRING::value_type(48 + number) });
-		else if (number < 100)
-			result = result + STRING({ STRING::value_type(48 + number / 10), STRING::value_type(48 + number % 10) });
-		else
-			result = result + STRING({ STRING::value_type(48 + number / 100), STRING::value_type(48 + (number % 100) / 10), STRING::value_type(48 + number % 10) });
-		return result;
 
-	}
-
-	template<class STRING, int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR>
-	STRING powerToTextShort()
-	{
-		//divide through by greatest common denominator
-		int8_t commonDenominator = greatestCommonDenominator8<POWER_NUMERATOR, POWER_DENOMINATOR>();
-		int8_t powerNumerator = POWER_NUMERATOR / commonDenominator;
-		int8_t powerDenominator = POWER_DENOMINATOR / commonDenominator;
-
-		//make sure the denominator is positive
-		if (powerDenominator < 0)
+		template <int64_t N1, int64_t N2>
+		int64_t constexpr greatestCommonDenominator64()
 		{
-			powerDenominator = -powerDenominator;
-			powerNumerator = -powerNumerator;
+
+			if constexpr (N1 < 0)
+				return greatestCommonDenominator64<-N1, N2>();
+			if constexpr (N2 < 0)
+				return greatestCommonDenominator64<N1, -N2>();
+			if constexpr (N1 < N2)
+				return greatestCommonDenominator64<N2, N1>();
+
+			if constexpr (N2 == 0)
+				return N1;
+			else
+				return greatestCommonDenominator64<N2, N1% N2>();
 		}
-		//the basic ascii characters have the same representation in all sensible encodings
-		//so we can use the same function irrespective of the string type
-		if (powerDenominator == 1)
-			return unitNumberToText<STRING>(powerNumerator);
-		return unitNumberToText<STRING>(powerNumerator) + STRING({ STRING::value_type(47) }) + unitNumberToText<STRING>(powerDenominator);
-	}
-	template<class STRING, int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR>
-	STRING powerToTextLong()
-	{
-		if (POWER_NUMERATOR % POWER_DENOMINATOR == 0)
+
+
+		//convert a number to text
+		template<class STRING>
+		STRING unitNumberToText(int8_t number)
 		{
-			if (POWER_NUMERATOR / POWER_DENOMINATOR == 2)
+			STRING result;
+			if (number < 0)
 			{
-				if constexpr (std::is_same<STRING, std::string>::value)
-					return " squared";
-				if constexpr (std::is_same<STRING, std::wstring>::value)
-					return L" squared";
-				if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
-					return u8" squared";
-				if constexpr (std::is_same<STRING, std::u16string>::value)
-					return u" squared";
-				if constexpr (std::is_same<STRING, std::u32string>::value)
-					return U" squared";
+				result = result + STRING({ STRING::value_type(45) });
+				number = -number;
 			}
-			if (POWER_NUMERATOR / POWER_DENOMINATOR == 3)
-			{
-				if constexpr (std::is_same<STRING, std::string>::value)
-					return " cubed";
-				if constexpr (std::is_same<STRING, std::wstring>::value)
-					return L" cubed";
-				if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
-					return u8" cubed";
-				if constexpr (std::is_same<STRING, std::u16string>::value)
-					return u" cubed";
-				if constexpr (std::is_same<STRING, std::u32string>::value)
-					return U" cubed";
-			}
+			//max 3 digits for a signed 8 bit number
+			if (number < 10)
+				result = result + STRING({ STRING::value_type(48 + number) });
+			else if (number < 100)
+				result = result + STRING({ STRING::value_type(48 + number / 10), STRING::value_type(48 + number % 10) });
+			else
+				result = result + STRING({ STRING::value_type(48 + number / 100), STRING::value_type(48 + (number % 100) / 10), STRING::value_type(48 + number % 10) });
+			return result;
+
 		}
-		if constexpr (std::is_same<STRING, std::string>::value)
-			return " to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-		if constexpr (std::is_same<STRING, std::wstring>::value)
-			return L" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
-			return u8" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-		if constexpr (std::is_same<STRING, std::u16string>::value)
-			return u" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-		if constexpr (std::is_same<STRING, std::u32string>::value)
-			return U" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-	}
 
-	//build a string showing the unit. Note that exponent must be before multiplying by power
-	template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT, class STRING>
-	STRING makeShortName(const STRING &unit, const STRING &powerPrefix, const STRING &powerSuffix)
-	{
-		if (POWER_NUMERATOR == 0)
-			return STRING();
-
-		if (POWER_NUMERATOR == POWER_DENOMINATOR)
-			return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit;
-
-		return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit + powerPrefix + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>() + powerSuffix;
-	}
-
-	//build a string showing the unit. Note that exponent must be before multiplying by power
-	template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT, class STRING>
-	STRING makeLongName(const STRING& unit)
-	{
-		STRING per = STRING();
-		if (POWER_NUMERATOR * POWER_DENOMINATOR < 0)
+		template<class STRING, int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR>
+		STRING powerToTextShort()
 		{
+			//divide through by greatest common denominator
+			int8_t commonDenominator = greatestCommonDenominator8<POWER_NUMERATOR, POWER_DENOMINATOR>();
+			int8_t powerNumerator = POWER_NUMERATOR / commonDenominator;
+			int8_t powerDenominator = POWER_DENOMINATOR / commonDenominator;
 
+			//make sure the denominator is positive
+			if (powerDenominator < 0)
+			{
+				powerDenominator = -powerDenominator;
+				powerNumerator = -powerNumerator;
+			}
+			//the basic ascii characters have the same representation in all sensible encodings
+			//so we can use the same function irrespective of the string type
+			if (powerDenominator == 1)
+				return unitNumberToText<STRING>(powerNumerator);
+			return unitNumberToText<STRING>(powerNumerator) + STRING({ STRING::value_type(47) }) + unitNumberToText<STRING>(powerDenominator);
+		}
+		template<class STRING, int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR>
+		STRING powerToTextLong()
+		{
+			if (POWER_NUMERATOR % POWER_DENOMINATOR == 0)
+			{
+				if (POWER_NUMERATOR / POWER_DENOMINATOR == 2)
+				{
+					if constexpr (std::is_same<STRING, std::string>::value)
+						return " squared";
+					if constexpr (std::is_same<STRING, std::wstring>::value)
+						return L" squared";
+					if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+						return u8" squared";
+					if constexpr (std::is_same<STRING, std::u16string>::value)
+						return u" squared";
+					if constexpr (std::is_same<STRING, std::u32string>::value)
+						return U" squared";
+				}
+				if (POWER_NUMERATOR / POWER_DENOMINATOR == 3)
+				{
+					if constexpr (std::is_same<STRING, std::string>::value)
+						return " cubed";
+					if constexpr (std::is_same<STRING, std::wstring>::value)
+						return L" cubed";
+					if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+						return u8" cubed";
+					if constexpr (std::is_same<STRING, std::u16string>::value)
+						return u" cubed";
+					if constexpr (std::is_same<STRING, std::u32string>::value)
+						return U" cubed";
+				}
+			}
 			if constexpr (std::is_same<STRING, std::string>::value)
-				per = "per ";
+				return " to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 			if constexpr (std::is_same<STRING, std::wstring>::value)
-				per = L"per ";
+				return L" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
-				per = u8"per ";
+				return u8" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 			if constexpr (std::is_same<STRING, std::u16string>::value)
-				per = u"per ";
+				return u" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 			if constexpr (std::is_same<STRING, std::u32string>::value)
-				per = U"per ";
+				return U" to the power " + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 		}
 
-		if (POWER_NUMERATOR == 0)
-			return STRING();
-
-		if (POWER_NUMERATOR == POWER_DENOMINATOR)
-			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit;
-		if(POWER_NUMERATOR < 0 && POWER_DENOMINATOR >=0)
-			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, POWER_DENOMINATOR>();
-		if (POWER_NUMERATOR >= 0 && POWER_DENOMINATOR < 0)
-			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, -POWER_DENOMINATOR>();
-		if (POWER_NUMERATOR < 0 && POWER_DENOMINATOR < 0)
-			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, -POWER_DENOMINATOR>();
-		return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
-	}
-
-
-
-	//This function encodes the power variable for the EncodedUnit class
-	template<int8_t POWER, int BYTE>
-	constexpr uint64_t encodePower()
-	{
-		//take the raw bits and cast them to an unsigned 8 bit
-		//value, then convert this to a 64 bit value then bitshift
-		//it by the appropriate amount
-		return uint64_t(uint8_t(POWER)) << (BYTE * 8);
-	}
-
-	//This function decodes the power variable for the EncodedUnit class
-	template <uint64_t POWER, int BYTE>
-	constexpr int8_t decodePower()
-	{
-		//this should filter out the correct byte, bitshift it to the
-		return int8_t((POWER & (uint64_t(0xff) << (BYTE * 8))) >> (BYTE * 8));
-	}
-
-
-	//These functions will reencode the encoded power variables when two units are
-	//multiplied. Because the powers are fractions, we need to create a common denominator
-
-	//This funtion calculates the numerators of the new powers when two units are multipled
-	template<uint64_t FIRST_NUMERATOR, uint64_t FIRST_DENOMINATOR, uint64_t SECOND_NUMERATOR, uint64_t SECOND_DENOMINATOR>
-	constexpr uint64_t multiplyPowersNumerator()
-	{
-
-		return
-			encodePower<decodePower<FIRST_NUMERATOR, 0>() * decodePower<SECOND_DENOMINATOR, 0>() + decodePower<SECOND_NUMERATOR, 0>() * decodePower<FIRST_DENOMINATOR, 0>(), 0>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 1>() * decodePower<SECOND_DENOMINATOR, 1>() + decodePower<SECOND_NUMERATOR, 1>() * decodePower<FIRST_DENOMINATOR, 1>(), 1>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 2>() * decodePower<SECOND_DENOMINATOR, 2>() + decodePower<SECOND_NUMERATOR, 2>() * decodePower<FIRST_DENOMINATOR, 2>(), 2>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 3>() * decodePower<SECOND_DENOMINATOR, 3>() + decodePower<SECOND_NUMERATOR, 3>() * decodePower<FIRST_DENOMINATOR, 3>(), 3>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 4>() * decodePower<SECOND_DENOMINATOR, 4>() + decodePower<SECOND_NUMERATOR, 4>() * decodePower<FIRST_DENOMINATOR, 4>(), 4>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 5>() * decodePower<SECOND_DENOMINATOR, 5>() + decodePower<SECOND_NUMERATOR, 5>() * decodePower<FIRST_DENOMINATOR, 5>(), 5>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 6>() * decodePower<SECOND_DENOMINATOR, 6>() + decodePower<SECOND_NUMERATOR, 6>() * decodePower<FIRST_DENOMINATOR, 6>(), 6>() |
-			encodePower<decodePower<FIRST_NUMERATOR, 7>() * decodePower<SECOND_DENOMINATOR, 7>() + decodePower<SECOND_NUMERATOR, 7>() * decodePower<FIRST_DENOMINATOR, 7>(), 7>();
-	}
-
-	//This function calculates the denominators of the new powers when two units are multiplied
-	template<uint64_t FIRST_DENOMINATOR, uint64_t SECOND_DENOMINATOR>
-	constexpr uint64_t multiplyPowersDenominator()
-	{
-		return
-			encodePower<decodePower<FIRST_DENOMINATOR, 0>()* decodePower<SECOND_DENOMINATOR, 0>(), 0>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 1>()* decodePower<SECOND_DENOMINATOR, 1>(), 1>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 2>()* decodePower<SECOND_DENOMINATOR, 2>(), 2>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 3>()* decodePower<SECOND_DENOMINATOR, 3>(), 3>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 4>()* decodePower<SECOND_DENOMINATOR, 4>(), 4>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 5>()* decodePower<SECOND_DENOMINATOR, 5>(), 5>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 6>()* decodePower<SECOND_DENOMINATOR, 6>(), 6>() |
-			encodePower<decodePower<FIRST_DENOMINATOR, 7>()* decodePower<SECOND_DENOMINATOR, 7>(), 7>();
-	}
-
-	//This function calculates the numerator of the new powers when a unit is raised to a power
-	//Pass in the unit and power numerator or the unit and power denominator to get the resulting
-	//unit power numerator and denominator
-	template<uint64_t VALUE, int POW>
-	constexpr uint64_t powPowers()
-	{
-
-		return
-			encodePower<decodePower<VALUE, 0>() * POW, 0>() |
-			encodePower<decodePower<VALUE, 1>() * POW, 1>() |
-			encodePower<decodePower<VALUE, 2>() * POW, 2>() |
-			encodePower<decodePower<VALUE, 3>() * POW, 3>() |
-			encodePower<decodePower<VALUE, 4>() * POW, 4>() |
-			encodePower<decodePower<VALUE, 5>() * POW, 5>() |
-			encodePower<decodePower<VALUE, 6>() * POW, 6>() |
-			encodePower<decodePower<VALUE, 7>() * POW, 7>();
-	}
-
-	//These enable raising 10 to the power of integers get
-	//determined at compile time as it will be a common operation
-	//when adding and subtracting
-	template <class VALUE_TYPE>
-	constexpr VALUE_TYPE pow10(int64_t pow)
-	{
-		if (pow == 0)
-			return VALUE_TYPE(1.);
-		if (pow == 1)
-			return VALUE_TYPE(10.);
-		if (pow == 2)
-			return VALUE_TYPE(100.);
-		if (pow == 3)
-			return VALUE_TYPE(1000.);
-		if (pow == -1)
-			return VALUE_TYPE(0.1);
-		if (pow == -2)
-			return VALUE_TYPE(0.01);
-		if (pow == -3)
-			return VALUE_TYPE(0.001);
-
-		VALUE_TYPE temp = pow10<VALUE_TYPE>(pow / 2);
-		if (pow % 2 == 0)
-			return temp * temp;
-		if(pow > 0)
-			return temp * temp * 10;
-		return temp * temp * 0.1;
-	}
-	template <int64_t pow, class VALUE_TYPE>
-	constexpr VALUE_TYPE pow10()
-	{
-		if (pow == 0)
-			return VALUE_TYPE(1);
-		return sci::pow10<VALUE_TYPE>(pow);
-	}
-
-	template<class VALUE_TYPE>
-	constexpr VALUE_TYPE pow(VALUE_TYPE base, int power)
-	{
-		if (power < 0)
-			return VALUE_TYPE(1.0) / pow(base, -power);
-		if (power == 0 && base ==  VALUE_TYPE(0.0))
-			return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
-		if (power == 0)
-			return VALUE_TYPE(1.0);
-		if (power == 1)
-			return base;
-		if (power == 2)
-			return base * base;
-		if (power == 3)
-			return base * (base * base);
-		if (power == 4)
-			return (base * base) * (base * base);
-		return pow(base, power / 2) * pow(base, power - power / 2);
-	}
-
-	template<class VALUE_TYPE>
-	constexpr VALUE_TYPE sqrt(VALUE_TYPE value)
-	{
-		if (value < VALUE_TYPE(0.0))
-			return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
-		if (value == VALUE_TYPE(0.0))
-			return VALUE_TYPE(0.0);
-		if (value == VALUE_TYPE(1.0))
-			return VALUE_TYPE(1.0);
-		if (value != value)
-			return value;
-		VALUE_TYPE twoToTheN = 1;
-		VALUE_TYPE a = value;
-		while (a > VALUE_TYPE(4))
+		//build a string showing the unit. Note that exponent must be before multiplying by power
+		template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT, class STRING>
+		STRING makeShortName(const STRING& unit, const STRING& powerPrefix, const STRING& powerSuffix)
 		{
-			a /= VALUE_TYPE(4);
-			twoToTheN *= 2;
+			if (POWER_NUMERATOR == 0)
+				return STRING();
+
+			if (POWER_NUMERATOR == POWER_DENOMINATOR)
+				return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit;
+
+			return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit + powerPrefix + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>() + powerSuffix;
 		}
-		while (a < VALUE_TYPE(1))
+
+		//build a string showing the unit. Note that exponent must be before multiplying by power
+		template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT, class STRING>
+		STRING makeLongName(const STRING& unit)
 		{
-			a *= VALUE_TYPE(4);
-			twoToTheN /= 2;
+			STRING per = STRING();
+			if (POWER_NUMERATOR * POWER_DENOMINATOR < 0)
+			{
+
+				if constexpr (std::is_same<STRING, std::string>::value)
+					per = "per ";
+				if constexpr (std::is_same<STRING, std::wstring>::value)
+					per = L"per ";
+				if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+					per = u8"per ";
+				if constexpr (std::is_same<STRING, std::u16string>::value)
+					per = u"per ";
+				if constexpr (std::is_same<STRING, std::u32string>::value)
+					per = U"per ";
+			}
+
+			if (POWER_NUMERATOR == 0)
+				return STRING();
+
+			if (POWER_NUMERATOR == POWER_DENOMINATOR)
+				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit;
+			if (POWER_NUMERATOR < 0 && POWER_DENOMINATOR >= 0)
+				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, POWER_DENOMINATOR>();
+			if (POWER_NUMERATOR >= 0 && POWER_DENOMINATOR < 0)
+				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, -POWER_DENOMINATOR>();
+			if (POWER_NUMERATOR < 0 && POWER_DENOMINATOR < 0)
+				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, -POWER_DENOMINATOR>();
+			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 		}
-		VALUE_TYPE currentGuess = (0.5 + 0.5 * a) * twoToTheN;
-		VALUE_TYPE nextGuess = 0.5*(currentGuess + value / currentGuess);
-		VALUE_TYPE err;
-		if (currentGuess > nextGuess)
-			err = currentGuess / nextGuess - VALUE_TYPE(1.0);
-		else
-			err = nextGuess / currentGuess - VALUE_TYPE(1.0);
-		while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
+
+
+
+		//This function encodes the power variable for the EncodedUnit class
+		template<int8_t POWER, int BYTE>
+		constexpr uint64_t encodePower()
 		{
-			currentGuess = nextGuess;
-			nextGuess = 0.5*(currentGuess + value / currentGuess);
+			//take the raw bits and cast them to an unsigned 8 bit
+			//value, then convert this to a 64 bit value then bitshift
+			//it by the appropriate amount
+			return uint64_t(uint8_t(POWER)) << (BYTE * 8);
+		}
+
+		//This function decodes the power variable for the EncodedUnit class
+		template <uint64_t POWER, int BYTE>
+		constexpr int8_t decodePower()
+		{
+			//this should filter out the correct byte, bitshift it to the
+			return int8_t((POWER & (uint64_t(0xff) << (BYTE * 8))) >> (BYTE * 8));
+		}
+
+
+		//These functions will reencode the encoded power variables when two units are
+		//multiplied. Because the powers are fractions, we need to create a common denominator
+
+		//This funtion calculates the numerators of the new powers when two units are multipled
+		template<uint64_t FIRST_NUMERATOR, uint64_t FIRST_DENOMINATOR, uint64_t SECOND_NUMERATOR, uint64_t SECOND_DENOMINATOR>
+		constexpr uint64_t multiplyPowersNumerator()
+		{
+
+			return
+				encodePower<decodePower<FIRST_NUMERATOR, 0>()* decodePower<SECOND_DENOMINATOR, 0>() + decodePower<SECOND_NUMERATOR, 0>() * decodePower<FIRST_DENOMINATOR, 0>(), 0>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 1>()* decodePower<SECOND_DENOMINATOR, 1>() + decodePower<SECOND_NUMERATOR, 1>() * decodePower<FIRST_DENOMINATOR, 1>(), 1>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 2>()* decodePower<SECOND_DENOMINATOR, 2>() + decodePower<SECOND_NUMERATOR, 2>() * decodePower<FIRST_DENOMINATOR, 2>(), 2>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 3>()* decodePower<SECOND_DENOMINATOR, 3>() + decodePower<SECOND_NUMERATOR, 3>() * decodePower<FIRST_DENOMINATOR, 3>(), 3>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 4>()* decodePower<SECOND_DENOMINATOR, 4>() + decodePower<SECOND_NUMERATOR, 4>() * decodePower<FIRST_DENOMINATOR, 4>(), 4>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 5>()* decodePower<SECOND_DENOMINATOR, 5>() + decodePower<SECOND_NUMERATOR, 5>() * decodePower<FIRST_DENOMINATOR, 5>(), 5>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 6>()* decodePower<SECOND_DENOMINATOR, 6>() + decodePower<SECOND_NUMERATOR, 6>() * decodePower<FIRST_DENOMINATOR, 6>(), 6>() |
+				encodePower<decodePower<FIRST_NUMERATOR, 7>()* decodePower<SECOND_DENOMINATOR, 7>() + decodePower<SECOND_NUMERATOR, 7>() * decodePower<FIRST_DENOMINATOR, 7>(), 7>();
+		}
+
+		//This function calculates the denominators of the new powers when two units are multiplied
+		template<uint64_t FIRST_DENOMINATOR, uint64_t SECOND_DENOMINATOR>
+		constexpr uint64_t multiplyPowersDenominator()
+		{
+			return
+				encodePower<decodePower<FIRST_DENOMINATOR, 0>()* decodePower<SECOND_DENOMINATOR, 0>(), 0>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 1>()* decodePower<SECOND_DENOMINATOR, 1>(), 1>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 2>()* decodePower<SECOND_DENOMINATOR, 2>(), 2>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 3>()* decodePower<SECOND_DENOMINATOR, 3>(), 3>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 4>()* decodePower<SECOND_DENOMINATOR, 4>(), 4>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 5>()* decodePower<SECOND_DENOMINATOR, 5>(), 5>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 6>()* decodePower<SECOND_DENOMINATOR, 6>(), 6>() |
+				encodePower<decodePower<FIRST_DENOMINATOR, 7>()* decodePower<SECOND_DENOMINATOR, 7>(), 7>();
+		}
+
+		//This function calculates the numerator of the new powers when a unit is raised to a power
+		//Pass in the unit and power numerator or the unit and power denominator to get the resulting
+		//unit power numerator and denominator
+		template<uint64_t VALUE, int POW>
+		constexpr uint64_t powPowers()
+		{
+
+			return
+				encodePower<decodePower<VALUE, 0>()* POW, 0>() |
+				encodePower<decodePower<VALUE, 1>()* POW, 1>() |
+				encodePower<decodePower<VALUE, 2>()* POW, 2>() |
+				encodePower<decodePower<VALUE, 3>()* POW, 3>() |
+				encodePower<decodePower<VALUE, 4>()* POW, 4>() |
+				encodePower<decodePower<VALUE, 5>()* POW, 5>() |
+				encodePower<decodePower<VALUE, 6>()* POW, 6>() |
+				encodePower<decodePower<VALUE, 7>()* POW, 7>();
+		}
+
+		//These enable raising 10 to the power of integers get
+		//determined at compile time as it will be a common operation
+		//when adding and subtracting
+		template <class VALUE_TYPE>
+		constexpr VALUE_TYPE pow10(int64_t pow)
+		{
+			if (pow == 0)
+				return VALUE_TYPE(1.);
+			if (pow == 1)
+				return VALUE_TYPE(10.);
+			if (pow == 2)
+				return VALUE_TYPE(100.);
+			if (pow == 3)
+				return VALUE_TYPE(1000.);
+			if (pow == -1)
+				return VALUE_TYPE(0.1);
+			if (pow == -2)
+				return VALUE_TYPE(0.01);
+			if (pow == -3)
+				return VALUE_TYPE(0.001);
+
+			VALUE_TYPE temp = pow10<VALUE_TYPE>(pow / 2);
+			if (pow % 2 == 0)
+				return temp * temp;
+			if (pow > 0)
+				return temp * temp * 10;
+			return temp * temp * 0.1;
+		}
+		template <int64_t pow, class VALUE_TYPE>
+		constexpr VALUE_TYPE pow10()
+		{
+			if (pow == 0)
+				return VALUE_TYPE(1);
+			return pow10<VALUE_TYPE>(pow);
+		}
+
+		template<class VALUE_TYPE>
+		constexpr VALUE_TYPE pow(VALUE_TYPE base, int power)
+		{
+			if (power < 0)
+				return VALUE_TYPE(1.0) / pow(base, -power);
+			if (power == 0 && base == VALUE_TYPE(0.0))
+				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
+			if (power == 0)
+				return VALUE_TYPE(1.0);
+			if (power == 1)
+				return base;
+			if (power == 2)
+				return base * base;
+			if (power == 3)
+				return base * (base * base);
+			if (power == 4)
+				return (base * base) * (base * base);
+			return pow(base, power / 2) * pow(base, power - power / 2);
+		}
+
+		template<class VALUE_TYPE>
+		constexpr VALUE_TYPE sqrt(VALUE_TYPE value)
+		{
+			if (value < VALUE_TYPE(0.0))
+				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
+			if (value == VALUE_TYPE(0.0))
+				return VALUE_TYPE(0.0);
+			if (value == VALUE_TYPE(1.0))
+				return VALUE_TYPE(1.0);
+			if (value != value)
+				return value;
+
+			VALUE_TYPE twoToTheN = 1;
+			VALUE_TYPE a = value;
+			while (a > VALUE_TYPE(4))
+			{
+				a /= VALUE_TYPE(4);
+				twoToTheN *= 2;
+			}
+			while (a < VALUE_TYPE(1))
+			{
+				a *= VALUE_TYPE(4);
+				twoToTheN /= 2;
+			}
+			VALUE_TYPE currentGuess = (VALUE_TYPE(0.5) + VALUE_TYPE(0.5) * a) * twoToTheN;
+
+			if constexpr (std::is_same<VALUE_TYPE, double>::value && std::numeric_limits<double>::is_iec559)
+			{
+				//5 iterations is enough to get to the max possible accuracy for an ieee double
+				//anoyingly, 4 is enough to get within a factor of a few of epsilon, the fifth
+				//is probably overkill, but c'est la vie.
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				return currentGuess;
+			}
+			else if constexpr (std::is_same<VALUE_TYPE, float>::value && std::numeric_limits<float>::is_iec559)
+			{
+				//3 iterations is enough to get to the max possible accuracy for an ieee float
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				currentGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				return currentGuess;
+			}
+			else
+			{
+				//if we are not using ieee floating point numbers then we set an
+				//accepatable error based on epsilon
+				VALUE_TYPE nextGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+				VALUE_TYPE err;
+				if (currentGuess > nextGuess)
+					err = currentGuess / nextGuess - VALUE_TYPE(1.0);
+				else
+					err = nextGuess / currentGuess - VALUE_TYPE(1.0);
+				while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
+				{
+					currentGuess = nextGuess;
+					nextGuess = VALUE_TYPE(0.5) * (currentGuess + value / currentGuess);
+					if (currentGuess > nextGuess)
+						err = currentGuess / nextGuess - VALUE_TYPE(1.0);
+					else
+						err = nextGuess / currentGuess - VALUE_TYPE(1.0);
+				}
+				return nextGuess;
+			}
+		}
+
+		template<class VALUE_TYPE>
+		constexpr VALUE_TYPE root(VALUE_TYPE value, int root)
+		{
+			if (value < VALUE_TYPE(0.0) && root % 2 == 0)
+				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
+			if (root == 0)
+				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
+			if (value < VALUE_TYPE(0.0))
+				return -unitsPrivate::root(-value, root);
+			if (value == VALUE_TYPE(0.0))
+				return VALUE_TYPE(0.0);
+			if (value == VALUE_TYPE(1.0))
+				return VALUE_TYPE(1.0);
+			if (value != value)
+				return value;
+			if (root == 1)
+				return value;
+			if (root < 0)
+				return VALUE_TYPE(1) / unitsPrivate::root(value, -root);
+			if (root == 0)
+				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
+			VALUE_TYPE twoToTheN = 1;
+			VALUE_TYPE a = value;
+			VALUE_TYPE maxVal = pow(VALUE_TYPE(2), root);
+			while (a > maxVal)
+			{
+				a /= maxVal;
+				twoToTheN *= 2;
+			}
+			while (a < VALUE_TYPE(1))
+			{
+				a *= maxVal;
+				twoToTheN /= 2;
+			}
+			VALUE_TYPE currentGuess = (VALUE_TYPE(1) + (a - VALUE_TYPE(1)) / (maxVal - VALUE_TYPE(1))) * twoToTheN;
+			VALUE_TYPE nextGuess = (VALUE_TYPE(1.0) / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess, root - 1));
+			VALUE_TYPE err;
 			if (currentGuess > nextGuess)
 				err = currentGuess / nextGuess - VALUE_TYPE(1.0);
 			else
 				err = nextGuess / currentGuess - VALUE_TYPE(1.0);
+			while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
+			{
+				currentGuess = nextGuess;
+				nextGuess = (VALUE_TYPE(1.0) / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess, root - 1));
+				if (currentGuess > nextGuess)
+					err = currentGuess / nextGuess - VALUE_TYPE(1.0);
+				else
+					err = nextGuess / currentGuess - VALUE_TYPE(1.0);
+			}
+			return nextGuess;
 		}
-		return nextGuess;
-	}
-	
-	template<class VALUE_TYPE>
-	constexpr VALUE_TYPE rt(VALUE_TYPE value, int root)
-	{
-		if (value < VALUE_TYPE(0.0) && root % 2 == 0)
-			return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
-		if(root == 0)
-			return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
-		if (value < VALUE_TYPE(0.0))
-			return -rt(-value, root);
-		if (value == VALUE_TYPE(0.0))
-			return VALUE_TYPE(0.0);
-		if (value == VALUE_TYPE(1.0))
-			return VALUE_TYPE(1.0);
-		if (value != value)
-			return value;
-		if (root == 1)
-			return value;
-		if (root < 0)
-			return VALUE_TYPE(1) / rt(value, -root);
-		if (root == 0)
-			return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
-		VALUE_TYPE twoToTheN = 1;
-		VALUE_TYPE a = value;
-		VALUE_TYPE maxVal = pow(2, root);
-		while (a > maxVal)
-		{
-			a /= maxVal;
-			twoToTheN *= 2;
-		}
-		while (a < VALUE_TYPE(1))
-		{
-			a *= maxVal;
-			twoToTheN /= 2;
-		}
-		VALUE_TYPE currentGuess = (VALUE_TYPE(1)+(a-VALUE_TYPE(1))/(maxVal-VALUE_TYPE(1))) * twoToTheN;
-		VALUE_TYPE nextGuess = (1.0 / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess,root-1));
-		VALUE_TYPE err;
-		if (currentGuess > nextGuess)
-			err = currentGuess / nextGuess - VALUE_TYPE(1.0);
-		else
-			err = nextGuess / currentGuess - VALUE_TYPE(1.0);
-		while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
-		{
-			currentGuess = nextGuess;
-			nextGuess = (1.0 / VALUE_TYPE(root)) * (currentGuess * (root - 1 ) + value / pow(currentGuess, root - 1));
-			if (currentGuess > nextGuess)
-				err = currentGuess / nextGuess - VALUE_TYPE(1.0);
-			else
-				err = nextGuess / currentGuess - VALUE_TYPE(1.0);
-		}
-		return nextGuess;
-	}
 
-	//Functions to check the compatibility of units
+		//Functions to check the compatibility of units
 
-	template< int64_t NUM1, int64_t DEN1, int64_t NUM2, int64_t DEN2>
-	constexpr bool fractionsEquivalent()
-	{
-		//multiplying each numerator by the other denominator scales the fractions to a common denominator
-		return (NUM1 * DEN2) == (NUM2 * DEN1);
-	}
-	template<class UNIT1, class UNIT2>
-	constexpr bool unitCompatible()
-	{
-		return
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 0>(), decodePower< UNIT1::unit::basePowersDenominators, 0>(), decodePower< UNIT2::unit::basePowersNumerators, 0>(), decodePower< UNIT2::unit::basePowersDenominators, 0>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 1>(), decodePower< UNIT1::unit::basePowersDenominators, 1>(), decodePower< UNIT2::unit::basePowersNumerators, 1>(), decodePower< UNIT2::unit::basePowersDenominators, 1>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 2>(), decodePower< UNIT1::unit::basePowersDenominators, 2>(), decodePower< UNIT2::unit::basePowersNumerators, 2>(), decodePower< UNIT2::unit::basePowersDenominators, 2>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 3>(), decodePower< UNIT1::unit::basePowersDenominators, 3>(), decodePower< UNIT2::unit::basePowersNumerators, 3>(), decodePower< UNIT2::unit::basePowersDenominators, 3>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 4>(), decodePower< UNIT1::unit::basePowersDenominators, 4>(), decodePower< UNIT2::unit::basePowersNumerators, 4>(), decodePower< UNIT2::unit::basePowersDenominators, 4>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 5>(), decodePower< UNIT1::unit::basePowersDenominators, 5>(), decodePower< UNIT2::unit::basePowersNumerators, 5>(), decodePower< UNIT2::unit::basePowersDenominators, 5>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 6>(), decodePower< UNIT1::unit::basePowersDenominators, 6>(), decodePower< UNIT2::unit::basePowersNumerators, 6>(), decodePower< UNIT2::unit::basePowersDenominators, 6>()>() &&
-			fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 7>(), decodePower< UNIT1::unit::basePowersDenominators, 7>(), decodePower< UNIT2::unit::basePowersNumerators, 7>(), decodePower< UNIT2::unit::basePowersDenominators, 7>()>();
-		
-	}
-	template<class UNIT1, class UNIT2>
-	constexpr bool unitSameExponent()
-	{
-		//scale powers to a common denominator and compare - basically multiply each numerator by the other unit's denominator
-		return fractionsEquivalent < UNIT1::unit::exponentNumerator, UNIT1::unit::exponentDenominator, UNIT2::unit::exponentNumerator, UNIT2::unit::exponentDenominator>();
-	}
-	template<class UNIT1, class UNIT2>
-	constexpr bool unitIdentical()
-	{
-		return unitCompatible<UNIT1, UNIT2>() && unitSameExponent<UNIT1, UNIT2>();
-	}
+		template< int64_t NUM1, int64_t DEN1, int64_t NUM2, int64_t DEN2>
+		constexpr bool fractionsEquivalent()
+		{
+			//multiplying each numerator by the other denominator scales the fractions to a common denominator
+			return (NUM1 * DEN2) == (NUM2 * DEN1);
+		}
+		template<class UNIT1, class UNIT2>
+		constexpr bool unitCompatible()
+		{
+			return
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 0>(), decodePower< UNIT1::unit::basePowersDenominators, 0>(), decodePower< UNIT2::unit::basePowersNumerators, 0>(), decodePower< UNIT2::unit::basePowersDenominators, 0>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 1>(), decodePower< UNIT1::unit::basePowersDenominators, 1>(), decodePower< UNIT2::unit::basePowersNumerators, 1>(), decodePower< UNIT2::unit::basePowersDenominators, 1>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 2>(), decodePower< UNIT1::unit::basePowersDenominators, 2>(), decodePower< UNIT2::unit::basePowersNumerators, 2>(), decodePower< UNIT2::unit::basePowersDenominators, 2>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 3>(), decodePower< UNIT1::unit::basePowersDenominators, 3>(), decodePower< UNIT2::unit::basePowersNumerators, 3>(), decodePower< UNIT2::unit::basePowersDenominators, 3>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 4>(), decodePower< UNIT1::unit::basePowersDenominators, 4>(), decodePower< UNIT2::unit::basePowersNumerators, 4>(), decodePower< UNIT2::unit::basePowersDenominators, 4>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 5>(), decodePower< UNIT1::unit::basePowersDenominators, 5>(), decodePower< UNIT2::unit::basePowersNumerators, 5>(), decodePower< UNIT2::unit::basePowersDenominators, 5>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 6>(), decodePower< UNIT1::unit::basePowersDenominators, 6>(), decodePower< UNIT2::unit::basePowersNumerators, 6>(), decodePower< UNIT2::unit::basePowersDenominators, 6>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 7>(), decodePower< UNIT1::unit::basePowersDenominators, 7>(), decodePower< UNIT2::unit::basePowersNumerators, 7>(), decodePower< UNIT2::unit::basePowersDenominators, 7>()>();
 
+		}
+		template<class UNIT1, class UNIT2>
+		constexpr bool unitSameExponent()
+		{
+			//scale powers to a common denominator and compare - basically multiply each numerator by the other unit's denominator
+			return fractionsEquivalent < UNIT1::unit::exponentNumerator, UNIT1::unit::exponentDenominator, UNIT2::unit::exponentNumerator, UNIT2::unit::exponentDenominator>();
+		}
+		template<class UNIT1, class UNIT2>
+		constexpr bool unitIdentical()
+		{
+			return unitCompatible<UNIT1, UNIT2>() && unitSameExponent<UNIT1, UNIT2>();
+		}
+
+		template<int64_t SOURCE_EXPONENT_NUMERATOR, int64_t SOURCE_EXPONENT_DENOMINATOR, int64_t DEST_EXPONENT_NUMERATOR, int64_t DEST_EXPONENT_DENOMINATOR, class VALUE_TYPE>
+		constexpr VALUE_TYPE applyExponents(VALUE_TYPE value)
+		{
+			if constexpr (fractionsEquivalent<SOURCE_EXPONENT_NUMERATOR, SOURCE_EXPONENT_DENOMINATOR, DEST_EXPONENT_NUMERATOR, DEST_EXPONENT_DENOMINATOR>())
+				return value;
+			constexpr uint64_t num = SOURCE_EXPONENT_NUMERATOR * DEST_EXPONENT_DENOMINATOR - DEST_EXPONENT_NUMERATOR * SOURCE_EXPONENT_DENOMINATOR;
+			constexpr uint64_t den = DEST_EXPONENT_DENOMINATOR * SOURCE_EXPONENT_DENOMINATOR;
+			if constexpr (num % den == 0)
+				return value * pow10<num / den, VALUE_TYPE>();
+			constexpr int64_t gcd = greatestCommonDenominator64<num, den>();
+			return value * root(pow10<num / gcd, VALUE_TYPE>(), den / gcd);
+		}
+	}
 	//This is the basic class that represents a unit. It takes two templated parameters
 	//The first is the powers. This is an encoded 64 bit number where the first byte is
 	//the power in the first dimension, the second byte is the power in the second
 	//dimension, etc.
 	//The second is the exponent the unit would have ONCE THE POWER HAS BEEN MULTIPLIED OUT.
 	//For example for a millimetre it would be -3, for a millimetre squared it would be -6, etc
-	template<uint64_t BASE_POWERS_NUMERATORS, uint64_t BASE_POWERS_DENOMINATORS, int64_t EXPONENT_NUMERATOR, int64_t EXPONENT_DENOMINATOR>
+	template<uint64_t BASE_POWERS_NUMERATORS, uint64_t BASE_POWERS_DENOMINATORS, int64_t EXPONENT_NUMERATOR, int64_t EXPONENT_DENOMINATOR, bool NEEDS_SCALING>
 	struct EncodedUnit
 	{
-		static const uint64_t basePowersNumerators = BASE_POWERS_NUMERATORS;
-		static const uint64_t basePowersDenominators = BASE_POWERS_DENOMINATORS;
-		static const int64_t exponentNumerator = EXPONENT_NUMERATOR;
-		static const int64_t exponentDenominator = EXPONENT_DENOMINATOR;
-		typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator > unit;
+		static constexpr bool needsScaling = NEEDS_SCALING;
+		static constexpr uint64_t basePowersNumerators = BASE_POWERS_NUMERATORS;
+		static constexpr uint64_t basePowersDenominators = BASE_POWERS_DENOMINATORS;
+		static constexpr int64_t exponentNumerator = EXPONENT_NUMERATOR;
+		static constexpr int64_t exponentDenominator = EXPONENT_DENOMINATOR;
+		typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling> unit;
 		typedef unit baseClass;
 
 		template<class VALUE_TYPE>
@@ -541,7 +611,7 @@ struct ExponentTraits<VALUE>\
 			template <class DESTINATION_UNIT>
 			static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
+				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
 				//If the destination unit is identical to this unit we can do nothing
 				//not sure if this really optimises anything, but we might as well do it
 				//Note that we can't just check equivalence of the base powers and exponent
@@ -559,13 +629,13 @@ struct ExponentTraits<VALUE>\
 			{
 				//for this type its base is itself, but with a different exponent
 				//so all we need to do is apply the difference in the exponent
-				if constexpr(fractionsEquivalent<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())
+				if constexpr(unitsPrivate::fractionsEquivalent<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())
 					return value;
 				//check if we can use the templated recursive pow10
 				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * EXPONENT_DENOMINATOR - EXPONENT_NUMERATOR * BASE_EXPONENT_DENOMINATOR;
 				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * EXPONENT_DENOMINATOR;
 				if constexpr(NUM%DEN==0)
-					return value * sci::pow10<NUM/DEN, VALUE_TYPE>();
+					return value * sci::unitsPrivate::pow10<NUM/DEN, VALUE_TYPE>();
 				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
 			}
 		};
@@ -576,23 +646,24 @@ struct ExponentTraits<VALUE>\
 		template<class OTHER_UNIT>
 		static constexpr bool compatibleWith()
 		{
-			return unitCompatible<unit, OTHER_UNIT>();
+			return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();
 		}
 	};
 
-	template<uint64_t BASE_POWERS, int64_t EXPONENT>
-	struct EncodedUnitWholePower : public EncodedUnit<BASE_POWERS, 0x0101010101010101, EXPONENT, 1>
+	template<uint64_t BASE_POWERS, int64_t EXPONENT, bool NEEDS_SCALING>
+	struct EncodedUnitWholePower : public EncodedUnit<BASE_POWERS, 0x0101010101010101, EXPONENT, 1, NEEDS_SCALING>
 	{
-
+		static constexpr bool needsScaling = NEEDS_SCALING;
 	};
 
 	//This is a class that represents an encoded unit to a power. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT, int8_t POW_NUMERATOR, int8_t POW_DENOMINATOR=1>
-	struct PoweredUnit : public EncodedUnit<powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR>
+	struct PoweredUnit : public EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling>
 	{
+		static constexpr bool needsScaling = ENCODEDUNIT::needsScaling;
 		typedef PoweredUnit< ENCODEDUNIT, POW_NUMERATOR, POW_DENOMINATOR> unit;
-		typedef EncodedUnit<powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR> encodedUnitClass;
+		typedef EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling> encodedUnitClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
@@ -619,13 +690,10 @@ struct ExponentTraits<VALUE>\
 			template <class DESTINATION_UNIT>
 			static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
-				//this test avoids scaling then unscaling a scaled unit via its base unit
-				//however, it doesn't cat the equivalence of unit^2 and unit*unit. I'm
-				//not sure there is much that can be done at compile time to catch that
-				//as simply checking equivalence of base powers and exponents doesn't work
-				if constexpr (std::is_same<unit, DESTINATION_UNIT>::value)
-					return value;
+				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
+				if constexpr (!needsScaling && !DESTINATION_UNIT::needsScaling)
+					return unitsPrivate::applyExponents<encodedUnitClass::exponentNumerator, encodedUnitClass::exponentDenominator, DESTINATION_UNIT::exponentNumerator, DESTINATION_UNIT::exponentDenominator>(value);
+					
 				//This unit and the DESTINATION_UNIT must share a common base type
 				//but with a possibly different exponent. So to do the conversion I convert the
 				//value to the base unit, then convert that to the destination unit using its
@@ -633,8 +701,8 @@ struct ExponentTraits<VALUE>\
 				//
 				//convert the value to the base type, we cascade the conversion down to the unit we are raising to the power,
 				//then apply the power
-				constexpr int8_t maxCommonDenominator = greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE multiplier = rt(pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator),POW_DENOMINATOR / maxCommonDenominator);
+				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
+				constexpr VALUE_TYPE multiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator),POW_DENOMINATOR / maxCommonDenominator);
 				VALUE_TYPE baseValue = value * multiplier;
 				//now convert from the base unit to the destination unit, with the different exponents.
 				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponentNumerator, encodedUnitClass::exponentDenominator>(baseValue);
@@ -644,14 +712,14 @@ struct ExponentTraits<VALUE>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
 				//cascade the conversion down to the unit we are raising to the power, then apply the power
-				constexpr int8_t maxCommonDenominator = greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE scaleMultiplier = rt(pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<0, 1>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
+				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
+				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<0, 1>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
 				
 				constexpr int64_t exponentNumerator = BASE_EXPONENT_NUMERATOR * encodedUnitClass::exponentDenominator - encodedUnitClass::exponentNumerator * BASE_EXPONENT_DENOMINATOR;
 				constexpr int64_t exponentDenominator = BASE_EXPONENT_DENOMINATOR * encodedUnitClass::exponentDenominator;
 
-				constexpr int64_t exponentMaxCommonDenominator = greatestCommonDenominator64<exponentNumerator, exponentDenominator>();
-				constexpr VALUE_TYPE exponentMultiplier = rt(sci::pow10<exponentNumerator / exponentMaxCommonDenominator, VALUE_TYPE>(), exponentDenominator / exponentMaxCommonDenominator);
+				constexpr int64_t exponentMaxCommonDenominator = unitsPrivate::greatestCommonDenominator64<exponentNumerator, exponentDenominator>();
+				constexpr VALUE_TYPE exponentMultiplier = unitsPrivate::root(unitsPrivate::pow10<exponentNumerator / exponentMaxCommonDenominator, VALUE_TYPE>(), exponentDenominator / exponentMaxCommonDenominator);
 				return value * scaleMultiplier * exponentMultiplier;
 			}
 		};
@@ -667,10 +735,11 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents two encoded units multiplied together. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units.
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
-	struct MultipliedUnit : public EncodedUnit<multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator*ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator*ENCODEDUNIT2::exponentDenominator>
+	struct MultipliedUnit : public EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator*ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator*ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling>
 	{
+		static constexpr bool needsScaling = ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling;
 		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
-		typedef EncodedUnit<multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator* ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator* ENCODEDUNIT2::exponentDenominator> encodedUnitClass;
+		typedef EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator* ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator* ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling> encodedUnitClass;
 		typedef MultipliedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
@@ -701,13 +770,10 @@ struct ExponentTraits<VALUE>\
 			template <class DESTINATION_UNIT>
 			static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
 			{
-				static_assert(unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
-				//this test avoids scaling then unscaling a scaled unit via its base unit
-				//however, it doesn't cat the equivalence of unit^2 and unit*unit. I'm
-				//not sure there is much that can be done at compile time to catch that
-				//as simply checking equivalence of base powers and exponents doesn't work
-				if (std::is_same<DESTINATION_UNIT, unit>::value)
-					return value;
+				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
+				if constexpr (!needsScaling && !DESTINATION_UNIT::needsScaling)
+					return unitsPrivate::applyExponents<encodedUnitClass::exponentNumerator, encodedUnitClass::exponentDenominator, DESTINATION_UNIT::exponentNumerator, DESTINATION_UNIT::exponentDenominator>(value);
+
 				//This unit and the DESTINATION_UNIT must share a common base type
 				//but with a possibly different exponent. So to do the conversion I convert the
 				//value to the base unit, then convert that to the destination unit using its
@@ -754,7 +820,7 @@ struct ExponentTraits<VALUE>\
 	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
 	static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
 	{\
-		return makeShortName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
+		return unitsPrivate::makeShortName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 	}\
 	template<class STRING>\
 	static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
@@ -764,7 +830,7 @@ struct ExponentTraits<VALUE>\
 	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
 	static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
 	{\
-		return makeLongName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
+		return unitsPrivate::makeLongName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 	}\
 	template<class STRING>\
 	static STRING getShortName()\
@@ -795,9 +861,13 @@ struct ExponentTraits<VALUE>\
 			return U##LONGNAME;\
 	}
 
-	struct Unitless : public EncodedUnitWholePower<0, 0>
+	//to allow macro expansion of the names before passing them to NAMEDEF where ## is applied
+#define ALTERNATE_NAMEDEF(SHORTNAME, LONGNAME) NAMEDEF(SHORTNAME, LONGNAME)
+
+	struct Unitless : public EncodedUnitWholePower<0, 0, false>
 	{
-		static const int8_t power = 0;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = 0;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -830,9 +900,10 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct Percent : public EncodedUnitWholePower<0, -2>
+	struct Percent : public EncodedUnitWholePower<0, -2, false>
 	{
-		static const int8_t power = 0;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = 0;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -883,9 +954,10 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct PerMille : public EncodedUnitWholePower<0, -3>
+	struct PerMille : public EncodedUnitWholePower<0, -3, false>
 	{
-		static const int8_t power = 0;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = 0;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -910,7 +982,11 @@ struct ExponentTraits<VALUE>\
 		static STRING getShortName()
 		{
 			if constexpr (std::is_same<STRING, std::string>::value)
+#ifdef ALTERNATE_PER_MILLE
+				return ALTERNATE_PER_MILLE;
+#else
 				return "\u2030";
+#endif
 			if constexpr (std::is_same<STRING, std::wstring>::value)
 				return L"\u2030";
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
@@ -936,9 +1012,10 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct BasisPoint : public EncodedUnitWholePower<0, -4>
+	struct BasisPoint : public EncodedUnitWholePower<0, -4, false>
 	{
-		static const int8_t power = 0;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = 0;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -963,7 +1040,11 @@ struct ExponentTraits<VALUE>\
 		static STRING getShortName()
 		{
 			if constexpr (std::is_same<STRING, std::string>::value)
+#ifdef ALTERNATE_BASIS_POINT
+				return ALTERNATE_BASIS_POINT;
+#else
 				return "\u2031";
+#endif
 			if constexpr (std::is_same<STRING, std::wstring>::value)
 				return L"\u2031";
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
@@ -990,64 +1071,72 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Amp : public EncodedUnitWholePower<encodePower<POWER, 0>(), EXPONENT*POWER>
+	struct Amp : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("A", "ampere")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Kelvin : public EncodedUnitWholePower<encodePower<POWER, 1>(), EXPONENT*POWER>
+	struct Kelvin : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 1>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("K", "kelvin")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Second : public EncodedUnitWholePower<encodePower<POWER, 2>(), EXPONENT*POWER>
+	struct Second : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 2>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("s", "second")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Metre : public EncodedUnitWholePower<encodePower<POWER, 3>(), EXPONENT*POWER>
+	struct Metre : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 3>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("m", "metre")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Gram : public EncodedUnitWholePower<encodePower<POWER, 4>(), EXPONENT*POWER>
+	struct Gram : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 4>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("g", "gram")
 	};
 
 	template<int8_t POWER = 1>
 	struct Kilogram : public Gram<POWER, 3>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Candela : public EncodedUnitWholePower<encodePower<POWER, 5>(), EXPONENT*POWER>
+	struct Candela : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 5>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("cd", "candela")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Mole : public EncodedUnitWholePower<encodePower<POWER, 6>(), EXPONENT*POWER>
+	struct Mole : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 6>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("mol", "mole")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Radian : public EncodedUnitWholePower<encodePower<POWER, 7>(), EXPONENT*POWER>
+	struct Radian : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 7>(), EXPONENT*POWER, false>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = false;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("rad", "radian")
 	};
 
@@ -1059,141 +1148,146 @@ struct ExponentTraits<VALUE>\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Steradian : public MultipliedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("sr", "steradian")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Hz", "hertz")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedUnit<MultipliedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr bool needsScaling = MultipliedUnit<MultipliedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>::needsScaling;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("N", "newton")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Pa", "pascal")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("J", "joule")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("W", "watt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("C", "coulomb")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("V", "volt")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("F", "farad")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
+#ifdef ALTERNATE_OMEGA
+		ALTERNATE_NAMEDEF(ALTERNATE_OMEGA, "ohm")
+#else
 		NAMEDEF("\u2126", "ohm")
+#endif
 	};
 
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("S", "seimens")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Wb", "weber")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("T", "tesla")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("H", "henry")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("lm", "lumen")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("lx", "lux")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Becquerel : public Second<-POWER, EXPONENT>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Bq", "baquerel")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Gy", "grey")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("Sv", "seivert")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
-		static const int8_t power = POWER;
+		static constexpr int8_t power = POWER;
 		NAMEDEF("kat", "katal")
 	};
 
@@ -1201,43 +1295,6 @@ struct ExponentTraits<VALUE>\
 	//A separate class for other units that are scaled versions of EncodedUnits.
 	//Note that these don't derive from EncodedUnits, but they conform to the same
 	//template as EncodedUnit, so can be used by Physical as a template parameter.
-/*#define 
-_SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
-	template<class BASE_NAME, int8_t POWER = 1, int64_t EXPONENT = 0>\
-	class CLASS_NAME\
-	{\
-	public:\
-		static const uint64_t basePowers = BASE_NAME::basePowers;\
-		static const int64_t exponent = BASE_NAME::exponent;\
-		typedef CLASS_NAME< BASE_NAME, POWER, EXPONENT > unit;\
-		template <class T>\
-		static double convertTo(double value)\
-		{\
-			static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
-			return T::convertFromBase<EXPONENT>(convertTo<BASE_NAME<POWER, EXPONENT>>(value));\
-		}\
-		template <>\
-		static double convertTo <CLASS_NAME<BASE_NAME, POWER, EXPONENT>>(double value)\
-		{\
-			return value;\
-		}\
-		template <>\
-		static double convertTo <BASE_NAME<POWER, EXPONENT>>(double value)\
-		{\
-			return value / m_baseToScaledMultiplier;\
-		}\
-		template <int64_t BASE_EXPONENT>\
-		static double convertFromBase(double value)\
-		{\
-			return value * m_baseToScaledMultiplier * sci::pow10<BASE_EXPONENT - EXPONENT>();\
-		}\
-		static const double m_baseToScaledMultiplier;\
-	};\
-	template <int8_t POWER, int64_t EXPONENT>\
-	const double CLASS_NAME<BASE_NAME, POWER, EXPONENT>::m_baseToScaledMultiplier = std::pow(BASE_TO_SCALED_MULTIPLIER, POWER);*/
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 #define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
@@ -1246,6 +1303,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 	public:\
 		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseClass;\
 		typedef CLASS_NAME< POWER, EXPONENT > unit;\
+		static constexpr bool needsScaling = true;\
 		static const uint64_t basePowers = baseClass::basePowers;\
 		static const int64_t baseExponent = baseClass::exponent;\
 		static const int64_t exponent = EXPONENT;\
@@ -1266,7 +1324,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 			template <int64_t BASE_EXPONENT>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)\
 			{\
-				return value * sci::pow10<(BASE_EXPONENT - baseExponent), VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				return value * unitsPrivate::pow10<(BASE_EXPONENT - baseExponent), VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 			}\
 		};\
 		template<class STRING>\
@@ -1277,7 +1335,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
 		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
 		{\
-			return makeShortName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
+			return unitsPrivate::makeShortName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 		}\
 		template<class STRING>\
 		static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
@@ -1287,7 +1345,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
 		static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
 		{\
-			return makeLongName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
+			return unitsPrivate::makeLongName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 		}\
 		template<class STRING>\
 		static STRING getShortName()\
@@ -1328,23 +1386,62 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 		}\
 	};
 
-/*
+	//needed to avoid ## being applied before alternate shortname is macro expanded
+	#define MAKE_ALTERNATE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME) MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)
+
+	namespace unitsPrivate
+	{
+#ifdef M_PI
+		constexpr double pi = M_PI;
+#else 
+		constexpr double pi = 3.14159265358979323846;
+#endif
+	}
+
 	//angle units
-	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / M_PI, "degree", "degree")
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / M_PI, "\u8242", "arcminute")
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / M_PI, "\u8243", "arcsecond")
-	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / M_PI, "tr", "turn")
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / M_PI, "quadrant", "quadrant")
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / M_PI, "sextant", "sextant")
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / M_PI, "hexacontade", "hexacontade")
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / M_PI, "binary degree", "binary degree")
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / M_PI, "gon", "gradian")
+#ifdef ALTERNATE_DEGREE
+	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, ALTERNATE_DEGREE, "degree")
+#else
+	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, "\u00b0", "degree")
+#endif
+#ifdef ALTERNATE_ARCMINUTE
+	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, ALTERNATE_ARCMINUTE, "arcminute")
+#else
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, "\u8242", "arcminute")
+#endif
+#ifdef ALTERNATE_ARCSECOND
+		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, ALTERNATE_ARCSECOND, "arcsecond")
+#else
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, "\u8243", "arcsecond")
+#endif
+	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / unitsPrivate::pi, "tr", "turn")
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / unitsPrivate::pi, "quadrant", "quadrant")
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / unitsPrivate::pi, "sextant", "sextant")
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / unitsPrivate::pi, "hexacontade", "hexacontade")
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / unitsPrivate::pi, "binary degree", "binary degree")
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / unitsPrivate::pi, "gon", "gradian")
 
 	//Farenheit equivalent of kelvin unit
+#ifdef ALTERNATE_RANKINE
+	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, ALTERNATE_RANKINE, "rankine")
+#else
 	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, "\u00b0Ra", "rankine")
+#endif
 
 	//alternative metric and scientific units
+#ifdef ALTERNATE_ANGSTROM_SHORT
+#ifdef ALTERNATE_ANGSTROM_LONG
+		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, ALTERNATE_ANGSTROM_SHORT, ALTERNATE_ANGSTROM_LONG)
+#else
+		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, ALTERNATE_ANGSTROM_SHORT, "\u00e5ngstrom")
+#endif
+#else
+#ifdef ALTERNATE_ANGSTROM_LONG
+		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", ALTERNATE_ANGSTROM_LONG)
+#else
 	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", "\u00e5ngstrom")
+#endif
+#endif
 	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, "AU", "astronomical unit")
 	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, "ly", "lightyear")
 	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, "pc", "parsec")
@@ -1385,7 +1482,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, "st", "stone")
 	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, "lb", "pound")
 	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, "oz", "ounce")
-	*/
+	
 
 
 	template < class ENCODED_UNIT, class VALUE_TYPE>
@@ -1487,7 +1584,7 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 		template<class OTHER>
 		static constexpr bool compatibleWith()
 		{
-			return unitCompatible<ENCODED_UNIT, OTHER::unit>();
+			return unitsPrivate::unitCompatible<ENCODED_UNIT, OTHER::unit>();
 		}
 	private:
 		VALUE_TYPE m_v;
@@ -1665,43 +1762,43 @@ _SCALED_UNIT(CLASS_NAME, BASE_NAME, BASE_TO_SCALED_MULTIPLIER, SHORT_NAME)\
 	template <int ROOT, class T, class V>
 	constexpr Physical<RootedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
 	{
-		return Physical<RootedUnit<T, ROOT>, V>(rt(base.template value<T>(), V(ROOT)));
+		return Physical<RootedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
 	}
 	//This version undoes a powered unit
 	template <int ROOT, class T, class V>
 	constexpr Physical<T, V> root(const Physical<PoweredUnit<T, ROOT>, V> &base)
 	{
-		return Physical<T, V>(rt(base.template value<PoweredUnit<T, ROOT>>(), V(ROOT)));
+		return Physical<T, V>(std::pow(base.template value<T>(), V(1.0) / V(ROOT)));
 	}
-	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
+	//root a Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
 	{
-		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
+		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
-	//same but for percent
+	//root a percent, note we convert to unitless
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Percent, V> &base)
 	{
-		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
+		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
-	//same but for per mille
+	//root a per mille, note we convert to unitless
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<PerMille, V> &base)
 	{
-		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
+		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
-	//same but for basis point
+	//root a basis point, note we convert to unitless
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<BasisPoint, V> &base)
 	{
-		return Physical<Unitless, V>(rt(base.template value<Unitless>(), V(ROOT)));
+		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
 	}
-	//sqrt - uses root<2> function
+	//sqrt
 	template<class T, class V>
 	constexpr Physical<RootedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
 	{
-		return Physical<RootedUnit<T, 2>, V>(sqrt(base.template value<T>()));
+		return Physical<RootedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
 	}
 
 	template <class T, class V>
