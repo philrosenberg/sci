@@ -1071,7 +1071,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Amp : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
+	struct Ampere : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1189,14 +1189,14 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Coulomb : public MultipliedUnit<Amp<POWER, EXPONENT>, Second<POWER>>
+	struct Coulomb : public MultipliedUnit<Ampere<POWER, EXPONENT>, Second<POWER>>
 	{
 		static constexpr int8_t power = POWER;
 		NAMEDEF("C", "coulomb")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Volt : public MultipliedUnit<Watt<POWER, EXPONENT>, Amp<-POWER>>
+	struct Volt : public MultipliedUnit<Watt<POWER, EXPONENT>, Ampere<-POWER>>
 	{
 		static constexpr int8_t power = POWER;
 		NAMEDEF("V", "volt")
@@ -1210,7 +1210,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Amp<-POWER>>
+	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Ampere<-POWER>>
 	{
 		static constexpr int8_t power = POWER;
 #ifdef ALTERNATE_OMEGA
@@ -1243,7 +1243,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Henry : public MultipliedUnit<Weber<POWER, EXPONENT>, Amp<-POWER>>
+	struct Henry : public MultipliedUnit<Weber<POWER, EXPONENT>, Ampere<-POWER>>
 	{
 		static constexpr int8_t power = POWER;
 		NAMEDEF("H", "henry")
