@@ -51,17 +51,8 @@ namespace sci
 		friend class std::numeric_limits<sci::UtcTime>;
 	public:
 		constexpr UtcTime()
-			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0)
+			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0), m_cTime{0, 0, 0, 1, 0, 70, 4, 0}
 		{
-			m_cTime.tm_year = 70;
-			m_cTime.tm_mon = 0;
-			m_cTime.tm_mday = 1;
-			m_cTime.tm_hour = 0;
-			m_cTime.tm_min = 0;
-			m_cTime.tm_sec = 0;
-			m_cTime.tm_isdst = 0;
-			m_cTime.tm_wday = 4;
-			m_cTime.tm_yday = 0;
 		}
 		constexpr UtcTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
 			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0)
