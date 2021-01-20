@@ -6,6 +6,7 @@
 
 #include<vector>
 #include<limits>
+#include<string>
 #include"Traits.h"
 namespace sci
 {
