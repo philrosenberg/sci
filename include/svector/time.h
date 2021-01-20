@@ -134,6 +134,28 @@ namespace sci
 				return true; //years divisible by 4, and by 100 and by 400
 			return false; //years divisible by 4 and 100 and not 400
 		}
+		std::string getIso8601String(int secondDecimalPlaces = 0, bool omitSeparators = false, bool omitTimePrefix = false, bool omitTimeZoneSuffix = false) const
+		{
+			std::stringstream stream;
+			std::string dateSeparator = omitSeparators ? "" : "-";
+			std::string timeSeparator = omitSeparators ? "" : ":";
+			std::string timePrefix = omitTimePrefix ? "" : "T";
+			std::string timeSuffix = omitTimeZoneSuffix ? "" : "Z";
+
+			stream << std::setw(4) << std::setfill('0') << getYear()
+				<< dateSeparator
+				<< std::setw(2) << std::setfill('0') << getMonth()
+				<< dateSeparator
+				<< std::setw(2) << std::setfill('0') << getDayOfMonth()
+				<< timePrefix
+				<< std::setw(2) << std::setfill('0') << getHour()
+				<< timeSeparator
+				<< std::setw(2) << std::setfill('0') << getMinute()
+				<< timeSeparator
+				<< std::fixed << std::setw(secondDecimalPlaces + (secondDecimalPlaces > 0 ? 1 : 0) + 2) << std::setfill('0') << std::setprecision(secondDecimalPlaces) << getSecond()
+				<< timeSuffix;
+			return stream.str();
+		}
 	private:
 		std::tm m_cTime;
 		std::time_t m_secsAfterPosixEpoch;
