@@ -523,13 +523,11 @@ struct ExponentTraits<VALUE>\
 				a *= maxVal;
 				twoToTheN /= 2;
 			}
+
 			VALUE_TYPE currentGuess = (VALUE_TYPE(1) + (a - VALUE_TYPE(1)) / (maxVal - VALUE_TYPE(1))) * twoToTheN;
 			VALUE_TYPE nextGuess = (VALUE_TYPE(1.0) / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess, root - 1));
-			VALUE_TYPE err;
-			if (currentGuess > nextGuess)
-				err = currentGuess / nextGuess - VALUE_TYPE(1.0);
-			else
-				err = nextGuess / currentGuess - VALUE_TYPE(1.0);
+			VALUE_TYPE err = currentGuess > nextGuess ? currentGuess / nextGuess - VALUE_TYPE(1.0) : nextGuess / currentGuess - VALUE_TYPE(1.0);
+			
 			while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
 			{
 				currentGuess = nextGuess;
