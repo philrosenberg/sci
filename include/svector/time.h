@@ -1,12 +1,11 @@
 #pragma once
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#define MUSTUNDEFNOMINMAX
-#endif
-
 #include <ctime>
 #include "Units.h"
+#include<limits>
+#include<string>
+#include<iomanip>
+
 
 namespace sci
 {
@@ -356,6 +355,13 @@ namespace sci
 		return t1.m_secsAfterPosixEpoch != t2.m_secsAfterPosixEpoch || t1.m_secondFraction != t2.m_secondFraction;
 	}
 }
+
+
+//include this between min or max and the opening parenthesis
+//and the macro expansion of this define will avoid macro
+//expansion of windows.h min and max
+#define AVOIDWINDOWSMINMAX
+
 namespace std
 {
 	template <>
@@ -364,16 +370,16 @@ namespace std
 	public:
 		static constexpr sci::UtcTime(min)() noexcept
 		{
-			return sci::UtcTime(std::numeric_limits<int>::min(), 0, 0, 0, 0, 0.0);
+			return sci::UtcTime(std::numeric_limits<int>::min AVOIDWINDOWSMINMAX (), 0, 0, 0, 0, 0.0);
 		}
 		static constexpr sci::UtcTime(max)() noexcept
 		{
-			return sci::UtcTime(std::numeric_limits<int>::max(), 11, 31, 23, 59, 1.0 - std::numeric_limits<double>::epsilon());
+			return sci::UtcTime(std::numeric_limits<int>::max AVOIDWINDOWSMINMAX (), 11, 31, 23, 59, 1.0 - std::numeric_limits<double>::epsilon());
 		}
 
 		static constexpr sci::UtcTime lowest() noexcept
 		{
-			return std::numeric_limits<sci::UtcTime>::min();
+			return std::numeric_limits<sci::UtcTime>::min AVOIDWINDOWSMINMAX ();
 		}
 
 		static constexpr sci::UtcTime infinity() noexcept
@@ -429,6 +435,4 @@ namespace std
 	}
 }
 
-#ifdef MUSTUNDEFNOMINMAX
-#undef NOMINMAX
-#endif
+#undef AVOIDWINDOWSMINMAX
