@@ -1303,27 +1303,36 @@ struct ExponentTraits<VALUE>\
 		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseClass;\
 		typedef CLASS_NAME< POWER, EXPONENT > unit;\
 		static constexpr bool needsScaling = true;\
-		static const uint64_t basePowers = baseClass::basePowers;\
-		static const int64_t baseExponent = baseClass::exponent;\
-		static const int64_t exponent = EXPONENT;\
-		static const int8_t power = POWER;\
+		static constexpr uint64_t basePowersNumerators = baseClass::basePowersNumerators;\
+		static constexpr uint64_t basePowersDenominators = baseClass::basePowersDenominators;\
+		static constexpr int64_t baseExponentNumerator = baseClass::exponentNumerator;\
+		static constexpr int64_t baseExponentDenominator = baseClass::exponentDenominator;\
+		static constexpr int64_t exponentNumerator = EXPONENT;\
+		static constexpr int64_t exponentDenominator = 1;\
+		static constexpr int8_t power = POWER;\
 		template <class VALUE_TYPE>\
 		struct Converter\
 		{\
-			template <class T>\
+			template <class DESTINATION_UNIT>\
 			static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)\
 			{\
-				static_assert(basePowers == T::basePowers, "Cannot convert between units with different powers or dimensions.");\
-				if (std::is_same<T, unit>::value)\
+				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");\
+				if (std::is_same<DESTINATION_UNIT, unit>::value)\
 					return value;\
-				if (std::is_same<T, baseClass>::value)\
+				if (std::is_same<DESTINATION_UNIT, baseClass>::value)\
 					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
-				return T::template Converter<VALUE_TYPE>::template convertFromBase<baseExponent>(convertTo<baseClass>(value));\
+				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<baseExponentNumerator, baseExponentDenominator>(convertTo<baseClass>(value));\
 			}\
-			template <int64_t BASE_EXPONENT>\
+			template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)\
 			{\
-				return value * unitsPrivate::pow10<(BASE_EXPONENT - baseExponent), VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				if constexpr (unitsPrivate::fractionsEquivalent<exponentNumerator, exponentDenominator, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())\
+				return value * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * exponentDenominator - exponentNumerator * BASE_EXPONENT_DENOMINATOR;\
+				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * exponentDenominator;\
+				if constexpr (NUM % DEN == 0)\
+					return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
 			}\
 		};\
 		template<class STRING>\
@@ -1717,7 +1726,7 @@ struct ExponentTraits<VALUE>\
 		typedef sci::Promoted<V, W>::type promotedType;
 		promotedType powerVal = power.template value<Unitless>();
 		promotedType baseVal = base.template value<T>();
-		return Physical<T, promotedType>(std::pow(baseVal, powerVal)*std::pow(promotedType(10), T::exponent*(powerVal - promotedType(1.0))));
+		return Physical<T, promotedType>(std::pow(baseVal, powerVal) * std::pow(promotedType(10), promotedType(T::exponentNumerator)/ promotedType(T::exponentDenominator)* (powerVal - promotedType(1.0))));
 	}
 
 	// power - this case deals with raising to the power of an integer.
