@@ -1295,7 +1295,7 @@ struct ExponentTraits<VALUE>\
 	//Note that these don't derive from EncodedUnits, but they conform to the same
 	//template as EncodedUnit, so can be used by Physical as a template parameter.
 
-#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)\
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_DIVIDER, SHORTNAME, LONGNAME)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
 	class CLASS_NAME\
 	{\
@@ -1320,19 +1320,19 @@ struct ExponentTraits<VALUE>\
 				if (std::is_same<DESTINATION_UNIT, unit>::value)\
 					return value;\
 				if (std::is_same<DESTINATION_UNIT, baseClass>::value)\
-					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+					return value * VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<baseExponentNumerator, baseExponentDenominator>(convertTo<baseClass>(value));\
 			}\
 			template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)\
 			{\
 				if constexpr (unitsPrivate::fractionsEquivalent<exponentNumerator, exponentDenominator, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())\
-				return value * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				return value / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * exponentDenominator - exponentNumerator * BASE_EXPONENT_DENOMINATOR;\
 				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * exponentDenominator;\
 				if constexpr (NUM % DEN == 0)\
-					return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
-				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+					return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>() / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
+				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 			}\
 		};\
 		template<class STRING>\
@@ -1385,12 +1385,13 @@ struct ExponentTraits<VALUE>\
 		}\
 		static constexpr bool isUnitless()\
 		{\
-			return basePowers == 0;\
+			return basePowersNumerators == 0;\
 		}\
 		template<class OTHER_UNIT>\
 		static constexpr bool compatibleWith()\
 		{\
-			return basePowers == OTHER_UNIT::basePowers;\
+			return basePowersNumerators == OTHER_UNIT::basePowersNumerators\
+				&& basePowersDenominators == OTHER_UNIT::basePowersDenominators;\
 		}\
 	};
 
@@ -1408,32 +1409,32 @@ struct ExponentTraits<VALUE>\
 
 	//angle units
 #ifdef ALTERNATE_DEGREE
-	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, ALTERNATE_DEGREE, "degree")
+	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0 , ALTERNATE_DEGREE, "degree")
 #else
-	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, "\u00b0", "degree")
+	MAKE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0, "\u00b0", "degree")
 #endif
 #ifdef ALTERNATE_ARCMINUTE
-	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, ALTERNATE_ARCMINUTE, "arcminute")
+	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0 , ALTERNATE_ARCMINUTE, "arcminute")
 #else
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, "\u8242", "arcminute")
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0, "\u8242", "arcminute")
 #endif
 #ifdef ALTERNATE_ARCSECOND
-		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, ALTERNATE_ARCSECOND, "arcsecond")
+		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, ALTERNATE_ARCSECOND, "arcsecond")
 #else
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, "\u8243", "arcsecond")
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, "\u8243", "arcsecond")
 #endif
-	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / unitsPrivate::pi, "tr", "turn")
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / unitsPrivate::pi, "quadrant", "quadrant")
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / unitsPrivate::pi, "sextant", "sextant")
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / unitsPrivate::pi, "hexacontade", "hexacontade")
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / unitsPrivate::pi, "binary degree", "binary degree")
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / unitsPrivate::pi, "gon", "gradian")
+	MAKE_SCALED_UNIT(Turn, Radian, 1, unitsPrivate::pi / 0.5, "tr", "turn")
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, unitsPrivate::pi / 2.0, "quadrant", "quadrant")
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, unitsPrivate::pi / 3.0, "sextant", "sextant")
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, unitsPrivate::pi / 30.0, "hexacontade", "hexacontade")
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, unitsPrivate::pi / 128.0, "binary degree", "binary degree")
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, unitsPrivate::pi / 200.0, "gon", "gradian")
 
 	//Farenheit equivalent of kelvin unit
 #ifdef ALTERNATE_RANKINE
-	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, ALTERNATE_RANKINE, "rankine")
+	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, ALTERNATE_RANKINE, "rankine")
 #else
-	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, "\u00b0Ra", "rankine")
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, "\u00b0Ra", "rankine")
 #endif
 
 	//alternative metric and scientific units
@@ -1463,9 +1464,9 @@ struct ExponentTraits<VALUE>\
 	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, "eV", "electron volt")
 
 	//time units
-	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, "min", "minute")
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, "hr", "hour")
-	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, "day", "day")
+	MAKE_SCALED_UNIT(Minute, Second, 1, 60.0, "min", "minute")
+	MAKE_SCALED_UNIT(Hour, Second, 1, 3600.0, "hr", "hour")
+	MAKE_SCALED_UNIT(Day, Second, 1, 86400.0, "day", "day")
 
 	//imperial units
 	//length units are all based on the international yard which is exactly 0.9144 m
@@ -1575,8 +1576,6 @@ struct ExponentTraits<VALUE>\
 			return ENCODED_UNIT::getLongRepresentation(exponentPrefix, exponentSuffix);
 		}
 
-		//static const uint64_t basePowers = ENCODED_UNIT::basePowers;
-		//static const int64_t exponent = ENCODED_UNIT::exponent;
 		typedef ENCODED_UNIT unit;
 		template <class REQUIRED>
 		constexpr VALUE_TYPE value() const
