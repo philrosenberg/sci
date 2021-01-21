@@ -1908,30 +1908,18 @@ struct ExponentTraits<VALUE>\
 		return Physical<T, V>(std::abs(value.template value<T>()));
 	}
 
-	
-	template<class T, class V>
-	Physical<Unitless, V> floor(const Physical<T, V> &value)
-	{
-		//Only really makes sense to floor a unitless
-		static_assert(T::isUnitless() && T::exponent == 0, "sci:floor only accepts sci::Physical with a sci::Unitless unit with no exponent.");
-		return Physical<Unitless, V>(std::floor(value.template value<Unitless>()));
-	}
-
-	template<class T, class V>
-	Physical<Unitless, V> ceil(const Physical<T, V> &value)
-	{
-		//Only really makes sense to ceil a unitless
-		static_assert(T::isUnitless() && T::exponent == 0, "sci:ceil only accepts sci::Physical with a sci::Unitless unit with no exponent.");
-		return Physical<Unitless, V>(std::ceil(value.template value<Unitless>()));
-	}
-
-
+	//floor a Physical - the first template parameter is the unit that
+	//you want the Physical to be converted to before doing the floor.
+	//The result will be in this unit.
 	template< class UNIT, class T, class V>
 	Physical<UNIT, V> floor(const Physical<T, V>& value)
 	{
 		return Physical<UNIT::unit, V>(std::floor(value.template value<UNIT::unit>()));
 	}
 
+	//ceil a Physical - the first template parameter is the unit that
+	//you want the Physical to be converted to before doing the ceil.
+	//The result will be in this unit.
 	template< class UNIT, class T, class V>
 	Physical<UNIT, V> ceil(const Physical<T, V>& value)
 	{
