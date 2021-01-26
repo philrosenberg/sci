@@ -53,41 +53,36 @@ namespace sci
 	const int64_t zepto = -21;
 	const int64_t yocto = -24;
 
-	template<int64_t EXPONENT>
-	constexpr inline bool isMetricExponent()
+	namespace unitsPrivate
 	{
-		return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT >-25 && EXPONENT < 25 && EXPONENT % 3 == 0 ); 
-	} 
+		template<int64_t EXPONENT>
+		constexpr inline bool isMetricExponent()
+		{
+			return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT > -25 && EXPONENT < 25 && EXPONENT % 3 == 0);
+		}
+	}
 	template<int64_t EXPONENT>
 	struct ExponentTraits
 	{
-		const static bool valid = false;
+		constexpr static bool validSi = false;
 		//we can't just put false in the static_assert. Some compilers see there is no dependence on the
 		//template parameter and expand the static_assert even when this template is never instantiated
-		static std::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::wstring getNameW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::basic_string<char8_t> getName8() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u16string getName16() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u32string getName32() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::string getPrefixW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::basic_string<char8_t> getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u16string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u32string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		template<class STRING> static STRING getName(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
+		template<class STRING> static STRING getPrefix(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
 	};
 
 #define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
 template<>\
 struct ExponentTraits<VALUE>\
 {\
-	const static bool valid = true;\
-	template<class STRING> static STRING getName(){}\
+	constexpr static bool validSi = true;\
+	template<class STRING> static STRING getName(){ static_assert(false, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
 	template<> static std::string getName<std::string>() { return LONG_NAME; }\
 	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
 	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
 	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
 	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
-	template<class STRING> static STRING getPrefix(){}\
+	template<class STRING> static STRING getPrefix(){ static_assert(false, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
 	template<> static std::string getPrefix<std::string>() { return ABBREVIATION; }\
 	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
 	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\

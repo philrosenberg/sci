@@ -33,6 +33,14 @@ float sumstd()
 int main()
 {
 
+	bool is2Valid = sci::ExponentTraits<2>::validSi;
+	bool is4Valid = sci::ExponentTraits<4>::validSi;
+	std::string milliString = sci::ExponentTraits<-3>::getName<std::string>();
+	//std::string invalidString = sci::ExponentTraits<4>::getName<std::string>(); //should generate error
+	//int invalidString2 = sci::ExponentTraits<-3>::getName<int>(); //should generate error
+
+
+
 	int seed;
 	std::cout << "double epsilon " << std::numeric_limits<double>::epsilon() << "\n";
 	std::cout << "float epsilon " << std::numeric_limits<float>::epsilon() << "\n";
