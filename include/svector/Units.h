@@ -672,12 +672,12 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODEDUNIT::getLongRepresentation<POW_NUMERATOR, POW_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT::template getLongRepresentation<POW_NUMERATOR, POW_DENOMINATOR, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
-			return ENCODEDUNIT::getLongRepresentation<POW_NUMERATOR* EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT::template getLongRepresentation<POW_NUMERATOR* EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR, STRING>();
 		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
@@ -708,14 +708,9 @@ struct ExponentTraits<VALUE>\
 			{
 				//cascade the conversion down to the unit we are raising to the power, then apply the power
 				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<0, 1>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
-				
-				constexpr int64_t exponentNumerator = BASE_EXPONENT_NUMERATOR * encodedUnitClass::exponentDenominator - encodedUnitClass::exponentNumerator * BASE_EXPONENT_DENOMINATOR;
-				constexpr int64_t exponentDenominator = BASE_EXPONENT_DENOMINATOR * encodedUnitClass::exponentDenominator;
+				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
 
-				constexpr int64_t exponentMaxCommonDenominator = unitsPrivate::greatestCommonDenominator64<exponentNumerator, exponentDenominator>();
-				constexpr VALUE_TYPE exponentMultiplier = unitsPrivate::root(unitsPrivate::pow10<exponentNumerator / exponentMaxCommonDenominator, VALUE_TYPE>(), exponentDenominator / exponentMaxCommonDenominator);
-				return value * scaleMultiplier * exponentMultiplier;
+				return value * scaleMultiplier;
 			}
 		};
 	};
@@ -748,15 +743,15 @@ struct ExponentTraits<VALUE>\
 			return ENCODEDUNIT1::getShortRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getShortRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
 			//for all sensible encodings a space is represented by value of 32, so we don't need to do any encoding conversion
-			return ENCODEDUNIT1::getLongRepresentation(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getLongRepresentation(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT1::template getLongRepresentation<STRING>() + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::template getLongRepresentation<STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
-			return ENCODEDUNIT1::getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT1::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR,STRING>() + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, STRING>();
 		}
 
 		template<class VALUE_TYPE>
@@ -818,12 +813,12 @@ struct ExponentTraits<VALUE>\
 		return unitsPrivate::makeShortName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 	}\
 	template<class STRING>\
-	static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
+	static STRING getLongRepresentation()\
 	{\
-		return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);\
+		return getLongRepresentation<1,1, STRING>();\
 	}\
 	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-	static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
+	static STRING getLongRepresentation()\
 	{\
 		return unitsPrivate::makeLongName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 	}\
@@ -874,12 +869,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -910,12 +905,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -964,12 +959,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1,STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -1022,12 +1017,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1,STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -1342,12 +1337,12 @@ struct ExponentTraits<VALUE>\
 			return unitsPrivate::makeShortName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 		}\
 		template<class STRING>\
-		static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
+		static STRING getLongRepresentation()\
 		{\
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);\
+			return getLongRepresentation<1,1,STRING>();\
 		}\
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-		static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
+		static STRING getLongRepresentation()\
 		{\
 			return unitsPrivate::makeLongName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 		}\
@@ -1569,7 +1564,7 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getLongUnitString(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODED_UNIT::getLongRepresentation(exponentPrefix, exponentSuffix);
+			return ENCODED_UNIT:: template getLongRepresentation<STRING>();
 		}
 
 		typedef ENCODED_UNIT unit;

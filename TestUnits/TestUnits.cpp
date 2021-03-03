@@ -4,16 +4,24 @@
 
 typedef sci::Physical<sci::Metre<>, double> dMetre;
 typedef sci::Physical<sci::Second<>, double> dSecond;
-typedef sci::Physical<sci::Metre<2>, double> dMetreSquared;
 typedef sci::Physical<sci::Metre<1, -2>, double> dCentimetre;
 typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
-typedef sci::Physical<sci::Metre<1,6>, double> dMegaMetre;
+typedef sci::Physical<sci::Metre<1, 6>, double> dMegaMetre;
+typedef sci::Physical< sci::PoweredUnit<sci::Metre<>,2>, double> dMetreSquared;
+typedef sci::Physical<sci::PoweredUnit<sci::Metre<1, 6>, 2>, double> dMegametreSquared;
+typedef sci::Physical<sci::PoweredUnit<sci::Metre<1,3>,2>, double> dKilometreSquared;
+typedef sci::Physical< sci::Metre<2>, double> dMetreSquaredOther;
+typedef sci::Physical<sci::Metre<2, 6>, double> dMegametreSquaredOther;
+typedef sci::Physical<sci::Metre<2, 3>, double> dKilometreSquaredOther;
 typedef sci::Physical<sci::Second<1,-9>, double> dnanoSecond;
 //typedef sci::Physical<sci::Degree<>, double> dDegree;
 //typedef sci::Physical<sci::Degree<1, -6>, double> dmicroDegree;
 typedef sci::Physical<sci::Unitless, double> dUnitless;
 typedef sci::Physical<sci::Newton<>, double> dNewton;
 typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double> dnewtonMetre;
+typedef sci::Physical < sci::Gram<>, double> dGram;
+typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
+typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
 
 constexpr float sumsci()
 {
@@ -38,6 +46,31 @@ int main()
 	std::string milliString = sci::ExponentTraits<-3>::getName<std::string>();
 	//std::string invalidString = sci::ExponentTraits<4>::getName<std::string>(); //should generate error
 	//int invalidString2 = sci::ExponentTraits<-3>::getName<int>(); //should generate error
+
+	dGram weight1(1);
+	dKilogram weight2 = weight1;
+	dKilogram weight3(2);
+	dGram weight4 = weight3;
+	std::wcout << weight1 << " = " << weight2 << "\n";
+	std::wcout << weight3 << " = " << weight4 << "\n";
+	dUnitless unitlessValue(0.001);
+	dGramPerKilogram gramPerKilogramValue = unitlessValue;
+	std::wcout << unitlessValue << L" = " << gramPerKilogramValue << "\n";
+
+	dMetreSquared bigArea(2e12);
+	dMegametreSquared bigArea2 = bigArea; //test conversion of a powered unit from base type to type with exponent
+	dMetreSquared bigArea3 = bigArea2; //test conversion of a powered unit from a type with an exponent to a base type
+	dKilometreSquared bigArea4 = bigArea2; //test conversion of a powered unit from a type with an exponent to a type with an exponent
+	std::wcout << bigArea << " = " << bigArea2 << " = " << bigArea3 << " = " << bigArea4 << "\n";
+
+	dMetreSquared bigAreaOther(2e12);
+	dMegametreSquared bigAreaOther2 = bigAreaOther; //test conversion of a unit with a power parameter from base type to type with exponent
+	dMetreSquared bigAreaOther3 = bigAreaOther2; //test conversion of a unit with a power parameter from a type with an exponent to a base type
+	dKilometreSquared bigAreaOther4 = bigAreaOther2; //test conversion of a unit with a power parameter from a type with an exponent to a type with an exponent
+	std::wcout << bigAreaOther << " = " << bigAreaOther2 << " = " << bigAreaOther3 << " = " << bigAreaOther4 << "\n";
+
+	std::wcout << "2e+12 m2 = 2 Mm2 = 2e+12 m2 = 2e+06 km2\n";
+	std::wcout << "Above 3 lines must match";
 
 
 
