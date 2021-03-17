@@ -390,7 +390,7 @@ struct ExponentTraits<VALUE>\
 				return temp * temp;
 			if (pow > 0)
 				return temp * temp * 10;
-			return temp * temp * 0.1;
+			return temp * temp * VALUE_TYPE(0.1);
 		}
 		template <int64_t pow, class VALUE_TYPE>
 		constexpr VALUE_TYPE pow10()
