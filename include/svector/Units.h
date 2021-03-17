@@ -1385,12 +1385,12 @@ struct ExponentTraits<VALUE>\
 		}\
 		static constexpr bool isUnitless()\
 		{\
-			return basePowers == 0;\
+			return basePowersNumerators == 0;\
 		}\
 		template<class OTHER_UNIT>\
 		static constexpr bool compatibleWith()\
 		{\
-			return basePowers == OTHER_UNIT::basePowers;\
+			return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();\
 		}\
 	};
 
