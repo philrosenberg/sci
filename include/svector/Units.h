@@ -1955,7 +1955,7 @@ struct ExponentTraits<VALUE>\
 	template <class T, class V>
 	Physical<T, V> PhysicalDivide(const Physical<T, V> &numerator, size_t denominator)
 	{
-		return numerator / unitless((V)denominator);
+		return numerator / Physical<Unitless, V>((V)denominator);
 	}
 
 	//this struct can be used to get the unitless type
