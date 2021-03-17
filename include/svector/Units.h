@@ -1772,12 +1772,6 @@ struct ExponentTraits<VALUE>\
 	{
 		return Physical<RootedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
 	}
-	//This version undoes a powered unit
-	template <int ROOT, class T, class V>
-	constexpr Physical<T, V> root(const Physical<PoweredUnit<T, ROOT>, V> &base)
-	{
-		return Physical<T, V>(std::pow(base.template value<T>(), V(1.0) / V(ROOT)));
-	}
 	//root a Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int ROOT, class V>
 	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
