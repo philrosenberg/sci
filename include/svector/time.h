@@ -5,6 +5,7 @@
 #include<limits>
 #include<string>
 #include<iomanip>
+#include<sstream>
 
 
 namespace sci
