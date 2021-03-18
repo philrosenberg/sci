@@ -53,41 +53,36 @@ namespace sci
 	const int64_t zepto = -21;
 	const int64_t yocto = -24;
 
-	template<int64_t EXPONENT>
-	constexpr inline bool isMetricExponent()
+	namespace unitsPrivate
 	{
-		return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT >-25 && EXPONENT < 25 && EXPONENT % 3 == 0 ); 
-	} 
+		template<int64_t EXPONENT>
+		constexpr inline bool isMetricExponent()
+		{
+			return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT > -25 && EXPONENT < 25 && EXPONENT % 3 == 0);
+		}
+	}
 	template<int64_t EXPONENT>
 	struct ExponentTraits
 	{
-		const static bool valid = false;
+		constexpr static bool validSi = false;
 		//we can't just put false in the static_assert. Some compilers see there is no dependence on the
 		//template parameter and expand the static_assert even when this template is never instantiated
-		static std::string getName() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::wstring getNameW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::basic_string<char8_t> getName8() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u16string getName16() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u32string getName32() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::string getPrefixW() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::basic_string<char8_t> getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u16string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
-		static std::u32string getPrefix() { static_assert(isMetricExponent<EXPONENT>(), "Cannot have an exponent not represented by the standard metric prefixes"); }
+		template<class STRING> static STRING getName(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
+		template<class STRING> static STRING getPrefix(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
 	};
 
 #define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
 template<>\
 struct ExponentTraits<VALUE>\
 {\
-	const static bool valid = true;\
-	template<class STRING> static STRING getName(){}\
+	constexpr static bool validSi = true;\
+	template<class STRING> static STRING getName(){ static_assert(false, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
 	template<> static std::string getName<std::string>() { return LONG_NAME; }\
 	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
 	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
 	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
 	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
-	template<class STRING> static STRING getPrefix(){}\
+	template<class STRING> static STRING getPrefix(){ static_assert(false, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
 	template<> static std::string getPrefix<std::string>() { return ABBREVIATION; }\
 	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
 	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\
@@ -527,7 +522,7 @@ struct ExponentTraits<VALUE>\
 			VALUE_TYPE currentGuess = (VALUE_TYPE(1) + (a - VALUE_TYPE(1)) / (maxVal - VALUE_TYPE(1))) * twoToTheN;
 			VALUE_TYPE nextGuess = (VALUE_TYPE(1.0) / VALUE_TYPE(root)) * (currentGuess * (root - 1) + value / pow(currentGuess, root - 1));
 			VALUE_TYPE err = currentGuess > nextGuess ? currentGuess / nextGuess - VALUE_TYPE(1.0) : nextGuess / currentGuess - VALUE_TYPE(1.0);
-			
+
 			while (err > VALUE_TYPE(2.0) * std::numeric_limits<VALUE_TYPE>::epsilon())
 			{
 				currentGuess = nextGuess;
@@ -586,83 +581,84 @@ struct ExponentTraits<VALUE>\
 			constexpr int64_t gcd = greatestCommonDenominator64<num, den>();
 			return value * root(pow10<num / gcd, VALUE_TYPE>(), den / gcd);
 		}
-	}
-	//This is the basic class that represents a unit. It takes two templated parameters
-	//The first is the powers. This is an encoded 64 bit number where the first byte is
-	//the power in the first dimension, the second byte is the power in the second
-	//dimension, etc.
-	//The second is the exponent the unit would have ONCE THE POWER HAS BEEN MULTIPLIED OUT.
-	//For example for a millimetre it would be -3, for a millimetre squared it would be -6, etc
-	template<uint64_t BASE_POWERS_NUMERATORS, uint64_t BASE_POWERS_DENOMINATORS, int64_t EXPONENT_NUMERATOR, int64_t EXPONENT_DENOMINATOR, bool NEEDS_SCALING>
-	struct EncodedUnit
-	{
-		static constexpr bool needsScaling = NEEDS_SCALING;
-		static constexpr uint64_t basePowersNumerators = BASE_POWERS_NUMERATORS;
-		static constexpr uint64_t basePowersDenominators = BASE_POWERS_DENOMINATORS;
-		static constexpr int64_t exponentNumerator = EXPONENT_NUMERATOR;
-		static constexpr int64_t exponentDenominator = EXPONENT_DENOMINATOR;
-		typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling> unit;
-		typedef unit baseClass;
 
-		template<class VALUE_TYPE>
-		struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
+		//This is the basic class that represents a unit. It takes two templated parameters
+		//The first is the powers. This is an encoded 64 bit number where the first byte is
+		//the power in the first dimension, the second byte is the power in the second
+		//dimension, etc.
+		//The second is the exponent the unit would have ONCE THE POWER HAS BEEN MULTIPLIED OUT.
+		//For example for a millimetre it would be -3, for a millimetre squared it would be -6, etc
+		template<uint64_t BASE_POWERS_NUMERATORS, uint64_t BASE_POWERS_DENOMINATORS, int64_t EXPONENT_NUMERATOR, int64_t EXPONENT_DENOMINATOR, bool NEEDS_SCALING>
+		struct EncodedUnit
 		{
-			template <class DESTINATION_UNIT>
-			static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
+			static constexpr bool needsScaling = NEEDS_SCALING;
+			static constexpr uint64_t basePowersNumerators = BASE_POWERS_NUMERATORS;
+			static constexpr uint64_t basePowersDenominators = BASE_POWERS_DENOMINATORS;
+			static constexpr int64_t exponentNumerator = EXPONENT_NUMERATOR;
+			static constexpr int64_t exponentDenominator = EXPONENT_DENOMINATOR;
+			typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling> unit;
+			typedef unit baseClass;
+
+			template<class VALUE_TYPE>
+			struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
 			{
-				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
-				//If the destination unit is identical to this unit we can do nothing
-				//not sure if this really optimises anything, but we might as well do it
-				//Note that we can't just check equivalence of the base powers and exponent
-				//as the DESTINATION_UNIT might be a scaled unit.
-				if constexpr (std::is_same<unit, DESTINATION_UNIT>::value)
-					return value;
-				//This class is always the base type for the DESTINATION_UNIT, but with potentially different exponents
-				//therefore to convert from this type, to the DESTINATION_UNIT we can use the DESTINATION_UNIT::convertFromBase
-				//function, with the alternate exponent provided from here. This ends the recursion.
-				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR>(value);
+				template <class DESTINATION_UNIT>
+				static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
+				{
+					static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
+					//If the destination unit is identical to this unit we can do nothing
+					//not sure if this really optimises anything, but we might as well do it
+					//Note that we can't just check equivalence of the base powers and exponent
+					//as the DESTINATION_UNIT might be a scaled unit.
+					if constexpr (std::is_same<unit, DESTINATION_UNIT>::value)
+						return value;
+					//This class is always the base type for the DESTINATION_UNIT, but with potentially different exponents
+					//therefore to convert from this type, to the DESTINATION_UNIT we can use the DESTINATION_UNIT::convertFromBase
+					//function, with the alternate exponent provided from here. This ends the recursion.
+					return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR>(value);
+				}
+				//convert value to this type, from the base type, but with the base type having the base exponent numerator and denominator as given
+				template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>
+				static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)
+				{
+					//for this type its base is itself, but with a different exponent
+					//so all we need to do is apply the difference in the exponent
+					if constexpr (unitsPrivate::fractionsEquivalent<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())
+						return value;
+					//check if we can use the templated recursive pow10
+					constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * EXPONENT_DENOMINATOR - EXPONENT_NUMERATOR * BASE_EXPONENT_DENOMINATOR;
+					constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * EXPONENT_DENOMINATOR;
+					if constexpr (NUM % DEN == 0)
+						return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>();
+					return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
+				}
+			};
+			static constexpr bool isUnitless()
+			{
+				return basePowersNumerators == 0;
 			}
-			//convert value to this type, from the base type, but with the base type having the base exponent numerator and denominator as given
-			template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>
-			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)
+			template<class OTHER_UNIT>
+			static constexpr bool compatibleWith()
 			{
-				//for this type its base is itself, but with a different exponent
-				//so all we need to do is apply the difference in the exponent
-				if constexpr(unitsPrivate::fractionsEquivalent<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())
-					return value;
-				//check if we can use the templated recursive pow10
-				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * EXPONENT_DENOMINATOR - EXPONENT_NUMERATOR * BASE_EXPONENT_DENOMINATOR;
-				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * EXPONENT_DENOMINATOR;
-				if constexpr(NUM%DEN==0)
-					return value * sci::unitsPrivate::pow10<NUM/DEN, VALUE_TYPE>();
-				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
+				return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();
 			}
 		};
-		static constexpr bool isUnitless()
-		{
-			return basePowersNumerators == 0;
-		}
-		template<class OTHER_UNIT>
-		static constexpr bool compatibleWith()
-		{
-			return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();
-		}
-	};
 
-	template<uint64_t BASE_POWERS, int64_t EXPONENT, bool NEEDS_SCALING>
-	struct EncodedUnitWholePower : public EncodedUnit<BASE_POWERS, 0x0101010101010101, EXPONENT, 1, NEEDS_SCALING>
-	{
-		static constexpr bool needsScaling = NEEDS_SCALING;
-	};
+		template<uint64_t BASE_POWERS, int64_t EXPONENT, bool NEEDS_SCALING>
+		struct EncodedUnitWholePower : public EncodedUnit<BASE_POWERS, 0x0101010101010101, EXPONENT, 1, NEEDS_SCALING>
+		{
+			static constexpr bool needsScaling = NEEDS_SCALING;
+		};
+	}
 
 	//This is a class that represents an encoded unit to a power. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT, int8_t POW_NUMERATOR, int8_t POW_DENOMINATOR=1>
-	struct PoweredUnit : public EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling>
+	struct PoweredUnit : public unitsPrivate::EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling>
 	{
 		static constexpr bool needsScaling = ENCODEDUNIT::needsScaling;
 		typedef PoweredUnit< ENCODEDUNIT, POW_NUMERATOR, POW_DENOMINATOR> unit;
-		typedef EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling> encodedUnitClass;
+		typedef unitsPrivate::EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling> encodedUnitClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
@@ -676,12 +672,12 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODEDUNIT::getLongRepresentation<POW_NUMERATOR, POW_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT::template getLongRepresentation<POW_NUMERATOR, POW_DENOMINATOR, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
-			return ENCODEDUNIT::getLongRepresentation<POW_NUMERATOR* EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT::template getLongRepresentation<POW_NUMERATOR* EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR, STRING>();
 		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
@@ -712,14 +708,9 @@ struct ExponentTraits<VALUE>\
 			{
 				//cascade the conversion down to the unit we are raising to the power, then apply the power
 				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<0, 1>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
-				
-				constexpr int64_t exponentNumerator = BASE_EXPONENT_NUMERATOR * encodedUnitClass::exponentDenominator - encodedUnitClass::exponentNumerator * BASE_EXPONENT_DENOMINATOR;
-				constexpr int64_t exponentDenominator = BASE_EXPONENT_DENOMINATOR * encodedUnitClass::exponentDenominator;
+				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
 
-				constexpr int64_t exponentMaxCommonDenominator = unitsPrivate::greatestCommonDenominator64<exponentNumerator, exponentDenominator>();
-				constexpr VALUE_TYPE exponentMultiplier = unitsPrivate::root(unitsPrivate::pow10<exponentNumerator / exponentMaxCommonDenominator, VALUE_TYPE>(), exponentDenominator / exponentMaxCommonDenominator);
-				return value * scaleMultiplier * exponentMultiplier;
+				return value * scaleMultiplier;
 			}
 		};
 	};
@@ -734,11 +725,11 @@ struct ExponentTraits<VALUE>\
 	//This is a class that represents two encoded units multiplied together. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units.
 	template<class ENCODEDUNIT1, class ENCODEDUNIT2>
-	struct MultipliedUnit : public EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator*ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator*ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling>
+	struct MultipliedUnit : public unitsPrivate::EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator*ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator*ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling>
 	{
 		static constexpr bool needsScaling = ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling;
 		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
-		typedef EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator* ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator* ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling> encodedUnitClass;
+		typedef unitsPrivate::EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator* ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator* ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling> encodedUnitClass;
 		typedef MultipliedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
@@ -752,15 +743,15 @@ struct ExponentTraits<VALUE>\
 			return ENCODEDUNIT1::getShortRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getShortRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
 			//for all sensible encodings a space is represented by value of 32, so we don't need to do any encoding conversion
-			return ENCODEDUNIT1::getLongRepresentation(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getLongRepresentation(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT1::template getLongRepresentation<STRING>() + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::template getLongRepresentation<STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
-			return ENCODEDUNIT1::getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix) + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+			return ENCODEDUNIT1::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR,STRING>() + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, STRING>();
 		}
 
 		template<class VALUE_TYPE>
@@ -822,12 +813,12 @@ struct ExponentTraits<VALUE>\
 		return unitsPrivate::makeShortName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 	}\
 	template<class STRING>\
-	static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
+	static STRING getLongRepresentation()\
 	{\
-		return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);\
+		return getLongRepresentation<1,1, STRING>();\
 	}\
 	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-	static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
+	static STRING getLongRepresentation()\
 	{\
 		return unitsPrivate::makeLongName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 	}\
@@ -863,7 +854,7 @@ struct ExponentTraits<VALUE>\
 	//to allow macro expansion of the names before passing them to NAMEDEF where ## is applied
 #define ALTERNATE_NAMEDEF(SHORTNAME, LONGNAME) NAMEDEF(SHORTNAME, LONGNAME)
 
-	struct Unitless : public EncodedUnitWholePower<0, 0, false>
+	struct Unitless : public unitsPrivate::EncodedUnitWholePower<0, 0, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
@@ -878,12 +869,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -899,7 +890,7 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct Percent : public EncodedUnitWholePower<0, -2, false>
+	struct Percent : public unitsPrivate::EncodedUnitWholePower<0, -2, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
@@ -914,12 +905,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1, STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -953,7 +944,7 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct PerMille : public EncodedUnitWholePower<0, -3, false>
+	struct PerMille : public unitsPrivate::EncodedUnitWholePower<0, -3, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
@@ -968,12 +959,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1,STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -1011,7 +1002,7 @@ struct ExponentTraits<VALUE>\
 		}
 	};
 
-	struct BasisPoint : public EncodedUnitWholePower<0, -4, false>
+	struct BasisPoint : public unitsPrivate::EncodedUnitWholePower<0, -4, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
@@ -1026,12 +1017,12 @@ struct ExponentTraits<VALUE>\
 			return getShortName<STRING>();
 		}
 		template<class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongRepresentation()
 		{
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);
+			return getLongRepresentation<1,1,STRING>();
 		}
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>
-		static STRING getLongRepresentation(const STRING& exponentPrefix, const STRING& exponentSuffix)
+		static STRING getLongRepresentation()
 		{
 			return getLongName<STRING>();
 		}
@@ -1070,7 +1061,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Ampere : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
+	struct Ampere : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1078,7 +1069,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Kelvin : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 1>(), EXPONENT*POWER, false>
+	struct Kelvin : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 1>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1086,7 +1077,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Second : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 2>(), EXPONENT*POWER, false>
+	struct Second : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 2>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1094,7 +1085,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Metre : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 3>(), EXPONENT*POWER, false>
+	struct Metre : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 3>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1102,7 +1093,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Gram : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 4>(), EXPONENT*POWER, false>
+	struct Gram : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 4>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1116,7 +1107,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Candela : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 5>(), EXPONENT*POWER, false>
+	struct Candela : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 5>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1124,7 +1115,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Mole : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 6>(), EXPONENT*POWER, false>
+	struct Mole : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 6>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1132,7 +1123,7 @@ struct ExponentTraits<VALUE>\
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Radian : public EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 7>(), EXPONENT*POWER, false>
+	struct Radian : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 7>(), EXPONENT*POWER, false>
 	{
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
@@ -1295,7 +1286,7 @@ struct ExponentTraits<VALUE>\
 	//Note that these don't derive from EncodedUnits, but they conform to the same
 	//template as EncodedUnit, so can be used by Physical as a template parameter.
 
-#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)\
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_DIVIDER, SHORTNAME, LONGNAME)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
 	class CLASS_NAME\
 	{\
@@ -1320,19 +1311,19 @@ struct ExponentTraits<VALUE>\
 				if (std::is_same<DESTINATION_UNIT, unit>::value)\
 					return value;\
 				if (std::is_same<DESTINATION_UNIT, baseClass>::value)\
-					return value / VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+					return value * VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<baseExponentNumerator, baseExponentDenominator>(convertTo<baseClass>(value));\
 			}\
 			template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)\
 			{\
 				if constexpr (unitsPrivate::fractionsEquivalent<exponentNumerator, exponentDenominator, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())\
-				return value * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+				return value / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * exponentDenominator - exponentNumerator * BASE_EXPONENT_DENOMINATOR;\
 				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * exponentDenominator;\
 				if constexpr (NUM % DEN == 0)\
-					return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>() * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
-				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) * VALUE_TYPE(BASE_TO_SCALED_MULTIPLIER);\
+					return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>() / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
+				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 			}\
 		};\
 		template<class STRING>\
@@ -1346,12 +1337,12 @@ struct ExponentTraits<VALUE>\
 			return unitsPrivate::makeShortName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
 		}\
 		template<class STRING>\
-		static STRING getLongRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
+		static STRING getLongRepresentation()\
 		{\
-			return getLongRepresentation<1,1>(exponentPrefix, exponentSuffix);\
+			return getLongRepresentation<1,1,STRING>();\
 		}\
 		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-		static STRING getLongRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
+		static STRING getLongRepresentation()\
 		{\
 			return unitsPrivate::makeLongName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
 		}\
@@ -1390,7 +1381,12 @@ struct ExponentTraits<VALUE>\
 		template<class OTHER_UNIT>\
 		static constexpr bool compatibleWith()\
 		{\
+<<<<<<< HEAD
 			return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();\
+=======
+			return basePowersNumerators == OTHER_UNIT::basePowersNumerators\
+				&& basePowersDenominators == OTHER_UNIT::basePowersDenominators;\
+>>>>>>> 9918c2f900ccbcffef2f66d20a17fa66bfbaaca7
 		}\
 	};
 
@@ -1408,32 +1404,32 @@ struct ExponentTraits<VALUE>\
 
 	//angle units
 #ifdef ALTERNATE_DEGREE
-	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, ALTERNATE_DEGREE, "degree")
+	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0 , ALTERNATE_DEGREE, "degree")
 #else
-	MAKE_SCALED_UNIT(Degree, Radian, 1, 180.0 / unitsPrivate::pi, "\u00b0", "degree")
+	MAKE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0, "\u00b0", "degree")
 #endif
 #ifdef ALTERNATE_ARCMINUTE
-	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, ALTERNATE_ARCMINUTE, "arcminute")
+	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0 , ALTERNATE_ARCMINUTE, "arcminute")
 #else
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, 10800.0 / unitsPrivate::pi, "\u8242", "arcminute")
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0, "\u8242", "arcminute")
 #endif
 #ifdef ALTERNATE_ARCSECOND
-		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, ALTERNATE_ARCSECOND, "arcsecond")
+		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, ALTERNATE_ARCSECOND, "arcsecond")
 #else
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, 648000.0 / unitsPrivate::pi, "\u8243", "arcsecond")
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, "\u8243", "arcsecond")
 #endif
-	MAKE_SCALED_UNIT(Turn, Radian, 1, 0.5 / unitsPrivate::pi, "tr", "turn")
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, 2.0 / unitsPrivate::pi, "quadrant", "quadrant")
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, 3.0 / unitsPrivate::pi, "sextant", "sextant")
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, 30.0 / unitsPrivate::pi, "hexacontade", "hexacontade")
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, 128.0 / unitsPrivate::pi, "binary degree", "binary degree")
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, 200.0 / unitsPrivate::pi, "gon", "gradian")
+	MAKE_SCALED_UNIT(Turn, Radian, 1, unitsPrivate::pi / 0.5, "tr", "turn")
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, unitsPrivate::pi / 2.0, "quadrant", "quadrant")
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, unitsPrivate::pi / 3.0, "sextant", "sextant")
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, unitsPrivate::pi / 30.0, "hexacontade", "hexacontade")
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, unitsPrivate::pi / 128.0, "binary degree", "binary degree")
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, unitsPrivate::pi / 200.0, "gon", "gradian")
 
 	//Farenheit equivalent of kelvin unit
 #ifdef ALTERNATE_RANKINE
-	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, ALTERNATE_RANKINE, "rankine")
+	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, ALTERNATE_RANKINE, "rankine")
 #else
-	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 0.55, "\u00b0Ra", "rankine")
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, "\u00b0Ra", "rankine")
 #endif
 
 	//alternative metric and scientific units
@@ -1463,9 +1459,9 @@ struct ExponentTraits<VALUE>\
 	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, "eV", "electron volt")
 
 	//time units
-	MAKE_SCALED_UNIT(Minute, Second, 1, 1.0 / 60.0, "min", "minute")
-	MAKE_SCALED_UNIT(Hour, Second, 1, 1.0 / 3600.0, "hr", "hour")
-	MAKE_SCALED_UNIT(Day, Second, 1, 1.0 / 86400.0, "day", "day")
+	MAKE_SCALED_UNIT(Minute, Second, 1, 60.0, "min", "minute")
+	MAKE_SCALED_UNIT(Hour, Second, 1, 3600.0, "hr", "hour")
+	MAKE_SCALED_UNIT(Day, Second, 1, 86400.0, "day", "day")
 
 	//imperial units
 	//length units are all based on the international yard which is exactly 0.9144 m
@@ -1572,11 +1568,9 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getLongUnitString(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODED_UNIT::getLongRepresentation(exponentPrefix, exponentSuffix);
+			return ENCODED_UNIT:: template getLongRepresentation<STRING>();
 		}
 
-		//static const uint64_t basePowers = ENCODED_UNIT::basePowers;
-		//static const int64_t exponent = ENCODED_UNIT::exponent;
 		typedef ENCODED_UNIT unit;
 		template <class REQUIRED>
 		constexpr VALUE_TYPE value() const
