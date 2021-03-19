@@ -1381,12 +1381,7 @@ struct ExponentTraits<VALUE>\
 		template<class OTHER_UNIT>\
 		static constexpr bool compatibleWith()\
 		{\
-<<<<<<< HEAD
 			return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();\
-=======
-			return basePowersNumerators == OTHER_UNIT::basePowersNumerators\
-				&& basePowersDenominators == OTHER_UNIT::basePowersDenominators;\
->>>>>>> 9918c2f900ccbcffef2f66d20a17fa66bfbaaca7
 		}\
 	};
 
