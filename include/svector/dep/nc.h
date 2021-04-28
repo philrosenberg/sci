@@ -381,8 +381,8 @@ namespace sci
 	class NcVariable
 	{
 	public:
-		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension);
-		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions);
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension, int deflateLevel0to9=0, bool shuffle = false);
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions, int deflateLevel0to9 = 0, bool shuffle = false);
 		NcVariable(NcVariable &&) = default;
 		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<T> &data, const NcDimension& dimension);
 		//NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<std::vector<T>> &data, const std::vector<const NcDimension&> &dimensions);
@@ -421,6 +421,8 @@ namespace sci
 		std::vector<NcAttribute> m_attributes;
 		std::vector<int> m_dimensionIds;
 		sci::string m_name;
+		int m_deflateLevel;
+		bool m_shuffle;
 
 		//remove copy constructors
 		NcVariable(const NcVariable&) = delete;
@@ -431,8 +433,8 @@ namespace sci
 	class NcVariable<Physical<T, double>> : public NcVariable<double>
 	{
 	public:
-		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension) : NcVariable<double>(name, ncFile, dimension) {}
-		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions) : NcVariable<double>(name, ncFile, dimensions) {}
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension, int deflateLevel0to9 = 0, bool shuffle = false) : NcVariable<double>(name, ncFile, dimension, deflateLevel0to9, shuffle) {}
+		NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension *> &dimensions, int deflateLevel0to9 = 0, bool shuffle = false) : NcVariable<double>(name, ncFile, dimensions, deflateLevel0to9, shuffle) {}
 		NcVariable(NcVariable &&) = default;
 		template<class U>
 		static std::vector<double> flattenData(const std::vector<Physical<U, double>> &data) { return sci::physicalsToValues<sci::Physical<T, double>>(data); }
@@ -626,9 +628,11 @@ namespace sci
 	}
 
 	template<class T>
-	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension)
+	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const NcDimension& dimension, int deflateLevel0to9, bool shuffle)
 	{
 		m_name = name;
+		m_deflateLevel = deflateLevel0to9;
+		m_shuffle = shuffle;
 		m_hasId = false;
 		m_dimensionIds.push_back(dimension.getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
@@ -636,9 +640,11 @@ namespace sci
 	}
 
 	template<class T>
-	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension*> &dimensions)
+	NcVariable<T>::NcVariable(sci::string name, const OutputNcFile &ncFile, const std::vector<NcDimension*> &dimensions, int deflateLevel0to9, bool shuffle)
 	{
 		m_name = name;
+		m_deflateLevel = deflateLevel0to9;
+		m_shuffle = shuffle;
 		m_hasId = false;
 		for (size_t i = 0; i < dimensions.size(); ++i)
 			m_dimensionIds.push_back(dimensions[i]->getId());
@@ -665,6 +671,9 @@ namespace sci
 		sci::assertThrow(!m_hasId, sci::err(SERR_NC, localNcError, "sci::NcVariable::write called multiple times on the same variable."));
 		checkNcCall(nc_def_var(file.getId(), toUtf8(m_name).c_str(), sci_internal::NcTraits<T>::ncType, (int)m_dimensionIds.size(), &m_dimensionIds[0], &m_id));
 		m_hasId = true;
+		//checkNcCall(nc_def_var_chunking(file.getId(), m_id, NC_CHUNKED, { size_t(1024 * 1024) })); //1MB chunk size
+		if(m_deflateLevel !=0)
+			checkNcCall(nc_def_var_deflate(file.getId(), m_id, m_shuffle ? 1 : 0, 1, m_deflateLevel));
 		for (size_t i = 0; i < m_attributes.size(); ++i)
 			m_attributes[i].write(file, *this);
 	}

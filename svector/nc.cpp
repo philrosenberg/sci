@@ -84,7 +84,7 @@ void sci::NcFileBase::openReadOnly(const sci::string &fileName)
 void sci::NcFileBase::openWritable(const sci::string &fileName)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER, &m_id));
+	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER | NC_NETCDF4, &m_id));
 	m_open = true;
 }
 
