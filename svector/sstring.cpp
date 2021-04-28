@@ -225,19 +225,6 @@ std::wstring sci::nativeUnicode(const std::u32string& str)
 	return sci::nativeUnicode(utf32ToUtf16(str));
 }
 
-
-#ifdef __WXWINDOWS__
-std::wstring sci::nativeUnicode(const wxString& str)
-{
-	return str.wc_str(wxMBConvUTF16());
-}
-
-wxString& sci::operator<<(wxString& str1, const sci::string& str2)
-{
-	return str1 << nativeUnicode(str2);
-}
-#endif
-
 std::string sci::nativeCodepage(const std::wstring &str)
 {
 	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
@@ -568,14 +555,6 @@ sci::string sci::fromUtf32(const std::u32string &string)
 {
 	return utf32ToUtf16(string);
 }
-
-
-#ifdef __WXWINDOWS__
-sci::string sci::fromWxString(const wxString &string)
-{
-	return sci::fromUtf8(std::string(string.utf8_str()));
-}
-#endif
 
 #ifdef _WIN32
 //needed for the definition of the numpunct<char16_t>::id variable
