@@ -36,6 +36,7 @@ std::string operator >> (std::string &lhs, T &rhs)
 
 namespace sci
 {
+
 	void replaceAll(std::string &destination, std::string textToFind, std::string replacementText);
 	std::string afterLast(std::string source, std::string textToFind);
 	std::string beforeLast(std::string source, std::string textToFind);
@@ -65,6 +66,7 @@ namespace sci
 	typedef std::basic_stringstream<sci::char_t> stringstream;
 	typedef std::basic_istringstream<sci::char_t> istringstream;
 	typedef std::basic_ostringstream<sci::char_t> ostringstream;
+
 #ifdef _WIN32
 	//On Windows the native unicode version is UCS-16 represented by std:::wstring
 	const std::wstring &nativeUnicode(const std::wstring &str);
@@ -154,7 +156,7 @@ namespace sci
 		return str.wc_str(wxMBConvUTF8());
 	}
 #endif
-#endif
+#endif 
 }
 
 #ifdef _WIN32
@@ -295,6 +297,120 @@ namespace std
 		const sci::char_t* _Falsename; // name for false, "false" for "C" locale
 		const sci::char_t* _Truename; // name for true, "true" for "C" locale
 	};
+}
+
+namespace sci
+{
+
+
+
+	inline std::ostream& operator << (std::ostream& stream, const sci::string& str)
+	{
+		return static_cast<std::ostream&>(stream << sci::nativeCodepage(str));
+	}
+
+	template<class _Elem, class _Traits>
+	class BasicNullBuf : public std::basic_streambuf<_Elem, _Traits>
+	{
+	public:
+		BasicNullBuf()
+		{}
+	protected:
+		virtual int_type overflow(int_type ch = _Traits::eof())
+		{
+			return _Traits::not_eof(ch);// return anything except _Traits::eof() for success
+		}
+	};
+	using NullBuf = BasicNullBuf<char_t, std::char_traits<char_t>>;
+
+	template<class _Elem, class _Traits>
+	class BasicNullStream : public std::basic_ostream<_Elem, _Traits>
+	{
+	public:
+		BasicNullStream()
+			: std::basic_ostream<_Elem, _Traits>(&m_basicNullBuf)
+		{}
+	private:
+		BasicNullBuf<_Elem, _Traits> m_basicNullBuf;
+	};
+	using NullStream = BasicNullStream<char_t, std::char_traits<char_t>>;
+	using NullStreamCh = BasicNullStream<char, std::char_traits<char>>;
+
+	static NullStream nullout;
+	static NullStreamCh nulloutch;
+
+	//check out basic_stringbuf for an example of this type of class
+	template<class STREAM1, class STREAM2, class _Elem, class _Traits>
+	class BasicTeeStreamBuf : public std::basic_streambuf<_Elem, _Traits>
+	{
+	public:
+		BasicTeeStreamBuf(STREAM1* stream1, STREAM2* stream2)
+			:m_stream1(stream1), m_stream2(stream2)
+		{}
+		STREAM1* getStream1() const
+		{
+			return m_stream1;
+		}
+		STREAM2* getStream2() const
+		{
+			return m_stream2;
+		}
+		void setStream1(STREAM1 * stream)
+		{
+			m_stream1 = stream;
+		}
+		void setStream2(STREAM2* stream)
+		{
+			m_stream2 = stream;
+		}
+		using int_type = typename _Traits::int_type;
+		using char_type = typename _Traits::char_type;
+	protected:
+		virtual int_type overflow(int_type ch = _Traits::eof())
+		{
+			char_type character = _Traits::to_char_type(ch);
+			std::basic_string<char_type> str(1, ch);
+			if (m_stream1)
+				(*m_stream1) << str;
+			if (m_stream2)
+				(*m_stream2) << str;
+			return _Traits::not_eof(ch);// return anything except _Traits::eof() for success
+		}
+	private:
+		STREAM1* m_stream1;
+		STREAM2* m_stream2;
+	};
+	template<class STREAM1, class STREAM2>
+	using TeeStreamBuf = BasicTeeStreamBuf<STREAM1, STREAM2, char_t, std::char_traits<char_t>>;
+
+	template<class STREAM1, class STREAM2, class _Elem, class _Traits>
+	class BasicOteestream : public std::basic_ostream<_Elem, _Traits>
+	{
+	public:
+		BasicOteestream(STREAM1* stream1, STREAM2* stream2)
+			: m_basicTeeStreamBuf(stream1, stream2), std::basic_ostream<_Elem, _Traits>(&m_basicTeeStreamBuf)
+		{}
+		STREAM1* getStream1() const
+		{
+			return m_basicTeeStreamBuf.getStream1();
+		}
+		STREAM2* getStream2() const
+		{
+			return m_basicTeeStreamBuf.getStream2();
+		}
+		void setStream1(STREAM1* stream)
+		{
+			m_basicTeeStreamBuf.setStream1(stream);
+		}
+		void setStream2(STREAM2* stream)
+		{
+			m_basicTeeStreamBuf.setStream2(stream);
+		}
+	private:
+		BasicTeeStreamBuf<STREAM1, STREAM2, _Elem, _Traits> m_basicTeeStreamBuf;
+	};
+	template<class STREAM1, class STREAM2>
+	using Oteestream = BasicOteestream<STREAM1, STREAM2, char_t, std::char_traits<char_t>>;
 }
 
 #endif
