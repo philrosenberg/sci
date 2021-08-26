@@ -68,7 +68,7 @@ sci::err sci::NcError::getError() const
 	return sci::err(SERR_NC, m_code, message);
 }
 
-void sci::NcFileBase::openReadOnly(const sci::string &fileName)
+void sci::NcFileBase::openReadOnly(const sci::string &fileName, bool diskless)
 {
 	//annoyingly netcdf only provides an interface for using 8bit strings
 	//and these strings are simply passed into the OS file API, so on windows
@@ -77,21 +77,24 @@ void sci::NcFileBase::openReadOnly(const sci::string &fileName)
 	//characters if they are not representable given the file will need to exist
 	//anyway for the open to work.
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenReadOnly called when the file is already open."));
-	checkNcCall(nc_open(sci::nativeCodepage(fileName).c_str(), NC_NOWRITE, &m_id));
+	int flag = NC_NOWRITE;
+	if (diskless)
+		flag = flag | NC_DISKLESS;
+	checkNcCall(nc_open(sci::nativeCodepage(fileName).c_str(), flag, &m_id));
 	m_open = true;
 }
 
-void sci::NcFileBase::openWritable(const sci::string &fileName)
+void sci::NcFileBase::openWritable(const sci::string &fileName, int formatFlags, bool diskless)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER | NC_NETCDF4, &m_id));
+	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
 }
 
-void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeReplacementCharacter)
+void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeReplacementCharacter, int formatFlags, bool diskless)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(sci::nativeCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER, &m_id));
+	checkNcCall(nc_create(sci::nativeCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
 }
 
@@ -1014,13 +1017,37 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 }*/
 
 
-sci::OutputNcFile::OutputNcFile(const sci::string &fileName)
+sci::OutputNcFile::OutputNcFile(const sci::string &fileName, bool diskless)
 {
 	m_inDefineMode = true;
-	openWritable(fileName);
+#ifdef USE_HDF5
+	m_flags = NC_NETCDF4;
+#else
+	m_flags = 0;
+#endif
+	openWritable(fileName, diskless);
 }
 
 sci::OutputNcFile::OutputNcFile()
 {
 	m_inDefineMode = true;
+	m_flags = NC_NETCDF4;
+}
+
+sci::OutputNcFile::OutputNcFile(const sci::string& fileName, int flags, bool diskless)
+{
+	m_inDefineMode = true;
+	m_flags = flags;
+	openWritable(fileName, diskless);
+}
+
+sci::OutputNcFile::OutputNcFile(int flags)
+{
+	m_inDefineMode = true;
+	m_flags = flags;
+}
+
+void sci::OutputNcFile::openWritable(const sci::string& fileName, bool diskless)
+{
+	NcFileBase::openWritable(fileName, m_flags, diskless);
 }

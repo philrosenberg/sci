@@ -201,12 +201,12 @@ namespace sci
 		NcFileBase() { m_open = false; }
 #pragma warning(pop)
 		virtual ~NcFileBase() { close(); };
-		void openReadOnly(const sci::string &fileName);
-		void openWritable(const sci::string &fileName);
+		void openReadOnly(const sci::string &fileName, bool diskless = false);
+		void openWritable(const sci::string &fileName, int formatFlags, bool diskless = false);
 		//This version permits the filename to have unicode characters not represented
 		//by the current codepage to be replaced by another character. Only really of
 		//use on Windows because netcdf on windows only permits ansi file names.
-		void openWritable(const sci::string &fileName, char unicodeReplacementCharacter);
+		void openWritable(const sci::string &fileName, char unicodeReplacementCharacter, int formatFlags, bool diskless = false);
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
@@ -464,14 +464,41 @@ namespace sci
 	class OutputNcFile : public NcFileBase
 	{
 	public:
-		OutputNcFile(const sci::string &fileName);
+		OutputNcFile(const sci::string &fileName, bool diskless=false);
 		OutputNcFile();
+		void openWritable(const sci::string& fileName, bool diskless=false);
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
 		template<class T, class U>
 		void write(const NcVariable<T> &variable, const U &data);
 	private:
 		bool m_inDefineMode;
+		int m_flags;
+	protected:
+		OutputNcFile(const sci::string& fileName, int flags, bool diskless);
+		OutputNcFile(int flags);
+	};
+
+	class OutputNc4File : public OutputNcFile
+	{
+	public:
+		OutputNc4File(const sci::string& fileName, bool diskless = false)
+			:OutputNcFile(fileName, NC_NETCDF4, diskless)
+		{
+		}
+		OutputNc4File()
+		{}
+	};
+
+	class OutputNc3File : public OutputNcFile
+	{
+	public:
+		OutputNc3File(const sci::string &fileName, bool sixtyFourBit = false, bool diskless = false)
+			:OutputNcFile(fileName, sixtyFourBit ? NC_64BIT_DATA : 0, diskless)
+		{}
+		OutputNc3File(bool sixtyFourBit = false)
+			:OutputNcFile(sixtyFourBit ? NC_64BIT_DATA : 0)
+		{}
 	};
 
 	class NcDimension
