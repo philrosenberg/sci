@@ -17,54 +17,11 @@ sci::NcError::NcError(long code)
 sci::err sci::NcError::getError() const
 {
 	std::string message;
-	switch (m_code)
-	{
-	case    NC_NOERR            : message = "No Error."; break;
-	case    NC2_ERR             : message = "Returned for all errors in the v2 API."; break;
-	case	NC_EBADID           : message = "Not a netcdf id"; break;
-	case	NC_ENFILE           : message = "Too many netcdfs open"; break;
-	case	NC_EEXIST           : message = "netcdf file exists && NC_NOCLOBBER"; break;
-	case	NC_EINVAL           : message = "Invalid Argument"; break;
-	case	NC_EPERM            : message = "Write to read only"; break;
-	case	NC_ENOTINDEFINE     : message = "Operation not allowed in data mode"; break;
-	case	NC_EINDEFINE        : message = "Operation not allowed in define mode"; break;
-	case	NC_EINVALCOORDS     : message = "Index exceeds dimension bound"; break;
-	case	NC_EMAXDIMS         : message = "NC_MAX_DIMS exceeded"; break;
-	case	NC_ENAMEINUSE       : message = "String match to name in use"; break;
-	case	NC_ENOTATT          : message = "Attribute not found"; break;
-	case	NC_EMAXATTS         : message = "NC_MAX_ATTRS exceeded"; break;
-	case	NC_EBADTYPE         : message = "Not a netcdf data type"; break;
-	case	NC_EBADDIM          : message = "Invalid dimension id or name"; break;
-	case	NC_EUNLIMPOS        : message = "NC_UNLIMITED in the wrong index"; break;
-	case	NC_EMAXVARS         : message = "NC_MAX_VARS exceeded"; break;
-	case	NC_ENOTVAR          : message = "Variable not found"; break;
-	case	NC_EGLOBAL          : message = "Action prohibited on NC_GLOBAL varid"; break;
-	case	NC_ENOTNC           : message = "Not a netcdf file"; break;
-	case	NC_ESTS             : message = "In Fortran, string too short"; break;
-	case	NC_EMAXNAME         : message = "NC_MAX_NAME exceeded"; break;
-	case	NC_EUNLIMIT         : message = "NC_UNLIMITED size already in use"; break;
-	case	NC_ENORECVARS       : message = "nc_rec op when there are no record vars"; break;
-	case	NC_ECHAR            : message = "Attempt to convert between text & numbers"; break;
-	case	NC_EEDGE            : message = "Start+count exceeds dimension bound"; break;
-	case	NC_ESTRIDE          : message = "Illegal stride"; break;
-	case	NC_EBADNAME         : message = "Attribute or variable name contains illegal characters"; break;
-	case	NC_ERANGE           : message = "Math result not representable"; break;
-	case	NC_ENOMEM           : message = "Memory allocation (malloc) failure"; break;
-	case	NC_EVARSIZE         : message = "One or more variable sizes violate."; break;
-	case	NC_EDIMSIZE         : message = "Invalid dimension size."; break;
-	case	NC_ETRUNC           : message = "File likely truncated or possibly corrupted."; break;
-	case	NC_EAXISTYPE        : message = "Unknown axis type."; break;
-	case	NC_EDAP             : message = "Generic DAP client error."; break;
-	case	NC_ECURL            : message = "Generic libcurl error."; break;
-	case	NC_EIO              : message = "Generic IO error."; break;
-	case	NC_ENODATA          : message = "Attempt to access variable with no data."; break;
-	case	NC_EDAPSVC          : message = "DAP Server side error."; break;
-	case	NC_EDAS             : message = "Malformed or inaccessible DAS."; break;
-	case	NC_EDDS             : message = "Malformed or inaccessible DDS."; break;
-	case	NC_EDATADDS         : message = "Malformed or inaccessible DATADDS."; break;
-	case	NC_EDAPURL          : message = "Malformed DAP URL."; break;
-	case	NC_EDAPCONSTRAINT   : message = "Malformed DAP Constraint."; break;
-	}
+	if (m_code <= 0)
+		message = nc_strerror(m_code);
+	else
+		message = std::string("System error: ") + std::string(strerror(m_code));
+	
 	return sci::err(SERR_NC, m_code, message);
 }
 
