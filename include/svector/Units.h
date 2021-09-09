@@ -1,9 +1,10 @@
 #pragma once
-//Copyright 2020 Philip Rosenberg https://science.cplusplus.engineering
-//This source code is provided under the Science.cplusplus.engineering Code license v1.
-//A copy of this license should have been provided with this code or can be downloaded
-//from https://science.cplusplus.engineering/science-cplusplus-engineering-code-license-v1/
+//Copyright 2021 Philip Rosenberg https://science.cplusplus.engineering
+//This source code is provided under the Science.cplusplus.engineering Code License v1.
+//If you wish to get hold of additional copies of this code then you should do so 
+//via my Patreon page at https://www.patreon.com/sciencecplusplusengineering.
 
+//version 1.0.0
 
 //if you intend utilising windows codepage text (i.e. not unicode), then you may
 //wish to #define the following in your code before #invlude<units.h>
@@ -1860,10 +1861,8 @@ struct ExponentTraits<VALUE>\
 	template <class T, class V>
 	Physical<Radian<>, V> atan2(const Physical<T, V> &y, const Physical<T, V> &x)
 	{
-		//we need this version with both parameters identical types in order to specialize
-		//<template<class T> sci::atan2(const T&y, const T&x) in svector.h. Otherwise
-		//the Physical version is more specialised by the type, but less specialised because
-		//the two types are different, so the compiler does not know which to choose.
+		//we need this version with both parameters identical types in case we have 
+		// another specialization <template<class T> sci::atan2(const T&y, const T&x)
 		return Physical<Radian<>, V>(std::atan2(y.template value<T>(), x.template value<T>()));
 	}
 
