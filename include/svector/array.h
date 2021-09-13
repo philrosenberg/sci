@@ -232,3 +232,91 @@ void sci::Array<TYPE, NDIMS>::setSize(const Array<size_t, 1>& dimensions)
 		std::swap(m_memory, newMemory);
 	}
 }
+
+#include<array>
+namespace sci
+{
+
+	template<class T, size_t ndims>
+	class GridData
+	{
+	public:
+		typedef T* pointer_type;
+		GridData(const std::array<size_t, ndims>& sizes)
+		{
+			setSize(sizes);
+		}
+		GridData()
+		{
+		}
+		void setSize(const std::array<size_t, ndims>& sizes)
+		{
+			//calculate full size
+			size_t size;
+			for (size_t i = 0; i < sizes.size(); ++i)
+				size *= sizes[i];
+			//create the data block
+			m_data.resize[size];
+
+			//save the sizes
+			m_sizes = sizes;
+
+			//calculate and save the strides
+			for (size_t i = 0; i < m_strides.size(); ++i)
+			{
+				m_strides[i] = 1;
+				for (size_t j = i + 1; j < sizes.size(); ++j)
+					m_strides[i] *= sizes[j];
+			}
+		}
+		pointer_type start()
+		{
+			return &m_data[0];
+		}
+		pointer_type end()
+		{
+			return start()+m_data.size();
+		}
+		const size_t* getStridesPointer() const
+		{
+			return &m_strides[0];
+		}
+	private:
+		std::vector<T> m_data;
+		std::array<size_t, ndims> m_sizes;
+		std::array<size_t, ndims-1> m_strides;
+	};
+
+	template<class T, size_t ndims>
+	class Grid
+	{
+	public:
+		typedef T* pointer_type;
+		Grid(const std::array<size_t, ndims>& sizes)
+			:m_gridData(sizes), m_strides(m_gridData.getStridesPointer())
+		{
+			m_start = m_gridData.start();
+		}
+		Grid(pointer_type start, size_t *strides, size_t length)
+			:m_start(start), m_strides(strides)
+		{
+		}
+		Grid<T, ndims-1> operator[](size_t index)
+		{
+			return Grid<T, ndims - 1>(m_start + index * (*m_strides), m_strides+1, *m_strides * *(m_strides+1));
+		}
+	private:
+		GridData<T, ndims> m_gridData;
+		pointer_type m_start;
+		const size_t *m_strides;
+	};
+
+	template<class T>
+	class Grid<T, 1>
+	{
+		decltype pointer_type T*;
+	private:
+		pointer_type start;
+		std::array<size_t, ndims> m_strides
+	};
+}
