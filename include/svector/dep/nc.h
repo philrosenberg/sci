@@ -465,8 +465,10 @@ namespace sci
 	{
 	public:
 		OutputNcFile(const sci::string &fileName, bool diskless=false);
+		OutputNcFile(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless = false);
 		OutputNcFile();
-		void openWritable(const sci::string& fileName, bool diskless=false);
+		void openWritable(const sci::string& fileName, bool diskless = false);
+		void openWritable(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless = false);
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
 		template<class T, class U>
@@ -476,6 +478,7 @@ namespace sci
 		int m_flags;
 	protected:
 		OutputNcFile(const sci::string& fileName, int flags, bool diskless);
+		OutputNcFile(const sci::string& fileName, char unicodeReplacementCharacter, int flags, bool diskless);
 		OutputNcFile(int flags);
 	};
 
@@ -486,6 +489,10 @@ namespace sci
 			:OutputNcFile(fileName, NC_NETCDF4, diskless)
 		{
 		}
+		OutputNc4File(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless = false)
+			:OutputNcFile(fileName, unicodeReplacementCharacter, NC_NETCDF4, diskless)
+		{
+		}
 		OutputNc4File()
 		{}
 	};
@@ -493,8 +500,11 @@ namespace sci
 	class OutputNc3File : public OutputNcFile
 	{
 	public:
-		OutputNc3File(const sci::string &fileName, bool sixtyFourBit = false, bool diskless = false)
+		OutputNc3File(const sci::string& fileName, bool sixtyFourBit = false, bool diskless = false)
 			:OutputNcFile(fileName, sixtyFourBit ? NC_64BIT_DATA : 0, diskless)
+		{}
+		OutputNc3File(const sci::string & fileName, char unicodeReplacementCharacter, bool sixtyFourBit = false, bool diskless = false)
+			:OutputNcFile(fileName, unicodeReplacementCharacter, sixtyFourBit ? NC_64BIT_DATA : 0, diskless)
 		{}
 		OutputNc3File(bool sixtyFourBit = false)
 			:OutputNcFile(sixtyFourBit ? NC_64BIT_DATA : 0)

@@ -977,12 +977,15 @@ void sci::NcAttribute::setValues(const T *values, size_t nValues)
 sci::OutputNcFile::OutputNcFile(const sci::string &fileName, bool diskless)
 {
 	m_inDefineMode = true;
-#ifdef USE_HDF5
-	m_flags = NC_NETCDF4;
-#else
-	m_flags = 0;
-#endif
+	m_flags = NC_NETCDF4; //use netcdf4 by default - would be nice to check for support for this and use netcdf3 if needed, but it doesn't seem possible
 	openWritable(fileName, diskless);
+}
+
+sci::OutputNcFile::OutputNcFile(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless)
+{
+	m_inDefineMode = true;
+	m_flags = NC_NETCDF4; //use netcdf4 by default - would be nice to check for support for this and use netcdf3 if needed, but it doesn't seem possible
+	openWritable(fileName, unicodeReplacementCharacter, diskless);
 }
 
 sci::OutputNcFile::OutputNcFile()
@@ -998,6 +1001,13 @@ sci::OutputNcFile::OutputNcFile(const sci::string& fileName, int flags, bool dis
 	openWritable(fileName, diskless);
 }
 
+sci::OutputNcFile::OutputNcFile(const sci::string& fileName, char unicodeReplacementCharacter, int flags, bool diskless)
+{
+	m_inDefineMode = true;
+	m_flags = flags;
+	openWritable(fileName, unicodeReplacementCharacter, diskless);
+}
+
 sci::OutputNcFile::OutputNcFile(int flags)
 {
 	m_inDefineMode = true;
@@ -1007,4 +1017,9 @@ sci::OutputNcFile::OutputNcFile(int flags)
 void sci::OutputNcFile::openWritable(const sci::string& fileName, bool diskless)
 {
 	NcFileBase::openWritable(fileName, m_flags, diskless);
+}
+
+void sci::OutputNcFile::openWritable(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless)
+{
+	NcFileBase::openWritable(fileName, unicodeReplacementCharacter, m_flags, diskless);
 }
