@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ctime>
+#include<chrono>
 #include "Units.h"
 #include<limits>
 #include<string>
@@ -208,7 +209,7 @@ namespace sci
 		{
 			auto time = std::chrono::system_clock::now();
 			decltype(time) epoch = std::chrono::system_clock::from_time_t(0); //system_clock does not include leap seconds
-			std::chrono::duration<float> secondsSinceEpoch = time - epoch;
+			typename std::chrono::template duration<float> secondsSinceEpoch = time - epoch;
 			GregorianTime<BASE_OFFSET, LEAP_SECONDS...> result = GregorianTime(1970, 1, 1, 0, 0, 0.0) + sci::TimeInterval((double)secondsSinceEpoch.count());
 			return result;
 		}
