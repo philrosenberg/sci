@@ -26,6 +26,7 @@
 #include<random>
 #include"../serr.h"
 #include"../Traits.h"
+#include<array>
 
 /*#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -656,6 +657,118 @@ namespace sci
 		return v.size();
 	}
 
+	template<class T>
+	auto flatten(const std::vector<std::vector<std::vector<T>>>& v)
+	{
+		decltype(flatten(v[0])) result;
+		if (v.size() == 0)
+			return result;
+		result = flatten(v[0]);
+		result.reserve(result.size() * v.size());
+
+		for (auto iter = v.begin()+1; iter != v.end(); ++iter)
+		{
+			decltype(flatten(v[0])) temp = flatten(*iter);
+			result.insert(result.end(), temp.begin(), temp.end());
+		}
+		return result;
+	}
+
+	template<class T>
+	std::vector<T> flatten(const std::vector<std::vector<T>>& v)
+	{
+		size_t size = 0;
+		for (auto iter = v.begin(); iter != v.end(); ++iter)
+			size += iter->size();
+		std::vector<T> result;
+		result.reserve(size);
+		for (auto iter = v.begin(); iter != v.end(); ++iter)
+			result.insert(result.end(), iter->begin(), iter->end());
+		return result;
+	}
+
+	template<class T, size_t NDIMS>
+	auto unflatten(typename std::vector<T>::const_iterator begin, typename std::vector<T>::const_iterator end, const std::array<size_t, NDIMS> &shape)
+	{
+		if constexpr (NDIMS == 2)
+		{
+			sci::assertThrow(end - begin == shape[0] * shape[1], sci::err(sci::SERR_VECTOR, 0, sU("Attempted to unflatten a vector, but the size does not match the shape.")));
+			std::vector<std::vector<T>> result(shape[0]);
+			for (size_t i = 0; i < shape[0]; ++i)
+			{
+				result[i] = std::vector<T>(begin + i * shape[1], begin + (i + 1) * shape[1]);
+			}
+			return result;
+		}
+		else
+		{
+			size_t stride = 1;
+			for (size_t i = 1; i < NDIMS; ++i)
+				stride *= shape[i];
+
+			sci::assertThrow(end - begin == shape[0] * stride, sci::err(sci::SERR_VECTOR, 0, sU("Attempted to unflatten a vector, but the size does not match the shape.")));
+
+			std::array<size_t, NDIMS - 1> subShape;
+			for (size_t i = 1; i < NDIMS; ++i)
+				subShape[i - 1] = shape[i];
+			std::vector<decltype(unflatten<T, NDIMS - 1>(begin, end, subShape))> result(shape[0]);
+			for (size_t i = 0; i < shape[0]; ++i)
+			{
+				result[i] = unflatten<T, NDIMS - 1>(begin + i * stride, begin + (i + 1) * stride, subShape);
+			}
+			return result;
+		}
+	}
+
+	template<class T, size_t NDIMS>
+	auto unflatten(const std::vector<T> &v, const std::array<size_t, NDIMS> &shape)
+	{
+		if constexpr(NDIMS == 1)
+		{
+			sci::assertThrow(v.size() == shape[0], sci::err(sci::SERR_VECTOR, 0, sU("Attempted to unflatten a vector, but the size does not match the shape.")));
+			return v;
+		}
+		else
+		{
+			typename std::vector<T>::const_iterator begin = v.begin();
+			typename std::vector<T>::const_iterator end = v.end();
+			return unflatten<T, NDIMS>(begin, end, shape);
+		}
+	}
+
+	/*template<class T>
+	std::vector<std::vector<T>> unflatten(typename std::vector<T>::const_iterator begin, typename std::vector<T>::const_iterator end, const std::array<size_t, 2> &shape)
+	{
+		sci::assertThrow(end-begin == shape[0] * shape[1], sci::err(sci::SERR_VECTOR, 0, sU("Attempted to unflatten a vector, but the size does not match the shape.")));
+		std::vector<std::vector<T>> result(shape[0]);
+		for (size_t i = 0; i < shape[0]; ++i)
+		{
+			result[i] = std::vector<T>(begin() + i * shape[1], begin() + (i + 1) * shape[1]);
+		}
+		return result;
+	}*/
+
+	template<class T>
+	std::vector<std::vector<T>> unflatten(const std::vector<T>& v, const std::array<size_t, 2> &shape)
+	{
+		typename std::vector<T>::const_iterator begin = v.begin();
+		typename std::vector<T>::const_iterator end = v.end();
+		return unflatten<T>(begin, end, shape);
+	}
+
+	/*template<class T>
+	std::vector<T> unflatten(const std::vector<T>& v, const std::array<size_t, 1> &shape)
+	{
+		sci::assertThrow(v.size() == shape[0], sci::err(sci::SERR_VECTOR, 0, sU("Attempted to unflatten a vector, but the size does not match the shape.")));
+		return v;
+	}*/
+
+	template<class T>
+	std::vector<T> flatten(const std::vector<T>& v)
+	{
+		return v;
+	}
+
 	template<class T,class A>
 	void flatten(std::vector<T> &result, const std::vector< std::vector<A> > &v)
 	{
@@ -873,16 +986,11 @@ namespace sci
 		destination.resize(source.size());
 		if (source.size() == 0)
 			return;
-		if(destination.size()>0)
-		{
-			T * di = &destination[0];
-			const  U  *sEnd = &source[0]+source.size();
-			for(const  U  *si = &source[0]; si!=sEnd; ++si)
-			{
-				*di=static_cast<T>(*si);
-				++di;
-			}
-		}
+
+		T * di = &destination[0];
+		const  U  *sEnd = &source[0]+source.size();
+		for(const  U  *si = &source[0]; si!=sEnd; ++si, ++di)
+			*di=static_cast<T>(*si);
 	}
 	
 	//recast one multi-d vector type to another. The destination vector will be resized
@@ -893,15 +1001,12 @@ namespace sci
 		destination.resize(source.size());
 		if (source.size() == 0)
 			return;
-		if(destination.size()>0)
+
+		std::vector<T> * di=&destination[0];
+		const std::vector<U> *sEnd=&source[0]+source.size();
+		for(const std::vector<U> *si=&source[0]; si!=sEnd; ++si, ++di)
 		{
-			std::vector<T> * di=&destination[0];
-			const std::vector<U> *sEnd=&source[0]+source.size();
-			for(const std::vector<U> *si=&source[0]; si!=sEnd; ++si)
-			{
-				convert(*di,*si);
-				++di;
-			}
+			convert(*di,*si);
 		}
 	}
 
