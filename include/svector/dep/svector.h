@@ -1025,13 +1025,13 @@ namespace sci
 	}
 
 	template<class T>
-	auto mean(const std::vector<T> &v) -> decltype( sum(v) / sci::TypeTraits<typename sci::TypeTraits<T>::unitlessType>::unity )
+	auto mean(const std::vector<T> &v)
 	{
 		return sum(v)/typename TypeTraits<T>::unitlessType(v.size());
 	}
 
 	template<class T, class U>
-	auto mean(const std::vector<T> &v, const std::vector<U> &weights) -> decltype( sum(v*weights)/sum(weights) )
+	auto mean(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		if(v.size()==0)
 			return sum(v*weights)/sum(weights);
@@ -1052,7 +1052,7 @@ namespace sci
 	}
 
 	template<class T>
-	auto meanIgnoreNans(const std::vector<T> &v) -> decltype(mean(v))
+	auto meanIgnoreNans(const std::vector<T> &v)
 	{
 		if(v.size()==0)
 			return mean(v);
@@ -1074,7 +1074,7 @@ namespace sci
 	}
 
 	template<class T, class U>
-	auto meanIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights) -> decltype(mean(v, weights))
+	auto meanIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		if(v.size()==0)
 			return mean(v, weights);
@@ -1109,29 +1109,28 @@ namespace sci
 
 	template<class T, class U>
 	auto centralMoment(int moment, const std::vector<T> &v, const U &mean)
-		-> decltype (sci::pow(v[0]-mean, moment))
 	{
-		typedef decltype (sci::pow(v, moment)) resultType;
+		typedef decltype (sci::pow(v[0] - mean, moment)) resultType;
 
 		if(v.size() == 0)
 			return (TypeTraits<resultType>::unity - TypeTraits<resultType>::unity)/(TypeTraits<resultType>::unity-TypeTraits<resultType>::unity); //zero/zero
 		
 		resultType result = TypeTraits<resultType>::zero;
-		const T* vEnd=&v[0]+v.size;
+		const T* vEnd=&v[0]+v.size();
 		for(const T* vi=&v[0]; vi!=vEnd; ++vi) 
 			result+=sci::pow((*vi-mean), moment);
 		return result/typename TypeTraits<decltype(v[0]-mean)>::unitlessType(v.size()-1);
 	}
 
 	template<class T>
-	auto centralMoment(int moment, const std::vector<T>& v) ->decltype(centralMoment(moment, v, sci::mean(v)))
+	auto centralMoment(int moment, const std::vector<T>& v)
 	{
 		T mean = sci::mean(v);
 		return centralMoment(moment, v, mean);
 	}
 
 	template<class T, class U>
-	auto centralMomentNoBessel(int moment, const std::vector<T> &v, const U &mean) ->decltype (centralMoment(moment, v, mean))
+	auto centralMomentNoBessel(int moment, const std::vector<T> &v, const U &mean)
 	{
                typedef decltype (sum(sci::pow(v-mean, moment))/TypeTraits<typename decltype(v-mean)::unitlessType>::unity) resultType;
                 resultType result = TypeTraits<resultType>::zero;
@@ -1142,7 +1141,7 @@ namespace sci
 	}
 
 	template<int MOMENT, class T, class U>
-	auto centralMoment(const std::vector<T> &v, const U &mean) -> decltype(sci::pow<MOMENT>(v[0]-mean))
+	auto centralMoment(const std::vector<T> &v, const U &mean)
 	{
 		typedef decltype(sci::pow<MOMENT>(v[0])) resultType;
 		if(v.size() == 0)
@@ -1155,14 +1154,14 @@ namespace sci
 	}
 
 	template<int MOMENT, class T>
-	auto centralMoment(const std::vector<T>& v) ->decltype(centralMoment<MOMENT>(v, sci::mean(v)))
+	auto centralMoment(const std::vector<T>& v)
 	{
 		T mean = sci::mean(v);
 		return centralMoment<MOMENT>(v, mean);
 	}
 
 	template<int MOMENT, class T, class U>
-	auto centralMomentNoBessel(const std::vector<T> &v, const U &mean) -> decltype(centralMoment<MOMENT>(v, mean))
+	auto centralMomentNoBessel(const std::vector<T> &v, const U &mean)
 	{
 		if(v.size() == 0)
 			return centralMoment<MOMENT>(v, mean);
@@ -1189,27 +1188,27 @@ namespace sci
     }
 
 	template<class T>
-	auto variance(const std::vector<T> &v) -> decltype(centralMoment<2>(v, sci::mean(v)))
+	auto variance(const std::vector<T> &v)
 	{
 		auto mean = sci::mean(v);
 		return centralMoment<2>(v, mean);
 	}
 
 	template<class T>
-    auto varianceNoBessel(const std::vector<T> &v) -> decltype(centralMoment<2>(v, sci::mean(v)))
+    auto varianceNoBessel(const std::vector<T> &v)
     {
             auto mean = sci::mean(v);
             return centralMomentNoBessel<2>(v, mean);
     }
 
 	template<class T, class U>
-	auto variance(const std::vector<T> &v, const U &mean) -> decltype(centralMoment<2>(v, mean))
+	auto variance(const std::vector<T> &v, const U &mean)
     {
             return centralMoment<2>(v, mean);
     }
 
     template<class T, class U>
-    auto varianceNoBessel(const std::vector<T> &v, const U &mean) -> decltype(centralMoment<2>(v, mean))
+    auto varianceNoBessel(const std::vector<T> &v, const U &mean)
     {
             return centralMomentNoBessel<2>(v, mean);
     }
@@ -1237,7 +1236,7 @@ namespace sci
 	}
 
 	template<class T>
-	auto varianceIgnoreNans(const std::vector<T> &v) -> decltype(variance(v))
+	auto varianceIgnoreNans(const std::vector<T> &v)
 	{
 		T mean;
 		decltype((v[0] - v[0]) * (v[0] - v[0])) variance;
@@ -1246,7 +1245,7 @@ namespace sci
 	}
 
 	template<class T, class U>
-	auto varianceIgnoreNans(const std::vector<T> &v, const U &mean) -> decltype(variance(v, mean))
+	auto varianceIgnoreNans(const std::vector<T> &v, const U &mean)
 	{
 		typedef decltype(variance(v)) returnType;
 		if(v.size()==0) 
@@ -1268,7 +1267,7 @@ namespace sci
 	}
 
 	template<class T, class U>
-	auto variance(const std::vector<T> &v, const std::vector<U> &weights) -> decltype(variance(v))
+	auto variance(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		typedef decltype(variance(v)) returnType;
 		typedef decltype(variance(v)*weights[0]) sumType;
@@ -1290,7 +1289,7 @@ namespace sci
 	}
 
 	template<class T, class U>
-	auto varianceIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights) -> decltype(variance(v))
+	auto varianceIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		if(v.size()==0) 
 			return std::numeric_limits<T>::quiet_NaN();
@@ -1313,7 +1312,7 @@ namespace sci
 	}
 
 	template<class T, class U, class V>
-	auto variance(const std::vector<T> &v, const std::vector<U> &weights, const V &mean) -> decltype(variance(v))
+	auto variance(const std::vector<T> &v, const std::vector<U> &weights, const V &mean)
 	{
 		typedef decltype(variance(v)) returnType;
 		typedef decltype(variance(v)*weights[0]) sumType;
@@ -1355,39 +1354,39 @@ namespace sci
 		return result/weight;
 	}
 
+	template<class T, class U>
+	auto stdev(const std::vector<T>& v, const U& mean)
+	{
+		auto var = variance(v, mean);
+		return TypeTraits<decltype(var)>::sqrt(var);
+	}
+
 	template<class T>
-	auto  stdev(const std::vector<T> &v) -> decltype(sci::TypeTraits<decltype(variance(v))>::sqrt(variance(v)))
+	auto  stdev(const std::vector<T> &v)
 	{
 		auto meanval=sci::mean(v);
 		return sci::stdev(v, meanval);
 	}
 
 	template<class T>
-	auto stdevIgnoreNans(const std::vector<T> &v) -> decltype(stdev(v))
+	auto stdevIgnoreNans(const std::vector<T> &v)
 	{
 		auto meanval=sci::meanIgnoreNans(v);
 		return sci::stdevIgnoreNans(v, meanval);
 	}
 
 	template<class T, class U>
-	auto stdev(const std::vector<T> &v, const std::vector<U> &weights) -> decltype(stdev(v))
+	auto stdev(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		auto meanval=sci::mean(v, weights);
 		return sci::stdev(v, weights, meanval);
 	}
 
 	template<class T, class U>
-	auto stdevIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights) -> decltype(stdev(v))
+	auto stdevIgnoreNans(const std::vector<T> &v, const std::vector<U> &weights)
 	{
 		auto meanval=sci::meanIgnoreNans(v, weights);
 		return sci::stdevIgnoreNans(v, weights, meanval);
-	}
-
-	template<class T, class U>
-	auto stdev(const std::vector<T> &v, const U &mean) -> decltype(stdev(v))
-	{
-		auto var = variance(v, mean);
-		return TypeTraits<decltype(var)>::sqrt( var );
 	}
 
 	template<class T, class U>
