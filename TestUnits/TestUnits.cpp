@@ -1,5 +1,6 @@
 #include <iostream>
 #include"../include/svector/Units.h"
+#include"../include/svector/Time.h"
 #include<assert.h>
 
 typedef sci::Physical<sci::Metre<>, double> dMetre;
@@ -22,6 +23,23 @@ typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double
 typedef sci::Physical < sci::Gram<>, double> dGram;
 typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
 typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
+
+#include<array>
+template<int ...INTS>
+class SomeInts
+{
+};
+
+template< int INT, int ...INTS>
+class SomeInts<INT, INTS...> : SomeInts<INTS...>
+{
+public:
+	SomeInts()
+		:SomeInts<INTS...>(), thisInt(INT)
+	{}
+private:
+	const int thisInt;
+};
 
 constexpr float sumsci()
 {
@@ -271,5 +289,217 @@ int main()
 	std::wcout << time1.getShortUnitString<std::wstring>() << L" " << time1.getLongUnitString<std::wstring>() << "\n";
 	//dDegree degree1 = dUnitless(100.0) * dmicroDegree(10.0);
 	//std::wcout << degree1.getShortUnitString<std::wstring>() << L" " << degree1.getLongUnitString<std::wstring>() << "\n";
+
+
+	//Time
+
+
+	sci::UtcTime beforeLeap[]{
+		sci::UtcTime(1972, 6, 30, 23, 59, 59),
+		sci::UtcTime(1972, 12, 31, 23, 59, 59),
+		sci::UtcTime(1973, 12, 31, 23, 59, 59),
+		sci::UtcTime(1974, 12, 31, 23, 59, 59),
+		sci::UtcTime(1975, 12, 31, 23, 59, 59),
+		sci::UtcTime(1976, 12, 31, 23, 59, 59),
+		sci::UtcTime(1977, 12, 31, 23, 59, 59),
+		sci::UtcTime(1978, 12, 31, 23, 59, 59),
+		sci::UtcTime(1979, 12, 31, 23, 59, 59),
+		sci::UtcTime(1981, 6, 30, 23, 59, 59),
+		sci::UtcTime(1982, 6, 30, 23, 59, 59),
+		sci::UtcTime(1983, 6, 30, 23, 59, 59),
+		sci::UtcTime(1985, 6, 30, 23, 59, 59),
+		sci::UtcTime(1987, 12, 31, 23, 59, 59),
+		sci::UtcTime(1989, 12, 31, 23, 59, 59),
+		sci::UtcTime(1990, 12, 31, 23, 59, 59),
+		sci::UtcTime(1992, 6, 30, 23, 59, 59),
+		sci::UtcTime(1993, 6, 30, 23, 59, 59),
+		sci::UtcTime(1994, 6, 30, 23, 59, 59),
+		sci::UtcTime(1995, 12, 31, 23, 59, 59),
+		sci::UtcTime(1997, 6, 30, 23, 59, 59),
+		sci::UtcTime(1998, 12, 31, 23, 59, 59),
+		sci::UtcTime(2005, 12, 31, 23, 59, 59),
+		sci::UtcTime(2008, 12, 31, 23, 59, 59),
+		sci::UtcTime(2012, 6, 30, 23, 59, 59),
+		sci::UtcTime(2015, 6, 30, 23, 59, 59),
+		sci::UtcTime(2016, 12, 31, 23, 59, 59)
+	};
+	sci::UtcTime onLeap[]{
+		sci::UtcTime(1972, 6, 30, 23, 59, 60),
+		sci::UtcTime(1972, 12, 31, 23, 59, 60),
+		sci::UtcTime(1973, 12, 31, 23, 59, 60),
+		sci::UtcTime(1974, 12, 31, 23, 59, 60),
+		sci::UtcTime(1975, 12, 31, 23, 59, 60),
+		sci::UtcTime(1976, 12, 31, 23, 59, 60),
+		sci::UtcTime(1977, 12, 31, 23, 59, 60),
+		sci::UtcTime(1978, 12, 31, 23, 59, 60),
+		sci::UtcTime(1979, 12, 31, 23, 59, 60),
+		sci::UtcTime(1981, 6, 30, 23, 59, 60),
+		sci::UtcTime(1982, 6, 30, 23, 59, 60),
+		sci::UtcTime(1983, 6, 30, 23, 59, 60),
+		sci::UtcTime(1985, 6, 30, 23, 59, 60),
+		sci::UtcTime(1987, 12, 31, 23, 59, 60),
+		sci::UtcTime(1989, 12, 31, 23, 59, 60),
+		sci::UtcTime(1990, 12, 31, 23, 59, 60),
+		sci::UtcTime(1992, 6, 30, 23, 59, 60),
+		sci::UtcTime(1993, 6, 30, 23, 59, 60),
+		sci::UtcTime(1994, 6, 30, 23, 59, 60),
+		sci::UtcTime(1995, 12, 31, 23, 59, 60),
+		sci::UtcTime(1997, 6, 30, 23, 59, 60),
+		sci::UtcTime(1998, 12, 31, 23, 59, 60),
+		sci::UtcTime(2005, 12, 31, 23, 59, 60),
+		sci::UtcTime(2008, 12, 31, 23, 59, 60),
+		sci::UtcTime(2012, 6, 30, 23, 59, 60),
+		sci::UtcTime(2015, 6, 30, 23, 59, 60),
+		sci::UtcTime(2016, 12, 31, 23, 59, 60)
+	};
+	sci::UtcTime afterLeap[]{
+		sci::UtcTime(1972, 7, 1, 0, 0, 0),
+		sci::UtcTime(1973, 1, 1, 0, 0, 0),
+		sci::UtcTime(1974, 1, 1, 0, 0, 0),
+		sci::UtcTime(1975, 1, 1, 0, 0, 0),
+		sci::UtcTime(1976, 1, 1, 0, 0, 0),
+		sci::UtcTime(1977, 1, 1, 0, 0, 0),
+		sci::UtcTime(1978, 1, 1, 0, 0, 0),
+		sci::UtcTime(1979, 1, 1, 0, 0, 0),
+		sci::UtcTime(1980, 1, 1, 0, 0, 0),
+		sci::UtcTime(1981, 7, 1, 0, 0, 0),
+		sci::UtcTime(1982, 7, 1, 0, 0, 0),
+		sci::UtcTime(1983, 7, 1, 0, 0, 0),
+		sci::UtcTime(1985, 7, 1, 0, 0, 0),
+		sci::UtcTime(1988, 1, 1, 0, 0, 0),
+		sci::UtcTime(1990, 1, 1, 0, 0, 0),
+		sci::UtcTime(1991, 1, 1, 0, 0, 0),
+		sci::UtcTime(1992, 7, 1, 0, 0, 0),
+		sci::UtcTime(1993, 7, 1, 0, 0, 0),
+		sci::UtcTime(1994, 7, 1, 0, 0, 0),
+		sci::UtcTime(1996, 1, 1, 0, 0, 0),
+		sci::UtcTime(1997, 7, 1, 0, 0, 0),
+		sci::UtcTime(1999, 1, 1, 0, 0, 0),
+		sci::UtcTime(2006, 1, 1, 0, 0, 0),
+		sci::UtcTime(2009, 1, 1, 0, 0, 0),
+		sci::UtcTime(2012, 7, 1, 0, 0, 0),
+		sci::UtcTime(2015, 7, 1, 0, 0, 0),
+		sci::UtcTime(2017, 1, 1, 0, 0, 0)
+	};
+	sci::UtcTime afterAfterLeap[]{
+		sci::UtcTime(1972, 7, 1, 0, 0, 1),
+		sci::UtcTime(1973, 1, 1, 0, 0, 1),
+		sci::UtcTime(1974, 1, 1, 0, 0, 1),
+		sci::UtcTime(1975, 1, 1, 0, 0, 1),
+		sci::UtcTime(1976, 1, 1, 0, 0, 1),
+		sci::UtcTime(1977, 1, 1, 0, 0, 1),
+		sci::UtcTime(1978, 1, 1, 0, 0, 1),
+		sci::UtcTime(1979, 1, 1, 0, 0, 1),
+		sci::UtcTime(1980, 1, 1, 0, 0, 1),
+		sci::UtcTime(1981, 7, 1, 0, 0, 1),
+		sci::UtcTime(1982, 7, 1, 0, 0, 1),
+		sci::UtcTime(1983, 7, 1, 0, 0, 1),
+		sci::UtcTime(1985, 7, 1, 0, 0, 1),
+		sci::UtcTime(1988, 1, 1, 0, 0, 1),
+		sci::UtcTime(1990, 1, 1, 0, 0, 1),
+		sci::UtcTime(1991, 1, 1, 0, 0, 1),
+		sci::UtcTime(1992, 7, 1, 0, 0, 1),
+		sci::UtcTime(1993, 7, 1, 0, 0, 1),
+		sci::UtcTime(1994, 7, 1, 0, 0, 1),
+		sci::UtcTime(1996, 1, 1, 0, 0, 1),
+		sci::UtcTime(1997, 7, 1, 0, 0, 1),
+		sci::UtcTime(1999, 1, 1, 0, 0, 1),
+		sci::UtcTime(2006, 1, 1, 0, 0, 1),
+		sci::UtcTime(2009, 1, 1, 0, 0, 1),
+		sci::UtcTime(2012, 7, 1, 0, 0, 1),
+		sci::UtcTime(2015, 7, 1, 0, 0, 1),
+		sci::UtcTime(2017, 1, 1, 0, 0, 1)
+	};
+	for(size_t i=0; i<27; ++i)
+		std::cout << onLeap[i]-onLeap[i].getPosixEpoch() << " " << onLeap[i] - beforeLeap[i] << " " << afterLeap[i] - beforeLeap[i] << " " << afterAfterLeap[i] - beforeLeap[i] << std::endl;
+
+	//search to find all the leap seconds and display them
+	for (size_t i = 0; i < 4000000000; i+=60*60*24) // searching through over 100 years
+	{
+		for (size_t j = 0; j < 30; ++j)
+		{
+			sci::UtcTime time = sci::UtcTime(1970, 1, 1, 0, 0, 0) + sci::TimeInterval(sci::TimeInterval::valueType(i+j));
+			if (time.getSecond() == 60)
+			{
+				std::cout << time.getIso8601String() << std::endl;
+			}
+		}
+	}
+
+	//compare UTC, GMT and TAI
+	const sci::UtcTime utcTime(2021, 6, 4, 9, 32, 41.4);
+	const sci::GpsTime gpsTime(utcTime);
+	const sci::TaiTime taiTime(utcTime);
+	const sci::LoranTime lorTime(utcTime);
+	const sci::GpsTime laterTime = taiTime + sci::TimeInterval(1.0);
+	const sci::LoranTime earlierTime = taiTime - sci::TimeInterval(1.0);
+	std::cout << "\n\n";
+	std::cout << "UTC should be 2021-06-04T09:32:41.4Z - " << utcTime.getIso8601String(1) << utcTime - utcTime << "\n";
+	std::cout << "GPS should be 2021-06-04T09:32:59.4Z - " << gpsTime.getIso8601String(1) << gpsTime - utcTime << "\n";
+	std::cout << "LOR should be 2021-06-04T09:33:08.4Z - " << lorTime.getIso8601String(1) << lorTime - utcTime << "\n";
+	std::cout << "TAI should be 2021-06-04T09:33:18.4Z - " << taiTime.getIso8601String(1) << taiTime - utcTime << "\n";
+
+	if (gpsTime != utcTime)
+		std::cout << "problem in not equal\n";
+	if (!(gpsTime == utcTime))
+		std::cout << "problem in equal\n";
+	if (!(gpsTime < laterTime))
+		std::cout << "problem in less than\n";
+	if (gpsTime < utcTime)
+		std::cout << "problem in less than\n";
+	if (!(gpsTime > earlierTime))
+		std::cout << "problem in greater than\n";
+	if (gpsTime > utcTime)
+		std::cout << "problem in greater than\n";
+	if (!(gpsTime <= laterTime))
+		std::cout << "problem in less than or equal\n";
+	if (!(gpsTime <= utcTime))
+		std::cout << "problem in less than or equal\n";
+	if (!(gpsTime >= earlierTime))
+		std::cout << "problem in greater than or equal\n";
+	if (!(gpsTime >= utcTime))
+		std::cout << "problem in greater than or equal\n";
+	sci::TaiTime negInf = taiTime - std::numeric_limits<sci::TimeInterval>::infinity();
+	sci::TaiTime inf = taiTime + std::numeric_limits<sci::TimeInterval>::infinity();
+	if (gpsTime > std::numeric_limits<sci::TaiTime>::infinity())
+		std::cout << "problem with gt inf\n";
+	if (gpsTime < negInf)
+		std::cout << "problem with lt inf\n";
+	if (!(gpsTime < std::numeric_limits<sci::TaiTime>::infinity()))
+		std::cout << "problem with lt inf\n";
+	if (!(gpsTime > negInf))
+		std::cout << "problem with gt inf\n";
+	if (gpsTime >= std::numeric_limits<sci::TaiTime>::infinity())
+		std::cout << "problem with gteq inf\n";
+	if (gpsTime <= negInf)
+		std::cout << "problem with lteq inf\n";
+	if (!(gpsTime <= std::numeric_limits<sci::TaiTime>::infinity()))
+		std::cout << "problem with lteq inf\n";
+	if (!(gpsTime >= negInf))
+		std::cout << "problem with gteq inf\n";
+	if (!(inf <= std::numeric_limits<sci::TaiTime>::infinity()))
+		std::cout << "problem with lteq inf\n";
+	if (!(negInf >= negInf))
+		std::cout << "problem with gteq inf\n";
+	if (inf != std::numeric_limits<sci::TaiTime>::infinity())
+		std::cout << "problem with noteq inf\n";
+	if (!(inf == std::numeric_limits<sci::TaiTime>::infinity()))
+		std::cout << "problem with eq inf\n";
+	if (utcTime == inf)
+		std::cout << "problem with eq inf\n";
+	if (!(utcTime != inf))
+		std::cout << "problem with noteq inf\n";
+	if (utcTime == std::numeric_limits<sci::UtcTime>::quiet_NaN())
+		std::cout << "problem with eq nan\n";
+	if (!(utcTime != std::numeric_limits<sci::UtcTime>::quiet_NaN()))
+		std::cout << "problem with noteq nan\n";
+	if (gpsTime < std::numeric_limits<sci::TaiTime>::quiet_NaN())
+		std::cout << "problem with lt nan\n";
+	if (gpsTime > std::numeric_limits<sci::TaiTime>::quiet_NaN())
+		std::cout << "problem with gt nan\n";
+	if (gpsTime >= std::numeric_limits<sci::TaiTime>::quiet_NaN())
+		std::cout << "problem with gteq nan\n";
+	if (gpsTime <= std::numeric_limits<sci::TaiTime>::quiet_NaN())
+		std::cout << "problem with lteq nan\n";
 }
 
