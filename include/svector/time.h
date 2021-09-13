@@ -6,6 +6,7 @@
 #include<string>
 #include<iomanip>
 #include<sstream>
+#include<type_traits>
 
 
 namespace sci
@@ -21,48 +22,131 @@ namespace sci
 		const int daysIn400Years = 146097;
 		const std::time_t secondsPerDay = 24 * 60 * 60;
 		const std::time_t secondsPerHour = 60 * 60;
+
+		template<std::time_t ...LEAP_SECONDS>
+		class LeapSecondCorrector
+		{
+		public:
+			constexpr static void addLeapSeconds(std::time_t& seconds, bool isSixtySeconds)
+			{
+
+			}
+			constexpr static void subtractLeapSeconds(std::time_t& seconds)
+			{
+			}
+			constexpr static bool isLeapSecond(std::time_t seconds)
+			{
+				return false;
+			}
+			constexpr static bool hasLeapSeconds()
+			{
+				return false;
+			}
+		};
+		template<std::time_t LEAP_SECOND, std::time_t ...LEAP_SECONDS>
+		class LeapSecondCorrector<LEAP_SECOND, LEAP_SECONDS...> : LeapSecondCorrector<LEAP_SECONDS...>
+		{
+
+		public:
+			constexpr static void addLeapSeconds(std::time_t& seconds, bool isSixtySeconds)
+			{
+				if (seconds > LEAP_SECOND)
+				{
+					++seconds;
+					LeapSecondCorrector<LEAP_SECONDS...>::addLeapSeconds(seconds, isSixtySeconds);
+				}
+				else if (!isSixtySeconds && seconds == LEAP_SECOND)
+					++seconds;
+
+			}
+			constexpr static void subtractLeapSeconds(std::time_t& seconds)
+			{
+				if (seconds > LEAP_SECOND)
+				{
+					--seconds;
+					LeapSecondCorrector<LEAP_SECONDS...>::subtractLeapSeconds(seconds);
+				}
+			}
+			constexpr static bool isLeapSecond(std::time_t seconds)
+			{
+				return seconds == LEAP_SECOND || LeapSecondCorrector<LEAP_SECONDS...>::isLeapSecond(seconds);
+			}
+			constexpr static bool hasLeapSeconds(std::time_t seconds)
+			{
+				return true;
+			}
+
+		};
 	}
-	class UtcTime;
+	//class GregorianTime;
 	typedef sci::Physical<Second<>, double> TimeInterval;
 
-	constexpr sci::TimeInterval operator-(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr sci::UtcTime operator-(const sci::UtcTime &time, const sci::TimeInterval &interval);
-	constexpr sci::UtcTime operator+(const sci::UtcTime &time, const sci::TimeInterval &interval);
-	constexpr sci::UtcTime operator+(const sci::TimeInterval &interval, const sci::UtcTime &time);
-	constexpr sci::UtcTime& operator-=(sci::UtcTime &time, const sci::TimeInterval &interval);
-	constexpr sci::UtcTime& operator+=(sci::UtcTime &time, const sci::TimeInterval &interval);
-	constexpr bool operator<(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr bool operator>(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr bool operator<=(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr bool operator>=(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr bool operator==(const sci::UtcTime &t1, const sci::UtcTime &t2);
-	constexpr bool operator!=(const sci::UtcTime &t1, const sci::UtcTime &t2);
+	/*template<std::time_t ...LEAP_SECONDS1, std::time_t ...LEAP_SECONDS2>
+	constexpr sci::TimeInterval operator-(const sci::GregorianTime<LEAP_SECONDS1...>&t1, const sci::GregorianTime<LEAP_SECONDS2...>&t2);
+	constexpr sci::GregorianTime operator-(const sci::GregorianTime &time, const sci::TimeInterval &interval);
+	constexpr sci::GregorianTime operator+(const sci::GregorianTime &time, const sci::TimeInterval &interval);
+	constexpr sci::GregorianTime operator+(const sci::TimeInterval &interval, const sci::GregorianTime &time);
+	constexpr sci::GregorianTime& operator-=(sci::GregorianTime &time, const sci::TimeInterval &interval);
+	constexpr sci::GregorianTime& operator+=(sci::GregorianTime &time, const sci::TimeInterval &interval);
+	constexpr bool operator<(const sci::GregorianTime &t1, const sci::GregorianTime &t2);
+	constexpr bool operator>(const sci::GregorianTime &t1, const sci::GregorianTime &t2);
+	constexpr bool operator<=(const sci::GregorianTime &t1, const sci::GregorianTime &t2);
+	constexpr bool operator>=(const sci::GregorianTime &t1, const sci::GregorianTime &t2);
+	constexpr bool operator==(const sci::GregorianTime &t1, const sci::GregorianTime &t2);
+	constexpr bool operator!=(const sci::GregorianTime &t1, const sci::GregorianTime &t2);*/
 
-	class UtcTime
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	class GregorianTime
 	{
-		friend constexpr TimeInterval(operator-)(const UtcTime &, const UtcTime &);
-		friend constexpr UtcTime(operator-)(const sci::UtcTime &time, const sci::TimeInterval &interval);
-		friend constexpr UtcTime(operator+)(const sci::UtcTime &time, const sci::TimeInterval &interval);
-		friend constexpr bool(operator<)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend constexpr bool(operator>)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend constexpr bool(operator<=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend constexpr bool(operator>=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend constexpr bool(operator==)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend constexpr bool(operator!=)(const sci::UtcTime &t1, const sci::UtcTime &t2);
-		friend class std::numeric_limits<sci::UtcTime>;
+		template <std::time_t OTHER_BASE_OFFSET, std::time_t ...OTHER_LEAP_SECONDS>
+		friend class GregorianTime;
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr sci::TimeInterval operator-(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2);
+		
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1>
+		friend constexpr GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>(operator-)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& time, const sci::TimeInterval& interval);
+		
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1>
+		friend constexpr sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...> operator+(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& time, const sci::TimeInterval& interval);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator<)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator>)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator<=)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator>=)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator==)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+
+		template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+		friend constexpr bool(operator!=)(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>&t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>&t2);
+		
+		friend class std::numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>>;
 	public:
-		constexpr UtcTime()
-			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0), m_cTime{0, 0, 0, 1, 0, 70, 4, 0}
+		constexpr GregorianTime()
+			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0), m_cTime(gmtime(0))
 		{
 		}
-		constexpr UtcTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
-			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0)
+		template<std::time_t OTHER_BASE_OFFSET, std::time_t ...OTHER_LEAP_SECONDS>
+		constexpr GregorianTime(const GregorianTime<OTHER_BASE_OFFSET, OTHER_LEAP_SECONDS...>& other)
+			: m_secondFraction(other.m_secondFraction), m_secsAfterPosixEpoch(other.m_secsAfterPosixEpoch), m_cTime(gmtime(other.m_secsAfterPosixEpoch))
+		{
+		}
+		constexpr GregorianTime(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
 		{
 			set(year, month, dayOfMonth, hour, minute, second);
 		}
-		constexpr TimeInterval getUnixTime() const
+
+		constexpr GregorianTime(std::tm time, double secondFraction)
 		{
-			return sci::TimeInterval(m_secsAfterPosixEpoch + m_secondFraction);
+			set(time, secondFraction);
 		}
 		constexpr void set(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
 		{
@@ -120,10 +204,17 @@ namespace sci
 		{
 			return double(m_cTime.tm_sec) + m_secondFraction;
 		}
-		static UtcTime now();
-		constexpr static UtcTime getPosixEpoch()
+		static GregorianTime<BASE_OFFSET, LEAP_SECONDS...> now()
 		{
-			return UtcTime();
+			auto time = std::chrono::system_clock::now();
+			decltype(time) epoch = std::chrono::system_clock::from_time_t(0); //system_clock does not include leap seconds
+			std::chrono::duration<float> secondsSinceEpoch = time - epoch;
+			GregorianTime<BASE_OFFSET, LEAP_SECONDS...> result = GregorianTime(1970, 1, 1, 0, 0, 0.0) + sci::TimeInterval((double)secondsSinceEpoch.count());
+			return result;
+		}
+		constexpr static GregorianTime<BASE_OFFSET, LEAP_SECONDS...> getPosixEpoch()
+		{
+			return GregorianTime<BASE_OFFSET, LEAP_SECONDS...>();
 		}
 		static constexpr bool isLeapYear(int year)
 		{
@@ -159,14 +250,12 @@ namespace sci
 		}
 	private:
 		std::tm m_cTime;
-		std::time_t m_secsAfterPosixEpoch;
+		std::time_t m_secsAfterPosixEpoch; //this is actual whole seconds (including leap seconds) since 00:00:00 1st Jan 1970
 		double m_secondFraction;
-		constexpr UtcTime(std::tm time, double secondFraction)
-			: m_secondFraction(0.0), m_secsAfterPosixEpoch(0)
-		{
-			set(time, secondFraction);
-		}
-		constexpr UtcTime(std::time_t secondInteger, double secondFraction)
+		//time is seconds after 00:00:00 1st Jan 1970 UTC
+		//note that secondFraction must always be a positive value in the range 0 <= secondFraction < 1, this is not checked
+		//this is the case even if secondInteger is negative, i.e. - 3.8 seconds would be represented by -4, 0.2
+		constexpr GregorianTime(std::time_t secondInteger, double secondFraction)
 			: m_secondFraction(secondFraction), m_secsAfterPosixEpoch(secondInteger), m_cTime(gmtime(secondInteger))
 		{
 		}
@@ -177,6 +266,10 @@ namespace sci
 			m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 		}
 
+		//The input is the representation of time as per this time type.
+		//The output will be the number of seconds since 00:00:00 1st Jan 1970 UTC. 
+		//The number of seconds includes any leap seconds. If BASE_OFFSET is 0 and
+		//there are no leap seconds then the output is equivalent to posix time.
 		static constexpr std::time_t mkgmtime(std::tm& time)
 		{
 			time.tm_yday = internal::monthStartDay[time.tm_mon] + time.tm_mday - 1; // -1 because month day starts at 1 and year day starts at 0
@@ -199,11 +292,26 @@ namespace sci
 			result += time.tm_min * 60;
 			result += time.tm_sec;
 
+			sci::internal::LeapSecondCorrector<LEAP_SECONDS...>::addLeapSeconds(result, time.tm_sec==60);
+			result -= BASE_OFFSET;
+
 			return result;
 		}
 
+		//pass in the actual number of seconds since 00:00:00 1st Jan 1970 UTC. The number of
+		//seconds includes any leap seconds. If BASE_OFFSET is 0 and there are no leap seconds then
+		//the input is equivalent to posix time.
+		//The output will be the representation of time as per this time type.
 		static constexpr std::tm gmtime(std::time_t time)
 		{
+			//check if we are on a leap second - if so, subtract 1 from the time
+			//then increment the seconds from 59 to 60 at the end
+			bool isLeapSecond = sci::internal::LeapSecondCorrector<LEAP_SECONDS...>::isLeapSecond(time);
+			if (isLeapSecond)
+				--time;
+			time += BASE_OFFSET;
+			sci::internal::LeapSecondCorrector<LEAP_SECONDS...>::subtractLeapSeconds(time);
+
 			std::tm timeStruct{};
 
 			//reference to 1900 rather than 1970
@@ -233,7 +341,7 @@ namespace sci
 			timeStruct.tm_sec = remainingSeconds % 60;
 			timeStruct.tm_isdst = 0;
 			//work out month and day of month
-			bool isLeapYear = UtcTime::isLeapYear(timeStruct.tm_year + 1900);
+			bool isLeapYear = GregorianTime::isLeapYear(timeStruct.tm_year + 1900);
 			if (remainingDays < 31)
 			{
 				timeStruct.tm_mon = 0;
@@ -260,22 +368,28 @@ namespace sci
 				timeStruct.tm_mday = remainingDays - internal::monthStartDay[month] + 1;
 			}
 
+			if (isLeapSecond)
+				++timeStruct.tm_sec;
 			return timeStruct;
 		}
 	};
 
 
-	constexpr sci::TimeInterval operator-(const sci::UtcTime& t1, const sci::UtcTime& t2)
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr sci::TimeInterval operator-(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
-		//set up this way so that it should avoid rounding errors for very small time differences a long way from 1st Jan 1970
-		return sci::TimeInterval(double(t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch)) + sci::TimeInterval(t1.m_secondFraction - t2.m_secondFraction);
+		std::time_t integer = t1.m_secsAfterPosixEpoch - t2.m_secsAfterPosixEpoch;
+		double fraction = t1.m_secondFraction - t2.m_secondFraction;
+		return TimeInterval(double(integer) + fraction);
 	}
-	constexpr sci::UtcTime operator-(const sci::UtcTime& time, const sci::TimeInterval& interval)
+
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(operator-)(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time, const sci::TimeInterval& interval)
 	{
 		time_t integerSeconds = time.m_secsAfterPosixEpoch;
 		time_t integerInterval = (time_t)interval.value<sci::Second<>>();
 		if (integerInterval < 0)
-			--integerInterval;
+			--integerInterval; //this makes it equivalent to floor;
 		integerSeconds -= integerInterval;
 		double fraction = time.m_secondFraction - (interval.value<sci::Second<>>() - (double)integerInterval);
 		if (fraction < 0.0)
@@ -284,14 +398,16 @@ namespace sci
 			fraction += 1.0;
 		}
 
-		return sci::UtcTime(integerSeconds, fraction);
+		return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(integerSeconds, fraction);
 	}
-	constexpr sci::UtcTime operator+(const sci::UtcTime& time, const sci::TimeInterval& interval)
+
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> operator+(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time, const sci::TimeInterval& interval)
 	{
 		time_t integerSeconds = time.m_secsAfterPosixEpoch;
 		time_t integerInterval = (time_t)interval.value<sci::Second<>>();
 		if (integerInterval < 0)
-			--integerInterval;
+			--integerInterval;//this makes it equivalent to floor
 		integerSeconds += integerInterval;
 		double fraction = time.m_secondFraction + (interval.value<sci::Second<>>() - (double)integerInterval);
 		if (fraction >= 1.0)
@@ -300,74 +416,125 @@ namespace sci
 			fraction -= 1.0;
 		}
 
-		return sci::UtcTime(integerSeconds, fraction);
+		return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(integerSeconds, fraction);
 	}
-	constexpr sci::UtcTime operator+(const sci::TimeInterval& interval, const sci::UtcTime& time)
+
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> operator+(const sci::TimeInterval& interval, const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time)
 	{
 		return time + interval;
 	}
-	constexpr sci::UtcTime& operator-=(sci::UtcTime& time, const sci::TimeInterval& interval)
+
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& operator-=(sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time, const sci::TimeInterval& interval)
 	{
 		time = time - interval;
 		return time;
 	}
-	constexpr sci::UtcTime& operator+=(sci::UtcTime& time, const sci::TimeInterval& interval)
+
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& operator+=(sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time, const sci::TimeInterval& interval)
 	{
 		time = time + interval;
 		return time;
 	}
-	constexpr bool operator<(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator<(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
+		//check for nans
 		if (t1.m_secondFraction != t1.m_secondFraction || t2.m_secondFraction != t2.m_secondFraction)
 			return false;
-		if (t2.m_secondFraction == std::numeric_limits<double>::infinity() && t1.m_secondFraction != std::numeric_limits<double>::infinity())
-			return true;
-		if (t1.m_secondFraction == -std::numeric_limits<double>::infinity() && t2.m_secondFraction != -std::numeric_limits<double>::infinity())
-			return true;
-		if (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch)
-			return (t1.m_secondFraction < t2.m_secondFraction);
-		return (t1.m_secsAfterPosixEpoch < t2.m_secsAfterPosixEpoch);
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction < t2.m_secondFraction;
+
+		return t1.m_secsAfterPosixEpoch < t2.m_secsAfterPosixEpoch
+			|| (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction < t2.m_secondFraction);
 	}
-	constexpr bool operator>(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator>(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
+		//check for nans
 		if (t1.m_secondFraction != t1.m_secondFraction || t2.m_secondFraction != t2.m_secondFraction)
 			return false;
-		if (t1.m_secondFraction == std::numeric_limits<double>::infinity() && t2.m_secondFraction != std::numeric_limits<double>::infinity())
-			return true;
-		if (t2.m_secondFraction == -std::numeric_limits<double>::infinity() && t1.m_secondFraction != -std::numeric_limits<double>::infinity())
-			return true;
-		if (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch)
-			return (t1.m_secondFraction > t2.m_secondFraction);
-		return (t1.m_secsAfterPosixEpoch > t2.m_secsAfterPosixEpoch);
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction > t2.m_secondFraction;
+
+		return t1.m_secsAfterPosixEpoch > t2.m_secsAfterPosixEpoch
+			|| (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction > t2.m_secondFraction);
 	}
-	constexpr bool operator<=(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator<=(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
+		//check for nans
 		if (t1.m_secondFraction != t1.m_secondFraction || t2.m_secondFraction != t2.m_secondFraction)
 			return false;
-		return !(t1 > t2);
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction <= t2.m_secondFraction;
+
+		return t1.m_secsAfterPosixEpoch < t2.m_secsAfterPosixEpoch
+			|| (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction <= t2.m_secondFraction);
 	}
-	constexpr bool operator>=(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator>=(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
+		//check for nans
 		if (t1.m_secondFraction != t1.m_secondFraction || t2.m_secondFraction != t2.m_secondFraction)
 			return false;
-		return !(t1 < t2);
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction >= t2.m_secondFraction;
+
+		return t1.m_secsAfterPosixEpoch > t2.m_secsAfterPosixEpoch
+			|| (t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction >= t2.m_secondFraction);
 	}
-	constexpr bool operator==(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator==(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
-		if (t1.m_secondFraction == std::numeric_limits<double>::infinity() && t2.m_secondFraction == std::numeric_limits<double>::infinity())
-			return true;
-		if (t1.m_secondFraction == -std::numeric_limits<double>::infinity() && t2.m_secondFraction == -std::numeric_limits<double>::infinity())
-			return true;
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction == t2.m_secondFraction;
 		return t1.m_secsAfterPosixEpoch == t2.m_secsAfterPosixEpoch && t1.m_secondFraction == t2.m_secondFraction;
 	}
-	constexpr bool operator!=(const sci::UtcTime& t1, const sci::UtcTime& t2)
+
+	template<std::time_t BASE_OFFSET1, std::time_t ...LEAP_SECONDS1, std::time_t BASE_OFFSET2, std::time_t ...LEAP_SECONDS2>
+	constexpr bool operator!=(const sci::GregorianTime<BASE_OFFSET1, LEAP_SECONDS1...>& t1, const sci::GregorianTime<BASE_OFFSET2, LEAP_SECONDS2...>& t2)
 	{
-		if (t1.m_secondFraction == std::numeric_limits<double>::infinity() && t2.m_secondFraction == std::numeric_limits<double>::infinity())
-			return false;
-		if (t1.m_secondFraction == -std::numeric_limits<double>::infinity() && t2.m_secondFraction == -std::numeric_limits<double>::infinity())
-			return false;
+		//check for infinities
+		if (t1.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t1.m_secondFraction == -std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == std::numeric_limits<double>::infinity()
+			|| t2.m_secondFraction == -std::numeric_limits<double>::infinity())
+			return t1.m_secondFraction != t2.m_secondFraction;
 		return t1.m_secsAfterPosixEpoch != t2.m_secsAfterPosixEpoch || t1.m_secondFraction != t2.m_secondFraction;
 	}
+
+	typedef GregorianTime<0, 78796800, 94694401, 126230402, 157766403, 189302404, 220924805, 252460806, 283996807, 315532808, 362793609, 394329610, 425865611, 489024012, 567993613, 631152014, 662688015, 709948816, 741484817, 773020818, 820454419, 867715220, 915148821, 1136073622, 1230768023, 1341100824, 1435708825, 1483228826> UtcTime;
+	typedef GregorianTime<-9> GpsTime;
+	typedef GregorianTime<10> TaiTime;
+	typedef GregorianTime<0> LoranTime;
 }
 
 
@@ -378,72 +545,70 @@ namespace sci
 
 namespace std
 {
-	template <>
-	class numeric_limits<sci::UtcTime> : public numeric_limits<sci::TimeInterval>
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	class numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>> : public numeric_limits<sci::TimeInterval>
 	{
 	public:
-		static constexpr sci::UtcTime(min)() noexcept
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(min)() noexcept
 		{
-			return sci::UtcTime(std::numeric_limits<int>::min AVOIDWINDOWSMINMAX (), 0, 0, 0, 0, 0.0);
-		}
-		static constexpr sci::UtcTime(max)() noexcept
-		{
-			return sci::UtcTime(std::numeric_limits<int>::max AVOIDWINDOWSMINMAX (), 11, 31, 23, 59, 1.0 - std::numeric_limits<double>::epsilon());
+			return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(std::numeric_limits<std::time_t>::min AVOIDWINDOWSMINMAX (), 0.0);
 		}
 
-		static constexpr sci::UtcTime lowest() noexcept
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> (max)() noexcept
 		{
-			return std::numeric_limits<sci::UtcTime>::min AVOIDWINDOWSMINMAX ();
+			return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>(std::numeric_limits<std::time_t>::max AVOIDWINDOWSMINMAX (), 1.0 - std::numeric_limits<double>::epsilon());
 		}
 
-		static constexpr sci::UtcTime infinity() noexcept
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> lowest() noexcept
 		{
-			sci::UtcTime result;
-			result.m_secondFraction = std::numeric_limits<double>::infinity();
-			return result;
+			return std::numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>>::min AVOIDWINDOWSMINMAX ();
 		}
 
-		static constexpr sci::UtcTime quiet_NaN() noexcept
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> infinity() noexcept
 		{
-			sci::UtcTime result;
-			result.m_secondFraction = std::numeric_limits<double>::quiet_NaN();
-			return result;
+			return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>()+std::numeric_limits<sci::TimeInterval>::infinity();
 		}
 
-		static constexpr sci::UtcTime signaling_NaN() noexcept
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> quiet_NaN() noexcept
 		{
-			sci::UtcTime result;
-			result.m_secondFraction = std::numeric_limits<double>::signaling_NaN();
-			return result;
+			return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>() + std::numeric_limits<sci::TimeInterval>::quiet_NaN();
+		}
+
+		static constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> signaling_NaN() noexcept
+		{
+			return sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>() + std::numeric_limits<sci::TimeInterval>::signaling_NaN();
 		}
 	};
 
-	template <>
-	class numeric_limits<const sci::UtcTime> : public numeric_limits<sci::UtcTime>
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	class numeric_limits<const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>> : public numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>>
 	{
 	};
-	template <>
-	class numeric_limits<volatile sci::UtcTime> : public numeric_limits<sci::UtcTime>
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	class numeric_limits<volatile sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>> : public numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>>
 	{
 	};
-	template <>
-	class numeric_limits<const volatile sci::UtcTime> : public numeric_limits<sci::UtcTime>
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	class numeric_limits<const volatile sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>> : public numeric_limits<sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>>
 	{
 	};
-
-	inline bool isnan(const sci::UtcTime &time)
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	inline bool isnan(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>&time)
 	{
 		return isnan(time.getSecond());
 	}
-	inline bool isinf(const sci::UtcTime& time)
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	inline bool isinf(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time)
 	{
 		return isinf(time.getSecond());
 	}
-	inline bool isfinite(const sci::UtcTime& time)
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	inline bool isfinite(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time)
 	{
 		return isfinite(time.getSecond());
 	}
-	inline bool isnormal(const sci::UtcTime& time)
+	template<std::time_t BASE_OFFSET, std::time_t ...LEAP_SECONDS>
+	inline bool isnormal(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time)
 	{
 		return isnormal(time.getSecond());
 	}
