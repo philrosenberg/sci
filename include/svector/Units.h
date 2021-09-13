@@ -1894,7 +1894,7 @@ struct ExponentTraits<VALUE>\
 	//you want the Physical to be converted to before doing the floor.
 	//The result will be in this unit.
 	template< class UNIT, class T, class V>
-	Physical<UNIT, V> floor(const Physical<T, V>& value)
+	Physical< typename UNIT::unit, V> floor(const Physical<T, V>& value)
 	{
 		return Physical<UNIT::unit, V>(std::floor(value.template value<UNIT::unit>()));
 	}
@@ -1903,7 +1903,7 @@ struct ExponentTraits<VALUE>\
 	//you want the Physical to be converted to before doing the ceil.
 	//The result will be in this unit.
 	template< class UNIT, class T, class V>
-	Physical<UNIT, V> ceil(const Physical<T, V>& value)
+	Physical<typename UNIT::unit, V> ceil(const Physical<T, V>& value)
 	{
 		return Physical<UNIT::unit, V>(std::ceil(value.template value<UNIT::unit>()));
 	}
