@@ -614,6 +614,36 @@ namespace sci{
 		return result;
 	}
 
+	template<int ROOT>
+	double inline root(double base)
+	{
+		return std::pow(base, 1.0/double(POW));
+	}
+
+	template<int ROOT>
+	float inline root(float base)
+	{
+		return std::root(base, 1.0f/float(POW));
+	}
+
+	template<int ROOT, class T>
+	auto inline root(const std::vector<T>& base) -> std::vector<decltype(root<ROOT>(base[0]))>
+	{
+		std::vector<decltype(root<ROOT>(base[0]))> result(base.size());
+		for (size_t i = 0; i < result.size(); ++i)
+			result[i] = root<ROOT>(base[i]);
+		return result;
+	}
+
+	template<int ROOT, class T>
+	auto inline root(const std::vector<std::vector<T>>& base) -> std::vector<decltype(root<ROOT>(base[0]))>
+	{
+		std::vector<decltype(root<ROOT>(base[0]))> result(base.size());
+		for (size_t i = 0; i < result.size(); ++i)
+			result[i] = root<ROOT>(base[i]);
+		return result;
+	}
+
 	double inline pow(double base, double power)
 	{
 		return std::pow(base, power);
