@@ -617,13 +617,13 @@ namespace sci{
 	template<int ROOT>
 	double inline root(double base)
 	{
-		return std::pow(base, 1.0/double(POW));
+		return std::pow(base, 1.0/double(ROOT));
 	}
 
 	template<int ROOT>
 	float inline root(float base)
 	{
-		return std::root(base, 1.0f/float(POW));
+		return std::pow(base, 1.0f/float(ROOT));
 	}
 
 	template<int ROOT, class T>
@@ -661,7 +661,7 @@ namespace sci{
 
 	float inline pow(float base, int power)
 	{
-		return std::pow(base, power);
+		return std::powf(base, float(power));
 	}
 
 	double inline sqrt(double value)
