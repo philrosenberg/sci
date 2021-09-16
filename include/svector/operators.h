@@ -3,6 +3,7 @@
 
 #include<vector>
 #include<stddef.h>
+#include<functional>
 
 //operators for operation on vectors in an elementwise fashion.
 //currently works for 2 vectors of the same number of dimensions
@@ -16,6 +17,193 @@
 #ifndef SBOOL
 #define SBOOL uint8_t
 #endif
+
+//must be in global namespace to permit use on built in types
+//namespace sci
+//{
+	template<class OP>
+	struct op
+	{
+	};
+	template<>
+	struct op<std::plus<>>
+	{
+		template<class T, class U>
+		auto static doOp(const T& t, const U& u)
+		{
+			return t + u;
+		}
+	};
+	template<>
+	struct op<std::minus<>>
+	{
+		template<class T, class U>
+		auto static doOp(const T& t, const U& u)
+		{
+			return t - u;
+		}
+	};
+	template<>
+	struct op<std::divides<>>
+	{
+		template<class T, class U>
+		auto static doOp(const T& t, const U& u)
+		{
+			return t / u;
+		}
+	};
+	template<>
+	struct op<std::multiplies<>>
+	{
+		template<class T, class U>
+		auto static doOp(const T& t, const U& u)
+		{
+			return t * u;
+		}
+	};
+
+	template<class OP, class T, class U>
+	auto operate(const std::vector<T>& a, const U& b)
+	{
+		using elementType = decltype(op<OP>::doOp(a[0], b));
+		std::vector<elementType> result(a.size());
+		auto iterResult = result.begin();
+		for (auto itera = a.begin(); itera != a.end(); ++itera, ++iterResult)
+			*iterResult = op<OP>::doOp(*itera, b);
+		return result;
+	}
+	template<class OP, class T, class U>
+	auto operate(const T& a, const std::vector<U>& b)
+	{
+		static OP op;
+		using elementType = decltype(op<OP>::doOp(a, b[0]));
+		std::vector<elementType> result(b.size());
+		auto iterResult = result.begin();
+		for (auto iterb = b.begin(); iterb != b.end(); ++iterb, ++iterResult)
+			*iterResult = op(a, *iterb);
+		return result;
+	}
+
+	template<class OP, class T, class U>
+	auto operate(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		using elementType = decltype(op<OP>::doOp(a[0], b[0]));
+		std::vector<elementType> result(a.size());
+		auto iterb = b.begin();
+		auto iterResult = result.begin();
+		for (auto itera = a.begin(); itera != a.end(); ++itera, ++iterb, ++iterResult)
+			*iterResult = op<OP>::doOp(*itera, *iterb);
+		return result;
+	}
+
+
+	template<class T, class U>
+	auto operator+(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator+(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator+(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+
+	template<class T, class U>
+	auto operator-(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::minus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator-(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::minus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator-(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::minus<>>(a, b);
+	}
+
+	template<class T, class U>
+	auto operator/(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::divides<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator/(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::divides<>, T, U>(a, b);
+	}
+	template<class T, class U>
+	auto operator/(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::divides<>>(a, b);
+	}
+
+	template<class T, class U>
+	auto operator*(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::multiplies<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator*(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::multiplies<>, T, U>(a, b);
+	}
+	template<class T, class U>
+	auto operator*(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::multiplies<>>(a, b);
+	}
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 template<class T, class U, class V>
 inline V add(T &a, U &b){return a+b;}
@@ -109,6 +297,70 @@ namespace sci_internal
 	inline V& bitwiseleftshiftass(T &a, const U &b){return a<<=b;}
 	template<class T, class U, class V>
 	inline V& bitwiserightshiftass(T &a, const U &b){return a>>=b;}
+
+
+	template<class OP, class T, class U>
+	auto operate(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		using elementType = decltype(operate<OP>(a[0], b[0]));
+		std::vector<elementType> result(a.size());
+		auto iterb = b.begin();
+		auto iterResult = result.begin();
+		for (auto itera = a.begin(); itera < a.size(); ++itera, ++iterb, ++iterResult)
+			*iterResult = operate<OP>(*itera, *iterb);
+	}
+	template<class OP, class T, class U>
+	auto operate(const std::vector<T>& a, const U& b)
+	{
+		static OP op;
+		using elementType = decltype(op(a[0], b));
+		std::vector<elementType> result(a.size());
+		auto iterResult = result.begin();
+		for (auto itera = a.begin(); itera < a.size(); ++itera, ++iterResult)
+			*iterResult = op(*itera, b);
+	}
+	template<class OP, class T, class U>
+	auto operate(const T& a, const std::vector<U>& b)
+	{
+		using elementType = decltype(OP(a, b[0]));
+		std::vector<elementType> result(b.size());
+		auto iterResult = result.begin();
+		for (auto iterb = b.begin(); iterb < b.size(); ++iterb, ++iterResult)
+			*iterResult = OP(a, *iterb);
+	}
+
+	template<class OP, class T, class U>
+	auto operator+(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator+(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator+(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::plus<>>(a, b);
+	}
+
+	template<class T, class U>
+	auto operator/(const std::vector<T>& a, const std::vector<U>& b)
+	{
+		return operate<std::divides<>>(a, b);
+	}
+	template<class T, class U>
+	auto operator/(const std::vector<T>& a, const U& b)
+	{
+		return operate<std::divides<>, T, U>(a, b);
+	}
+	template<class T, class U>
+	auto operator/(const T& a, const std::vector<U>& b)
+	{
+		return operate<std::divides<>>(a, b);
+	}
+
 
 	//deals with +, -, *, /, etc for two vectors
 	template <class T, class U, class V, V FUNC ( const T &, const U & ) > 
@@ -334,18 +586,20 @@ namespace sci_internal
 
 #define COMMA ,
 
-OPPREFIX+VECVECFUNC(add, const, decltype(T()+U()))
-OPPREFIX-VECVECFUNC(subtract, const, decltype(T()-U()))
-OPPREFIX*VECVECFUNC(multiply, const, decltype(T()*U()))
-OPPREFIX/VECVECFUNC(divide, const, decltype(T()/U()))
-OPPREFIX+VECSCALFUNC(add, const, decltype(T()+U()))
-OPPREFIX-VECSCALFUNC(subtract, const, decltype(T()-U()))
-OPPREFIX*VECSCALFUNC(multiply, const, decltype(T()*U()))
-OPPREFIX/VECSCALFUNC(divide, const, decltype(T()/U()))
-OPPREFIX+SCALVECFUNC(add, decltype(T()+U()))
-OPPREFIX-SCALVECFUNC(subtract, decltype(T()-U()))
-OPPREFIX*SCALVECFUNC(multiply, decltype(T()*U()))
-OPPREFIX/SCALVECFUNC(divide, decltype(T()/U()))
+
+//redefined these above because they were suddenly not working for some reason
+//OPPREFIX+VECVECFUNC(add, const, decltype(T()+U()))
+//OPPREFIX-VECVECFUNC(subtract, const, decltype(T()-U()))
+//OPPREFIX*VECVECFUNC(multiply, const, decltype(T()*U()))
+//OPPREFIX/VECVECFUNC(divide, const, decltype(T()/U()))
+//OPPREFIX+VECSCALFUNC(add, const, decltype(T()+U()))
+//OPPREFIX-VECSCALFUNC(subtract, const, decltype(T()-U()))
+//OPPREFIX*VECSCALFUNC(multiply, const, decltype(T()*U()))
+//OPPREFIX/VECSCALFUNC(divide, const, decltype(T()/U()))
+//OPPREFIX+SCALVECFUNC(add, decltype(T()+U()))
+//OPPREFIX-SCALVECFUNC(subtract, decltype(T()-U()))
+//OPPREFIX*SCALVECFUNC(multiply, decltype(T()*U()))
+//OPPREFIX/SCALVECFUNC(divide, decltype(T()/U()))
 
 OPPREFIX+=VECVECFUNCREFRETURN(addass, , T)
 OPPREFIX-=VECVECFUNCREFRETURN(subtractass, , T)
