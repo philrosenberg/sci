@@ -616,7 +616,7 @@ namespace sci
 			resetInputs();
 			event.Skip();
 		}
-		void InputPanel::OnControlChanged(wxCommandEvent& event)
+		void OnControlChanged(wxCommandEvent& event)
 		{
 			bool newChange = processModified(event.GetEventObject());
 			if(newChange)
