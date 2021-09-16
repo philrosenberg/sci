@@ -658,6 +658,19 @@ namespace sci
 	}
 
 	template<class T>
+	std::vector<T> flatten(const std::vector<std::vector<T>>& v)
+	{
+		size_t size = 0;
+		for (auto iter = v.begin(); iter != v.end(); ++iter)
+			size += iter->size();
+		std::vector<T> result;
+		result.reserve(size);
+		for (auto iter = v.begin(); iter != v.end(); ++iter)
+			result.insert(result.end(), iter->begin(), iter->end());
+		return result;
+	}
+
+	template<class T>
 	auto flatten(const std::vector<std::vector<std::vector<T>>>& v)
 	{
 		decltype(flatten(v[0])) result;
@@ -671,19 +684,6 @@ namespace sci
 			decltype(flatten(v[0])) temp = flatten(*iter);
 			result.insert(result.end(), temp.begin(), temp.end());
 		}
-		return result;
-	}
-
-	template<class T>
-	std::vector<T> flatten(const std::vector<std::vector<T>>& v)
-	{
-		size_t size = 0;
-		for (auto iter = v.begin(); iter != v.end(); ++iter)
-			size += iter->size();
-		std::vector<T> result;
-		result.reserve(size);
-		for (auto iter = v.begin(); iter != v.end(); ++iter)
-			result.insert(result.end(), iter->begin(), iter->end());
 		return result;
 	}
 
