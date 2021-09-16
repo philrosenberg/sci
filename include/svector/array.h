@@ -234,14 +234,27 @@ void sci::Array<TYPE, NDIMS>::setSize(const Array<size_t, 1>& dimensions)
 }
 
 #include<array>
+#include<span>
+
 namespace sci
 {
 
-	template<class T, size_t ndims>
+	template<class T, size_t ndims, class Allocator = std::allocator<T>>
 	class GridData
 	{
 	public:
-		typedef T* pointer_type;
+		using value_type = typename std::span<T>::value_type;
+		using allocator_type = typename std::vector<T, Allocator>::allocator_type;
+		using pointer = typename std::span<T>::pointer;
+		using const_pointer = typename std::span<T>::const_pointer;
+		using reference = typename std::span<T>::reference;
+		using const_reference = typename std::span<T>::const_reference;
+		using size_type = typename std::span<T>::size_type;
+		using difference_type = typename std::span<T>::difference_type;
+		using iterator = typename std::span<T>::iterator;
+		using const_iterator = typename std::span<const T>::iterator;
+		using reverse_iterator = typename std::span<T>::reverse_iterator;
+		using const_reverse_iterator = std::span<const T>::reverse_iterator;
 		GridData(const std::array<size_t, ndims>& sizes)
 		{
 			setSize(sizes);
@@ -268,14 +281,31 @@ namespace sci
 				for (size_t j = i + 1; j < sizes.size(); ++j)
 					m_strides[i] *= sizes[j];
 			}
+			m_fullSpan = std::span<T>(m_data);
 		}
-		pointer_type start()
+		iterator begin()
 		{
-			return &m_data[0];
+			return m_fullSpan.begin();
 		}
-		pointer_type end()
+		iterator end()
 		{
-			return start()+m_data.size();
+			return m_fullSpan.end();
+		}
+		const_iterator begin() const
+		{
+			return m_fullSpan.begin();
+		}
+		const_iterator end() const
+		{
+			return m_fullSpan.end();
+		}
+		std::span<T> getSpan()
+		{
+			return m_fullSpan;
+		}
+		std::span<T const> getSpan() const
+		{
+			return m_fullSpan;
 		}
 		const size_t* getStridesPointer() const
 		{
@@ -283,40 +313,105 @@ namespace sci
 		}
 	private:
 		std::vector<T> m_data;
+		std::span<T> m_fullSpan;
 		std::array<size_t, ndims> m_sizes;
 		std::array<size_t, ndims-1> m_strides;
 	};
 
+
 	template<class T, size_t ndims>
-	class Grid
+	class GridView
 	{
 	public:
-		typedef T* pointer_type;
-		Grid(const std::array<size_t, ndims>& sizes)
-			:m_gridData(sizes), m_strides(m_gridData.getStridesPointer())
+		using value_type = typename std::span<T>::value_type;
+		using pointer = typename std::span<T>::pointer;
+		using const_pointer = typename std::span<T>::const_pointer;
+		using reference = typename std::span<T>::reference;
+		using const_reference = typename std::span<T>::const_reference;
+		using size_type = typename std::span<T>::size_type;
+		using difference_type = typename std::span<T>::difference_type;
+		using iterator = typename std::span<T>::iterator;
+		//using const_iterator = typename std::span<T>::const_iterator;
+		using reverse_iterator = typename std::span<T>::reverse_iterator;
+		//using const_reverse_iterator = std::span<T>::const_iterator;
+		
+		template<class Allocator>
+		GridView(GridData<T, ndims, Allocator> &gridData)
+			: m_strides(gridData.getStridesPointer())
 		{
-			m_start = m_gridData.start();
+			m_begin = gridData.begin();
+			m_end = gridData.end();
 		}
-		Grid(pointer_type start, size_t *strides, size_t length)
-			:m_start(start), m_strides(strides)
+		GridView(std::span<T> span, const size_t * const premultipliedStrides)
+			:m_span(span), m_strides(premultipliedStrides)
 		{
 		}
-		Grid<T, ndims-1> operator[](size_t index)
+		GridView<T, ndims - 1> operator[](size_t index)
 		{
-			return Grid<T, ndims - 1>(m_start + index * (*m_strides), m_strides+1, *m_strides * *(m_strides+1));
+			return GridView<T, ndims - 1>(m_span.subspan(index * (*m_strides), *m_strides), m_strides + 1);
+		}
+		const GridView<T const, ndims - 1> operator[](size_t index) const
+		{
+			return GridView<T const, ndims - 1>(m_span.subspan(index * (*m_strides), *m_strides), m_strides + 1);
+		}
+		iterator begin()
+		{
+			return m_span.begin();
+		}
+		iterator end()
+		{
+			return m_span.end();
 		}
 	private:
-		GridData<T, ndims> m_gridData;
-		pointer_type m_start;
+		std::span<T> m_span;
 		const size_t *m_strides;
 	};
 
 	template<class T>
-	class Grid<T, 1>
+	class GridView<T, 1>
 	{
-		decltype pointer_type T*;
+		using value_type = typename std::span<T>::value_type;
+		using pointer = typename std::span<T>::pointer;
+		using const_pointer = typename std::span<T>::const_pointer;
+		using reference = typename std::span<T>::reference;
+		using const_reference = typename std::span<T>::const_reference;
+		using size_type = typename std::span<T>::size_type;
+		using difference_type = typename std::span<T>::difference_type;
+		using iterator = typename std::span<T>::iterator;
+		//using const_iterator = typename std::span<T>::const_iterator;
+		using reverse_iterator = typename std::span<T>::reverse_iterator;
+		//using const_reverse_iterator = std::span<T>::const_iterator;
+		template<class Allocator>
+		GridView(GridData<T, 1, Allocator>& gridData)
+		{
+			m_begin = gridData.begin();
+			m_end = gridData.end();
+		}
+		GridView(std::span<T> span, const size_t* const strides) //for compatibility with multidimensional GridViews. the strides pointer will not be used in 1d
+			:m_span(span)
+		{
+		}
+		GridView(std::span<T> span)
+			:m_span(span)
+		{
+		}
+		reference operator[](size_t index)
+		{
+			return m_span[index];
+		}
+		const_reference operator[](size_t index) const
+		{
+			return m_span[index];
+		}
+		iterator begin()
+		{
+			return m_span.begin();
+		}
+		iterator end()
+		{
+			return m_span.end();
+		}
 	private:
-		pointer_type start;
-		std::array<size_t, ndims> m_strides
+		std::span<T> m_span;
 	};
 }

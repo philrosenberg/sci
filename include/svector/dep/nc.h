@@ -8,6 +8,7 @@
 #include"../svector.h"
 #include"../sstring.h"
 #include"../Units.h"
+#include"../array.h"
 
 namespace sci_internal
 {
@@ -472,7 +473,11 @@ namespace sci
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
 		template<class T, class U>
-		void write(const NcVariable<T> &variable, const U &data);
+		void write(const NcVariable<T>& variable, const U& data);
+		template<class T, class U>
+		void write(const NcVariable<T>& variable, std::span<const T> data);
+		template<class T, size_t ndims>
+		void write(const NcVariable<T> &variable, const sci::GridView<const T, ndims>);
 	private:
 		bool m_inDefineMode;
 		int m_flags;
@@ -728,6 +733,44 @@ namespace sci
 		std::vector<size_t> starts(variable.getNDimensions(), 0);
 		size_t size = sci::product(shape);
 		auto flattenedData = NcVariable<T>::flattenData(data);
+		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariable::flattenData returned data of an unexpected size."));
+		//Check we are getting the right kind of data back
+		static_assert(std::is_same<typename decltype(flattenedData)::value_type, typename NcVariable<T>::write_type>::value, "NcVariable::flattenData returned a vector of the incorrect type.");
+		if (flattenedData.size() > 0)
+			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
+	}
+
+	template<class T, class U>
+	void OutputNcFile::write(const NcVariable<T>& variable, std::span<const T> data)
+	{
+		if (m_inDefineMode)
+		{
+			nc_enddef(getId());
+			m_inDefineMode = false;
+		};
+		std::vector<size_t> shape = NcVariable<T>::getDataShape(data);
+		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions."));
+		std::vector<size_t> starts(variable.getNDimensions(), 0);
+		size_t size = sci::product(shape);
+		auto flattenedData = NcVariable<T>::flattenData(data);
+		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariable::flattenData returned data of an unexpected size."));
+		//Check we are getting the right kind of data back
+		static_assert(std::is_same<typename decltype(flattenedData)::value_type, typename NcVariable<T>::write_type>::value, "NcVariable::flattenData returned a vector of the incorrect type.");
+		if (flattenedData.size() > 0)
+			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
+	}
+	template<class T, size_t ndims>
+	void OutputNcFile::write(const NcVariable<T>& variable, const sci::GridView<const T, ndims> data)
+	{
+		if (m_inDefineMode)
+		{
+			nc_enddef(getId());
+			m_inDefineMode = false;
+		};
+		std::vector<size_t> shape = NcVariable<T>::getDataShape(data);
+		sci::assertThrow(variable.getNDimensions() == shape.size(), sci::err(SERR_NC, localNcError, "sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions."));
+		std::vector<size_t> starts(variable.getNDimensions(), 0);
+		
 		sci::assertThrow(size == flattenedData.size(), sci::err(SERR_NC, localNcError, "In sci::OutputNcFile::write NcVariable::flattenData returned data of an unexpected size."));
 		//Check we are getting the right kind of data back
 		static_assert(std::is_same<typename decltype(flattenedData)::value_type, typename NcVariable<T>::write_type>::value, "NcVariable::flattenData returned a vector of the incorrect type.");
