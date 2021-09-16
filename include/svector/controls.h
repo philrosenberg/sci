@@ -8,8 +8,10 @@
 #include<wx/sizer.h>
 #include<wx/checkbox.h>
 #include<wx/combobox.h>
+#include<wx/stattext.h>
 #include"sstring.h"
 #include<vector>
+#include"serr.h"
 
 namespace sci
 {
@@ -153,11 +155,11 @@ namespace sci
 		GenericControl(wxWindow* parent, int id, T defaultValue)
 		{
 			if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxCheckBox>::value)
-				Create(parent, id, ""); 
+				Control_Type_Traits<T>::ControlType::Create(parent, id, "");
 			//else if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
 			//	Create(parent, id, "", wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
 			else
-				Create(parent, id);
+				Control_Type_Traits<T>::ControlType::Create(parent, id);
 			setValue(defaultValue);
 		}
 		bool hasValidValue()
@@ -165,10 +167,10 @@ namespace sci
 			if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxTextCtrl>::value)
 			{
 				T number;
-				return textToValue(GetValue(), number);
+				return textToValue(Control_Type_Traits<T>::ControlType::GetValue(), number);
 			}
 			else if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
-				return GetSelection() != wxNOT_FOUND;
+				return Control_Type_Traits<T>::ControlType::GetSelection() != wxNOT_FOUND;
 			else
 				return true;
 		}
@@ -177,14 +179,14 @@ namespace sci
 			if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxTextCtrl>::value)
 			{
 				T number;
-				textToValue(GetValue(), number);
+				textToValue(Control_Type_Traits<T>::ControlType::GetValue(), number);
 				return number;
 			}
 			else if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
 			{
 				T result;
-				result.first = GetSelection();
-				wxArrayString controlElements = GetStrings();
+				result.first = Control_Type_Traits<T>::ControlType::GetSelection();
+				wxArrayString controlElements = Control_Type_Traits<T>::ControlType::GetStrings();
 				result.second.resize(controlElements.size());
 				if constexpr(std::is_same < T::second_type::value_type, wxString>::value)
 				{
@@ -203,7 +205,7 @@ namespace sci
 				return result;
 			}
 			else
-				return GetValue();
+				return Control_Type_Traits<T>::ControlType::GetValue();
 		}
 		void setValue(T value)
 		{
@@ -211,12 +213,12 @@ namespace sci
 			{
 				wxString valueText;
 				valueText << value;
-				SetValue(valueText);
+				Control_Type_Traits<T>::ControlType::SetValue(valueText);
 			}
 			else if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
 			{
 				//check if the options have changes first
-				wxArrayString controlStrings = GetStrings();
+				wxArrayString controlStrings = Control_Type_Traits<T>::ControlType::GetStrings();
 				bool same = controlStrings.size() == value.second.size();
 				if constexpr (std::is_same<T::second_type::value_type, wxString>::value)
 				{
@@ -230,7 +232,7 @@ namespace sci
 					}
 					if (!same)
 					{
-						Set(value.second.size(), &value.second[0]);
+						Control_Type_Traits<T>::ControlType::Set(value.second.size(), &value.second[0]);
 					}
 
 				}
@@ -251,7 +253,7 @@ namespace sci
 						newStrings.resize(value.second.size());
 						for (size_t i = 0; i < newStrings.size(); ++i)
 							newStrings[i] << sci::nativeUnicode(value.second[i]);
-						Set(newStrings);
+						Control_Type_Traits<T>::ControlType::Set(newStrings);
 					}
 				}
 
@@ -278,10 +280,10 @@ namespace sci
 		{
 			if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
 			{
-				SetBackgroundColour(colour);
+				Control_Type_Traits<T>::ControlType::SetBackgroundColour(colour);
 			}
 			else
-				SetBackgroundColour(colour);
+				Control_Type_Traits<T>::ControlType::SetBackgroundColour(colour);
 		}
 	};
 

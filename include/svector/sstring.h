@@ -312,6 +312,8 @@ namespace sci
 	template<class _Elem, class _Traits>
 	class BasicNullBuf : public std::basic_streambuf<_Elem, _Traits>
 	{
+	private:
+		using int_type = typename _Traits::int_type;
 	public:
 		BasicNullBuf()
 		{}
