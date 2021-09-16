@@ -311,6 +311,17 @@ namespace sci
 		{
 			return &m_strides[0];
 		}
+		std::array<size_t, ndims> getShape() const
+		{
+			std::array<size_t, ndims> result;
+			result[0] = m_fullSpan.size() / m_strides[0];
+			for (size_t i = 1; i < ndims; ++i)
+				result[i] = result[i - 1] / m_strides[i-1];
+		}
+		size_t size() const
+		{
+			return m_fullSpan.size();
+		}
 	private:
 		std::vector<T> m_data;
 		std::span<T> m_fullSpan;
@@ -339,8 +350,7 @@ namespace sci
 		GridView(GridData<T, ndims, Allocator> &gridData)
 			: m_strides(gridData.getStridesPointer())
 		{
-			m_begin = gridData.begin();
-			m_end = gridData.end();
+			m_span = gridData.getSpan();
 		}
 		GridView(std::span<T> span, const size_t * const premultipliedStrides)
 			:m_span(span), m_strides(premultipliedStrides)
@@ -361,6 +371,17 @@ namespace sci
 		iterator end()
 		{
 			return m_span.end();
+		}
+		std::array<size_t, ndims> getShape() const
+		{
+			std::array<size_t, ndims> result;
+			result[0] = m_span.size() / m_strides[0];
+			for (size_t i = 1; i < ndims; ++i)
+				result[i] = result[i - 1] / m_strides[i - 1];
+		}
+		size_t size() const
+		{
+			return m_span.size();
 		}
 	private:
 		std::span<T> m_span;
@@ -384,8 +405,7 @@ namespace sci
 		template<class Allocator>
 		GridView(GridData<T, 1, Allocator>& gridData)
 		{
-			m_begin = gridData.begin();
-			m_end = gridData.end();
+			m_span = gridData.getSpan();
 		}
 		GridView(std::span<T> span, const size_t* const strides) //for compatibility with multidimensional GridViews. the strides pointer will not be used in 1d
 			:m_span(span)
@@ -410,6 +430,15 @@ namespace sci
 		iterator end()
 		{
 			return m_span.end();
+		}
+		std::array<size_t, 1> getShape() const
+		{
+			std::array<size_t, 1> result;
+			result[0] = m_span.size();
+		}
+		size_t size() const
+		{
+			return m_span.size();
 		}
 	private:
 		std::span<T> m_span;
