@@ -1618,11 +1618,11 @@ namespace sci
 	}
 
 
-	template< class T>
+	/*template< class T>
 	inline T min(const T& v)
 	{
 		return v;
-	}
+	}*/
 
 	template< class U, class T>
 	inline U min(const std::vector<T>& v)
@@ -3378,10 +3378,10 @@ namespace sci
 		return a.imag()==0.0 ? a.real() : std::numeric_limits<double>::quiet_NaN();
 	}
 
-	bool anyTrue(const std::vector<SBOOL> &v);
+	/*bool anyTrue(const std::vector<SBOOL>& v);
 	bool allTrue(const std::vector<SBOOL> &v);
 	bool anyFalse(const std::vector<SBOOL> &v);
-	bool allFalse(const std::vector<SBOOL> &v);
+	bool allFalse(const std::vector<SBOOL> &v);*/
 
 	std::vector<SBOOL> rollingOr(const std::vector<SBOOL> &v, size_t n);
 	std::vector<SBOOL> rollingAnd(const std::vector<SBOOL> &v, size_t n);

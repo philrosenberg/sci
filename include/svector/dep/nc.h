@@ -472,8 +472,8 @@ namespace sci
 		void openWritable(const sci::string& fileName, char unicodeReplacementCharacter, bool diskless = false);
 		template<class T>
 		void write(const T &item) const { item.write(*this); }
-		template<class T, class U>
-		void write(const NcVariable<T>& variable, const U& data);
+		//template<class T, class U>
+		//void write(const NcVariable<T>& variable, const U& data);
 		//template<class T, class U>
 		//void write(const NcVariable<T>& variable, std::span<const T> data);
 		template<class T, size_t ndims>
@@ -720,7 +720,7 @@ namespace sci
 			m_attributes[i].write(file, *this);
 	}
 
-	template<class T, class U>
+	/*template<class T, class U>
 	void OutputNcFile::write(const NcVariable<T> &variable, const U &data)
 	{
 		if (m_inDefineMode)
@@ -738,7 +738,7 @@ namespace sci
 		static_assert(std::is_same<typename decltype(flattenedData)::value_type, typename NcVariable<T>::write_type>::value, "NcVariable::flattenData returned a vector of the incorrect type.");
 		if (flattenedData.size() > 0)
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
-	}
+	}*/
 
 	/*template<class T, class U>
 	void OutputNcFile::write(const NcVariable<T>& variable, std::span<const T> data)
