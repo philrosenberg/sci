@@ -237,6 +237,9 @@ void sci::Array<TYPE, NDIMS>::setSize(const Array<size_t, 1>& dimensions)
 #include<array>
 #include<span>
 #include<functional>
+#include<ranges>
+#include<memory>
+#include<deque>
 
 namespace sci
 {
@@ -1080,29 +1083,31 @@ namespace sci
 	class GridView<T, 1>
 	{
 	public:
-		using value_type = typename std::span<T>::value_type;
-		using pointer = typename std::span<T>::pointer;
-		using const_pointer = typename std::span<T>::const_pointer;
-		using reference = typename std::span<T>::reference;
-		using const_reference = typename std::span<T>::const_reference;
-		using size_type = typename std::span<T>::size_type;
-		using difference_type = typename std::span<T>::difference_type;
-		using iterator = typename std::span<T>::iterator;
+
+		//using range_type = std::ranges::random_access_range<value_type>;
+		using value_type = T;
+		using pointer = T*;
+		using const_pointer = const T*;
+		using reference = T&;
+		using const_reference = const T&;
+		using size_type = size_t;
+		using difference_type = long;
+		//using iterator = std::ranges::iterator_t( typename range_type::iterator;
 		//using const_iterator = typename std::span<T>::const_iterator;
-		using reverse_iterator = typename std::span<T>::reverse_iterator;
+		//using reverse_iterator = typename range_type::reverse_iterator;
 		//using const_reverse_iterator = std::span<T>::const_iterator;
 
 		template<class OtherT, class Allocator>
 		requires(std::is_convertible_v < OtherT(*)[], value_type(*)[] >)
 		GridView(GridData<OtherT, 1, Allocator>& gridData)
 		{
-			m_span = gridData.getSpan();
+			m_span = gridData;
 		}
 		template<class OtherT, class Allocator>
 		requires(std::is_convertible_v < OtherT(*)[], value_type(*)[] >)
 		GridView(const GridData<OtherT, 1, Allocator>& gridData)
 		{
-			m_span = gridData.getSpan();
+			m_span = gridData;
 		}
 		template<class OtherT>
 		requires(std::is_convertible_v < OtherT(*)[], value_type(*)[] >)
@@ -1120,10 +1125,6 @@ namespace sci
 			:m_span(span)
 		{
 		}
-		GridView(std::span<T> span)
-			:m_span(span)
-		{
-		}
 		reference operator[](size_t index)
 		{
 			return m_span[index];
@@ -1132,11 +1133,11 @@ namespace sci
 		{
 			return m_span[index];
 		}
-		iterator begin()
+		auto begin()
 		{
 			return m_span.begin();
 		}
-		iterator end()
+		auto end()
 		{
 			return m_span.end();
 		}
@@ -1160,6 +1161,249 @@ namespace sci
 	private:
 		std::span<T> m_span;
 	};
+
+
+
+	template<class RANGE>
+	requires std::ranges::random_access_range<RANGE>
+		class view_grid : public std::ranges::view_base
+	{
+	public:
+		class Iterator : public std::ranges::iterator_t<RANGE>
+		{
+		public:
+			using base_type = std::ranges::iterator_t<RANGE>;
+			using iterator_category = std::iterator_traits<base_type>::iterator_category;
+			using value_type = std::iterator_traits<base_type>::value_type;
+			using difference_type = std::iterator_traits<base_type>::difference_type;
+			using pointer = std::iterator_traits<base_type>::pointer;
+			using reference = std::iterator_traits<base_type>::reference;
+			using size_type = std::ranges::range_size_t<RANGE>;
+			using difference_type = std::ranges::range_difference_t<RANGE>;
+			//template<std::ranges::contiguous_range<RANGE>>
+			using element_type = std::pointer_traits<pointer>::element_type;
+
+			Iterator() = default;
+			Iterator(base_type const& b)
+				:base_type( b )
+			{
+
+			}
+
+
+			reference operator*() const
+			{
+				return *static_cast<base_type>(*this);
+			}
+			pointer operator->()
+			{
+				return static_cast<pointer>(static_cast<base_type>(*this).operator->());
+			}
+			const pointer operator->() const
+			{
+				return static_cast<const pointer>(static_cast<const base_type>(*this).operator->());
+			}
+			// Prefix increment
+			Iterator& operator++()
+			{
+				++static_cast<base_type&>(*this);
+				return (*this);
+			}
+			// Postfix increment
+			Iterator operator++(int)
+			{
+				return static_cast<base_type&>(*this)++;
+			}
+			// Prefix decrement
+			Iterator& operator--()
+			{
+				--static_cast<base_type&>(*this);
+				return (*this);
+			}
+			// Postfix decrement
+			Iterator operator--(int)
+			{
+				return static_cast<base_type&>(*this)--;
+			}
+			Iterator& operator+=(const difference_type offset)
+			{
+				static_cast<base_type&>(*this)+=offset;
+				return *this;
+			}
+
+			Iterator operator+(const difference_type offset) const noexcept
+			{
+				Iterator tmp = *this;
+				tmp += offset;
+				return tmp;
+			}
+
+			friend Iterator operator+(const difference_type offset, const Iterator& iter) noexcept
+			{
+				return iter + offset;
+			}
+
+			Iterator& operator-=(const difference_type offset) noexcept
+			{
+				return *this += -offset;
+			}
+
+			Iterator operator-(const difference_type offset) const noexcept
+			{
+				Iterator tmp = *this;
+				tmp -= offset;
+				return tmp;
+			}
+
+			friend Iterator operator-(const difference_type offset, const Iterator& iter) noexcept
+			{
+				return iter - offset;
+			}
+
+			difference_type operator-(const Iterator& right) const noexcept
+			{
+				return static_cast<const base_type&>(*this) - static_cast<const base_type&>(right);
+			}
+
+			reference operator[](const difference_type offset) const noexcept
+			{
+				return *(*this + offset);
+			}
+			bool operator==(const Iterator& right) const noexcept
+			{
+				return (static_cast<const base_type&>(*this) == static_cast<const base_type&>(right));
+			}
+			bool operator!=(const Iterator& right) const noexcept
+			{
+				return !(*this == right);
+			}
+
+			bool operator<(const Iterator& right) const noexcept
+			{
+				return static_cast<const base_type&>(*this) < static_cast<const base_type&>(right);
+			}
+
+			bool operator>(const Iterator& right) const noexcept
+			{
+				return right < *this;
+			}
+
+			bool operator<=(const Iterator& right) const noexcept
+			{
+				return !(right < *this);
+			}
+
+			bool operator>=(const Iterator& right) const noexcept
+			{
+				return !(*this < right);
+			}
+		};
+
+		using iterator = Iterator;
+		using const_iterator = iterator;
+		using reference_type = iterator::reference;
+		using size_type = iterator::size_type;
+		using difference_type = iterator::difference_type;
+		using sentinel = iterator;
+
+		view_grid() = default;
+		constexpr view_grid(view_grid const& rhs) = default;
+		constexpr view_grid(view_grid&& rhs) = default;
+		constexpr view_grid& operator=(view_grid const& rhs) = default;
+		constexpr view_grid& operator=(view_grid&& rhs) = default;
+		~view_grid() = default;
+
+		iterator begin() const
+		{
+			return std::begin(m_dataMembers->m_range);
+		}
+		iterator cbegin() const
+		{
+			return begin();
+		}
+		sentinel end() const
+		{
+			return std::end(m_dataMembers->m_range);
+		}
+		sentinel cend() const
+		{
+			return end();
+		}
+		auto size() const
+		{
+			return std::size(m_dataMembers->m_range);
+		}
+		reference_type operator[](const difference_type &index)
+		{
+			return m_dataMembers->m_range[index];
+		}
+		const reference_type operator[](const difference_type& index) const
+		{
+			return m_dataMembers->m_range[index];
+		}
+
+	private:
+		struct data_members_t
+		{
+			RANGE m_range;
+		};
+		std::shared_ptr<data_members_t> m_dataMembers;
+	};
+
+	template < class RANGE>
+	requires std::ranges::random_access_range<RANGE>
+	view_grid(RANGE&&)->view_grid<RANGE>;
+
+	
+
+	static_assert((bool)std::ranges::random_access_range<view_grid<std::deque<double>>>, "sci::view_grid failed the test for being a random access range");
+	static_assert((bool)std::ranges::range<view_grid<std::deque<double>>>, "sci::view_grid failed the test for being a range");
+	static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a random access iterator");
+	static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a bidirectional iterator");
+	static_assert(std::input_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a input iterator");
+	static_assert(std::forward_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a forward iterator");
+	static_assert(std::output_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>, int>, "sci::view_grid failed the test for having a output iterator");
+	static_assert(std::indirectly_readable<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a indirectly readable iterator");
+	static_assert((bool)!std::ranges::contiguous_range< view_grid<std::deque<double>>>, "view_grid<std::deque<>> should not be contiguous");
+
+	static_assert((bool)std::ranges::contiguous_range<view_grid<std::vector<double>>>, "sci::view_grid<std::vector<>> failed the test for being a contiguous range");
+	static_assert((bool)std::ranges::contiguous_range<std::vector<double>>, "std::vector<> failed the test for being a contiguous range");
+
+
+	struct grid_fn
+	{
+		template <typename RANGE>
+		requires std::ranges::random_access_range<RANGE>
+		auto operator()(RANGE&& range) const
+		{
+			return view_grid{ std::forward<RANGE>(range) };
+		}
+
+		template <typename RANGE>
+		requires std::ranges::random_access_range<RANGE>
+		friend auto operator|(RANGE&& range, grid_fn const&)
+		{
+			return view_grid{ std::forward<RANGE>(range) };
+		}
+
+	};
+
+	namespace views
+	{
+		grid_fn constexpr grid;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	struct plus_assign
 	{
