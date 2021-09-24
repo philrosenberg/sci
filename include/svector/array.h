@@ -788,7 +788,7 @@ namespace sci
 			if (simpleExpand)
 				setSize(shape);
 			else
-				sci::assertThrow(false, sci::err(sci::SERR_VECTOR, 0, sU("I have not yet coded beyond simple multi-d resizes.")));
+				throw("I have not yet coded beyond simple multi-d resizes.");
 		}
 		void resize(const std::array<size_t, NDIMS>& shape, const T& value)
 		{
@@ -804,7 +804,7 @@ namespace sci
 				setSize(shape);
 			}
 			else
-				sci::assertThrow(false, sci::err(sci::SERR_VECTOR, 0, sU("I have not yet coded beyond simple multi-d resizes.")));
+				throw("I have not yet coded beyond simple multi-d resizes.");
 		}
 		void insert(size_t index, GridView<T const, NDIMS> source)
 		{
@@ -1166,7 +1166,7 @@ namespace sci
 
 	template<class RANGE>
 	requires std::ranges::random_access_range<RANGE>
-		class view_grid : public std::ranges::view_base
+		class grid_view : public std::ranges::view_base
 	{
 	public:
 		class Iterator : public std::ranges::iterator_t<RANGE>
@@ -1306,12 +1306,17 @@ namespace sci
 		using difference_type = iterator::difference_type;
 		using sentinel = iterator;
 
-		view_grid() = default;
-		constexpr view_grid(view_grid const& rhs) = default;
-		constexpr view_grid(view_grid&& rhs) = default;
-		constexpr view_grid& operator=(view_grid const& rhs) = default;
-		constexpr view_grid& operator=(view_grid&& rhs) = default;
-		~view_grid() = default;
+		grid_view() = default;
+		constexpr grid_view(grid_view const& rhs) = default;
+		constexpr grid_view(grid_view&& rhs) = default;
+		constexpr grid_view& operator=(grid_view const& rhs) = default;
+		constexpr grid_view& operator=(grid_view&& rhs) = default;
+		~grid_view() = default;
+
+		grid_view(RANGE&& range)
+			 : m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }
+		{
+		}
 
 		iterator begin() const
 		{
@@ -1352,21 +1357,21 @@ namespace sci
 
 	template < class RANGE>
 	requires std::ranges::random_access_range<RANGE>
-	view_grid(RANGE&&)->view_grid<RANGE>;
+	grid_view(RANGE&&)->grid_view<RANGE>;
 
 	
 
-	static_assert((bool)std::ranges::random_access_range<view_grid<std::deque<double>>>, "sci::view_grid failed the test for being a random access range");
-	static_assert((bool)std::ranges::range<view_grid<std::deque<double>>>, "sci::view_grid failed the test for being a range");
-	static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a random access iterator");
-	static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a bidirectional iterator");
-	static_assert(std::input_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a input iterator");
-	static_assert(std::forward_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a forward iterator");
-	static_assert(std::output_iterator<std::ranges::iterator_t<view_grid<std::deque<double>>>, int>, "sci::view_grid failed the test for having a output iterator");
-	static_assert(std::indirectly_readable<std::ranges::iterator_t<view_grid<std::deque<double>>>>, "sci::view_grid failed the test for having a indirectly readable iterator");
-	static_assert((bool)!std::ranges::contiguous_range< view_grid<std::deque<double>>>, "view_grid<std::deque<>> should not be contiguous");
+	static_assert((bool)std::ranges::random_access_range<grid_view<std::deque<double>>>, "sci::grid_view failed the test for being a random access range");
+	static_assert((bool)std::ranges::range<grid_view<std::deque<double>>>, "sci::grid_view failed the test for being a range");
+	static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<grid_view<std::deque<double>>>>, "sci::grid_view failed the test for having a random access iterator");
+	static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<grid_view<std::deque<double>>>>, "sci::grid_view failed the test for having a bidirectional iterator");
+	static_assert(std::input_iterator<std::ranges::iterator_t<grid_view<std::deque<double>>>>, "sci::grid_view failed the test for having a input iterator");
+	static_assert(std::forward_iterator<std::ranges::iterator_t<grid_view<std::deque<double>>>>, "sci::grid_view failed the test for having a forward iterator");
+	static_assert(std::output_iterator<std::ranges::iterator_t<grid_view<std::deque<double>>>, int>, "sci::grid_view failed the test for having a output iterator");
+	static_assert(std::indirectly_readable<std::ranges::iterator_t<grid_view<std::deque<double>>>>, "sci::grid_view failed the test for having a indirectly readable iterator");
+	static_assert((bool)!std::ranges::contiguous_range< grid_view<std::deque<double>>>, "grid_view<std::deque<>> should not be contiguous");
 
-	static_assert((bool)std::ranges::contiguous_range<view_grid<std::vector<double>>>, "sci::view_grid<std::vector<>> failed the test for being a contiguous range");
+	static_assert((bool)std::ranges::contiguous_range<grid_view<std::vector<double>>>, "sci::grid_view<std::vector<>> failed the test for being a contiguous range");
 	static_assert((bool)std::ranges::contiguous_range<std::vector<double>>, "std::vector<> failed the test for being a contiguous range");
 
 
@@ -1376,14 +1381,14 @@ namespace sci
 		requires std::ranges::random_access_range<RANGE>
 		auto operator()(RANGE&& range) const
 		{
-			return view_grid{ std::forward<RANGE>(range) };
+			return grid_view{ std::forward<RANGE>(range) };
 		}
 
 		template <typename RANGE>
 		requires std::ranges::random_access_range<RANGE>
 		friend auto operator|(RANGE&& range, grid_fn const&)
 		{
-			return view_grid{ std::forward<RANGE>(range) };
+			return grid_view{ std::forward<RANGE>(range) };
 		}
 
 	};
@@ -1395,6 +1400,8 @@ namespace sci
 
 
 
+	std::deque<double> que{ 1., 2., 3., 4., 5., 6. };
+	auto gridRange = que | views::grid;
 
 
 

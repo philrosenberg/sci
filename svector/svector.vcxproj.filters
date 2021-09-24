@@ -221,5 +221,8 @@
     <ClInclude Include="..\include\svector\controls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\ArrayManipulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
