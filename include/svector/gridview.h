@@ -10,55 +10,75 @@ namespace sci
 	class GridPremultipliedStridesPointer
 	{
 	public:
-		GridPremultipliedStridesPointer(const size_t* ptrIn)
+		constexpr GridPremultipliedStridesPointer(const size_t* ptrIn)
 			:ptr(ptrIn)
 		{}
-		GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
+		GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
+		GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
+		~GridPremultipliedStridesPointer() = default;
 		const size_t* ptr;
 	};
 	template<>
 	class GridPremultipliedStridesPointer<1>
 	{
 	public:
-		GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<1> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<1>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<1> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<1>&& rhs) = default;
+		~GridPremultipliedStridesPointer() = default;
 	};
 	template<>
 	class GridPremultipliedStridesPointer<0>
 	{
 	public:
-		GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer() = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<0> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<0>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<0> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<0>&& rhs) = default;
+		~GridPremultipliedStridesPointer() = default;
 	};
 
 	template<size_t NDIMS>
 	class GridPremultipliedStridesReference
 	{
 	public:
-		GridPremultipliedStridesReference() = default;
-		GridPremultipliedStridesReference(const size_t* stridesPtr) requires (NDIMS > 1)
+		constexpr GridPremultipliedStridesReference() = default;
+		constexpr GridPremultipliedStridesReference(GridPremultipliedStridesReference<NDIMS> const& rhs) = default;
+		constexpr GridPremultipliedStridesReference(GridPremultipliedStridesReference<NDIMS>&& rhs) = default;
+		constexpr GridPremultipliedStridesReference& operator=(GridPremultipliedStridesReference<NDIMS> const& rhs) = default;
+		constexpr GridPremultipliedStridesReference& operator=(GridPremultipliedStridesReference<NDIMS>&& rhs) = default;
+		~GridPremultipliedStridesReference() = default;
+		constexpr GridPremultipliedStridesReference(const size_t* stridesPtr) requires (NDIMS > 1)
 			: m_ptr(stridesPtr)
 		{
 		}
-		const size_t stride() const requires (NDIMS > 1)
+		constexpr const size_t stride() const requires (NDIMS > 1)
 		{
 			return *(m_ptr.ptr);
 		}
-		const size_t stride() const requires (NDIMS == 1)
+		constexpr const size_t stride() const requires (NDIMS == 1)
 		{
 			return 1;
 		}
-		const size_t stride() const requires (NDIMS == 0)
+		constexpr const size_t stride() const requires (NDIMS == 0)
 		{
 			return 0;
 		}
-		GridPremultipliedStridesReference<NDIMS - 1> next() const requires (NDIMS > 2)
+		constexpr GridPremultipliedStridesReference<NDIMS - 1> next() const requires (NDIMS > 2)
 		{
 			return GridPremultipliedStridesReference<NDIMS - 1>(m_ptr.ptr + 1);
 		}
-		GridPremultipliedStridesReference<NDIMS - 1> next() const requires (NDIMS == 1 || NDIMS == 2)
+		constexpr GridPremultipliedStridesReference<NDIMS - 1> next() const requires (NDIMS == 1 || NDIMS == 2)
 		{
 			return GridPremultipliedStridesReference<NDIMS - 1>();
 		}
-		std::array<size_t, NDIMS> getShape(size_t size) const
+		constexpr std::array<size_t, NDIMS> getShape(size_t size) const
 		{
 			if constexpr (NDIMS == 0)
 			{
@@ -78,7 +98,7 @@ namespace sci
 				return result;
 			}
 		}
-		size_t getOffset(const std::array<size_t, NDIMS>& index)
+		constexpr size_t getOffset(const std::array<size_t, NDIMS>& index)
 		{
 			if constexpr (NDIMS == 0)
 				return 0;
@@ -88,7 +108,7 @@ namespace sci
 			{
 				size_t result = 0;
 				for (size_t i = 0; i < NDIMS - 1; ++i)
-					result += index * m_ptr.ptr[i];
+					result += index[i] * m_ptr.ptr[i];
 				return result + index[NDIMS - 1];
 			}
 		}
@@ -239,11 +259,11 @@ namespace sci
 		using difference_type = iterator::difference_type;
 		using sentinel = iterator;
 
-		grid_view() = default;
-		constexpr grid_view(grid_view const& rhs) = default;
-		constexpr grid_view(grid_view&& rhs) = default;
-		constexpr grid_view& operator=(grid_view const& rhs) = default;
-		constexpr grid_view& operator=(grid_view&& rhs) = default;
+		constexpr grid_view() = default;
+		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
+		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = default;
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = default;
 		~grid_view() = default;
 
 		grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides)
@@ -312,7 +332,7 @@ namespace sci
 			RANGE m_range;
 		};
 		std::shared_ptr<data_members_t> m_dataMembers;
-		const GridPremultipliedStridesReference<NDIMS> m_strides;
+		GridPremultipliedStridesReference<NDIMS> m_strides;
 	};
 
 

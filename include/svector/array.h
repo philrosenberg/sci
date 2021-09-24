@@ -234,10 +234,9 @@ void sci::Array<TYPE, NDIMS>::setSize(const Array<size_t, 1>& dimensions)
 	}
 }
 
-#include<array>
+#include"gridview.h"
 #include<span>
 #include<functional>
-#include<ranges>
 #include<memory>
 #include<deque>
 
@@ -286,7 +285,7 @@ namespace sci
 			result[NDIMS - 1] = m_strides[NDIMS - 2];
 			return result;
 		}
-		constexpr void setStride(const std::array<size_t, NDIMS>& shape)
+		constexpr void setStrides(const std::array<size_t, NDIMS>& shape)
 		{
 			//calculate and save the strides
 			for (size_t i = 0; i < m_strides.size(); ++i)
@@ -311,11 +310,18 @@ namespace sci
 		{
 			return &m_strides[0];
 		}
-
-		std::vector<GridDataVectorType<T>> m_data;
+		constexpr void refreshView()
+		{
+			m_view = m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0]));
+		}
 
 	private:
 		std::array<size_t, NDIMS - 1> m_strides;
+	protected:
+		std::vector<typename GridDataVectorType<T>::type> m_data;
+		using view_type = std::remove_cv_t<decltype(m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0])))>;
+		view_type m_view;
+
 	};
 
 	template<class T>
@@ -327,7 +333,7 @@ namespace sci
 			std::array<size_t, 1> result{ m_data.size() };
 			return result;
 		}
-		constexpr void setStride(const std::array<size_t, 1>&)
+		constexpr void setStrides(const std::array<size_t, 1>&)
 		{
 		}
 		constexpr size_t getTopStride() const
@@ -342,8 +348,14 @@ namespace sci
 		{
 			return nullptr;
 		}
+		constexpr void refreshView()
+		{
+			m_view = m_data | views::grid<1>;
+		}
 
-		std::vector<GridDataVectorType<T>> m_data;
+		std::vector<typename GridDataVectorType<T>::type> m_data;
+		using view_type = decltype(m_data | views::grid<1>);
+		view_type m_view;
 	};
 
 	template<class T>
@@ -355,7 +367,7 @@ namespace sci
 			std::array<size_t, 0> result;
 			return result;
 		}
-		constexpr void setStride(const std::array<size_t, 0>&)
+		constexpr void setStrides(const std::array<size_t, 0>&)
 		{
 		}
 		constexpr size_t getTopStride() const
@@ -370,8 +382,14 @@ namespace sci
 		{
 			return nullptr;
 		}
+		constexpr void refreshView()
+		{
+		}
 		T m_data;
+		//using view_type = decltype(m_data | views::grid<0>);
+		//view_type m_view;
 	};
+
 
 
 
@@ -379,7 +397,298 @@ namespace sci
 	class GridData :public GridDataMembers<T, NDIMS>
 	{
 	public:
-		class ConstIterator
+		using members = GridDataMembers<T, NDIMS>;
+
+		using value_type = T;
+		using allocator_type = Allocator;
+		using pointer = typename std::allocator_traits<Allocator>::pointer;
+		using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
+		using reference = value_type&;
+		using const_reference = const value_type&;
+		using size_type = typename std::vector<T>::size_type;
+		using difference_type = typename std::vector<T>::difference_type;
+		using iterator = members::view_type::iterator;
+		using const_iterator = members::view_type::const_iterator;
+		using reverse_iterator = typename std::reverse_iterator<iterator>;
+		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
+		using data_type = typename GridDataVectorType<T>::type;
+
+		constexpr GridData(const std::array<size_t, NDIMS>& shape)
+		{
+			setShape(shape);
+		}
+		constexpr GridData(const std::array<size_t, NDIMS>& shape, const T& value)
+		{
+			setShape(shape);
+		}
+		constexpr GridData()
+		{
+			std::array<size_t, NDIMS> shape;
+			for (size_t& size : shape)
+				size = 0;
+			setShape(shape);
+		}
+		template<class U>
+		requires(std::is_convertible_v < U(*)[], value_type(*)[] >)
+			constexpr GridData(GridView<U, NDIMS> view)
+		{
+			std::array<size_t, NDIMS> shape = view.getShape();
+			size_t size = 1;
+			for (size_t i = 0; i < NDIMS; ++i)
+				size *= shape[i];
+			members::m_data.assign(view.begin(), view.begin() + size);
+			setShape(shape);
+		}
+		template<class U>
+		requires(std::is_convertible_v < U(*)[], value_type(*)[] >)
+			constexpr GridData(const GridData<U, NDIMS>& other)
+		{
+			std::array<size_t, NDIMS> shape = other.getShape();
+			size_t size = 1;
+			for (size_t i = 0; i < NDIMS; ++i)
+				size *= shape[i];
+			members::m_data.assign(other.begin(), other.begin() + size);
+			setShape(shape);
+		}
+		constexpr GridData(std::initializer_list<T> list)
+		{
+			static_assert(NDIMS == 1, "Cannot use an initializer list constructor on GridData with more than 1 dimension.");
+			members::m_data = std::vector<T>(list);
+			setShape({ members::m_data.size() });
+		}
+		iterator begin()
+		{
+			return iterator(members::m_view.begin());
+		}
+		iterator end()
+		{
+			return iterator(members::m_view.end());
+		}
+		const_iterator begin() const
+		{
+			return const_iterator(members::m_view.begin());
+		}
+		const_iterator end() const
+		{
+			return const_iterator(members::m_view.end());
+		}
+		const size_t* getStridesPointer() const
+		{
+			return members::getStridesPointer();
+		}
+		std::array<size_t, NDIMS> getShape() const
+		{
+			return members::m_view::getShape();
+		}
+		size_t size() const
+		{
+			return members::m_view.size();
+		}
+		void resize(const std::array<size_t, NDIMS>& shape)
+		{
+			bool simpleExpand = true;
+			for (size_t i = 1; i < NDIMS; ++i)
+				simpleExpand &= shape[i] == members::m_sizes[i];
+			if (simpleExpand)
+				setShape(shape);
+			else
+				throw("I have not yet coded beyond simple multi-d resizes.");
+		}
+		void resize(const std::array<size_t, NDIMS>& shape, const T& value)
+		{
+			bool simpleExpand = true;
+			for (size_t i = 1; i < NDIMS; ++i)
+				simpleExpand &= shape[i] == members::m_sizes[i];
+			if (simpleExpand)
+			{
+				size_t size = 1;
+				for (size_t i = 0; i < NDIMS; ++i)
+					size *= shape[i];
+				members::m_data.resize(size, value); //resize the data first to avoid multiple assigns
+				setShape(shape);
+			}
+			else
+				throw("I have not yet coded beyond simple multi-d resizes.");
+		}
+		void insert(size_t index, GridView<T const, NDIMS> source)
+		{
+			std::array<size_t, NDIMS> sourceShape = source.getShape();
+#ifdef _DEBUG
+			for (size_t i = 1; i < NDIMS; ++i)
+				assert(sourceShape[i] == members::m_sizes[i]);
+#endif
+			iterator pos = begin() + index * members::getTopStride();
+			members::m_data.insert(pos, source.begin(), source.begin() + sourceShape[0] * members::getTopStride());
+		}
+		/*void insert(size_t index, GridView<T, NDIMS - 1> source)
+		{
+			//To Do
+		}*/
+		void insert(size_t index, GridView<T const, NDIMS - 1> source)
+		{
+			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
+
+			//check sizes match
+			assert(members::getTopStride() == source.size());
+			if constexpr (NDIMS > 1)
+			{
+				for (size_t i = 0; i < NDIMS - 2; ++i)
+					assert(source.getPremultipliedStridesPointer()[i] == members::getPremultipliedStridesPointer()[i + 1]);
+			}
+
+			//insert the data
+			iterator pos = begin() + index * members::getTopStride();
+			members::m_data.insert(pos, source.begin(), source.begin() + members::getTopStride());
+		}
+		void insert(size_t index, size_t count, GridView<T const, NDIMS - 1> source)
+		{
+			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
+
+			//check sizes match
+			assert(members::getTopStride() == source.size());
+			if constexpr (NDIMS > 1)
+			{
+				for (size_t i = 0; i < NDIMS - 2; ++i)
+					assert(source.getPremultipliedStridesPointer()[i] == members::getPremultipliedStridesPointer()[i + 1]);
+			}
+
+			iterator pos = begin() + index * members::getTopStride();
+			//expand with default construction
+			insert(index, count * members::getTopStride(), T());
+			//perform repeated assigns to put the data in
+			for (size_t i = 0; i < count; ++i)
+				members::m_data.insert(pos + (i * members::getTopStride()), source.begin(), source.begin() + members::getTopStride());
+		}
+		void insert(size_t index, const T& source)
+		{
+			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
+
+			iterator pos = begin() + index * members::getTopStride();
+			members::m_data.insert(pos, members::getTopStride(), source);
+		}
+		void insert(size_t index, size_t count, const T& source)
+		{
+			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
+
+			iterator pos = begin() + index * members::getTopStride();
+			members::m_data.insert(pos, members::getTopStride() * count, source);
+		}
+		template<class U>
+		void push_back(GridView<U, NDIMS - 1> source)
+		{
+			static_assert(NDIMS != 0, "Cannot push_back into a zero dimensional GridData object.");
+
+			insert(members::m_data.size() / members::getTopStride(), source);
+		}
+		template<class U>
+		void push_back(GridData<U, NDIMS - 1> source)
+		{
+			static_assert(NDIMS != 0, "Cannot push_back into a zero dimensional GridData object.");
+
+			insert(members::m_data.size() / members::getTopStride(), source);
+		}
+		void push_back(const T& source)
+		{
+			static_assert(NDIMS != 0, "Cannot push_back into a zero dimensional GridData object.");
+
+			members::m_data.resize(members::m_data.size() + members::getTopStride(), source);
+		}
+		void reserve(size_t size)
+		{
+			if constexpr (NDIMS == 0)
+				assert(size < 2);
+			else
+				members::m_data.reserve(size);
+		}
+		void reserve(const std::array<size_t, NDIMS>& shape)
+		{
+			size_t product = 1;
+			for (auto iter = size.begin(); iter != size.end(); ++iter)
+				product *= size;
+			members::m_data.reserve(product);
+		}
+		auto getView()
+		{
+			return members::m_view;
+		}
+		auto getView() const
+		{
+			return members::m_view;
+		}
+		//GridView<T, NDIMS> getGridView(size_t offset, size_t elements)
+		//{
+		//	return GridView<T, NDIMS>(std::span<T>(members::m_data.begin() + offset * members::getTopStride(), elements * members::getTopStride()), members::getPremultipliedStridePointer());
+		//}
+		T& operator[](const std::array<size_t, NDIMS>& index)
+		{
+			return members::m_view[index];
+		}
+		const T& operator[](const std::array<size_t, NDIMS>& index) const
+		{
+			return members::m_view[index];
+		}
+		decltype(auto) operator[](size_t index)
+		{
+			return (members::m_view[index]);
+		}
+		constexpr static size_t nDimensions()
+		{
+			return NDIMS;
+		}
+	private:
+		void setShape(const std::array<size_t, NDIMS>& shape)
+		{
+			members::setStrides(shape);
+			if constexpr (NDIMS > 1)
+			{
+				//calculate full size
+				size_t size = shape[0] * members::getTopStride();
+				//create the data block
+				members::m_data.resize(size);
+			}
+			members::refreshView();
+		}
+		void setShape(const std::array<size_t, NDIMS>& shape, const T& value)
+		{
+			members::setStrides(shape);
+			if constexpr (NDIMS > 1)
+			{
+				//calculate full size
+				size_t size = shape[0] * members::getTopStride();
+				//create the data block
+				members::m_data.resize(size, value);
+			}
+			members::refreshView();
+		}
+
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	template<class T, size_t NDIMS, class Allocator = std::allocator<typename GridDataVectorType<T>::type>>
+	class GridDataOld :public GridDataMembers<T, NDIMS>
+	{
+	public:
+		/**/class ConstIterator
 		{
 		public:
 			using iterator_category = std::contiguous_iterator_tag;
@@ -685,15 +994,15 @@ namespace sci
 		using data_type = typename GridDataVectorType<T>::type;
 		using members = GridDataMembers<T, NDIMS>;
 
-		constexpr GridData(const std::array<size_t, NDIMS>& sizes)
+		constexpr GridDataOld(const std::array<size_t, NDIMS>& sizes)
 		{
 			setSize(sizes);
 		}
-		constexpr GridData(const std::array<size_t, NDIMS>& sizes, const T&value)
+		constexpr GridDataOld(const std::array<size_t, NDIMS>& sizes, const T&value)
 		{
 			setSize(sizes);
 		}
-		constexpr GridData()
+		constexpr GridDataOld()
 		{
 			std::array<size_t, NDIMS> shape;
 			for (size_t &size : shape)
@@ -702,7 +1011,7 @@ namespace sci
 		}
 		template<class U>
 		requires(std::is_convertible_v < U(*)[], value_type(*)[] >)
-		constexpr GridData(GridView<U, NDIMS> view)
+		constexpr GridDataOld(GridView<U, NDIMS> view)
 		{
 			std::array<size_t, NDIMS> shape = view.getShape();
 			size_t size = 1;
@@ -713,7 +1022,7 @@ namespace sci
 		}
 		template<class U>
 		requires(std::is_convertible_v < U(*)[], value_type(*)[] >)
-		constexpr GridData(const GridData<U, NDIMS> &other)
+		constexpr GridDataOld(const GridData<U, NDIMS> &other)
 		{
 			std::array<size_t, NDIMS> shape = other.getShape();
 			size_t size = 1;
@@ -722,7 +1031,7 @@ namespace sci
 			members::m_data.assign(other.begin(), other.begin() + size);
 			setSize(shape);
 		}
-		constexpr GridData(std::initializer_list<T> list)
+		constexpr GridDataOld(std::initializer_list<T> list)
 		{
 			static_assert(NDIMS == 1, "Cannot use an initializer list constructor on GridData with more than 1 dimension.");
 			members::m_data = std::vector<T>(list);

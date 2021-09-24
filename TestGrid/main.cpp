@@ -1,4 +1,5 @@
 #include"../include/svector/gridview.h"
+#include"../include/svector/array.h"
 #include<iostream>
 
 #include<vector>
@@ -53,44 +54,69 @@ void output1d(sci::grid_view<BASERANGE, 1> grid)
 
 int main()
 {
-	std::array<size_t, 2>shapeArray{ 3, 2 };
-	std::array<size_t, 1>stridesArray{2};
-	sci::GridPremultipliedStridesReference<2> strides2d(&stridesArray[0]);
-
-	//sci::GridPremultipliedStridesReference<1> strides1d;
-
-	//start with some data
-	std::deque<double> que{ 1., 2., 3., 4., 5., 6. };
-	auto subrange = std::ranges::subrange(que.begin() + 2, que.begin()+5);
-
-	//create a 1D grid from que and output it
-	auto gridRange1d1 = que | sci::views::grid<1>;
-	for (size_t i = 0; i < gridRange1d1.size(); ++i)
-		std::cout << gridRange1d1[i] << ",";
-	std::cout << "\n\n";
-
-	//create a 1D grid from subrange and output it
-	auto gridRange1d2 = subrange | sci::views::grid<1>;
-	for (size_t i = 0; i < gridRange1d2.size(); ++i)
-		std::cout << gridRange1d2[i] << ",";
-	std::cout << "\n\n";
-
-	//create a 2D grid from que and output it
-	auto gridRange = que | sci::views::grid<2>(strides2d);
-	//auto gridRange = que | sci::grid_fn<2>(shape1);
-	//for (size_t i = 0; i < gridRange.size(); ++i)
-	//	std::cout << gridRange[i] << ",";
-	for (size_t i = 0; i < shapeArray[0]; ++i)
+	//testing grid_view
 	{
-		for (size_t j = 0; j < shapeArray[1]; ++j)
-			std::cout << gridRange[i][j] << ",";
-		std::cout << "\n";
-	}
-	std::cout << "\n\n";
+		std::array<size_t, 2>shapeArray{ 3, 2 };
+		std::array<size_t, 1>stridesArray{ 2 };
+		sci::GridPremultipliedStridesReference<2> strides2d(&stridesArray[0]);
 
-	//pass the grid into a function expecting a 2d grid
-	output2d(gridRange);
-	output1d(gridRange1d1);
+		//sci::GridPremultipliedStridesReference<1> strides1d;
+
+		//start with some data
+		std::deque<double> que{ 1., 2., 3., 4., 5., 6. };
+		auto subrange = std::ranges::subrange(que.begin() + 2, que.begin() + 5);
+
+		//create a 1D grid from que and output it
+		auto gridRange1d1 = que | sci::views::grid<1>;
+		for (size_t i = 0; i < gridRange1d1.size(); ++i)
+			std::cout << gridRange1d1[i] << ",";
+		std::cout << "\n\n";
+
+		//create a 1D grid from subrange and output it
+		auto gridRange1d2 = subrange | sci::views::grid<1>;
+		for (size_t i = 0; i < gridRange1d2.size(); ++i)
+			std::cout << gridRange1d2[i] << ",";
+		std::cout << "\n\n";
+
+		//create a 2D grid from que and output it
+		auto gridRange = que | sci::views::grid<2>(strides2d);
+		//auto gridRange = que | sci::grid_fn<2>(shape1);
+		//for (size_t i = 0; i < gridRange.size(); ++i)
+		//	std::cout << gridRange[i] << ",";
+		for (size_t i = 0; i < shapeArray[0]; ++i)
+		{
+			for (size_t j = 0; j < shapeArray[1]; ++j)
+				std::cout << gridRange[i][j] << ",";
+			std::cout << "\n";
+		}
+		std::cout << "\n\n";
+
+		//pass the grid into a function expecting a 2d grid
+		output2d(gridRange);
+		output1d(gridRange1d1);
+	}
+
+	//testing GridData
+	{
+		std::array<size_t, 2> shape2d{4, 3};
+		sci::GridPremultipliedStridesReference<2> strides2d(&shape2d[0]);
+		std::vector<double> data;
+		using view_type = std::remove_cv_t<decltype(data | sci::views::grid<2>(sci::GridPremultipliedStridesReference<2>()))>;
+		view_type m_view = data | sci::views::grid<2>(strides2d);
+		m_view = data | sci::views::grid<2>(strides2d);
+		sci::GridData<double, 2> grid(shape2d);
+		for (auto &val : grid)
+			val = 1.0;
+		output2d(grid.getView());
+		grid[{0, 0}] = 2.0;
+		grid[{1, 1}] = 4.0;
+		grid[{2, 0}] = 8.0;
+		output2d(grid.getView());
+		grid.resize({ 5, 3 }, 7.0);
+		output2d(grid.getView());
+	}
+
+
 
 	return 0;
 }
