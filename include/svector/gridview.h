@@ -97,7 +97,7 @@ namespace sci
 	};
 
 
-	template<size_t NDIMS, class RANGE>
+	template<class RANGE, size_t NDIMS>
 	requires std::ranges::random_access_range<RANGE>
 		class grid_view : public std::ranges::view_base
 	{
@@ -292,14 +292,14 @@ namespace sci
 			auto subrange = std::ranges::subrange(m_dataMembers->m_range.begin() + index * m_strides.stride(),
 				m_dataMembers->m_range.begin() + (index + 1) * m_strides.stride());
 			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
-			return grid_view<NDIMS - 1, decltype(subrange)>(std::forward<decltype(subrange)>(subrange), m_strides.next());
+			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 		}
 		const auto operator[](const difference_type& index) const requires(NDIMS > 1)
 		{
 			auto subrange = std::ranges::subrange(m_dataMembers->m_range.begin() + index * m_strides.stride(),
 				m_dataMembers->m_range.begin() + (index + 1) * m_strides.stride());
 			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
-			return grid_view<NDIMS - 1, decltype(subrange)>(std::forward<decltype(subrange)>(subrange), m_strides.next());
+			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 		}
 		std::array<size_t, NDIMS> shape()
 		{
@@ -318,11 +318,11 @@ namespace sci
 
 	template <size_t NDIMS, class RANGE>
 	requires std::ranges::random_access_range<RANGE>
-		grid_view(RANGE&&, const GridPremultipliedStridesReference<NDIMS>&)->grid_view<NDIMS, RANGE>;
+		grid_view(RANGE&&, const GridPremultipliedStridesReference<NDIMS>&)->grid_view<RANGE, NDIMS>;
 
 	template <size_t NDIMS, class RANGE>
 	requires std::ranges::random_access_range<RANGE>
-		grid_view(RANGE&&)->grid_view<1, RANGE>;
+		grid_view(RANGE&&)->grid_view<RANGE, 1>;
 
 
 
@@ -333,11 +333,11 @@ namespace sci
 		grid_fn(const GridPremultipliedStridesReference<NDIMS>& strides)
 			:m_strides(strides)
 		{}
-		template <size_t NDIMS, class RANGE>
+		template <class RANGE, size_t NDIMS>
 		requires std::ranges::random_access_range<RANGE>
 			auto operator()(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) const
 		{
-			return grid_view<NDIMS, RANGE>{ std::forward<RANGE>(range), m_strides };
+			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), m_strides };
 		}
 		template <size_t NDIMS>
 		auto operator()(const GridPremultipliedStridesReference<NDIMS>& strides) const
@@ -349,7 +349,7 @@ namespace sci
 		requires std::ranges::random_access_range<RANGE>
 			friend auto operator|(RANGE&& range, grid_fn const& fn)
 		{
-			return grid_view<NDIMS, RANGE>{ std::forward<RANGE>(range), fn.m_strides };
+			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
 		}
 	private:
 		const GridPremultipliedStridesReference<NDIMS> m_strides;
