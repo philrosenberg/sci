@@ -1,5 +1,28 @@
-#include"../include/svector/array.h"
+#include"../include/svector/gridview.h"
 #include<iostream>
+
+#include<vector>
+#include<deque>
+
+
+
+
+static_assert((bool)std::ranges::random_access_range<sci::grid_view<1, std::deque<double>>>, "sci::grid_view failed the test for being a random access range");
+static_assert((bool)std::ranges::range<sci::grid_view<1, std::deque<double>>>, "sci::grid_view failed the test for being a range");
+static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>>, "sci::grid_view failed the test for having a random access iterator");
+static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>>, "sci::grid_view failed the test for having a bidirectional iterator");
+static_assert(std::input_iterator<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>>, "sci::grid_view failed the test for having a input iterator");
+static_assert(std::forward_iterator<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>>, "sci::grid_view failed the test for having a forward iterator");
+static_assert(std::output_iterator<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>, int>, "sci::grid_view failed the test for having a output iterator");
+static_assert(std::indirectly_readable<std::ranges::iterator_t<sci::grid_view<1, std::deque<double>>>>, "sci::grid_view failed the test for having a indirectly readable iterator");
+static_assert((bool)!std::ranges::contiguous_range< sci::grid_view<1, std::deque<double>>>, "grid_view<std::deque<>> should not be contiguous");
+
+static_assert((bool)std::ranges::contiguous_range<sci::grid_view<1, std::vector<double>>>, "sci::grid_view<std::vector<>> failed the test for being a contiguous range");
+
+
+
+
+
 
 template<class BASERANGE>
 void output2d(sci::grid_view<2, BASERANGE> grid)
