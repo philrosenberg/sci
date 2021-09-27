@@ -321,9 +321,51 @@ namespace sci
 			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 		}
-		std::array<size_t, NDIMS> shape()
+		std::array<size_t, NDIMS> shape() const
 		{
 			return m_strides.getShape(size());
+		}
+		reference_type at(const difference_type& index) requires(NDIMS == 1)
+		{
+			return m_dataMembers->m_range.at(index);
+		}
+		const reference_type at(const difference_type& index) const requires(NDIMS == 1)
+		{
+			return m_dataMembers->m_range.at(index);
+		}
+		reference_type at(const std::array<size_t, NDIMS>& index)
+		{
+			return m_dataMembers->m_range.at(m_strides.getOffset(index));
+		}
+		const reference_type at(const std::array<size_t, NDIMS>& index) const
+		{
+			return m_dataMembers->m_range.at(m_strides.getOffset(index));
+		}
+		auto at(const difference_type& index) requires(NDIMS > 1)
+		{
+			//use vector::at to do range checking on first and last element
+			auto first = m_dataMembers->m_range.at(index * m_strides.stride());
+			auto last = m_dataMembers->m_range.at((index + 1) * m_strides.stride()-1);
+
+			auto subrange = std::ranges::subrange(m_dataMembers->m_range.begin() + index * m_strides.stride(),
+				m_dataMembers->m_range.begin() + (index + 1) * m_strides.stride());
+			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
+			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
+		}
+		const auto at(const difference_type& index) const requires(NDIMS > 1)
+		{
+			//use vector::at to do range checking on first and last element
+			auto first = m_dataMembers->m_range.at(index * m_strides.stride());
+			auto last = m_dataMembers->m_range.at((index + 1) * m_strides.stride() - 1);
+
+			auto subrange = std::ranges::subrange(m_dataMembers->m_range.begin() + index * m_strides.stride(),
+				m_dataMembers->m_range.begin() + (index + 1) * m_strides.stride());
+			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
+			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
+		}
+		bool empty() const
+		{
+			return std::ranges::empty(m_dataMembers->m_range);
 		}
 
 	private:

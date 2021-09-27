@@ -112,7 +112,9 @@ int main()
 		grid[{1, 1}] = 4.0;
 		grid[{2, 0}] = 8.0;
 		output2d(grid.getView());
-		grid.resize({ 5, 3 }, 7.0);
+		grid.reshape({ 5, 3 }, 7.0);
+		output2d(grid.getView());
+		grid.reshape({ 6, 4 }, 8.0);
 		output2d(grid.getView());
 	}
 
