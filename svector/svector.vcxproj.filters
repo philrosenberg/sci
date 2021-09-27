@@ -227,5 +227,8 @@
     <ClInclude Include="..\include\svector\gridview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\gridtupleview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

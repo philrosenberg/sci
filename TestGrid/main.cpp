@@ -1,4 +1,5 @@
 #include"../include/svector/gridview.h"
+#include"../include/svector/gridtupleview.h"
 #include"../include/svector/array.h"
 #include<iostream>
 
@@ -116,6 +117,14 @@ int main()
 		output2d(grid.getView());
 		grid.reshape({ 6, 4 }, 8.0);
 		output2d(grid.getView());
+	}
+
+	//testing gridtuple_view
+	{
+		std::array<size_t, 2> shape2d{ 4, 3 };
+		sci::GridData<double, 2>grid1(shape2d, 1.0);
+		sci::GridData<double, 2>grid2(shape2d, 1.0);
+		auto grid3 = grid1 + grid2;
 	}
 
 

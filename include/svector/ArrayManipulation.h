@@ -6,47 +6,32 @@
 
 namespace sci
 {
-	/*template<size_t NDIMS>
-	bool allTrue(GridView<bool const, NDIMS> gridView)
+	template<size_t NDIMS>
+	bool allTrue(grid_view<bool const, NDIMS> gridView)
 	{
 		bool result = true;
 		for (auto iter = gridView.begin(); iter != gridView.end(); ++iter)
 			result &= *iter;
 		return result;
 	}
-	template<class T>
-	requires(bool(isGrid<T>()))
-		bool allTrue(T gridView)
+	template<size_t NDIMS>
+	bool allTrue(grid_view<bool const, NDIMS> gridView)
 	{
 		return allTrue(GridView<bool const, T::nDimensions()>(gridView));
 	}
 	template<size_t NDIMS>
-	bool anyTrue(GridView<bool const, NDIMS> gridView)
+	bool anyTrue(grid_view<bool const, NDIMS> gridView)
 	{
 		for (auto iter = gridView.begin(); iter != gridView.end(); ++iter)
 			result &= *iter;
 		return false;
 	}
-	template<class T>
-	requires(bool(isGrid<T>()))
-		bool anyTrue(T gridView)
+	template<size_t NDIMS>
+	bool anyTrue(grid_view<bool const, NDIMS> grid_view)
 	{
 		return anyTrue(GridView<bool const, T::nDimensions()>(gridView));
-	}*/
-	bool anyTrue(std::span<bool const> s)
-	{
-		for (bool val : s)
-			if (val)
-				return true;
-		return false;
 	}
-	bool allTrue(std::span<bool> s)
-	{
-		for (bool val : s)
-			if (!val)
-				return false;
-		return true;
-	}
+	
 	int sum(std::span<int const>s)
 	{
 		int result =0;
@@ -120,7 +105,7 @@ namespace sci
 	}
 
 	template<class T, size_t NDIMS>
-	T min(GridView<T, NDIMS> gridView)
+	T min(grid_view<T, NDIMS> gridView)
 	{
 		if (gridView.size() == 0)
 			return std::numeric_limits<T>::quiet_NaN();
@@ -131,7 +116,7 @@ namespace sci
 	}
 
 	template<class T, size_t NDIMS>
-	T max(GridView<T, NDIMS> gridView)
+	T max(grid_view<T, NDIMS> gridView)
 	{
 		if (gridView.size() == 0)
 			return std::numeric_limits<T>::quiet_NaN();
