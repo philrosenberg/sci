@@ -1,6 +1,7 @@
 #pragma once
 #include"gridview.h"
 #include<tuple>
+#include<assert.h>
 
 namespace sci
 {
@@ -12,14 +13,14 @@ namespace sci
 	private:
 		const size_t NDIMS;
 	public:
-		class Iterator : public std::pair<typename grid_view<RANGE1, NDIMS1>::Iterator, typename grid_view<RANGE2, NDIMS2>::Iterator>
+		class Iterator : public std::pair<typename grid_view<RANGE1, NDIMS1>::iterator, typename grid_view<RANGE2, NDIMS2>::iterator>
 		{
 		public:
 			using base_type1 = typename std::ranges::iterator_t<grid_view<RANGE1, NDIMS1>>;
 			using base_type2 = typename std::ranges::iterator_t<grid_view<RANGE2, NDIMS2>>;
 			using iterator_category = std::random_access_iterator_tag;
 			using value_type = std::pair<typename std::iterator_traits<base_type1>::value_type, typename std::iterator_traits<base_type2>::value_type>;
-			using difference_type = typename std::iterator_traits<base_type1>::difference_type;
+			//using difference_type = typename std::iterator_traits<base_type1>::difference_type;
 			using pointer = std::pair<typename std::iterator_traits<base_type1>::pointer, typename std::iterator_traits<base_type2>::pointer>;
 			using const_pointer = std::pair<const typename std::iterator_traits<base_type1>::pointer, const typename std::iterator_traits<base_type2>::pointer>;
 			using reference = std::pair<typename std::iterator_traits<base_type1>::reference, typename std::iterator_traits<base_type2>::pointer>;
@@ -54,7 +55,7 @@ namespace sci
 			{
 				if constexpr(NDIMS1 > 0)
 					++static_cast<base_type1&>(this->first);
-				if constxpr(NDIMS2 > 0)
+				if constexpr(NDIMS2 > 0)
 					++static_cast<base_type2&>(this->second);
 				return (*this);
 			}
@@ -213,53 +214,53 @@ namespace sci
 		{
 			return const_reference_type(*(begin() + index));
 		}
-		reference_type operator[](const std::array<size_t, NDIMS>& index)
+		reference_type operator[](const std::array<size_t, std::max(NDIMS1,NDIMS2)>& index)
 		{
-			return reference_type(*(begin() + m_strides.getOffset(index)));
+			return reference_type(*(begin() + m_grid1.getStrides().getOffset(index)));
 		}
-		const_reference_type operator[](const std::array<size_t, NDIMS>& index) const
+		const_reference_type operator[](const std::array<size_t, std::max(NDIMS1, NDIMS2)>& index) const
 		{
-			return const_reference_type(*(begin() + m_strides.getOffset(index)));
+			return const_reference_type(*(begin() + m_grid1.getStrides().getOffset(index)));
 		}
-		auto operator[](const difference_type& index) requires(NDIMS != 1)
+		auto operator[](const difference_type& index) requires(std::max(NDIMS1, NDIMS2) != 1)
 		{
 			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
 			{
-				return gridpair_view<RANGE1, NDIMS1 - 1, RANGE2, NDIMS2 - 1>(grid1[index], grid2[index]);
+				return gridpair_view<RANGE1, NDIMS1 - 1, RANGE2, NDIMS2 - 1>(m_grid1[index], m_grid2[index]);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
-				return gridpair_view<RANGE1, NDIMS1 - 1, RANGE2, NDIMS2>(grid1[index], grid2);
+				return gridpair_view<RANGE1, NDIMS1 - 1, RANGE2, NDIMS2>(m_grid1[index], m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
-				return gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2 - 1>(grid1, grid2[index]);
+				return gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2 - 1>(m_grid1, m_grid2[index]);
 			}
 			else
 			{
-				return gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2>(grid1, grid2);
+				return gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2>(m_grid1, m_grid2);
 			}
 		}
 		const auto operator[](const difference_type& index) const requires(NDIMS > 1)
 		{
 			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
 			{
-				return gridpair_view<RANGE1 const, NDIMS1 - 1, RANGE2 const, NDIMS2 - 1>(grid1[index], grid2[index]);
+				return gridpair_view<RANGE1 const, NDIMS1 - 1, RANGE2 const, NDIMS2 - 1>(m_grid1[index], m_grid2[index]);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
-				return gridpair_view<RANGE1 const, NDIMS1 - 1, RANGE2 const, NDIMS2>(grid1[index], grid2);
+				return gridpair_view<RANGE1 const, NDIMS1 - 1, RANGE2 const, NDIMS2>(m_grid1[index], m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
-				return gridpair_view<RANGE1 const, NDIMS1, RANGE2 const, NDIMS2 - 1>(grid1, grid2[index]);
+				return gridpair_view<RANGE1 const, NDIMS1, RANGE2 const, NDIMS2 - 1>(m_grid1, m_grid2[index]);
 			}
 			else
 			{
-				return gridpair_view<RANGE1 const, NDIMS1, RANGE2 const, NDIMS2>(grid1, grid2);
+				return gridpair_view<RANGE1 const, NDIMS1, RANGE2 const, NDIMS2>(m_grid1, m_grid2);
 			}
 		}
-		std::array<size_t, NDIMS> shape() const
+		std::array<size_t, std::max(NDIMS1, NDIMS2)> shape() const
 		{
 			return m_grid1.shape();
 		}
@@ -315,11 +316,11 @@ namespace sci
 
 
 	template<class T, class U>
-	requires(bool(isGrid<T>() && isGrid<U>()))
-		auto operator+(const T& a, const U& b)
+	requires(bool(isGrid<T>() && isGrid<U>() && std::ranges::random_access_range<T>&& std::ranges::random_access_range<U>))
+		auto operator+(T& a, U& b)
 	{
-		using pair_type = gridpair_view<T::value_type, T::ndims, U::value_type, U::ndims>;
+		using pair_type = gridpair_view<T, T::ndims, U, U::ndims>;
 		pair_type pair(a, b);
-		return pair | std::ranges::views::transform([]decltype(auto)(pair_type::const_reference_type p){ return (p.first + p.second); });
+		return pair | std::ranges::views::transform([](pair_type::const_reference_type p){ return (p.first + p.second); });
 	}
 }

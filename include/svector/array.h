@@ -245,6 +245,8 @@ namespace sci
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 		using data_type = typename GridDataVectorType<T>::type;
 
+		static const size_t ndims = NDIMS;
+
 		constexpr GridData(const std::array<size_t, NDIMS>& shape)
 		{
 			setShape(shape);
@@ -312,7 +314,7 @@ namespace sci
 		}
 		const size_t* getStridesPointer() const
 		{
-			return members::getStridesPointer();
+			return members::getPremultipliedStridePointer();
 		}
 		std::array<size_t, NDIMS> shape() const
 		{
@@ -320,7 +322,7 @@ namespace sci
 		}
 		size_t size() const
 		{
-			return members::m_view.size();
+			return members::m_data.size();
 		}
 		void reshape(const std::array<size_t, NDIMS>& shape)
 		{
@@ -881,12 +883,12 @@ namespace sci
 		return a;
 	}
 
-	template<class T, class U>
-	requires(bool(isGrid<T>() && isGrid<U>()))
-	auto operator+(const T &a, const U &b)
-	{
-		return operate<std::plus<>>(GridView<std::add_const<T::value_type>::type, T::nDimensions()>(a), GridView<std::add_const<U::value_type>::type, U::nDimensions()>(b));
-	}
+	//template<class T, class U>
+	//requires(bool(isGrid<T>() && isGrid<U>()))
+	//auto operator+(const T &a, const U &b)
+	//{
+	//	return operate<std::plus<>>(GridView<std::add_const<T::value_type>::type, T::nDimensions()>(a), GridView<std::add_const<U::value_type>::type, U::nDimensions()>(b));
+	//}
 	template<class T, class U>
 	requires(bool(isGrid<T>() && !isGrid<U>()))
 	auto operator+(const T &a, const U& b)

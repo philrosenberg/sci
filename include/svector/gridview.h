@@ -116,6 +116,9 @@ namespace sci
 		GridPremultipliedStridesPointer<NDIMS> m_ptr;
 	};
 
+	template<class T, size_t NDIMS, class Allocator>
+	class GridData;
+
 
 	template<class RANGE, size_t NDIMS>
 	requires std::ranges::random_access_range<RANGE>
@@ -128,7 +131,6 @@ namespace sci
 			using base_type = std::ranges::iterator_t<RANGE>;
 			using iterator_category = std::iterator_traits<base_type>::iterator_category;
 			using value_type = std::iterator_traits<base_type>::value_type;
-			using difference_type = std::iterator_traits<base_type>::difference_type;
 			using pointer = std::iterator_traits<base_type>::pointer;
 			using reference = std::iterator_traits<base_type>::reference;
 			using size_type = std::ranges::range_size_t<RANGE>;
@@ -258,6 +260,7 @@ namespace sci
 		using size_type = iterator::size_type;
 		using difference_type = iterator::difference_type;
 		using sentinel = iterator;
+		static const size_t ndims = NDIMS;
 
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
@@ -268,6 +271,12 @@ namespace sci
 
 		grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides)
 			: m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }, m_strides(strides)
+		{
+		}
+
+		template<class T, class Allocator>
+		grid_view(GridData<T, NDIMS, Allocator> &gridData)
+			: m_dataMembers{ new data_members_t{(gridData)} }, m_strides(gridData.getStridesPointer())
 		{
 		}
 

@@ -21,6 +21,18 @@ static_assert((bool)!std::ranges::contiguous_range< sci::grid_view<std::deque<do
 
 static_assert((bool)std::ranges::contiguous_range<sci::grid_view<std::vector<double>, 1>>, "sci::grid_view<std::vector<>> failed the test for being a contiguous range");
 
+static_assert((bool)std::ranges::random_access_range<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>, "sci::gridpair_view failed the test for being a random access range");
+static_assert((bool)std::ranges::range<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>, "sci::gridpair_view failed the test for being a range");
+static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>, "sci::gridpair_view failed the test for having a random access iterator");
+static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>, "sci::gridpair_view failed the test for having a bidirectional iterator");
+static_assert(std::input_iterator<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>, "sci::grid_view gridpair_view the test for having a input iterator");
+static_assert(std::forward_iterator<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>, "sci::gridpair_view failed the test for having a forward iterator");
+static_assert(std::output_iterator<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>, int>, "sci::gridpair_view failed the test for having a output iterator");
+static_assert(std::indirectly_readable<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>, "sci::gridpair_view failed the test for having a indirectly readable iterator");
+static_assert((bool)!std::ranges::contiguous_range< sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>, "gridpair_view<std::deque<>> should not be contiguous");
+
+static_assert((bool)std::ranges::contiguous_range<sci::gridpair_view<std::vector<double>, 1, std::deque<double>, 1>>, "sci::gridpair_view<std::vector<>> failed the test for being a contiguous range");
+
 
 
 
@@ -117,6 +129,10 @@ int main()
 		output2d(grid.getView());
 		grid.reshape({ 6, 4 }, 8.0);
 		output2d(grid.getView());
+
+		std::cout << "Testing grid_view(GridData) constructor\n";
+		sci::grid_view<sci::GridData<double, 2>, 2>view(grid);
+		output2d(view);
 	}
 
 	//testing gridtuple_view
@@ -124,6 +140,7 @@ int main()
 		std::array<size_t, 2> shape2d{ 4, 3 };
 		sci::GridData<double, 2>grid1(shape2d, 1.0);
 		sci::GridData<double, 2>grid2(shape2d, 1.0);
+		sci::gridpair_view<sci::GridData<double, 2>, 2, sci::GridData<double, 2>, 2> pair(grid1, grid2);
 		auto grid3 = grid1 + grid2;
 	}
 
