@@ -135,8 +135,10 @@ namespace sci
 			using reference = std::iterator_traits<base_type>::reference;
 			using size_type = std::ranges::range_size_t<RANGE>;
 			using difference_type = std::ranges::range_difference_t<RANGE>;
+			using range_type = RANGE;
 			//template<std::ranges::contiguous_range<RANGE>>
-			using element_type = std::pointer_traits<pointer>::element_type;
+			//using element_type = std::pointer_traits<pointer>::element_type;
+			//using element_type = base_type::element_type;
 
 			Iterator() = default;
 			Iterator(base_type const& b)
@@ -261,6 +263,7 @@ namespace sci
 		using difference_type = iterator::difference_type;
 		using sentinel = iterator;
 		static const size_t ndims = NDIMS;
+		using range_type = RANGE;
 
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
@@ -295,6 +298,10 @@ namespace sci
 		sentinel cend() const
 		{
 			return end();
+		}
+		const GridPremultipliedStridesReference<NDIMS> getStrides() const
+		{
+			return m_strides;
 		}
 		auto size() const
 		{
@@ -375,6 +382,14 @@ namespace sci
 		bool empty() const
 		{
 			return std::ranges::empty(m_dataMembers->m_range);
+		}
+		grid_view<RANGE, NDIMS>& getView()
+		{
+			return *this;
+		}
+		const grid_view<RANGE, NDIMS>& getView() const
+		{
+			return *this;
 		}
 
 	private:

@@ -108,6 +108,10 @@ namespace sci
 		{
 			return &m_strides[0];
 		}
+		const GridPremultipliedStridesReference<NDIMS> getStrides() const
+		{
+			return GridPremultipliedStridesReference<NDIMS>(&m_strides[0]);
+		}
 		constexpr void refreshView()
 		{
 			m_view = m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0]));
@@ -244,6 +248,7 @@ namespace sci
 		using reverse_iterator = typename std::reverse_iterator<iterator>;
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 		using data_type = typename GridDataVectorType<T>::type;
+		using range_type = std::vector<T>;
 
 		static const size_t ndims = NDIMS;
 
@@ -315,6 +320,10 @@ namespace sci
 		const size_t* getStridesPointer() const
 		{
 			return members::getPremultipliedStridePointer();
+		}
+		const GridPremultipliedStridesReference<NDIMS> getStrides() const
+		{
+			return GridPremultipliedStridesReference<NDIMS>(members::getPremultipliedStridePointer());
 		}
 		std::array<size_t, NDIMS> shape() const
 		{
