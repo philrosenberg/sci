@@ -8,18 +8,20 @@ namespace sci
 {
 
 
-	template<class RANGE1, size_t NDIMS1, class RANGE2, size_t NDIMS2>
+	template<class GRID1, class GRID2>
 	class gridpair_view
 	{
 	private:
+		static const size_t NDIMS1 = GRID1::ndims;
+		static const size_t NDIMS2 = GRID2::ndims;
 		static const size_t NDIMS = std::max(NDIMS1, NDIMS2);
 		static const size_t ndims = NDIMS;
 	public:
-		class Iterator : public std::pair<typename grid_view<RANGE1, NDIMS1>::iterator, typename grid_view<RANGE2, NDIMS2>::iterator>
+		class Iterator : public std::pair<typename GRID1::iterator, typename GRID2::iterator>
 		{
 		public:
-			using base_type1 = typename std::ranges::iterator_t<grid_view<RANGE1, NDIMS1>>;
-			using base_type2 = typename std::ranges::iterator_t<grid_view<RANGE2, NDIMS2>>;
+			using base_type1 = typename std::ranges::iterator_t<GRID1>;
+			using base_type2 = typename std::ranges::iterator_t<GRID2>;
 			using iterator_category = std::random_access_iterator_tag;
 			using value_type = std::pair<typename std::iterator_traits<base_type1>::value_type, typename std::iterator_traits<base_type2>::value_type>;
 			//using difference_type = typename std::iterator_traits<base_type1>::difference_type;
@@ -29,8 +31,8 @@ namespace sci
 			//using const_reference = std::pair<const typename std::reference_wrapper<std::iterator_traits<base_type1>>, const typename std::reference_wrapper<std::iterator_traits<base_type2>>>;
 			//using reference = std::pair<typename std::iterator_traits<base_type1>::reference, typename std::iterator_traits<base_type2>::reference>;
 			//using const_reference = std::pair<const typename std::iterator_traits<base_type1>::reference, const typename std::iterator_traits<base_type2>::reference>;
-			using size_type = typename std::ranges::range_size_t<grid_view<RANGE1, NDIMS1>>;
-			using difference_type = typename std::ranges::range_difference_t<grid_view<RANGE1, NDIMS1>>;
+			using size_type = typename std::ranges::range_size_t<GRID1>;
+			using difference_type = typename std::ranges::range_difference_t<GRID1>;
 			//template<std::ranges::contiguous_range<RANGE>>
 			//using element_type = std::pair<typename base_type1::element_type, typename base_type2::element_type>;
 			//using element_type = std::pointer_traits<pointer>::element_type;
@@ -182,11 +184,11 @@ namespace sci
 		using  const_reference_type = iterator::value_type;
 
 		constexpr gridpair_view() = default;
-		constexpr gridpair_view(gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2> const& rhs) = default;
-		constexpr gridpair_view(gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2> && rhs) = default;
-		constexpr gridpair_view& operator=(gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2> const& rhs) = default;
-		constexpr gridpair_view& operator=(gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2> && rhs) = default;
-		constexpr gridpair_view(grid_view<RANGE1, NDIMS1> grid1, grid_view<RANGE2, NDIMS2> grid2)
+		constexpr gridpair_view(gridpair_view<GRID1, GRID2> const& rhs) = default;
+		constexpr gridpair_view(gridpair_view<GRID1, GRID2> && rhs) = default;
+		constexpr gridpair_view& operator=(gridpair_view<GRID1, GRID2> const& rhs) = default;
+		constexpr gridpair_view& operator=(gridpair_view<GRID1, GRID2> && rhs) = default;
+		constexpr gridpair_view(GRID1 grid1, GRID2 grid2)
 			:m_grid1(grid1), m_grid2(grid2), m_strides(NDIMS1 > NDIMS2 ? grid1.getStrides() : grid2.getStrides())
 		{
 			assert(grid1.ndims == 0 || grid2.ndims == 0 || grid1.shape() == grid2.shape());
@@ -239,17 +241,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(sub2)::range_type, NDIMS2 - 1>(sub1, sub2);
+				return gridpair_view<decltype(sub1), decltype(sub1)>(sub1, sub2);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(m_grid2), 0>(m_grid1[index], m_grid2);
+				return gridpair_view<decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(m_grid1), 0, decltype(sub2)::range_type, NDIMS2 - 1>(m_grid1, m_grid2[index]);
+				return gridpair_view<decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -262,17 +264,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(sub2)::range_type, NDIMS2 - 1>(sub1, sub2);
+				return gridpair_view<decltype(sub1), decltype(sub2)>(sub1, sub2);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(m_grid2), 0>(m_grid1[index], m_grid2);
+				return gridpair_view<decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(m_grid1), 0, decltype(sub2)::range_type, NDIMS2 - 1>(m_grid1, m_grid2[index]);
+				return gridpair_view<decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -286,11 +288,11 @@ namespace sci
 			else
 				return m_grid2.shape();
 		}
-		gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2>& getView()
+		gridpair_view<GRID1, GRID2>& getView()
 		{
 			return *this;
 		}
-		const gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2>& getView() const
+		const gridpair_view<GRID1, GRID2>& getView() const
 		{
 			return *this;
 		}
@@ -340,34 +342,38 @@ namespace sci
 
 
 	private:
-		grid_view<RANGE1, NDIMS1> m_grid1;
-		grid_view<RANGE2, NDIMS2> m_grid2;
+		GRID1 m_grid1;
+		GRID2 m_grid2;
 		GridPremultipliedStridesReference<std::max(NDIMS1, NDIMS2)> m_strides;
 	};
 
+	template<class GRID1, class GRID2>
+	struct isGrid< gridpair_view<GRID1, GRID2>> : std::true_type {};
 
-	template<class RANGE1, size_t NDIMS1, class RANGE2, size_t NDIMS2>
-	auto make_gridpair_view(grid_view<RANGE1, NDIMS1> grid1, grid_view<RANGE2, NDIMS2> grid2)
+	template<class GRID1, class GRID2>
+	auto make_gridpair_view(GRID1 grid1, GRID2 grid2) requires(bool(isGrid<GRID1>() && isGrid<GRID2>()))
 	{
-		return gridpair_view<RANGE1, NDIMS1, RANGE2, NDIMS2>(grid1, grid2);
+		return gridpair_view<decltype(grid1.getView()), decltype(grid2.getView())>(grid1.getView(), grid2.getView());
 	}
 
 
 
-	template<class RANGE1, size_t NDIMS1, class RANGE2, size_t NDIMS2, class TRANSFORM>
+	template<class GRID1, class GRID2, class TRANSFORM>
 	class gridpairtransform_view
 	{
 	private:
+		static const size_t NDIMS1 = GRID1::ndims;
+		static const size_t NDIMS2 = GRID2::ndims;
 		static const size_t NDIMS = std::max(NDIMS1, NDIMS2);
 		static const size_t ndims = NDIMS;
 
 
 	public:
-		class Iterator : public std::pair<typename grid_view<RANGE1, NDIMS1>::iterator, typename grid_view<RANGE2, NDIMS2>::iterator>
+		class Iterator : public std::pair<typename GRID1::iterator, typename GRID2::iterator>
 		{
 		public:
-			using base_type1 = typename std::ranges::iterator_t<grid_view<RANGE1, NDIMS1>>;
-			using base_type2 = typename std::ranges::iterator_t<grid_view<RANGE2, NDIMS2>>;
+			using base_type1 = typename std::ranges::iterator_t<GRID1>;
+			using base_type2 = typename std::ranges::iterator_t<GRID2>;
 			//to do - work out how to sort the return type
 			//using transform_return_type = decltype(TRANSFORM t(*base_type1(), *base_type2()));
 			using transform_return_type = base_type1::value_type;
@@ -380,8 +386,8 @@ namespace sci
 			//using const_reference = std::pair<const typename std::reference_wrapper<std::iterator_traits<base_type1>>, const typename std::reference_wrapper<std::iterator_traits<base_type2>>>;
 			//using reference = std::pair<typename std::iterator_traits<base_type1>::reference, typename std::iterator_traits<base_type2>::reference>;
 			//using const_reference = std::pair<const typename std::iterator_traits<base_type1>::reference, const typename std::iterator_traits<base_type2>::reference>;
-			using size_type = typename std::ranges::range_size_t<grid_view<RANGE1, NDIMS1>>;
-			using difference_type = typename std::ranges::range_difference_t<grid_view<RANGE1, NDIMS1>>;
+			using size_type = typename std::ranges::range_size_t<GRID1>;
+			using difference_type = typename std::ranges::range_difference_t<GRID1>;
 			//template<std::ranges::contiguous_range<RANGE>>
 			//using element_type = std::pair<typename base_type1::element_type, typename base_type2::element_type>;
 			//using element_type = std::pointer_traits<pointer>::element_type;
@@ -535,11 +541,11 @@ namespace sci
 		using  const_reference_type = iterator::value_type;
 
 		constexpr gridpairtransform_view() = default;
-		constexpr gridpairtransform_view(gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM> const& rhs) = default;
-		constexpr gridpairtransform_view(gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM>&& rhs) = default;
-		constexpr gridpairtransform_view& operator=(gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM> const& rhs) = default;
-		constexpr gridpairtransform_view& operator=(gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM>&& rhs) = default;
-		constexpr gridpairtransform_view(grid_view<RANGE1, NDIMS1> grid1, grid_view<RANGE2, NDIMS2> grid2, TRANSFORM transform)
+		constexpr gridpairtransform_view(gridpairtransform_view<GRID1, GRID2, TRANSFORM> const& rhs) = default;
+		constexpr gridpairtransform_view(gridpairtransform_view<GRID1, GRID2, TRANSFORM>&& rhs) = default;
+		constexpr gridpairtransform_view& operator=(gridpairtransform_view<GRID1, GRID2, TRANSFORM> const& rhs) = default;
+		constexpr gridpairtransform_view& operator=(gridpairtransform_view<GRID1, GRID2, TRANSFORM>&& rhs) = default;
+		constexpr gridpairtransform_view(GRID1 grid1, GRID2 grid2, TRANSFORM transform)
 			:m_grid1(grid1), m_grid2(grid2), m_strides(NDIMS1 > NDIMS2 ? grid1.getStrides() : grid2.getStrides())
 		{
 			m_transform = transform;
@@ -593,17 +599,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(sub2)::range_type, NDIMS2 - 1, TRANSFORM>(sub1, sub2, m_transform);
+				return gridpairtransform_view<decltype(sub1), decltype(sub2), TRANSFORM>(sub1, sub2, m_transform);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(m_grid2), 0, TRANSFORM>(m_grid1[index], m_grid2, m_transform);
+				return gridpair_view<decltype(sub1), decltype(m_grid2), TRANSFORM>(m_grid1[index], m_grid2, m_transform);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(m_grid1), 0, decltype(sub2)::range_type, NDIMS2 - 1, TRANSFORM>(m_grid1, m_grid2[index], m_transform);
+				return gridpair_view<decltype(m_grid1), decltype(sub2), TRANSFORM>(m_grid1, m_grid2[index], m_transform);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -616,17 +622,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(sub2)::range_type, NDIMS2 - 1, TRANSFORM>(sub1, sub2, m_transform);
+				return gridpair_view<decltype(sub1), decltype(sub2)::range_type, TRANSFORM>(sub1, sub2, m_transform);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpair_view<decltype(sub1)::range_type, NDIMS1 - 1, decltype(m_grid2), 0, TRANSFORM>(m_grid1[index], m_grid2, m_transform);
+				return gridpair_view<decltype(sub1), decltype(m_grid2), TRANSFORM>(m_grid1[index], m_grid2, m_transform);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpair_view<decltype(m_grid1), 0, decltype(sub2)::range_type, NDIMS2 - 1, TRANSFORM>(m_grid1, m_grid2[index], m_transform);
+				return gridpair_view<decltype(m_grid1), decltype(sub2), TRANSFORM>(m_grid1, m_grid2[index], m_transform);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -640,11 +646,11 @@ namespace sci
 			else
 				return m_grid2.shape();
 		}
-		gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM>& getView()
+		gridpairtransform_view<GRID1, GRID2, TRANSFORM>& getView()
 		{
 			return *this;
 		}
-		const gridpairtransform_view<RANGE1, NDIMS1, RANGE2, NDIMS2, TRANSFORM>& getView() const
+		const gridpairtransform_view<GRID1, GRID2, TRANSFORM>& getView() const
 		{
 			return *this;
 		}
@@ -694,12 +700,14 @@ namespace sci
 
 
 	private:
-		grid_view<RANGE1, NDIMS1> m_grid1;
-		grid_view<RANGE2, NDIMS2> m_grid2;
+		GRID1 m_grid1;
+		GRID2 m_grid2;
 		GridPremultipliedStridesReference<std::max(NDIMS1, NDIMS2)> m_strides;
 		TRANSFORM m_transform;
 	};
 
+	template<class GRID1, class GRID2, class TRANSFORM>
+	struct isGrid< gridpairtransform_view<GRID1, GRID2, TRANSFORM>> : std::true_type {};
 
 
 
@@ -713,27 +721,10 @@ namespace sci
 
 
 	template<class GRID1, class GRID2, class TRANSFORM>
-	auto make_gridpairtransform_view(GRID1 &grid1, GRID2 &grid2, TRANSFORM transform)// requires(bool(isGrid<GRID1>() && idGrid<GRID2>()))
+	auto make_gridpairtransform_view(GRID1 &grid1, GRID2 &grid2, TRANSFORM transform) requires(bool(isGrid<GRID1>() && isGrid<GRID2>()))
 	{
-		using range1 = decltype(grid1.getView())::range_type;
-		using range2 = decltype(grid2.getView())::range_type;
-		return gridpairtransform_view<range1, GRID1::ndims, range2, GRID2::ndims, TRANSFORM>(grid1.getView(), grid2.getView(), transform);
+		return gridpairtransform_view<decltype(grid1.getView()), decltype(grid2.getView()), TRANSFORM>(grid1.getView(), grid2.getView(), transform);
 	}
-	/*template<class T, size_t NDIMS1, class RANGE2, size_t NDIMS2, class TRANSFORM>
-	auto make_gridpairtransform_view(GridData<T, NDIMS1> &grid1, GridData<U, NDIMS2> &grid2, TRANSFORM transform)
-	{
-		return make_gridpairtransform_view(grid1.getView(), grid2.getView(), transform);
-	}
-	template<class RANGE1, size_t NDIMS1, class U, size_t NDIMS2, class TRANSFORM>
-	auto make_gridpairtransform_view(GridData<T, NDIMS1>& grid1, GridData<U, NDIMS2>& grid2, TRANSFORM transform)
-	{
-		return make_gridpairtransform_view(grid1.getView(), grid2.getView(), transform);
-	}
-	template<class T, size_t NDIMS1, class U, size_t NDIMS2, class TRANSFORM>
-	auto make_gridpairtransform_view(GridData<T, NDIMS1>& grid1, GridData<U, NDIMS2>& grid2, TRANSFORM transform)
-	{
-		return make_gridpairtransform_view(grid1.getView(), grid2.getView(), transform);
-	}*/
 
 
 
@@ -743,14 +734,9 @@ namespace sci
 	}
 
 	template<class T, class U>
-	requires(bool(isGrid<T>() && isGrid<U>() && std::ranges::random_access_range<T>&& std::ranges::random_access_range<U>))
+	requires(bool(isGrid<T>() && isGrid<U>()))
 		auto operator+(T& a, U& b)
 	{
 		return make_gridpairtransform_view(a, b, add);
-		//using pair_type = gridpair_view<T, T::ndims, U, U::ndims>;
-		//pair_type pair(a, b);
-		//auto operated = std::forward<pair_type>(pair) | std::ranges::views::transform([](pair_type::const_reference_type p){ return (p.first + p.second); });
-		//return operated | views::grid<std::max(T::ndims, U::ndims)>(a.getStrides());
-		//using pair_type = gridpair_view<T, T::ndims, U, U::ndims>;
 	}
 }

@@ -248,7 +248,6 @@ namespace sci
 		using reverse_iterator = typename std::reverse_iterator<iterator>;
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 		using data_type = typename GridDataVectorType<T>::type;
-		using range_type = std::vector<T>;
 
 		static const size_t ndims = NDIMS;
 

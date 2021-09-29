@@ -135,7 +135,6 @@ namespace sci
 			using reference = std::iterator_traits<base_type>::reference;
 			using size_type = std::ranges::range_size_t<RANGE>;
 			using difference_type = std::ranges::range_difference_t<RANGE>;
-			using range_type = RANGE;
 			//template<std::ranges::contiguous_range<RANGE>>
 			//using element_type = std::pointer_traits<pointer>::element_type;
 			//using element_type = base_type::element_type;
