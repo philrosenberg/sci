@@ -642,9 +642,38 @@ namespace sci
 	};
 
 
+	template<class T>
+	struct isGrid : std::false_type {};
+
+	template<class T, size_t NDIMS>
+	struct isGrid< grid_view<T, NDIMS>> : std::true_type {};
+
+	template<class T, size_t NDIMS>
+	struct isGrid< grid_view<T&, NDIMS>&> : std::true_type {};
+
+	template<class T, size_t NDIMS>
+	struct isGrid< GridData<T, NDIMS>> : std::true_type {};
+
+	template<class T, size_t NDIMS>
+	struct isGrid< GridData<T, NDIMS>&> : std::true_type {};
+
+	template<class T, size_t NDIMS>
+	struct isGrid< const GridData<T, NDIMS>&> : std::true_type {};
+
+	template<class T>
+	auto getGridView(T& grid) requires(bool(isGrid<std::remove_cvref_t<T>>()))
+	{
+		return grid.getView();
+	}
+
+	template<class T>
+	auto getGridView(T& scalar) requires(bool(!isGrid<std::remove_cvref_t<T>>()))
+	{
+		return scalar | views::grid<0>;
+	}
 
 
-	struct plus_assign
+	/*struct plus_assign
 	{
 		template <class T, class U>
 		constexpr auto operator()(T&& a, U&& b) const
@@ -825,14 +854,7 @@ namespace sci
 		}
 	};
 
-	template<class T>
-	struct isGrid : std::false_type {};
-
-	template<class T, size_t NDIMS>
-	struct isGrid< grid_view<T, NDIMS>> : std::true_type {};
-
-	template<class T, size_t NDIMS>
-	struct isGrid< GridData<T, NDIMS>> : std::true_type {};
+	
 
 	template<class OP, class T, class U, size_t NDIMS>
 	requires(!isGrid<U>())
@@ -1138,5 +1160,5 @@ namespace sci
 		auto operator/=(T &a, const U& b)
 	{
 		return operateAssign<std::divides<>>(GridView<T::value_type, T::nDimensions()>(a), b);
-	}
+	}*/
 }

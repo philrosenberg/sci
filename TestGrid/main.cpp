@@ -72,6 +72,18 @@ const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::dequ
 const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>> ref2(*iter);
 const_cast<const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>>(*iter) = std::pair(d1,d2);
 */
+
+using gd = sci::GridData<double, 2>;
+static_assert((bool)std::ranges::random_access_range<gd>, "sci::grid_view failed the test for being a random access range");
+static_assert((bool)std::ranges::range<gd>, "sci::grid_view failed the test for being a range");
+static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<gd>>, "sci::grid_view failed the test for having a random access iterator");
+static_assert((bool)std::bidirectional_iterator<std::ranges::iterator_t<gd>>, "sci::grid_view failed the test for having a bidirectional iterator");
+static_assert(std::input_iterator<std::ranges::iterator_t<gd>>, "sci::grid_view failed the test for having a input iterator");
+static_assert(std::forward_iterator<std::ranges::iterator_t<gd>>, "sci::grid_view failed the test for having a forward iterator");
+static_assert(std::output_iterator<std::ranges::iterator_t<gd>, double>, "sci::grid_view failed the test for having a output iterator");
+static_assert(std::indirectly_readable<std::ranges::iterator_t<gd>>, "sci::grid_view failed the test for having a indirectly readable iterator");
+
+
 static_assert((bool)std::ranges::random_access_range<sci::grid_view<std::deque<double>, 1>>, "sci::grid_view failed the test for being a random access range");
 static_assert((bool)std::ranges::range<sci::grid_view<std::deque<double>, 1>>, "sci::grid_view failed the test for being a range");
 static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<sci::grid_view<std::deque<double>, 1>>>, "sci::grid_view failed the test for having a random access iterator");
@@ -161,6 +173,7 @@ int main()
 		//start with some data
 		std::deque<double> que{ 1., 2., 3., 4., 5., 6. };
 		auto subrange = std::ranges::subrange(que.begin() + 2, que.begin() + 5);
+		double scalar = 100.0;
 
 		//create a 1D grid from que and output it
 		auto gridRange1d1 = que | sci::views::grid<1>;
@@ -194,6 +207,12 @@ int main()
 		//test slicing
 		auto gridRange1d3 = gridRange[0];
 		output1d(gridRange1d1);
+
+		//create a zero d grid
+		auto gridRange0d = scalar | sci::views::grid<0>;
+		std::cout << gridRange0d[{}] << "\n\n";
+		sci::getGridView(scalar);
+		//auto gridRange0d2 = sci::grid_fn<0>(sci::GridPremultipliedStridesReference<0>())(scalar);
 	}
 
 	//testing GridData
@@ -226,7 +245,7 @@ int main()
 	{
 		std::array<size_t, 2> shape2d{ 4, 3 };
 		sci::GridData<double, 2>grid1(shape2d, 1.0);
-		sci::GridData<double, 2>grid2(shape2d, 1.0);
+		sci::GridData<double, 2>grid2(shape2d, 3.0);
 		sci::gridpair_view<sci::GridData<double, 2>, sci::GridData<double, 2>> pair(grid1, grid2);
 		std::cout << "Testing gridtuple_view operator[](std::array) accessor\n";
 		auto val2 = pair[{0, 0}];
@@ -248,10 +267,15 @@ int main()
 		//return operated | views::grid<std::max(T::ndims, U::ndims)>(a.getStrides());
 		output2d(operated | sci::views::grid<2>(grid1.getStrides()));
 
-
+		const sci::GridData<double, 2>& gridref = grid1;
+		auto gridbad = sci::getGridView(gridref);
+		output2d(gridbad);
 		std::cout << "testing operator +\n";
 		auto grid3 = grid1 + grid2;
 		output2d(grid3);
+
+		auto grid4 = grid1 + 5.0 - grid2;
+		output2d(grid4);
 	}
 
 
