@@ -3,9 +3,43 @@
 #include<ranges>
 #include<array>
 #include<memory>
+#include<assert.h>
+#include<stdexcept>
 
 namespace sci
 {
+
+
+	//concept to check if somethng is a grid at compile time
+	//to be a grid a class must have:
+	//   a shape method
+	//   a public static ndims variable
+	//   operator[]
+	//   be a random access range
+	template<class T>
+	concept IsGrid =
+		requires(std::remove_cvref_t < T > t)
+	{
+		t.shape();
+		t.ndims;
+		t[std::array<size_t, T::ndims>()];
+		t.getView();
+		T::value_type;
+	};
+	template<class T, size_t NDIMS>
+	concept IsGridDims = IsGrid<T> &&
+		requires(std::remove_cvref_t < T > t)
+	{
+		t.ndims == NDIMS;
+	};
+	/*template<class T, size_t NDIMS, class VALUE_TYPE>
+	concept IsGridDimsVt = IsGridDims<T, NDIMS> &&
+		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;
+
+	template<class T, class VALUE_TYPE>
+	concept IsGridVt = IsGrid<T> &&
+		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;*/
+
 	template<size_t NDIMS>
 	class GridPremultipliedStridesPointer
 	{
@@ -91,14 +125,21 @@ namespace sci
 			else
 			{
 				std::array<size_t, NDIMS> result;
+				result.fill(0);
+				if (m_ptr.ptr[0] == 0)
+					return result;
 				result[0] = size / m_ptr.ptr[0];
 				for (size_t i = 1; i < NDIMS - 1; ++i)
+				{
+					if (m_ptr.ptr[i] == 0)
+						return result;
 					result[i] = m_ptr.ptr[i - 1] / m_ptr.ptr[i];
+				}
 				result[NDIMS - 1] = m_ptr.ptr[NDIMS - 2];
 				return result;
 			}
 		}
-		constexpr size_t getOffset(const std::array<size_t, NDIMS>& index)
+		constexpr size_t getOffset(const std::array<size_t, NDIMS>& index) const
 		{
 			if constexpr (NDIMS == 0)
 				return 0;
@@ -127,7 +168,7 @@ namespace sci
 
 
 
-	template<class T>
+	/*template<class T>
 	constexpr auto begin(T& t) requires std::ranges::range<T>
 	{
 		return std::begin(t);
@@ -156,7 +197,7 @@ namespace sci
 	constexpr auto size(T& t) requires (!std::ranges::range<T>)
 	{
 		return 1;
-	}
+	}*/
 	namespace ranges
 	{
 		template<class T, bool IS_RANGE>
@@ -378,8 +419,25 @@ namespace sci
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = default;
+		//constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = default;
+		template<IsGrid GRID>
+		constexpr grid_view& operator=(const GRID &rhs)
+		{
+			assert(rhs.shape() == shape());
+			auto iter = begin();
+			auto rhsIter = rhs.begin();
+			for (; iter != end(); ++iter, ++rhsIter)
+				*iter = *rhsIter;
+			return *this;
+		}
+		template<class T>
+		constexpr grid_view& operator=(const T& rhs)
+		{
+			for (auto& element : (*this))
+				element = rhs;
+			return *this;
+		}
 		~grid_view() = default;
 
 		grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) requires (std::ranges::random_access_range<RANGE>)
@@ -400,7 +458,10 @@ namespace sci
 
 		iterator begin() const
 		{
-			return sci::begin(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::begin(m_dataMembers->m_range);
+			else
+				return &m_dataMembers->m_range;
 		}
 		iterator cbegin() const
 		{
@@ -408,11 +469,28 @@ namespace sci
 		}
 		sentinel end() const
 		{
-			return sci::end(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::end(m_dataMembers->m_range);
+			else
+				return (&m_dataMembers->m_range) + 1;
 		}
 		sentinel cend() const
 		{
 			return end();
+		}
+		reference_type first() const
+		{
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return *begin();
+			else
+				return m_dataMembers->m_range;
+		}
+		reference_type last() const
+		{
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return *(end()-1);
+			else
+				return m_dataMembers->m_range;
 		}
 		const GridPremultipliedStridesReference<NDIMS> getStrides() const
 		{
@@ -420,7 +498,10 @@ namespace sci
 		}
 		auto size() const
 		{
-			return sci::size(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::size(m_dataMembers->m_range);
+			else
+				return size_t(1);
 		}
 		reference_type operator[](const difference_type& index) requires(NDIMS == 1)
 		{
@@ -457,8 +538,8 @@ namespace sci
 		}
 		const auto operator[](const difference_type& index) const requires(NDIMS > 1)
 		{
-			auto subrange = std::ranges::subrange(m_dataMembers->m_range.cbegin() + index * m_strides.stride(),
-				m_dataMembers->m_range.cbegin() + (index + 1) * m_strides.stride());
+			auto subrange = std::ranges::subrange(m_dataMembers->m_range.begin() + index * m_strides.stride(),
+				m_dataMembers->m_range.begin() + (index + 1) * m_strides.stride());
 			static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 			return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 		}
@@ -515,6 +596,16 @@ namespace sci
 		const grid_view<RANGE, NDIMS>& getView() const
 		{
 			return *this;
+		}
+		template<IsGridDims<NDIMS> GRID>
+		void assign(const GRID &other)
+		{
+			if (other.shape() != shape())
+				throw(std::out_of_range("Attempted to assign to a grid_view with a grid of differing shape."));
+			auto iter = begin();
+			auto otherIter = other.begin();
+			for (; iter != end(); ++iter, ++otherIter)
+				*iter = *otherIter;
 		}
 
 	private:
@@ -578,3 +669,5 @@ namespace sci
 		grid_fn<NDIMS> grid;
 	}
 }
+
+#include"gridtupleview.h"
