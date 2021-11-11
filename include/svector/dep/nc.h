@@ -8,7 +8,8 @@
 #include"../svector.h"
 #include"../sstring.h"
 #include"../Units.h"
-#include"../array.h"
+#include"../gridview.h"
+#include<cstdint>
 
 namespace sci_internal
 {
@@ -400,21 +401,15 @@ namespace sci
 			sci::assertThrow(m_hasId, sci::err(SERR_NC, localNcError, "NcVariable::getId called before the variable has got an id from being written."));
 			return m_id;
 		}
+		std::vector<size_t> getShape() const
+		{
+			std::vector<size_t> result(getNDimensions());
+			for (size_t i = 0; i < m_dimensionIds.size(); ++i)
+				sci::checkNcCall(nc_inq_dimlen(m_fileId, m_dimensionIds[i], &result[i]));
+			return result;
+		}
 		size_t getNDimensions() const { return m_dimensionIds.size(); }
 		bool hasId() const { return m_hasId; }
-		template<class U>
-		static std::vector<size_t> getDataShape(const U &data)
-		{
-			return sci::shape(data);
-		}
-		static std::vector<T> flattenData(const std::vector<T> & data) { return data; }
-		template<class U>
-		static std::vector<T> flattenData(const std::vector<std::vector<U>> & data)
-		{
-			std::vector<T> flattenedData;
-			sci::flatten(flattenedData, data);
-			return flattenedData;
-		}
 		typedef T write_type;
 	private:
 		mutable bool m_hasId;
@@ -424,13 +419,14 @@ namespace sci
 		sci::string m_name;
 		int m_deflateLevel;
 		bool m_shuffle;
+		int m_fileId;
 
 		//remove copy constructors
 		NcVariable(const NcVariable&) = delete;
 		NcVariable operator=(const NcVariable&) = delete;
 	};
 
-	template<class T>
+	/*template<class T>
 	class NcVariable<Physical<T, double>> : public NcVariable<double>
 	{
 	public:
@@ -460,7 +456,7 @@ namespace sci
 		{
 			return NcVariable<float>::flattenData(sci::physicalsToValues<sci::Physical<T, float>>(data));
 		}
-	};
+	};*/
 
 	class OutputNcFile : public NcFileBase
 	{
@@ -476,8 +472,34 @@ namespace sci
 		//void write(const NcVariable<T>& variable, const U& data);
 		//template<class T, class U>
 		//void write(const NcVariable<T>& variable, std::span<const T> data);
-		template<class T, size_t ndims>
-		void write(const NcVariable<T> &variable, const sci::GridView<const T, ndims>);
+		template<class T, sci::IsGrid GRID>
+		void write(const NcVariable<T>& variable, const GRID& data)
+		{
+			//leave define mode if needed
+			if (m_inDefineMode)
+			{
+				nc_enddef(getId());
+				m_inDefineMode = false;
+			};
+
+			//check the data shape matches the variable shape
+
+			auto dataShape = data.shape();
+			auto variableShape = variable.getShape();
+			sci::assertThrow(variable.getNDimensions() == data.ndims, sci::err(SERR_NC, localNcError, sU("sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions.")));
+			for (size_t i = 0; i < data.ndims; ++i)
+				sci::assertThrow(dataShape[i] == variableShape[i], sci::err(SERR_NC, localNcError, sU("In sci::OutputNcFile::write The data and the variable have incompatible sizes.")));
+
+			std::array<size_t, data.ndims> starts;
+			starts.fill(0);
+			if constexpr (std::ranges::contiguous_range<GRID>)
+				checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &variableShape[0], &(data.first())));
+			else
+			{
+				sci::GridData<T, data.ndims> dataCopy(data);
+				checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &variableShape[0], &(dataCopy.first())));
+			}
+		}
 	private:
 		bool m_inDefineMode;
 		int m_flags;
@@ -678,6 +700,7 @@ namespace sci
 		m_hasId = false;
 		m_dimensionIds.push_back(dimension.getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
+		m_fileId = ncFile.getId();
 		write(ncFile);
 	}
 
@@ -692,6 +715,7 @@ namespace sci
 			m_dimensionIds.push_back(dimensions[i]->getId());
 		sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcVariable construction failed because the ncFile passed was not open."));
 		sci::assertThrow(m_dimensionIds.size() < std::numeric_limits<int>::max(), sci::err(SERR_NC, 0, "Attempted to create NEtCDF variable with more dimensions than supported."));
+		m_fileId = ncFile.getId();
 		write(ncFile);
 	}
 
@@ -759,27 +783,7 @@ namespace sci
 		if (flattenedData.size() > 0)
 			checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &shape[0], &flattenedData[0]));
 	}*/
-	template<class T, size_t ndims>
-	void OutputNcFile::write(const NcVariable<T>& variable, const sci::GridView<const T, ndims> data)
-	{
-		//leave define mode if needed
-		if (m_inDefineMode)
-		{
-			nc_enddef(getId());
-			m_inDefineMode = false;
-		};
-
-		//check the data shape matches the variable shape
-		auto dataShape = data.getShape();
-		auto variableShape = variable.getDataShape();
-		sci::assertThrow(variable.getNDimensions() == dataShape.size(), sci::err(SERR_NC, localNcError, sU("sci::OutputNcFile::write called with a variable and data with differing numbers of dimensions.")));
-		for (size_t i = 0; i < ndims; ++i)
-			sci::assertThrow(dataShape[i] == variableShape[i], sci::err(SERR_NC, localNcError, sU("In sci::OutputNcFile::write The data and the variable have incompatible sizes.")));
-		
-		std::array<size_t, ndims> starts;
-		starts.fill(0);
-		checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &variableShape[0], &(data.getSpan()[0])));
-	}
+	
 }
 
 #endif
