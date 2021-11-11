@@ -115,12 +115,12 @@ static_assert(std::indirectly_readable<std::ranges::iterator_t<gpv>>, "sci::grid
 //static_assert((bool)std::ranges::contiguous_range<sci::gridpair_view<std::vector<double>, 1, std::deque<double>, 1>>, "sci::gridpair_view<std::vector<>> failed the test for being a contiguous range");
 
 
+static_assert(sci::IsGrid<sci::GridData<double, 0>>, "zero dimensional grid failed the IsGrid test");
 
 
 
-
-template<class BASERANGE>
-void output2d(sci::grid_view<BASERANGE, 2> grid)
+template<sci::IsGridDims<2> GRID>
+void output2d(GRID grid)
 {
 	std::array<size_t, 2> shape = grid.shape();
 
@@ -276,6 +276,16 @@ int main()
 
 		auto grid4 = grid1 + 5.0 - grid2;
 		output2d(grid4);
+
+		auto grid5 = grid1 + 2.0;
+		std::cout << "ndims = " << grid5.ndims << "\n\n";
+		sci::GridData<double, 2>grid7(grid5);
+		sci::GridData<double, 2> grid6 = grid5;
+		decltype(grid5)::value_type value=3.0;
+		static_assert(sci::IsGridDims<decltype(grid5),2>, "transformed grid is not a grid");
+
+		std::cout << "testing operator ==\n";
+		output2d(grid2 == 3.0);
 	}
 
 
