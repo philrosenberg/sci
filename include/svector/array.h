@@ -101,6 +101,7 @@ namespace sci
 			m_data = other.m_data;
 			m_strides = other.m_strides;
 			refreshView();
+			return *this;
 		}
 		GridDataMembers<T, NDIMS>& operator=(GridDataMembers<T, NDIMS>&& other)
 		{
@@ -108,6 +109,7 @@ namespace sci
 			std::swap(m_strides, other.m_strides);
 			refreshView();
 			other.refreshView();
+			return *this;
 		}
 	protected:
 		constexpr std::array<size_t, NDIMS> getShape() const
@@ -143,7 +145,7 @@ namespace sci
 		}
 		constexpr void refreshView()
 		{
-			m_view = m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0]));
+			m_view.retarget(m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0])));
 		}
 		void swap(GridDataMembers& other)
 		{
@@ -195,12 +197,14 @@ namespace sci
 		{
 			m_data = other.m_data;
 			refreshView();
+			return *this;
 		}
 		GridDataMembers<T, 1>& operator=(GridDataMembers<T, 1>&& other)
 		{
 			std::swap(m_data, other.m_data);
 			refreshView();
 			other.refreshView();
+			return *this;
 		}
 	protected:
 		constexpr std::array<size_t, 1> getShape() const
@@ -221,7 +225,7 @@ namespace sci
 		}
 		constexpr void refreshView()
 		{
-			m_view = m_data | views::grid<1>;
+			m_view.retarget(m_data | views::grid<1>);
 		}
 		void swap(GridDataMembers& other)
 		{
@@ -264,10 +268,12 @@ namespace sci
 		GridDataMembers<T, 0>& operator=(const GridDataMembers<T, 0>& other)
 		{
 			m_data = other.m_data;
+			return *this;
 		}
 		GridDataMembers<T, 0>& operator=(GridDataMembers<T, 0>&& other)
 		{
 			std::swap(m_data, other.m_data);
+			return *this;
 		}
 	protected:
 		constexpr std::array<size_t, 0> getShape() const
@@ -397,6 +403,24 @@ namespace sci
 		{
 			members::m_data = std::vector<T>(first, last);
 			setShape({ members::m_data.size() });
+		}
+
+		template<std::input_iterator ITER>
+		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape)
+		{
+			if constexpr (NDIMS == 0)
+			{
+				if( begin - end != 1)
+					throw(std::out_of_range("Attempted to construct a GridData object with first and last iterators which did not match the shape."));
+				members::m_data = *begin;
+			}
+			size_t size = 1;
+			for (size_t i = 0; i < NDIMS; ++i)
+				size *= shape[i];
+			if (size != end - begin)
+				throw(std::out_of_range("Attempted to construct a GridData object with first and last iterators which did not match the shape."));
+			members::m_data = std::vector<T>(begin, end);
+			setShape(shape);
 		}
 		
 		constexpr GridData(const T &value) requires(NDIMS == 0)
@@ -550,30 +574,40 @@ namespace sci
 		template<IsGridDims<NDIMS> GRID>
 		void insert(size_t index, const GRID &source)
 		{
-			std::array<size_t, GRID::ndims> sourceShape = source.getShape();
-#ifdef _DEBUG
-			for (size_t i = 1; i < GRID::ndims; ++i)
-				assert(sourceShape[i] == members::m_sizes[i]);
-#endif
-			iterator pos = begin() + index * members::getTopStride();
-			members::m_data.insert(pos, source.begin(), source.begin() + sourceShape[0] * members::getTopStride());
-		}
-		template<IsGridDims<NDIMS-1> GRID>
-		void insert(size_t index, const GRID &source)
-		{
+			static_assert(GRID::ndims == ndims || GRID::ndims == ndims - 1, "Can only insert a grid with the same number of dimensions or one dimension less than the destination grid.");
 			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
-
-			//check sizes match
-			assert(members::getTopStride() == source.size());
-			if constexpr (source.ndims > 1)
+			if constexpr (GRID::ndims == ndims)
 			{
-				for (size_t i = 0; i < NDIMS - 2; ++i)
-					assert(source.getPremultipliedStridesPointer()[i] == members::getPremultipliedStridesPointer()[i + 1]);
-			}
 
-			//insert the data
-			iterator pos = begin() + index * members::getTopStride();
-			members::m_data.insert(pos, source.begin(), source.begin() + members::getTopStride());
+				const std::array<size_t, GRID::ndims> sourceShape = source.shape();
+				const std::array<size_t, GRID::ndims> thisShape = shape();
+#ifdef _DEBUG
+				for (size_t i = 1; i < GRID::ndims; ++i)
+					assert(sourceShape[i] == thisShape[i]);
+#endif
+				iterator pos = begin() + index * members::getTopStride();
+				members::m_data.insert(pos, source.begin(), source.begin() + sourceShape[0] * members::getTopStride());
+			}
+			else
+			{
+				//this is inserting a grid that is one dimension smaller than this grid.
+				// It should have a size equal to the top stride
+				//check sizes match
+				if constexpr (ndims == 1)
+					assert(source.size() == 1);
+				else
+				{
+					assert(members::getTopStride() == source.size());
+					const std::array<size_t, GRID::ndims> sourceShape = source.shape();
+					const std::array<size_t, ndims> thisShape = shape();
+					for (size_t i = 0; i < NDIMS - 2; ++i)
+						assert(sourceShape[i] == thisShape[i+1]);
+				}
+
+				//insert the data
+				iterator pos = begin() + index * members::getTopStride();
+				members::m_data.insert(pos, source.begin(), source.begin() + members::getTopStride());
+			}
 		}
 		void insert(size_t index, size_t count, GridView<T const, NDIMS - 1> source)
 		{
@@ -645,8 +679,8 @@ namespace sci
 		void reserve(const std::array<size_t, NDIMS>& shape)
 		{
 			size_t product = 1;
-			for (auto iter = size.begin(); iter != size.end(); ++iter)
-				product *= size;
+			for (auto s : shape)
+				product *= s;
 			members::m_data.reserve(product);
 			members::refreshView();
 		}
@@ -664,10 +698,14 @@ namespace sci
 			else
 				return members::m_view;
 		}
-		//GridView<T, NDIMS> getGridView(size_t offset, size_t elements)
-		//{
-		//	return GridView<T, NDIMS>(std::span<T>(members::m_data.begin() + offset * members::getTopStride(), elements * members::getTopStride()), members::getPremultipliedStridePointer());
-		//}
+		GridData<T, NDIMS, Allocator> subGrid(size_t firstIndexBegin, size_t nSlices)
+		{
+			static_assert(NDIMS > 0, "Cannot get a subgrid of a zero diminsional GridData.");
+			if constexpr (NDIMS > 1)
+				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin * members::getTopStride(), members::m_data.begin() + (firstIndexBegin + nSlices) * members::getTopStride(), shape());
+			else
+				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin, members::m_data.begin() + (firstIndexBegin + nSlices), shape());
+		}
 		T& operator[](const std::array<size_t, NDIMS>& index)
 		{
 			if constexpr (NDIMS == 0)

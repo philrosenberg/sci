@@ -731,7 +731,13 @@ namespace sci
 
 
 	template<class GRID1, class GRID2, class TRANSFORM>
-	auto make_gridpairtransform_view(GRID1 &grid1, GRID2 &grid2, TRANSFORM transform)
+	auto make_gridpairtransform_view(const GRID1 &grid1, const GRID2 &grid2, TRANSFORM transform)
+	{
+		return gridpairtransform_view<decltype(getGridView(grid1)), decltype(getGridView(grid2)), TRANSFORM>(getGridView(grid1), getGridView(grid2), transform);
+	}
+
+	template<class GRID1, class GRID2, class TRANSFORM>
+	auto make_ncgridpairtransform_view(GRID1& grid1, const GRID2& grid2, TRANSFORM transform)
 	{
 		return gridpairtransform_view<decltype(getGridView(grid1)), decltype(getGridView(grid2)), TRANSFORM>(getGridView(grid1), getGridView(grid2), transform);
 	}
@@ -759,7 +765,14 @@ namespace sci
 	//using gridtransform_view = gridpairtransform_view<GRID1, uint8_t, decltype(&discardSecond<GRID1::value_type, uint8_t, TRANSFORM>)>;
 
 	template<class GRID1, class TRANSFORM>
-	auto make_gridtransform_view(GRID1& grid1, TRANSFORM transform)
+	auto make_gridtransform_view(const GRID1& grid1, TRANSFORM transform)
+	{
+		uint8_t grid2(0);
+		return make_gridpairtransform_view(grid1, grid2, discardSecond<TRANSFORM>(transform));
+	}
+
+	template<class GRID1, class TRANSFORM>
+	auto make_ncgridtransform_view(GRID1& grid1, TRANSFORM transform)
 	{
 		uint8_t grid2(0);
 		return make_gridpairtransform_view(grid1, grid2, discardSecond<TRANSFORM>(transform));
@@ -848,6 +861,11 @@ namespace sci
 		return ((a != 0) && (b != 0)) ? uint8_t(1) : uint8_t(0);
 	}
 
+	inline uint8_t notFunc(uint8_t a)
+	{
+		return a == 0 ? uint8_t(1) : uint8_t(0);
+	}
+
 	template<class T, class U>
 	auto plusEquals(T &a, U b)
 	{
@@ -871,6 +889,60 @@ namespace sci
 	{
 		return a /= b;
 	}
+
+	template<class T, class U>
+	auto moduloEquals(T& a, U b)
+	{
+		return a %= b;
+	}
+
+	template<class T, class U>
+	auto andEquals(T& a, U b)
+	{
+		return a &= b;
+	}
+
+	template<class T, class U>
+	auto orEquals(T& a, U b)
+	{
+		return a |= b;
+	}
+
+	template<class T>
+	auto unaryPlus(T a)
+	{
+		return +a;
+	}
+
+	template<class T>
+	auto unaryMinus(T a)
+	{
+		return -a;
+	}
+
+	template<class T>
+	auto prefixIncrement(T &a)
+	{
+		return ++a;
+	}
+
+	template<class T>
+	auto postfixIncrement(T& a)
+	{
+		return a++;
+	}
+
+	template<class T>
+	auto prefixDecrement(T& a)
+	{
+		return --a;
+	}
+
+	template<class T>
+	auto postfixDecrement(T& a)
+	{
+		return a--;
+	}
 	
 
 
@@ -893,6 +965,11 @@ namespace sci
 	auto operator/(const T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
 	{
 		return make_gridpairtransform_view(a, b, divide<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator%(const T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_gridpairtransform_view(a, b, modulo<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
 	}
 	template<class T, class U>
 	auto operator<=>(const T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
@@ -939,9 +1016,74 @@ namespace sci
 	{
 		return make_gridpairtransform_view(a, b, andFunc);
 	}
+	template<class T>
+	auto operator!(const T& a) requires(bool(IsGrid<T>))
+	{
+		return make_gridtransform_view(a, notFunc);
+	}
+	template<class T, class U>
+	auto operator+=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, plusEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator-=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, minusEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator*=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, multiplyEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
 	template<class T, class U>
 	auto operator/=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
 	{
-		return make_gridpairtransform_view(a, b, divideEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+		return make_ncgridpairtransform_view(a, b, divideEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator%=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, moduloEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator&=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, andEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T, class U>
+	auto operator|=(T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
+	{
+		return make_ncgridpairtransform_view(a, b, orEquals<decltype(getGridView(a))::value_type, decltype(getGridView(b))::value_type>);
+	}
+	template<class T>
+	auto operator+(const T& a) requires(bool(IsGrid<T>))
+	{
+		return make_gridtransform_view(a, unaryPlus<decltype(getGridView(a))::value_type>);
+	}
+	template<class T>
+	auto operator-(const T& a) requires(bool(IsGrid<T>))
+	{
+		return make_gridtransform_view(a, unaryMinus<decltype(getGridView(a))::value_type>);
+	}
+	template<class T>
+	auto operator++(T& a) requires(bool(IsGrid<T>))
+	{
+		return make_ncgridtransform_view(a, prefixIncrement<decltype(getGridView(a))::value_type>);
+	}
+	template<class T>
+	auto operator--(T& a) requires(bool(IsGrid<T>))
+	{
+		return make_ncgridtransform_view(a, prefixDecrement<decltype(getGridView(a))::value_type>);
+	}
+	template<class T>
+	auto operator++(T& a, int) requires(bool(IsGrid<T>))
+	{
+		return make_ncgridtransform_view(a, postfixIncrement<decltype(getGridView(a))::value_type>);
+	}
+	template<class T>
+	auto operator--(T& a, int) requires(bool(IsGrid<T>))
+	{
+		return make_ncgridtransform_view(a, postfixDecrement<decltype(getGridView(a))::value_type>);
 	}
 }

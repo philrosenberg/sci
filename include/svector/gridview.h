@@ -419,8 +419,8 @@ namespace sci
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
-		//constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = default;
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = default;
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
 		template<IsGrid GRID>
 		constexpr grid_view& operator=(const GRID &rhs)
 		{
@@ -437,6 +437,16 @@ namespace sci
 			for (auto& element : (*this))
 				element = rhs;
 			return *this;
+		}
+		void retarget(grid_view<RANGE, NDIMS> const& other)
+		{
+			m_dataMembers = other.m_dataMembers;
+			m_strides = other.m_strides;
+		}
+		void retarget(grid_view<RANGE, NDIMS> && other)
+		{
+			std::swap(m_dataMembers, other.m_dataMembers);
+			std::swap(m_strides, other.m_strides);
 		}
 		~grid_view() = default;
 

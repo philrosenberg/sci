@@ -1,7 +1,7 @@
 #ifndef SCI_ARRAYMANIPULATION
 #define SCI_ARRAYMANIPULATION
 
-#include"gridview.h"
+#include"gridtupleview.h"
 #include<limits>
 #include"serr.h"
 #include"svector.h"
@@ -46,13 +46,14 @@ namespace sci
 	}*/
 
 	template<IsGrid GRID>
-	GRID abs(const GRID &grid)
+	auto abs(const GRID &grid)
 	{
-		GRID result(grid.shape());
+		using valueType = decltype(sci::abs(GRID::value_type()));
+		GridData<valueType, GRID::ndims> result(grid.shape());
 		auto resultIter = result.begin();
 		auto inputIter = grid.begin();
 		for (; inputIter != grid.end(); ++inputIter, ++resultIter)
-			*resultIter = sci::abs(inputIter);
+			*resultIter = sci::abs(*inputIter);
 		return result;
 	}
 
@@ -107,6 +108,28 @@ namespace sci
 		result_type result = *range.begin();
 		for (auto iter = range.begin() + 1; iter != range.end(); ++iter)
 			result = std::max(result, *iter);
+		return result;
+	}
+
+	template<IsGrid GRID>
+	auto min(const GRID& grid)
+	{
+		if (grid.size() == 0)
+			return std::numeric_limits<GRID::value_type>::quiet_NaN();
+		typename GRID::value_type result = std::numeric_limits<GRID::value_type>::infinity();
+		for (auto& g : grid)
+			result =std::min(g, result);
+		return result;
+	}
+
+	template<IsGrid GRID>
+	auto max(const GRID& grid)
+	{
+		if (grid.size() == 0)
+			return std::numeric_limits<GRID::value_type>::quiet_NaN();
+		typename GRID::value_type result = std::numeric_limits<GRID::value_type>::infinity();
+		for (auto& g : grid)
+			result = std::max(g, result);
 		return result;
 	}
 
