@@ -536,18 +536,19 @@ namespace sci
 		return b - unitless(0.5) * ((b - a) * (b - a) * (fb - fc) - (b - c) * (b - c) * (fb - fa)) / ((b - a) * (fb - fc) - (b - c) * (fb - fa));
 	}
 
-	//Find the minimum of a function using the "Golden Ratio" method
+	//Find the minimum of a function using the "Brent" method
 	//  function is the function to minimise. It may be a c-style function or a class with operator() defined. It must take one parameter, a double, and return the evaluation of the function as a double
-	//  firstGuess is a guess at the location of the minimum
+	//  guess is a guess at the location of the minimum
 	//  firstGuessUncertainty is used  to optimise finding a range within which a minima can be found.The algorithm will work if this is set badly, but it will be fasterand less likely to find a local minima if it is set correctly if it is set correctly
 	//  tollerance is the fractional tollerance of the result. It defaults to sqrt(epsilon) and there is little point making it smaller than this.
 	//  maxIterations is the maximum number of iterations to perform. It defaults to the maximum size_t
+	//  The guess variable will be modified to the best estimate and the return value will be the residual
 	template <class FUNCTOR, class STOPPER, class T, class U>
-	T minimiseBrent(const FUNCTOR& function, T firstGuess, U firstGuessUncertainty, STOPPER& stopper)
+	auto minimiseBrent(const FUNCTOR& function, T &guess, U firstGuessUncertainty, STOPPER& stopper) -> decltype(function(guess))
 	{
-		using result_type = decltype(function(firstGuess));
+		using result_type = decltype(function(guess));
 		using unitless = decltype(T() / T());
-		assert(firstGuess == firstGuess);
+		assert(guess == guess);
 		const unitless goldenRatio = unitless((3.0 - std::sqrt(5.0)) / 2.0);
 
 		T lower;
@@ -556,7 +557,7 @@ namespace sci
 		result_type lowerVal;
 		result_type upperVal;
 		result_type bestVal;
-		bracketMinimum(function, firstGuess, firstGuessUncertainty, lower, upper, best, lowerVal, upperVal, bestVal);
+		bracketMinimum(function, guess, firstGuessUncertainty, lower, upper, best, lowerVal, upperVal, bestVal);
 
 		T secondBest;
 		T previousSecondBest;
@@ -672,7 +673,7 @@ namespace sci
 			}
 			stop = stopper(best, secondBest, bestVal, secondBestVal);
 		}
-		return best;
+		return bestVal;
 	}
 
 	//Find the minimum of a multi-d function along a given direction using the "Golden Ratio" method
@@ -681,7 +682,7 @@ namespace sci
 	//  tollerance is the fractional tollerance of the result in each dimension. It is futile making this less than sqrt(epsilon)
 	//  maxIterations is the maximum number of iterations to perform. It defaults to the maximum size_t
 	template <class FUNCTOR, IsGrid GRID1, IsGrid GRID2, IsGrid GRID3, IsGrid GRID4, IsGrid UNITLESS_GRID>
-	void minimiseOnLineBrent(FUNCTOR& function, GRID1& guess, const GRID2& firstGuessUncertainty, const GRID3& direction, const GRID4& absoluteTollerance, const UNITLESS_GRID& tollerance, size_t maxIterations = -1)
+	auto  minimiseOnLineBrent(FUNCTOR& function, GRID1& guess, const GRID2& firstGuessUncertainty, const GRID3& direction, const GRID4& absoluteTollerance, const UNITLESS_GRID& tollerance, size_t maxIterations = -1)
 	{
 		using unitless = decltype(GRID1::value_type() / GRID1::value_type());
 		using result_type = decltype(function(guess));
@@ -691,7 +692,7 @@ namespace sci
 		for( auto &dir : direction)
 			nonZeroDirection |= dir != GRID3::value_type(0);
 		if (!nonZeroDirection)
-			return;
+			return std::numeric_limits<result_type>::quiet_NaN();
 
 		decltype(GRID3::value_type() * GRID3::value_type()) sumSqDirection(0);
 		for (auto& dir : direction)
@@ -718,8 +719,10 @@ namespace sci
 
 		BrentStopper<unitless, result_type> stopper(sci::abs(absoluteTolleranceDirected/magnitudeDirection), sci::abs(tolleranceDirected), originOffset/magnitudeDirection, result_type(0), std::numeric_limits<unitless_result_type>::epsilon(), maxIterations);
 
-		unitless distance = minimiseBrent([&](unitless x) {return function(guess + direction * x); }, unitless(0), uncertaintyDirected/magnitudeDirection, stopper);
+		unitless distance(0);
+		result_type residual = minimiseBrent([&](unitless x) {return function(guess + direction * x); }, distance, uncertaintyDirected/magnitudeDirection, stopper);
 		guess = guess + direction * distance;
+		return residual;
 	}
 
 	//Find the minimum of a multi-d function along a given direction using the "Golden Ratio" method. In this version a default fractional tollerance of sqrt(epsilon) is used
@@ -753,8 +756,10 @@ namespace sci
 		for (size_t i = 0; i < unitDirection.size(); ++i)
 			uncertaintyDirected += *(firstGuessUncertainty.begin() + i) * *(unitDirection.begin() + i);
 
-		unitless distance = minimiseBrent([&](unitless x) {return function(guess + direction * x); }, unitless(0), uncertaintyDirected/magnitudeDirection, stopper);
+		unitless distance(0);
+		unitless residual = minimiseBrent([&](unitless x) {return function(guess + direction * x); }, distance, uncertaintyDirected/magnitudeDirection, stopper);
 		guess = guess + direction * distance;
+		return residual;
 	}
 
 	//Find the minimum of a multi-d function using the Powel method
@@ -811,8 +816,8 @@ namespace sci
 				//append the total move of this iteration as a direction for the next iteration - this is known as a conjugate direction
 				directions[directions.shape()[0] - 1].assign (guess - subIterStartGuess);
 				//perform a minimisation in the direction of the just found conjugate direction
-				minimiseOnLineBrent(function, guess, firstGuessUncertainty, directions[directions.shape()[0] - 1], absoluteTollerance, tollerance, maxBrentIterations);
-				stop = stopper(guess, function(guess));
+				auto residual = minimiseOnLineBrent(function, guess, firstGuessUncertainty, directions[directions.shape()[0] - 1], absoluteTollerance, tollerance, maxBrentIterations);
+				stop = stopper(guess, residual);
 				if (stop)
 					break;
 			}
@@ -849,5 +854,39 @@ namespace sci
 		GridData<unitless, GRID1::ndims> tollerance(guess.shape(), sci::sqrt(std::numeric_limits<unitless>::epsilon()));
 		GridData<GRID1::value_type, GRID1::ndims> absoluteTollerance(guess.shape(), GRID1::value_type(0));
 		minimisePowell(function, stopper, guess, firstGuessUncertainty, absoluteTollerance, tollerance, maxIterations, maxBrentIterations);
+	}
+
+	template <class FUNCTOR, class STOPPER, IsGrid GRID1, IsGrid GRID3, IsGrid UNITLESS_GRID>
+	void minimiseGradientDescentWithLineSearch(FUNCTOR& function, STOPPER& stopper, GRID1& guess, const GRID3& absoluteTollerance, const UNITLESS_GRID& tollerance, size_t maxIterations = -1, size_t maxBrentIterations = -1)
+	{
+		using gradient_type = decltype(function(guess) / GRID1::value_type());
+		//directions is a set of direction in space along which we will search for the solution
+		// we initially set the directions to the orthoganal directions with magnitudes equal to firstGuessUncertainty
+		// directions will have one more dimension than guess. Usually guess will be 1d, but we permit it to be higher dimensions
+		// for ease of use in some scenarios
+		assert(guess.size() == absoluteTollerance.size());
+
+		bool stop = stopper(guess, function(guess));
+		size_t count = 0;
+		while ((!stop) && (count < maxIterations))
+		{
+			for (size_t i = 0; i < guess.size(); ++i)
+			{
+				std::pair<sci::GridData< GRID1::value_type, GRID1::ndims>, sci::GridData< GRID1::value_type, GRID1::ndims>> directionsAndUncertainties = function.gradients(guess);
+				auto residual = minimiseOnLineBrent(function, guess, directionsAndUncertainties.second, directionsAndUncertainties.first, absoluteTollerance, tollerance, maxBrentIterations);
+				stop = stopper(guess, residual);
+				if (stop)
+					break;
+			}
+			++count;
+		}
+	}
+	template <class FUNCTOR, class STOPPER, IsGrid GRID1>
+	void minimiseGradientDescentWithLineSearch(FUNCTOR& function, STOPPER& stopper, GRID1& guess, size_t maxIterations = -1, size_t maxBrentIterations = -1)
+	{
+		using unitless = decltype(GRID1::value_type() / GRID1::value_type());
+		GridData<unitless, GRID1::ndims> tollerance(guess.shape(), sci::sqrt(std::numeric_limits<unitless>::epsilon()));
+		GridData<GRID1::value_type, GRID1::ndims> absoluteTollerance(guess.shape(), GRID1::value_type(0));
+		minimiseGradientDescentWithLineSearch(function, stopper, guess, absoluteTollerance, tollerance, maxIterations, maxBrentIterations);
 	}
 }
