@@ -45,6 +45,22 @@ namespace sci
 	class GridDataMembers
 	{
 	public:
+		GridDataMembers()
+		{
+		}
+		GridDataMembers(const GridDataMembers<T, NDIMS>& other)
+		{
+			m_data = other.m_data;
+			m_strides = other.m_strides;
+			refreshView();
+		}
+		GridDataMembers(GridDataMembers<T, NDIMS>&& other)
+		{
+			std::swap(m_data, other.m_data);
+			std::swap(m_strides, other.m_strides);
+			refreshView();
+			other.refreshView();
+		}
 		constexpr size_t multiToVectorPosition(const std::array<size_t, NDIMS>& position) const
 		{
 			size_t pos = 0;
@@ -79,6 +95,19 @@ namespace sci
 				extra = position[index] / length;
 				position[index] = position[index] % length;
 			}
+		}
+		GridDataMembers<T, NDIMS>& operator=(const GridDataMembers<T, NDIMS>& other)
+		{
+			m_data = other.m_data;
+			m_strides = other.m_strides;
+			refreshView();
+		}
+		GridDataMembers<T, NDIMS>& operator=(GridDataMembers<T, NDIMS>&& other)
+		{
+			std::swap(m_data, other.m_data);
+			std::swap(m_strides, other.m_strides);
+			refreshView();
+			other.refreshView();
 		}
 	protected:
 		constexpr std::array<size_t, NDIMS> getShape() const
@@ -130,13 +159,26 @@ namespace sci
 		std::vector<typename GridDataVectorType<T>::type> m_data;
 		using view_type = std::remove_cv_t<decltype(m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0])))>;
 		view_type m_view;
-
 	};
 
 	template<class T>
 	class GridDataMembers<T, 1>
 	{
 	public:
+		GridDataMembers()
+		{
+		}
+		GridDataMembers(const GridDataMembers<T, 1>& other)
+		{
+			m_data = other.m_data;
+			refreshView();
+		}
+		GridDataMembers(GridDataMembers<T, 1>&& other)
+		{
+			std::swap(m_data, other.m_data);
+			refreshView();
+			other.refreshView();
+		}
 		constexpr size_t multiToVectorPosition(const std::array<size_t, 1>& position) const
 		{
 			return position[0];
@@ -148,6 +190,17 @@ namespace sci
 		void incrementPosition(std::array<size_t, 1>& position, size_t amount = 1) const
 		{
 			position[0] += amount;
+		}
+		GridDataMembers<T, 1>& operator=(const GridDataMembers<T, 1>& other)
+		{
+			m_data = other.m_data;
+			refreshView();
+		}
+		GridDataMembers<T, 1>& operator=(GridDataMembers<T, 1>&& other)
+		{
+			std::swap(m_data, other.m_data);
+			refreshView();
+			other.refreshView();
 		}
 	protected:
 		constexpr std::array<size_t, 1> getShape() const
@@ -186,6 +239,17 @@ namespace sci
 	class GridDataMembers<T, 0>
 	{
 	public:
+		GridDataMembers()
+		{
+		}
+		GridDataMembers(const GridDataMembers<T, 0>& other)
+		{
+			m_data = other.m_data;
+		}
+		GridDataMembers(GridDataMembers<T, 0>&& other)
+		{
+			std::swap(m_data, other.m_data);
+		}
 		constexpr size_t multiToVectorPosition(const std::array<size_t, 0>& position) const
 		{
 			return 0;
@@ -196,6 +260,14 @@ namespace sci
 		}
 		void incrementPosition(std::array<size_t, 0>& position, size_t amount = 1) const
 		{
+		}
+		GridDataMembers<T, 0>& operator=(const GridDataMembers<T, 0>& other)
+		{
+			m_data = other.m_data;
+		}
+		GridDataMembers<T, 0>& operator=(GridDataMembers<T, 0>&& other)
+		{
+			std::swap(m_data, other.m_data);
 		}
 	protected:
 		constexpr std::array<size_t, 0> getShape() const
@@ -308,6 +380,11 @@ namespace sci
 			members::m_data.assign(other.begin(), other.begin() + size);
 			setShape(shape);
 		}
+
+
+
+		constexpr GridData(const GridData<T, NDIMS, Allocator>& other) = default;
+		constexpr GridData(GridData<T, NDIMS, Allocator>&& other) = default;
 		
 		constexpr GridData(std::initializer_list<T> list) requires(NDIMS==1)
 		{
@@ -708,46 +785,53 @@ namespace sci
 				*iter = rhs;
 			return *this;
 		}
-		GridData<T, NDIMS, Allocator>& operator=(const GridData<T, NDIMS, Allocator>& rhs)
-		{
-			reshape(rhs.shape());
-			auto iter = begin();
-			auto rhsIter = rhs.begin();
-			for (; iter != end(); ++iter, ++rhsIter)
-				*iter = *rhsIter;
-			return *this;
-		}
+		GridData<T, NDIMS, Allocator>& operator=(const GridData<T, NDIMS, Allocator>& rhs) = default;
+		GridData<T, NDIMS, Allocator>& operator=(GridData<T, NDIMS, Allocator>&& rhs) = default;
 
 	private:
 		void setShape(const std::array<size_t, NDIMS>& shape)
 		{
-			members::setStrides(shape);
-			if constexpr (NDIMS > 1)
+			try
 			{
-				//calculate full size
-				size_t size = shape[0] * members::getTopStride();
-				//create the data block
-				members::m_data.resize(size);
+				members::setStrides(shape);
+				if constexpr (NDIMS > 1)
+				{
+					//calculate full size
+					size_t size = shape[0] * members::getTopStride();
+					//create the data block
+					members::m_data.resize(size);
+				}
+				else if constexpr (NDIMS == 1)
+				{
+					members::m_data.resize(shape[0]);
+				}
 			}
-			else if constexpr (NDIMS == 1)
+			catch (...)
 			{
-				members::m_data.resize(shape[0]);
+				members::refreshView();
 			}
 			members::refreshView();
 		}
 		void setShape(const std::array<size_t, NDIMS>& shape, const T& value)
 		{
-			members::setStrides(shape);
-			if constexpr (NDIMS > 1)
+			try
 			{
-				//calculate full size
-				size_t size = shape[0] * members::getTopStride();
-				//create the data block
-				members::m_data.resize(size, value);
+				members::setStrides(shape);
+				if constexpr (NDIMS > 1)
+				{
+					//calculate full size
+					size_t size = shape[0] * members::getTopStride();
+					//create the data block
+					members::m_data.resize(size, value);
+				}
+				else if constexpr (NDIMS == 1)
+				{
+					members::m_data.resize(shape[0], value);
+				}
 			}
-			else if constexpr (NDIMS == 1)
+			catch (...)
 			{
-				members::m_data.resize(shape[0], value);
+				members::refreshView();
 			}
 			members::refreshView();
 		}
