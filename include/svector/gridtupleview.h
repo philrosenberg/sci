@@ -314,6 +314,40 @@ namespace sci
 		grid_view<RANGE2, NDIMS2> m_grid2;
 	};
 
+	template<size_t NDIMS>
+	struct gridpair_fn
+	{
+		gridpair_fn() = default;
+		/*grid_fn(const GridPremultipliedStridesReference<NDIMS>& strides)
+			:m_strides(strides)
+		{}
+		template <class RANGE, size_t NDIMS>
+		requires std::ranges::random_access_range<RANGE>
+			auto operator()(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) const
+		{
+			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), m_strides };
+		}
+		template <size_t NDIMS>
+		auto operator()(const GridPremultipliedStridesReference<NDIMS>& strides) const
+		{
+			//This operator() returns a grid_fn which uses strides. This in turn can get piped
+			return grid_fn(strides);
+		}*/
+		template <typename RANGE>
+		requires std::ranges::random_access_range<RANGE>
+			friend auto operator|(RANGE&& range, grid_fn const& fn)
+		{
+			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
+		}
+	private:
+		const GridPremultipliedStridesReference<NDIMS> m_strides;
+	};
+
+	namespace views
+	{
+		template<size_t NDIMS>
+		grid_fn<NDIMS> grid;
+	}
 
 	template<class T, class U>
 	requires(bool(isGrid<T>() && isGrid<U>() && std::ranges::random_access_range<T>&& std::ranges::random_access_range<U>))
