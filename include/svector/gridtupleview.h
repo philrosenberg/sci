@@ -782,7 +782,7 @@ namespace sci
 		}*/
 		template <typename RANGE>
 		requires std::ranges::random_access_range<RANGE>
-			friend auto operator|(RANGE&& range, grid_fn const& fn)
+			friend auto operator|(RANGE&& range, gridpair_fn const& fn)
 		{
 			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
 		}
