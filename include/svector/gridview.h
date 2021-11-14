@@ -3,9 +3,43 @@
 #include<ranges>
 #include<array>
 #include<memory>
+#include<assert.h>
+#include<stdexcept>
 
 namespace sci
 {
+
+
+	//concept to check if somethng is a grid at compile time
+	//to be a grid a class must have:
+	//   a shape method
+	//   a public static ndims variable
+	//   operator[]
+	//   be a random access range
+	template<class T>
+	concept IsGrid =
+		requires(std::remove_cvref_t < T > t)
+	{
+		t.shape();
+		t.ndims;
+		t[std::array<size_t, T::ndims>()];
+		t.getView();
+		T::value_type;
+	};
+	template<class T, size_t NDIMS>
+	concept IsGridDims = IsGrid<T> &&
+		requires(std::remove_cvref_t < T > t)
+	{
+		t.ndims == NDIMS;
+	};
+	/*template<class T, size_t NDIMS, class VALUE_TYPE>
+	concept IsGridDimsVt = IsGridDims<T, NDIMS> &&
+		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;
+
+	template<class T, class VALUE_TYPE>
+	concept IsGridVt = IsGrid<T> &&
+		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;*/
+
 	template<size_t NDIMS>
 	class GridPremultipliedStridesPointer
 	{
@@ -91,14 +125,21 @@ namespace sci
 			else
 			{
 				std::array<size_t, NDIMS> result;
+				result.fill(0);
+				if (m_ptr.ptr[0] == 0)
+					return result;
 				result[0] = size / m_ptr.ptr[0];
 				for (size_t i = 1; i < NDIMS - 1; ++i)
+				{
+					if (m_ptr.ptr[i] == 0)
+						return result;
 					result[i] = m_ptr.ptr[i - 1] / m_ptr.ptr[i];
+				}
 				result[NDIMS - 1] = m_ptr.ptr[NDIMS - 2];
 				return result;
 			}
 		}
-		constexpr size_t getOffset(const std::array<size_t, NDIMS>& index)
+		constexpr size_t getOffset(const std::array<size_t, NDIMS>& index) const
 		{
 			if constexpr (NDIMS == 0)
 				return 0;
@@ -120,26 +161,121 @@ namespace sci
 	class GridData;
 
 
+	//begin, end, size, ranges::iterator, ranges::range_size and ranges::range_difference
+	//all emulate the std versions, but for non ranges, they treat the passed type/value
+	//like it is a range with a size of 1
+	//This allows grid_view to treat scalars like a zero dimensional array
+
+
+
+	/*template<class T>
+	constexpr auto begin(T& t) requires std::ranges::range<T>
+	{
+		return std::begin(t);
+	}
+	template<class T>
+	constexpr auto begin(T& t) requires (!std::ranges::range<T>)
+	{
+		return &t;
+	}
+	template<class T>
+	constexpr auto end(T& t) requires std::ranges::range<T>
+	{
+		return std::end(t);
+	}
+	template<class T>
+	constexpr auto end(T& t) requires (!std::ranges::range<T>)
+	{
+		return (&t)+1;
+	}
+	template<class T>
+	constexpr auto size(T& t) requires std::ranges::range<T>
+	{
+		return std::size(t);
+	}
+	template<class T>
+	constexpr auto size(T& t) requires (!std::ranges::range<T>)
+	{
+		return 1;
+	}*/
+	namespace ranges
+	{
+		template<class T, bool IS_RANGE>
+		struct iterator
+		{
+		};
+		template<class T>
+		struct iterator<T, true>
+		{
+			using type = std::ranges::iterator_t<T>;
+		};
+		template<class T>
+		struct iterator<T, false>
+		{
+			using type = std::remove_reference<T>::type*;
+		};
+		template<class T>
+		using iterator_t = typename iterator<T, std::ranges::range<T>>::type;
+
+		template<class T, bool IS_RANGE>
+		struct range_size
+		{
+		};
+		template<class T>
+		struct range_size<T, true>
+		{
+			using type = std::ranges::range_size_t<T>;
+		};
+		template<class T>
+		struct range_size<T, false>
+		{
+			using type = size_t;
+		};
+		template<class T>
+		using range_size_t = typename range_size<T, std::ranges::range<T>>::type;
+
+		template<class T, bool IS_RANGE>
+		struct range_difference
+		{
+		};
+		template<class T>
+		struct range_difference<T, true>
+		{
+			using type = std::ranges::range_difference_t<T>;
+		};
+		template<class T>
+		struct range_difference<T, false>
+		{
+			using type = long;
+		};
+		template<class T>
+		using range_difference_t = typename range_difference<T, std::ranges::range<T>>::type;
+
+	}
+
+
 	template<class RANGE, size_t NDIMS>
-	requires std::ranges::random_access_range<RANGE>
+	requires (std::ranges::random_access_range<RANGE> || (!std::ranges::range<RANGE> && NDIMS == 0) ) // either RANGE is a random access range or a scalar (i.e. Range isn't a range and NDIMS=0)
 		class grid_view : public std::ranges::view_base
 	{
 	public:
-		class Iterator : public std::ranges::iterator_t<RANGE>
+		template<class R>
+		class Iterator : public sci::ranges::iterator_t<R>
 		{
 		public:
-			using base_type = std::ranges::iterator_t<RANGE>;
+			using base_type = sci::ranges::iterator_t<R>;
 			using iterator_category = std::iterator_traits<base_type>::iterator_category;
 			using value_type = std::iterator_traits<base_type>::value_type;
 			using pointer = std::iterator_traits<base_type>::pointer;
 			using reference = std::iterator_traits<base_type>::reference;
-			using size_type = std::ranges::range_size_t<RANGE>;
-			using difference_type = std::ranges::range_difference_t<RANGE>;
-			//template<std::ranges::contiguous_range<RANGE>>
-			using element_type = std::pointer_traits<pointer>::element_type;
+			using size_type = sci::ranges::range_size_t<R>;
+			using difference_type = sci::ranges::range_difference_t<R>;
+			//template<std::ranges::contiguous_range<R>>
+			//using element_type = std::pointer_traits<pointer>::element_type;
+			//using element_type = base_type::element_type;
 
-			Iterator() = default;
-			Iterator(base_type const& b)
+			Iterator<R>() = default;
+			Iterator<R>(base_type const& b)
 				:base_type(b)
 			{
 
@@ -159,63 +295,63 @@ namespace sci
 				return static_cast<const pointer>(static_cast<const base_type>(*this).operator->());
 			}
 			// Prefix increment
-			Iterator& operator++()
+			Iterator<R>& operator++()
 			{
 				++static_cast<base_type&>(*this);
 				return (*this);
 			}
 			// Postfix increment
-			Iterator operator++(int)
+			Iterator<R> operator++(int)
 			{
 				return static_cast<base_type&>(*this)++;
 			}
 			// Prefix decrement
-			Iterator& operator--()
+			Iterator<R>& operator--()
 			{
 				--static_cast<base_type&>(*this);
 				return (*this);
 			}
 			// Postfix decrement
-			Iterator operator--(int)
+			Iterator<R> operator--(int)
 			{
 				return static_cast<base_type&>(*this)--;
 			}
-			Iterator& operator+=(const difference_type offset)
+			Iterator<R>& operator+=(const difference_type offset)
 			{
 				static_cast<base_type&>(*this) += offset;
 				return *this;
 			}
 
-			Iterator operator+(const difference_type offset) const noexcept
+			Iterator<R> operator+(const difference_type offset) const noexcept
 			{
-				Iterator tmp = *this;
+				Iterator<R> tmp = *this;
 				tmp += offset;
 				return tmp;
 			}
 
-			friend Iterator operator+(const difference_type offset, const Iterator& iter) noexcept
+			friend Iterator<R> operator+(const difference_type offset, const Iterator<R>& iter) noexcept
 			{
 				return iter + offset;
 			}
 
-			Iterator& operator-=(const difference_type offset) noexcept
+			Iterator<R>& operator-=(const difference_type offset) noexcept
 			{
 				return *this += -offset;
 			}
 
-			Iterator operator-(const difference_type offset) const noexcept
+			Iterator<R> operator-(const difference_type offset) const noexcept
 			{
-				Iterator tmp = *this;
+				Iterator<R> tmp = *this;
 				tmp -= offset;
 				return tmp;
 			}
 
-			friend Iterator operator-(const difference_type offset, const Iterator& iter) noexcept
+			friend Iterator<R> operator-(const difference_type offset, const Iterator<R>& iter) noexcept
 			{
 				return iter - offset;
 			}
 
-			difference_type operator-(const Iterator& right) const noexcept
+			difference_type operator-(const Iterator<R>& right) const noexcept
 			{
 				return static_cast<const base_type&>(*this) - static_cast<const base_type&>(right);
 			}
@@ -224,52 +360,97 @@ namespace sci
 			{
 				return *(*this + offset);
 			}
-			bool operator==(const Iterator& right) const noexcept
+			bool operator==(const Iterator<R>& right) const noexcept
 			{
 				return (static_cast<const base_type&>(*this) == static_cast<const base_type&>(right));
 			}
-			bool operator!=(const Iterator& right) const noexcept
+			bool operator!=(const Iterator<R>& right) const noexcept
 			{
 				return !(*this == right);
 			}
 
-			bool operator<(const Iterator& right) const noexcept
+			bool operator<(const Iterator<R>& right) const noexcept
 			{
 				return static_cast<const base_type&>(*this) < static_cast<const base_type&>(right);
 			}
 
-			bool operator>(const Iterator& right) const noexcept
+			bool operator>(const Iterator<R>& right) const noexcept
 			{
 				return right < *this;
 			}
 
-			bool operator<=(const Iterator& right) const noexcept
+			bool operator<=(const Iterator<R>& right) const noexcept
 			{
 				return !(right < *this);
 			}
 
-			bool operator>=(const Iterator& right) const noexcept
+			bool operator>=(const Iterator<R>& right) const noexcept
 			{
 				return !(*this < right);
 			}
 		};
 
-		using iterator = Iterator;
+		template<bool IS_RANGE>
+		struct IteratorChooser
+		{};
+		template<>
+		struct IteratorChooser<true>
+		{
+			using type = Iterator<RANGE>;
+			using size_type = Iterator<RANGE>::size_type;
+		};
+		template<>
+		struct IteratorChooser<false>
+		{
+			typedef std::add_pointer<RANGE>::type type;
+			using size_type = size_t;
+			//using type = (RANGE*);
+		};
+
+		using iterator = typename IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::type;
 		using const_iterator = iterator;
-		using reference_type = iterator::reference;
-		using size_type = iterator::size_type;
-		using difference_type = iterator::difference_type;
+		using reference_type = std::iterator_traits<iterator>::reference;
+		using size_type = IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::size_type;
+		using difference_type = std::iterator_traits<iterator>::difference_type;
 		using sentinel = iterator;
+		using value_type = std::iterator_traits<iterator>::value_type;
 		static const size_t ndims = NDIMS;
 
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = default;
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = default;
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
+		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
+		template<IsGrid GRID>
+		constexpr grid_view& operator=(const GRID &rhs)
+		{
+			assert(rhs.shape() == shape());
+			auto iter = begin();
+			auto rhsIter = rhs.begin();
+			for (; iter != end(); ++iter, ++rhsIter)
+				*iter = *rhsIter;
+			return *this;
+		}
+		template<class T>
+		constexpr grid_view& operator=(const T& rhs)
+		{
+			for (auto& element : (*this))
+				element = rhs;
+			return *this;
+		}
+		void retarget(grid_view<RANGE, NDIMS> const& other)
+		{
+			m_dataMembers = other.m_dataMembers;
+			m_strides = other.m_strides;
+		}
+		void retarget(grid_view<RANGE, NDIMS> && other)
+		{
+			std::swap(m_dataMembers, other.m_dataMembers);
+			std::swap(m_strides, other.m_strides);
+		}
 		~grid_view() = default;
 
-		grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides)
+		grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) requires (std::ranges::random_access_range<RANGE>)
 			: m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }, m_strides(strides)
 		{
 		}
@@ -280,9 +461,17 @@ namespace sci
 		{
 		}
 
+		grid_view(RANGE&& range) requires (!std::ranges::range<RANGE> && NDIMS == 0)
+			: m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }
+		{
+		}
+
 		iterator begin() const
 		{
-			return std::begin(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::begin(m_dataMembers->m_range);
+			else
+				return &m_dataMembers->m_range;
 		}
 		iterator cbegin() const
 		{
@@ -290,15 +479,39 @@ namespace sci
 		}
 		sentinel end() const
 		{
-			return std::end(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::end(m_dataMembers->m_range);
+			else
+				return (&m_dataMembers->m_range) + 1;
 		}
 		sentinel cend() const
 		{
 			return end();
 		}
+		reference_type first() const
+		{
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return *begin();
+			else
+				return m_dataMembers->m_range;
+		}
+		reference_type last() const
+		{
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return *(end()-1);
+			else
+				return m_dataMembers->m_range;
+		}
+		const GridPremultipliedStridesReference<NDIMS> getStrides() const
+		{
+			return m_strides;
+		}
 		auto size() const
 		{
-			return std::size(m_dataMembers->m_range);
+			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+				return std::ranges::size(m_dataMembers->m_range);
+			else
+				return size_t(1);
 		}
 		reference_type operator[](const difference_type& index) requires(NDIMS == 1)
 		{
@@ -310,11 +523,21 @@ namespace sci
 		}
 		reference_type operator[](const std::array<size_t, NDIMS>& index)
 		{
-			return m_dataMembers->m_range[m_strides.getOffset(index)];
+			if constexpr (NDIMS == 0)
+				return m_dataMembers->m_range;
+			else if constexpr (NDIMS == 1)
+				return operator[](index[0]);
+			else
+				return m_dataMembers->m_range[m_strides.getOffset(index)];
 		}
 		const reference_type operator[](const std::array<size_t, NDIMS>& index) const
 		{
-			return m_dataMembers->m_range[m_strides.getOffset(index)];
+			if constexpr (NDIMS == 0)
+				return m_dataMembers->m_range;
+			else if constexpr (NDIMS == 1)
+				return operator[](index[0]);
+			else
+				return m_dataMembers->m_range[m_strides.getOffset(index)];
 		}
 		auto operator[](const difference_type& index) requires(NDIMS > 1)
 		{
@@ -376,6 +599,24 @@ namespace sci
 		{
 			return std::ranges::empty(m_dataMembers->m_range);
 		}
+		grid_view<RANGE, NDIMS>& getView()
+		{
+			return *this;
+		}
+		const grid_view<RANGE, NDIMS>& getView() const
+		{
+			return *this;
+		}
+		template<IsGridDims<NDIMS> GRID>
+		void assign(const GRID &other)
+		{
+			if (other.shape() != shape())
+				throw(std::out_of_range("Attempted to assign to a grid_view with a grid of differing shape."));
+			auto iter = begin();
+			auto otherIter = other.begin();
+			for (; iter != end(); ++iter, ++otherIter)
+				*iter = *otherIter;
+		}
 
 	private:
 		struct data_members_t
@@ -404,11 +645,14 @@ namespace sci
 		grid_fn(const GridPremultipliedStridesReference<NDIMS>& strides)
 			:m_strides(strides)
 		{}
-		template <class RANGE, size_t NDIMS>
-		requires std::ranges::random_access_range<RANGE>
+		template <class RANGE>
+		requires (std::ranges::random_access_range<RANGE> || (!std::ranges::range<RANGE> && NDIMS == 0) )
 			auto operator()(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) const
 		{
-			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), m_strides };
+			if constexpr (std::ranges::random_access_range<RANGE>)
+				return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), strides };
+			else
+				return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range)};
 		}
 		template <size_t NDIMS>
 		auto operator()(const GridPremultipliedStridesReference<NDIMS>& strides) const
@@ -417,10 +661,13 @@ namespace sci
 			return grid_fn(strides);
 		}
 		template <typename RANGE>
-		requires std::ranges::random_access_range<RANGE>
+		requires (std::ranges::random_access_range<RANGE> || (!std::ranges::range<RANGE> && NDIMS == 0) )
 			friend auto operator|(RANGE&& range, grid_fn const& fn)
 		{
-			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
+			if constexpr (std::ranges::random_access_range<RANGE>)
+				return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
+			else
+				return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range)};
 		}
 	private:
 		const GridPremultipliedStridesReference<NDIMS> m_strides;
@@ -432,3 +679,5 @@ namespace sci
 		grid_fn<NDIMS> grid;
 	}
 }
+
+#include"gridtupleview.h"
