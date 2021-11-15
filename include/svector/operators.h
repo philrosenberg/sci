@@ -75,12 +75,11 @@
 	template<class OP, class T, class U>
 	auto operate(const T& a, const std::vector<U>& b)
 	{
-		static OP op;
 		using elementType = decltype(op<OP>::doOp(a, b[0]));
 		std::vector<elementType> result(b.size());
 		auto iterResult = result.begin();
 		for (auto iterb = b.begin(); iterb != b.end(); ++iterb, ++iterResult)
-			*iterResult = op(a, *iterb);
+			*iterResult = op<OP>::doOp(a, *iterb);
 		return result;
 	}
 
