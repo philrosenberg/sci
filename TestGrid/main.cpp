@@ -162,6 +162,18 @@ void output1d(sci::grid_view<BASERANGE, 1> grid)
 
 int main()
 {
+	//testing GridData
+	{
+		//std::vector<double> dest;
+		//std::vector<double> source(20);
+		//std::span<double> viewOfSource(source.begin(), source.end());
+		//dest.assign(viewOfSource.begin(), viewOfSource.end());
+
+		sci::GridData < double, 2> d2;
+		sci::GridData<double, 1> d1{ 1., 2., 3., 4., 5. };
+		sci::GridData<double, 1> d1_2{ 11., 12., 13., 14., 15. };
+		d2.push_back(d1+d1_2);
+	}
 	//testing grid_view
 	{
 		std::array<size_t, 2>shapeArray{ 3, 2 };
@@ -222,7 +234,7 @@ int main()
 		std::vector<double> data;
 		using view_type = std::remove_cv_t<decltype(data | sci::views::grid<2>(sci::GridPremultipliedStridesReference<2>()))>;
 		view_type m_view = data | sci::views::grid<2>(strides2d);
-		m_view = data | sci::views::grid<2>(strides2d);
+		m_view.retarget( data | sci::views::grid<2>(strides2d));
 		sci::GridData<double, 2> grid(shape2d);
 		for (auto &val : grid)
 			val = 1.0;
@@ -286,6 +298,9 @@ int main()
 
 		std::cout << "testing operator ==\n";
 		output2d(grid2 == 3.0);
+
+		std::cout << "testing operator +=";
+		output2d(grid2 += 1.0);
 	}
 
 

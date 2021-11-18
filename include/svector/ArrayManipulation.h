@@ -127,7 +127,7 @@ namespace sci
 	{
 		if (grid.size() == 0)
 			return std::numeric_limits<GRID::value_type>::quiet_NaN();
-		typename GRID::value_type result = std::numeric_limits<GRID::value_type>::infinity();
+		typename GRID::value_type result = -std::numeric_limits<GRID::value_type>::infinity();
 		for (auto& g : grid)
 			result = std::max(g, result);
 		return result;

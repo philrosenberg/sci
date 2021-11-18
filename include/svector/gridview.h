@@ -259,7 +259,7 @@ namespace sci
 		class grid_view : public std::ranges::view_base
 	{
 	public:
-		template<class R>
+		/*template<class R>
 		class Iterator : public sci::ranges::iterator_t<R>
 		{
 		public:
@@ -405,15 +405,48 @@ namespace sci
 			typedef std::add_pointer<RANGE>::type type;
 			using size_type = size_t;
 			//using type = (RANGE*);
+		};*/
+		template<size_t NDIMS>
+		struct TypeDefs
+		{
+			using iterator = std::ranges::iterator_t<std::remove_reference_t<RANGE>>;
+			using const_iterator = iterator;
+			using reference_type = std::ranges::range_reference_t<RANGE>;
+			using rvalue_reference_type = std::ranges::range_rvalue_reference_t<std::remove_reference_t<RANGE>>;
+			using size_type = std::ranges::range_size_t<std::remove_reference_t<RANGE>>;
+			using difference_type = std::ranges::range_difference_t<std::remove_reference_t<RANGE>>;
+			using sentinel = std::ranges::sentinel_t<std::remove_reference_t<RANGE>>;
+			using value_type = std::iterator_traits<iterator>::value_type;
 		};
 
-		using iterator = typename IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::type;
-		using const_iterator = iterator;
-		using reference_type = std::iterator_traits<iterator>::reference;
-		using size_type = IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::size_type;
-		using difference_type = std::iterator_traits<iterator>::difference_type;
-		using sentinel = iterator;
-		using value_type = std::iterator_traits<iterator>::value_type;
+		template<>
+		struct TypeDefs<0>
+		{
+			using iterator = std::add_pointer_t<std::remove_reference_t<RANGE>>;
+			using const_iterator = iterator;
+			using reference_type = std::add_lvalue_reference_t<std::remove_reference_t<RANGE>>;
+			using rvalue_reference_type = std::add_rvalue_reference_t<std::remove_reference_t<RANGE>>;
+			using size_type = size_t;
+			using difference_type = size_t;
+			using sentinel = iterator;
+			using value_type = RANGE;
+		};
+
+		using iterator = TypeDefs<NDIMS>::iterator;
+		using const_iterator = TypeDefs<NDIMS>::const_iterator;
+		using reference_type = TypeDefs<NDIMS>::reference_type;
+		using rvalue_reference_type = TypeDefs<NDIMS>::rvalue_reference_type;
+		using size_type = TypeDefs<NDIMS>::size_type;
+		using difference_type = TypeDefs<NDIMS>::difference_type;
+		using sentinel = TypeDefs<NDIMS>::sentinel;
+		using value_type = TypeDefs<NDIMS>::value_type;
+		//using iterator = typename IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::type;
+		//using const_iterator = iterator;
+		
+		//using reference_type = typename std::iterator_traits<iterator>::reference;
+		//using size_type = IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::size_type;
+		//using difference_type = std::iterator_traits<iterator>::difference_type;
+		//using sentinel = iterator;
 		static const size_t ndims = NDIMS;
 
 		constexpr grid_view() = default;
@@ -468,7 +501,7 @@ namespace sci
 
 		iterator begin() const
 		{
-			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+			if constexpr (NDIMS > 0)
 				return std::ranges::begin(m_dataMembers->m_range);
 			else
 				return &m_dataMembers->m_range;
@@ -479,7 +512,7 @@ namespace sci
 		}
 		sentinel end() const
 		{
-			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+			if constexpr (NDIMS > 0)
 				return std::ranges::end(m_dataMembers->m_range);
 			else
 				return (&m_dataMembers->m_range) + 1;
@@ -490,14 +523,14 @@ namespace sci
 		}
 		reference_type first() const
 		{
-			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+			if constexpr (NDIMS > 0)
 				return *begin();
 			else
 				return m_dataMembers->m_range;
 		}
 		reference_type last() const
 		{
-			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+			if constexpr (NDIMS > 0)
 				return *(end()-1);
 			else
 				return m_dataMembers->m_range;
@@ -508,7 +541,7 @@ namespace sci
 		}
 		auto size() const
 		{
-			if constexpr (std::is_same<iterator, Iterator<RANGE>>::value)
+			if constexpr (NDIMS > 0)
 				return std::ranges::size(m_dataMembers->m_range);
 			else
 				return size_t(1);
@@ -678,6 +711,33 @@ namespace sci
 		template<size_t NDIMS>
 		grid_fn<NDIMS> grid;
 	}
+	
+	/*template <class _Ty>
+	struct pointer_traits
+	{
+		using pointer = _Ty;
+		using element_type = typename _Get_element_type<_Ty>::type;
+		using difference_type = typename _Get_ptr_difference_type<_Ty>::type;
+
+		template <class _Other>
+		using rebind = typename _Get_rebind_alias<_Ty, _Other>::type;
+
+		using _Reftype = conditional_t<is_void_v<element_type>, char, element_type>&;
+
+		_NODISCARD static pointer pointer_to(_Reftype _Val) noexcept(noexcept(_Ty::pointer_to(_Val))) {
+			return _Ty::pointer_to(_Val);
+		}
+	};*/
+
 }
 
+/*namespace std
+{
+	template<class RANGE, size_t NDIMS>
+	auto to_address(const typename sci::grid_view<RANGE, NDIMS>::iterator& iter) noexcept
+	{
+		using base_type = const typename sci::grid_view<RANGE, NDIMS>::iterator::base_type;
+		return to_address(static_cast<base_type>(iter));
+	}
+}*/
 #include"gridtupleview.h"

@@ -235,7 +235,7 @@ namespace sci
 		}
 
 		std::vector<typename GridDataVectorType<T>::type> m_data;
-		using view_type = decltype(m_data | views::grid<1>);
+		using view_type = std::remove_cvref_t<decltype(m_data | views::grid<1>)>;
 		view_type m_view;
 	};
 
@@ -478,23 +478,7 @@ namespace sci
 		{
 			return members::m_data.size();
 		}
-		void reshape(const std::array<size_t, NDIMS>& shape)
-		{
-			if (size() == 0)
-				setShape( shape );
-			else
-			{
-				bool simpleExpand = true;
-				std::array<size_t, NDIMS> oldShape = this->shape();
-				for (size_t i = 1; i < NDIMS; ++i)
-					simpleExpand &= (shape[i] == oldShape[i]);
-				if (simpleExpand)
-					setShape(shape);
-				else
-					throw("I have not yet coded beyond simple multi-d resizes.");
-			}
-		}
-		void reshape(const std::array<size_t, NDIMS>& shape, const T& value)
+		void reshape(const std::array<size_t, NDIMS>& shape, const T& value = T())
 		{
 			if constexpr (NDIMS == 0)
 			{
@@ -509,9 +493,13 @@ namespace sci
 			{
 				std::array<size_t, NDIMS> thisShape = this->shape();
 				bool simpleExpand = true;
+				bool previouslyZeroSized = false;
 				for (size_t i = 1; i < NDIMS; ++i)
+				{
 					simpleExpand &= shape[i] == thisShape[i];
-				if (simpleExpand)
+					previouslyZeroSized |= thisShape[i] == 0;
+				}
+				if (simpleExpand || previouslyZeroSized)
 				{
 					size_t size = 1;
 					for (size_t i = 0; i < NDIMS; ++i)
@@ -571,7 +559,7 @@ namespace sci
 		{
 			members::swap(other);
 		}
-		template<IsGridDims<NDIMS> GRID>
+		template<IsGrid GRID>
 		void insert(size_t index, const GRID &source)
 		{
 			static_assert(GRID::ndims == ndims || GRID::ndims == ndims - 1, "Can only insert a grid with the same number of dimensions or one dimension less than the destination grid.");
@@ -580,80 +568,97 @@ namespace sci
 			{
 
 				const std::array<size_t, GRID::ndims> sourceShape = source.shape();
-				const std::array<size_t, GRID::ndims> thisShape = shape();
+				std::array<size_t, GRID::ndims> thisShape = shape();
 #ifdef _DEBUG
-				for (size_t i = 1; i < GRID::ndims; ++i)
-					assert(sourceShape[i] == thisShape[i]);
+				if (size() > 0)
+				{
+					for (size_t i = 1; i < GRID::ndims; ++i)
+						assert(sourceShape[i] == thisShape[i]);
+				}
 #endif
 				iterator pos = begin() + index * members::getTopStride();
 				members::m_data.insert(pos, source.begin(), source.begin() + sourceShape[0] * members::getTopStride());
+				thisShape[0] += sourceShape[0];
+				setShape(thisShape);
 			}
 			else
 			{
 				//this is inserting a grid that is one dimension smaller than this grid.
 				// It should have a size equal to the top stride
 				//check sizes match
+				std::array<size_t, ndims> thisShape = shape();
+				const std::array<size_t, GRID::ndims> sourceShape = source.shape();
 				if constexpr (ndims == 1)
 					assert(source.size() == 1);
 				else
 				{
-					assert(members::getTopStride() == source.size());
-					const std::array<size_t, GRID::ndims> sourceShape = source.shape();
-					const std::array<size_t, ndims> thisShape = shape();
-					for (size_t i = 0; i < NDIMS - 2; ++i)
-						assert(sourceShape[i] == thisShape[i+1]);
+					if (size() > 0)
+					{
+						assert(members::getTopStride() == source.size());
+						for (size_t i = 0; i < sourceShape.size(); ++i)
+							assert(sourceShape[i] == thisShape[i + 1]);
+					}
 				}
 
 				//insert the data
-				iterator pos = begin() + index * members::getTopStride();
-				members::m_data.insert(pos, source.begin(), source.begin() + members::getTopStride());
+				if (size() == 0 && index == 0)
+				{
+					thisShape[0] = 1;
+					for (size_t i = 0; i < sourceShape.size(); ++i)
+						thisShape[i + 1] = sourceShape[i];
+					members::m_data.assign(source.begin(), source.begin() + source.size());
+				}
+				else
+				{
+					iterator pos = begin() + index * members::getTopStride();
+					members::m_data.insert(pos, source.begin(), source.begin() + source.size());
+					++thisShape[0];
+				}
+				setShape(thisShape);
 			}
 		}
-		void insert(size_t index, size_t count, GridView<T const, NDIMS - 1> source)
-		{
-			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
-
-			//check sizes match
-			assert(members::getTopStride() == source.size());
-			if constexpr (NDIMS > 1)
-			{
-				for (size_t i = 0; i < NDIMS - 2; ++i)
-					assert(source.getPremultipliedStridesPointer()[i] == members::getPremultipliedStridesPointer()[i + 1]);
-			}
-
-			iterator pos = begin() + index * members::getTopStride();
-			//expand with default construction
-			insert(index, count * members::getTopStride(), T());
-			//perform repeated assigns to put the data in
-			for (size_t i = 0; i < count; ++i)
-				members::m_data.insert(pos + (i * members::getTopStride()), source.begin(), source.begin() + members::getTopStride());
-		}
+		//insert an element at index with value source. If NDIMS > 1 then
+		//all values through the lower dimensions of the inserted element
+		//will have value given by source.
 		void insert(size_t index, const T& source)
 		{
 			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
 
+			assert(size() > 0 || (ndims == 1 ));
+			assert(index <= shape()[0]);
+
 			iterator pos = begin() + index * members::getTopStride();
+			std::array<size_t, ndims> thisShape = shape();
 			members::m_data.insert(pos, members::getTopStride(), source);
+			++thisShape[0];
+			setShape(thisShape);
 		}
+		//insert multiple elements at index with value source. If NDIMS > 1 then
+		//all values through the lower dimensions of the inserted elements
+		//will have value given by source.
 		void insert(size_t index, size_t count, const T& source)
 		{
 			static_assert(NDIMS != 0, "Cannot insert into a zero dimensional GridData object.");
 
+			assert(size() > 0 || (ndims == 1));
+			assert(index <= shape()[0]);
+
 			iterator pos = begin() + index * members::getTopStride();
+			std::array<size_t, ndims> thisShape = shape();
 			members::m_data.insert(pos, members::getTopStride() * count, source);
+			++thisShape[0];
+			setShape(thisShape);
 		}
 		template<IsGridDims<NDIMS-1> GRID> requires(NDIMS > 1)
 		void push_back(const GRID &source)
 		{
 			static_assert(NDIMS != 0, "Cannot push_back into a zero dimensional GridData object.");
-
-			insert(members::m_data.size() / members::getTopStride(), source);
+			insert(shape()[0], source);
 		}
 		void push_back(const T& source) requires(NDIMS == 1)
 		{
 			static_assert(NDIMS != 0, "Cannot push_back into a zero dimensional GridData object.");
-
-			members::m_data.resize(members::m_data.size() + members::getTopStride(), source);
+			insert(shape()[0], source);
 		}
 		constexpr void assign(size_t count, const T& value) requires(NDIMS == 1)
 		{
@@ -701,10 +706,14 @@ namespace sci
 		GridData<T, NDIMS, Allocator> subGrid(size_t firstIndexBegin, size_t nSlices)
 		{
 			static_assert(NDIMS > 0, "Cannot get a subgrid of a zero diminsional GridData.");
+			std::array<size_t, NDIMS> subgridShape = shape();
+			subgridShape[0] = nSlices;
 			if constexpr (NDIMS > 1)
-				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin * members::getTopStride(), members::m_data.begin() + (firstIndexBegin + nSlices) * members::getTopStride(), shape());
+			{
+				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin * members::getTopStride(), members::m_data.begin() + (firstIndexBegin + nSlices) * members::getTopStride(), subgridShape);
+			}
 			else
-				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin, members::m_data.begin() + (firstIndexBegin + nSlices), shape());
+				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin, members::m_data.begin() + (firstIndexBegin + nSlices), subgridShape);
 		}
 		T& operator[](const std::array<size_t, NDIMS>& index)
 		{
