@@ -14,6 +14,7 @@
 //if you are not in a region using CP-1253 or you want to
 //use your own unicode alternatives
 #if (defined _WIN32 && !defined UNITS_H_NOT_CP1253) || defined UNITS_H_FORCE_CP1253
+#define UNITS_H_USING_CP1253
 #define ALTERNATE_MICRO "\xe6"
 #define ALTERNATE_OMEGA "\xea"
 #define ALTERNATE_PER_MILLE "0/00"
@@ -24,6 +25,8 @@
 #define ALTERNATE_ANGSTROM_SHORT "\x8e"
 #define ALTERNATE_ANGSTROM_LONG "\x8e" "ngstrom"
 #define ALTERNATE_RANKINE "\xf8" "Ra"
+#else
+#define UNITS_H_USING_UNICODE
 #endif
 
 #include<vector>
