@@ -342,21 +342,21 @@ namespace sci
 
 	//return the number of dimensions in a scalar
 	template<class T>
-	inline size_t ndims(const T &v)
+	constexpr size_t ndims(const T &)
 	{
 		return 0;
 	}
 	//return the number of dimensions in a vector v
 	template<class T>
-	inline size_t ndims(const std::vector< T > &v)
+	constexpr size_t ndims(const std::vector< T > &)
 	{
 		return 1;
 	}
 	//return the number of dimensions in a multi dimension vector v
 	template<class T>
-	size_t ndims(const std::vector< std::vector< T > > &v)
+	constexpr size_t ndims(const std::vector< std::vector< T > > &)
 	{
-		return (v.size()>0?ndims(v[0]):ndims(std::vector<T>()))+1;
+		return VectorTraits<std::vector<std::vector<T>>>::nDimensions;
 	}
 	
 	//create a 2 d vector with dimensions as given
@@ -1628,20 +1628,38 @@ namespace sci
 	inline U min(const std::vector<T>& v)
 	{
 		if(v.size()==0) return std::numeric_limits<U>::quiet_NaN();
-		typename std::vector<T>::const_iterator vi=v.begin();
-		U result = min<U>(*vi);
-		++vi;
-		while(result!=result && vi!=v.end())
+		if constexpr (VectorTraits<std::vector<T>>::nDimensions == 1)
 		{
-			result = min<U>(*vi);
+			typename std::vector<T>::const_iterator vi = v.begin();
+			U result = *vi;
 			++vi;
+			while (result != result && vi != v.end())
+			{
+				result = *vi;
+				++vi;
+			}
+			for (; vi != v.end(); ++vi)
+				result = *vi < result ? *vi : result;
+			return result;
+
 		}
-		for(; vi!=v.end(); ++vi) 
+		else
 		{
-			U newmin=min<U>(*vi);
-			result=newmin<result ? newmin : result;
+			typename std::vector<T>::const_iterator vi = v.begin();
+			U result = min<U>(*vi);
+			++vi;
+			while (result != result && vi != v.end())
+			{
+				result = min<U>(*vi);
+				++vi;
+			}
+			for (; vi != v.end(); ++vi)
+			{
+				U newmin = min<U>(*vi);
+				result = newmin < result ? newmin : result;
+			}
+			return result;
 		}
-		return result;
 	}
 
 	//return the minimum value from a vector greater than a given limit
