@@ -1329,7 +1329,7 @@ void sci::solveCubic(double a, double b, double c, double d, double &sln1, doubl
 }
 
 
-bool sci::anyTrue(const std::vector<SBOOL> &v)
+/*bool sci::anyTrue(const std::vector<SBOOL>& v)
 {
 	if(v.size()==0)
 		return false;
@@ -1358,7 +1358,7 @@ bool sci::anyFalse(const std::vector<SBOOL> &v)
 bool sci::allFalse(const std::vector<SBOOL> &v)
 {
 	return !anyTrue(v);
-}
+}*/
 
 std::vector<SBOOL> sci::rollingOr(const std::vector<SBOOL> &v, size_t n)
 {
