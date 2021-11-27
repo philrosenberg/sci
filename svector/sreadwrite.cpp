@@ -632,7 +632,7 @@ double sci::atofcustom(const std::string &numstr)
 		else if(ise(c))
 		{
 			if(paste) return std::numeric_limits<double>::quiet_NaN();
-			if(!pastwholenumbers) std::numeric_limits<double>::quiet_NaN();
+			if(!pastwholenumbers) return std::numeric_limits<double>::quiet_NaN();
 			pastwholenumbers=true;
 			pastpoint=true;
 			pastfraction=true;
