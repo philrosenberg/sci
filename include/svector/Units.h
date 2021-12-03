@@ -15,6 +15,7 @@
 //use your own unicode alternatives
 #if (defined _WIN32 && !defined UNITS_H_NOT_CP1253) || defined UNITS_H_FORCE_CP1253
 #define UNITS_H_USING_CP1253
+#define UNITS_H_STR8(STR) (STR)
 #define ALTERNATE_MICRO "\xe6"
 #define ALTERNATE_OMEGA "\xea"
 #define ALTERNATE_PER_MILLE "0/00"
@@ -27,6 +28,7 @@
 #define ALTERNATE_RANKINE "\xf8" "Ra"
 #else
 #define UNITS_H_USING_UNICODE
+#define UNITS_H_STR8(STR) ((char*)u8##STR)
 #endif
 
 #include<vector>
@@ -81,13 +83,13 @@ struct ExponentTraits<VALUE>\
 {\
 	constexpr static bool validSi = true;\
 	template<class STRING> static STRING getName(){ static_assert(false, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
-	template<> static std::string getName<std::string>() { return LONG_NAME; }\
+	template<> static std::string getName<std::string>() { return UNITS_H_STR8(LONG_NAME); }\
 	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
 	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
 	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
 	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
 	template<class STRING> static STRING getPrefix(){ static_assert(false, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
-	template<> static std::string getPrefix<std::string>() { return ABBREVIATION; }\
+	template<> static std::string getPrefix<std::string>() { return UNITS_H_STR8(ABBREVIATION); }\
 	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
 	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\
 	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
@@ -830,7 +832,7 @@ struct ExponentTraits<VALUE>\
 	static STRING getShortName()\
 	{\
 		if constexpr (std::is_same<STRING, std::string>::value)\
-			return SHORTNAME;\
+			return UNITS_H_STR8(SHORTNAME);\
 		if constexpr (std::is_same<STRING, std::wstring>::value)\
 			return L##SHORTNAME;\
 		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
@@ -844,7 +846,7 @@ struct ExponentTraits<VALUE>\
 	static STRING getLongName()\
 	{\
 		if constexpr (std::is_same<STRING, std::string>::value)\
-			return LONGNAME;\
+			return UNITS_H_STR8(LONGNAME);\
 		if constexpr (std::is_same<STRING, std::wstring>::value)\
 			return L##LONGNAME;\
 		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
@@ -1037,7 +1039,7 @@ struct ExponentTraits<VALUE>\
 #ifdef ALTERNATE_BASIS_POINT
 				return ALTERNATE_BASIS_POINT;
 #else
-				return "\u2031";
+				return UNITS_H_STR8("\u2031");
 #endif
 			if constexpr (std::is_same<STRING, std::wstring>::value)
 				return L"\u2031";
@@ -1354,7 +1356,7 @@ struct ExponentTraits<VALUE>\
 		static STRING getShortName()\
 		{\
 			if constexpr (std::is_same<STRING, std::string>::value)\
-				return SHORTNAME;\
+				return UNITS_H_STR8(SHORTNAME);\
 			if constexpr (std::is_same<STRING, std::wstring>::value)\
 				return L##SHORTNAME;\
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
@@ -1368,7 +1370,7 @@ struct ExponentTraits<VALUE>\
 		static STRING getLongName()\
 		{\
 			if constexpr (std::is_same<STRING, std::string>::value)\
-				return LONGNAME;\
+				return UNITS_H_STR8(LONGNAME);\
 			if constexpr (std::is_same<STRING, std::wstring>::value)\
 				return L##LONGNAME;\
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
