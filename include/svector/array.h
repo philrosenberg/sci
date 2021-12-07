@@ -646,7 +646,7 @@ namespace sci
 			iterator pos = begin() + index * members::getTopStride();
 			std::array<size_t, ndims> thisShape = shape();
 			members::m_data.insert(pos, members::getTopStride() * count, source);
-			++thisShape[0];
+			thisShape[0]+=count;
 			setShape(thisShape);
 		}
 		template<IsGridDims<NDIMS-1> GRID> requires(NDIMS > 1)
