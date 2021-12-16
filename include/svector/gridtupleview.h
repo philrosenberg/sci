@@ -719,15 +719,17 @@ namespace sci
 
 
 
+	template<class T>
+	auto getGridView(T& grid) requires(IsGrid<T>)
+	{
+		return grid.getView();
+	}
 
-
-
-
-
-
-
-
-
+	template<class T>
+	auto getGridView(T& scalar) requires(!IsGrid<T>)
+	{
+		return scalar | views::grid<0>;
+	}
 
 
 	template<class GRID1, class GRID2, class TRANSFORM>

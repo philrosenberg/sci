@@ -885,18 +885,6 @@ namespace sci
 
 	};
 
-	template<class T>
-	auto getGridView(T& grid) requires(IsGrid<T>)
-	{
-		return grid.getView();
-	}
-
-	template<class T>
-	auto getGridView(T& scalar) requires(!IsGrid<T>)
-	{
-		return scalar | views::grid<0>;
-	}
-
 
 	/*struct plus_assign
 	{
