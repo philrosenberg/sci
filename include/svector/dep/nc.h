@@ -490,6 +490,12 @@ namespace sci
 			for (size_t i = 0; i < data.ndims; ++i)
 				sci::assertThrow(dataShape[i] == variableShape[i], sci::err(SERR_NC, localNcError, sU("In sci::OutputNcFile::write The data and the variable have incompatible sizes.")));
 
+			//If the size of the data is actually 0, then it's not an error, but we don't need to actually do any writing.
+			//However, it is appropriate that we do the checks above
+			for (size_t i = 0; i < dataShape.size(); ++i)
+				if (dataShape[i] == 0)
+					return;
+
 			std::array<size_t, data.ndims> starts;
 			starts.fill(0);
 			if constexpr (std::ranges::contiguous_range<GRID>)
