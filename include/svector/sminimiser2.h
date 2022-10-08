@@ -351,7 +351,15 @@ namespace sci
 	template <class FUNCTOR>
 	std::vector<double> minimiseOnLineGoldenSection(FUNCTOR& function, const std::vector<double>& firstGuess, const std::vector<double>& direction, const std::vector<double>& absoluteTollerance, const std::vector<double>& tollerance, size_t maxIterations = -1)
 	{
-		double distance = minimiseGoldenSection([=](double x) mutable {return function(firstGuess + direction * x); }, 1.0, sci::abs(sci::dot(direction, absoluteTollerance)), sci::abs(sci::dot(direction, tollerance)), maxIterations);
+		//lamda to move a distance x in the given direction
+		auto move = [&](double x) mutable
+		{
+			std::vector<double> result(firstGuess.size());
+			for (size_t i = 0; i < firstGuess.size(); ++i)
+				result[i] = firstGuess[i] + direction[i] * x;
+			return result;
+		};
+		double distance = minimiseGoldenSection(move, 1.0, sci::abs(sci::dot(direction, absoluteTollerance)), sci::abs(sci::dot(direction, tollerance)), maxIterations);
 		return firstGuess + direction * distance;
 	}
 
@@ -364,7 +372,15 @@ namespace sci
 	template <class FUNCTOR>
 	std::vector<double> minimiseOnLineGoldenSection(FUNCTOR& function, const std::vector<double>& firstGuess, const std::vector<double>& direction, size_t maxIterations = -1)
 	{
-		double distance = minimiseGoldenSection([=](double x) mutable {return function(firstGuess + direction * x); }, 1.0, 0.0, std::sqrt(std::numeric_limits<double>::epsilon()), maxIterations);
+		//lamda to move a distance x in the given direction
+		auto move = [&](double x) mutable
+		{
+			std::vector<double> result(firstGuess.size());
+			for (size_t i = 0; i < firstGuess.size(); ++i)
+				result[i] = firstGuess[i] + direction[i] * x;
+			return result;
+		};
+		double distance = minimiseGoldenSection(move, 1.0, 0.0, std::sqrt(std::numeric_limits<double>::epsilon()), maxIterations);
 		return firstGuess + direction * distance;
 	}
 
