@@ -82,13 +82,13 @@ template<>\
 struct ExponentTraits<VALUE>\
 {\
 	constexpr static bool validSi = true;\
-	template<class STRING> static STRING getName(){ static_assert(false, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
+	template<class STRING> static STRING getName(){ static_assert(sizeof(STRING)==-1, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
 	template<> static std::string getName<std::string>() { return UNITS_H_STR8(LONG_NAME); }\
 	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
 	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
 	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
 	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
-	template<class STRING> static STRING getPrefix(){ static_assert(false, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
+	template<class STRING> static STRING getPrefix(){ static_assert(sizeof(STRING)==-1, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
 	template<> static std::string getPrefix<std::string>() { return UNITS_H_STR8(ABBREVIATION); }\
 	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
 	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\
