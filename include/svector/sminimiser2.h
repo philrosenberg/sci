@@ -2,7 +2,7 @@
 
 #include<assert.h>
 #include"ArrayManipulation.h"
-
+#include<svector/svector.h>
 /*
 //minimiser must be a functor that accepts fitParams and returns the value to minimise
 template <class MINIMISER>
