@@ -1553,7 +1553,7 @@ struct ExponentTraits<VALUE>\
 		//although trying to set a Physical with a VALUE_TYPE causes a compile error with just
 		//the above, the error message is pretty cryptic. This should give something more
 		//sensible
-		Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const VALUE_TYPE& other)
+		Physical<ENCODED_UNIT, VALUE_TYPE>& operator=(const VALUE_TYPE& other)
 		{
 			//use std::is_same to ensure we always fail the assert, but avoid a constant false that can be
 			//seen by some compilers as a reason to throw an error without the template being instantiated
