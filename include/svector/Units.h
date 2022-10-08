@@ -1901,7 +1901,7 @@ struct ExponentTraits<VALUE>\
 	template< class UNIT, class T, class V>
 	Physical< typename UNIT::unit, V> floor(const Physical<T, V>& value)
 	{
-		return Physical<UNIT::unit, V>(std::floor(value.template value<UNIT::unit>()));
+		return Physical<typename UNIT::unit, V>(std::floor(value.template value<typename UNIT::unit>()));
 	}
 
 	//ceil a Physical - the first template parameter is the unit that
@@ -1910,7 +1910,7 @@ struct ExponentTraits<VALUE>\
 	template< class UNIT, class T, class V>
 	Physical<typename UNIT::unit, V> ceil(const Physical<T, V>& value)
 	{
-		return Physical<UNIT::unit, V>(std::ceil(value.template value<UNIT::unit>()));
+		return Physical<typename UNIT::unit, V>(std::ceil(value.template value<typename UNIT::unit>()));
 	}
 
 	//round a Physical - the first template parameter is the unit that
@@ -1919,7 +1919,7 @@ struct ExponentTraits<VALUE>\
 	template< class UNIT, class T, class V>
 	Physical<typename UNIT::unit, V> round(const Physical<T, V>& value)
 	{
-		return Physical<UNIT::unit, V>(std::round(value.template value<UNIT::unit>()));
+		return Physical<typename UNIT::unit, V>(std::round(value.template value<typename UNIT::unit>()));
 	}
 
 
