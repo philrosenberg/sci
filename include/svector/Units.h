@@ -1731,7 +1731,7 @@ struct ExponentTraits<VALUE>\
 	constexpr Physical<PoweredUnit<T, POWER>, V> pow(const Physical<T, V> &base)
 	{
 		static_assert(!T::isUnitless(), "When raising a unitless quantity to a power, please explicitly cast it to sci::Physical<sci::Unitless, VALUE_TYPE>, where VALUE_TYPE is some value type. This ensures the output is not Unitless to some power, which makes no physical sense. You may also use sci::Percent, sci::PerMille and sci::BasisPoint, which will be converted to sci::Unitless for you.");
-		return Physical<PoweredUnit<T, POWER>, V>(std::pow(base.template value<T>(), POWER));
+		return Physical<PoweredUnit<T, POWER>, V>(V(std::pow(base.template value<T>(), POWER)));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int POWER, class V>
