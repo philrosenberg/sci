@@ -1809,7 +1809,7 @@ struct ExponentTraits<VALUE>\
 	constexpr Physical<Unitless, V> log10(const Physical<T, V> &value)
 	{
 		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
-		return Physical<Unitless, V>(std::log10(value.template value<T>()) + T::exponent); // make use of log laws to split this
+		return Physical<Unitless, V>(std::log10(value.template value<Unitless>()));
 	}
 
 	template <class T, class V>
