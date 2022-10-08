@@ -703,7 +703,7 @@ namespace sci
 			else
 				return members::m_view;
 		}
-		GridData<T, NDIMS, Allocator> subGrid(size_t firstIndexBegin, size_t nSlices)
+		GridData<T, NDIMS, Allocator> subGrid(size_t firstIndexBegin, size_t nSlices) const
 		{
 			static_assert(NDIMS > 0, "Cannot get a subgrid of a zero diminsional GridData.");
 			std::array<size_t, NDIMS> subgridShape = shape();
