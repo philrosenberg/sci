@@ -1913,6 +1913,15 @@ struct ExponentTraits<VALUE>\
 		return Physical<UNIT::unit, V>(std::ceil(value.template value<UNIT::unit>()));
 	}
 
+	//round a Physical - the first template parameter is the unit that
+	//you want the Physical to be converted to before doing the ceil.
+	//The result will be in this unit.
+	template< class UNIT, class T, class V>
+	Physical<typename UNIT::unit, V> round(const Physical<T, V>& value)
+	{
+		return Physical<UNIT::unit, V>(std::round(value.template value<UNIT::unit>()));
+	}
+
 
 	//declare a TypeTraits for Physicals we can use this to get a unitless type for dividing when averaging
 	//in templated functions
