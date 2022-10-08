@@ -4,7 +4,8 @@
 #include"gridtupleview.h"
 #include<limits>
 #include"serr.h"
-#include"svector.h"
+#include<algorithm>
+//#include"svector.h"
 
 namespace sci
 {
@@ -268,12 +269,12 @@ namespace sci
 				continue;
 			if (x0 < minx)
 			{
-				y0 = typename U::value_type(sci::linearinterpolate(minx, x0, x1, y0, y1));
+				y0 = typename U::value_type((y1 - y0) / (x1 - x0) * (minx - x0) + y0);
 				x0 = minx;
 			}
 			if (x1 > maxx)
 			{
-				y1 = typename U::value_type(sci::linearinterpolate(maxx, x0, x1, y0, y1));
+				y1 = typename U::value_type((y1 - y0) / (x1 - x0) * (maxx - x0) + y0);
 				x1 = maxx;
 			}
 
@@ -293,6 +294,58 @@ namespace sci
 		for (; iterD != destination.end(); ++iterD, ++iterF)
 			if (*iterF != 0)
 				*iterD = value;
+	}
+
+	template<IsGrid T>
+	void reorder(T& v, const sci::GridData<size_t, 1>& newlocations)
+	{
+		if constexpr (T::ndims == 0)
+			return;
+
+		T result(v.shape());
+		if constexpr (T::ndims == 1)
+			for (size_t i = 0; i < result.size(); ++i)
+				result[newlocations[i]] = v[i];
+		else
+			for (size_t i = 0; i < result.shape()[0]; ++i)
+				result[newlocations[i]] = sci::GridData<T::value_type, T::ndims - 1>(v[i]);
+		std::swap(result, v);;
+	}
+
+	template<size_t N, class TUPLEOFARRAYPOINTERS>
+	void reorder(TUPLEOFARRAYPOINTERS vs, const sci::GridData<size_t, 1>& newlocations)
+	{
+		if constexpr (N > std::tuple_size_v< TUPLEOFARRAYPOINTERS>-1)
+			return;
+		else
+		{
+			reorder(*std::get<N>(vs), newlocations);
+			reorder<N + 1>(vs, newlocations);
+		}
+	}
+
+	template<IsGridDims<1> SORTBY, class TUPLEOFARRAYPOINTERS>
+	void sortBy(SORTBY &toSortBy, TUPLEOFARRAYPOINTERS arrays)
+	{
+		//create a vector of indices which will represent the original locations o each element after it has been sorted
+		sci::GridData<size_t, 1> originalLocations(toSortBy.size());
+		for (size_t i = 0; i < originalLocations.size(); ++i)
+			originalLocations[i] = i;
+		//sort the locations based on the data in v
+		//the custom comparator function compares based on the element at the original index stored in the element being compared
+		//by the end of the sort originalLocations[i] is the index of the ith lowest element of toSortBy
+		std::sort(originalLocations.begin(), originalLocations.end(), [toSortBy](size_t originalIndex1, size_t originalIndex2) {return toSortBy[originalIndex1] < toSortBy[originalIndex2]; });
+
+		//invert originalLocatons to set up our newLocations for each element of toSortBy
+		sci::GridData<size_t, 1>newLocations(originalLocations.size());
+		for (size_t i = 0; i < originalLocations.size(); ++i)
+		{
+			newLocations[originalLocations[i]] = i;
+		}
+
+		//reorder the arrays
+		reorder(toSortBy, newLocations);
+		reorder<0>(arrays, newLocations);
 	}
 }
 
