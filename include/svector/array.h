@@ -470,6 +470,15 @@ namespace sci
 			else
 				return GridPremultipliedStridesReference<NDIMS>();
 		}
+		template<size_t dimension>
+		constexpr size_t getStride() const requires (dimension < NDIMS)
+		{
+			return members::getPremultipliedStridePointer()[dimension];
+		}
+		constexpr size_t getStride(size_t dimension) const
+		{
+			return members::getPremultipliedStridePointer()[dimension];
+		}
 		std::array<size_t, NDIMS> shape() const
 		{
 			return members::m_view.shape();
