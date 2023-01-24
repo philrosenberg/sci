@@ -884,6 +884,10 @@ namespace sci
 				{
 					members::m_data.resize(shape[0], value);
 				}
+				else
+				{
+					members::m_data = value;
+				}
 			}
 			catch (...)
 			{
