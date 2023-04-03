@@ -1997,12 +1997,12 @@ namespace std
 	public:
 		static constexpr sci::Physical<T, V>(min)() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::min());
+			return sci::Physical<T, V>((numeric_limits<V>::min)());
 		}
 
 		static constexpr sci::Physical<T, V>(max)() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::max());
+			return sci::Physical<T, V>((numeric_limits<V>::max)());
 		}
 
 		static constexpr sci::Physical<T, V> lowest() noexcept
