@@ -214,16 +214,20 @@ namespace sci
 		int getId() const { return m_id; }
 		const sci::string& getFileName() const { return m_fileName; }
 		//add move constructors
-		NcFileBase(NcFileBase&& other)
+		NcFileBase(NcFileBase&& other) noexcept
 		{
-			m_open = other.m_open;
-			m_id = other.m_id;
+			m_open = std::move(other.m_open);
+			m_id = std::move(other.m_id);
+			m_fileName = std::move(other.m_fileName);
+			m_fileName.clear();
 			other.m_open = false;
 		}
-		NcFileBase operator=(NcFileBase&& other)
+		NcFileBase operator=(NcFileBase&& other) noexcept
 		{
-			m_open = other.m_open;
-			m_id = other.m_id;
+			m_open = std::move(other.m_open);
+			m_id = std::move(other.m_id);
+			m_fileName = std::move(other.m_fileName);
+			m_fileName.clear();
 			other.m_open = false;
 		}
 	private:
