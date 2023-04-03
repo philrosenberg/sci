@@ -212,6 +212,7 @@ namespace sci
 		void close();
 		bool isOpen() const { return m_open; }
 		int getId() const { return m_id; }
+		const sci::string& getFileName() const { return m_fileName; }
 		//add move constructors
 		NcFileBase(NcFileBase&& other)
 		{
@@ -228,6 +229,7 @@ namespace sci
 	private:
 		bool m_open;
 		int m_id;
+		sci::string m_fileName;
 
 		//remove copy constructors
 		NcFileBase(const NcFileBase&) = delete;

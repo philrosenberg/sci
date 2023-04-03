@@ -39,6 +39,7 @@ void sci::NcFileBase::openReadOnly(const sci::string &fileName, bool diskless)
 		flag = flag | NC_DISKLESS;
 	checkNcCall(nc_open(sci::nativeCodepage(fileName).c_str(), flag, &m_id));
 	m_open = true;
+	m_fileName = fileName;
 }
 
 void sci::NcFileBase::openWritable(const sci::string &fileName, int formatFlags, bool diskless)
@@ -46,6 +47,7 @@ void sci::NcFileBase::openWritable(const sci::string &fileName, int formatFlags,
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
 	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
+	m_fileName = fileName;
 }
 
 void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeReplacementCharacter, int formatFlags, bool diskless)
@@ -53,12 +55,14 @@ void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeRepl
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
 	checkNcCall(nc_create(sci::nativeCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
+	m_fileName = fileName;
 }
 
 void sci::NcFileBase::close()
 {
 	if (m_open)
 	{
+		m_fileName = sU("");
 		m_open = false;
 		checkNcCall(nc_close(m_id)); //we can get an error, but I assume the file isstill closed
 	}
