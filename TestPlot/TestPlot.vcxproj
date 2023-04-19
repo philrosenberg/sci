@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8B096D72-3996-4AD0-8CFF-B9016033B0A2}</ProjectGuid>
+    <ProjectGuid>{06c2344f-52c4-4dc3-a61b-5357bb216bee}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Apex</RootNamespace>
+    <RootNamespace>TestPlot</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

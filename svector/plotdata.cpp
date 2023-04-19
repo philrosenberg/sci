@@ -44,7 +44,7 @@ void LineStyle::setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) 
 			scaledMarks[i] = (PLINT)( m_marks[i] * scale ); 
 			scaledSpaces[i] = (PLINT)( m_spaces[i] * scale );
 		}
-		pl->styl(m_marks.size(),&m_marks[0],&m_spaces[0]);
+		pl->styl(m_marks.size(),&scaledMarks[0],&scaledSpaces[0]);
 	}
 }
 void LineStyle::resetLineStyle( plstream *pl, PLINT colourIndex ) const
@@ -181,6 +181,53 @@ rgbcolour FillStyle::getColour() const
 	return m_colour;
 }
 
+PlotFrame::PlotFrame(double bottomLeftX, double bottomLeftY, double width, double height, const FillStyle& fillStyle, const LineStyle& lineStyle, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour)
+{
+	m_bottomLeftX = bottomLeftX;
+	m_bottomLeftY = bottomLeftY;
+	m_width = width;
+	m_height = height;
+	m_fillStyle = fillStyle;
+	m_lineStyle = lineStyle;
+	m_title = title;
+	m_titlesize = titlesize;
+	m_titledistance = titledistance;
+	m_titlefont = titlefont;
+	m_titlestyle = titlestyle;
+	m_titlecolour = titlecolour;
+}
+
+void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+{
+	pl->vpor(- 1e-5, 1.00005, -1e-5, 1.00005);
+	pl->wind(-1e-5, 1.00005, -1e-5, 1.00005);
+	double x[]{ m_bottomLeftX, m_bottomLeftX + m_width, m_bottomLeftX + m_width, m_bottomLeftX, m_bottomLeftX };
+	double y[]{ m_bottomLeftY, m_bottomLeftY, m_bottomLeftY + m_height, m_bottomLeftY + m_height, m_bottomLeftY };
+
+	if (m_fillStyle.getColour().a() > 0.0)
+	{
+		m_fillStyle.setupFillStyle(pl, 1, scale);
+		pl->fill(5, x, y);
+		m_fillStyle.resetFillStyle(pl, 1);
+	}
+
+	if (m_lineStyle.getWidth() > 0.0)
+	{
+		m_lineStyle.setupLineStyle(pl, 1, scale);
+		pl->line(5, x, y);
+		m_lineStyle.resetLineStyle(pl, 1);
+	}
+
+
+	pl->vpor(m_bottomLeftX, m_bottomLeftX + m_width, m_bottomLeftY, m_bottomLeftY + m_height);
+	pl->sfci(m_titlestyle);
+	//pl->sfontf(m_titlefont.mb_str());
+	pl->schr(1.0, m_titlesize * scale / 72.0 * 25.4);
+	pl->scol0(0, m_titlecolour.Red(), m_titlecolour.Green(), m_titlecolour.Blue());
+	pl->col0(0);
+	pl->mtex("t", m_titledistance, 0.5, 0.5, sci::utf16ToUtf8(m_title).c_str());
+}
+
 SymbolBase::SymbolBase( sci::string symbol, PLUNICODE fci )
 {
 	m_symbol = symbol;
@@ -209,7 +256,7 @@ void Symbol::setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	pl->schr( m_size, 1.0 );
+	pl->schr( m_size, scale );
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
 }
@@ -229,726 +276,273 @@ VaryingSymbol::VaryingSymbol ( sci::string symbol )
 {
 }
 
-ColourVaryingSymbol::ColourVaryingSymbol ( sci::string symbol, double size, splotcolourscale colourScale )
+ColourVaryingSymbol::ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, sci::string symbol, double size )
 	:VaryingSymbol( symbol )
 {
 	m_size = size;
 	m_colourScale = colourScale;
 }
 
-void ColourVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const
+//we must call this prior to each individual symbol being plotted
+void ColourVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	pl->schr( m_size, 1.0 );
-	rgbcolour colour = useNormalisedScale ? m_colourScale.getRgbNormalisedScale( parameter ) : m_colourScale.getRgbOriginalScale( parameter );
+	pl->schr( m_size, scale );
+	rgbcolour colour = m_colourScale->getRgbOriginalScale(parameter);
 	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
 	pl->col0( colourIndex );
 }
 
 bool ColourVaryingSymbol::isLogScaled() const
 {
-	return m_colourScale.isLogarithmic();
+	return m_colourScale->isLog();
 }
 
-SizeVaryingSymbol::SizeVaryingSymbol ( sci::string symbol, rgbcolour colour, splotsizescale sizeScale )
+SizeVaryingSymbol::SizeVaryingSymbol (std::shared_ptr<splotsizescale> sizeScale, sci::string symbol, rgbcolour colour)
 	:VaryingSymbol( symbol )
 {
 	m_sizeScale = sizeScale;
 	m_colour = colour;
 }
 
-void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const
+//we must call this prior to each individual symbol being plotted
+void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = getSize(parameter, useNormalisedScale);
-	pl->schr( size, 1.0 );
+	double size = m_sizeScale->getsize(parameter);
+	pl->schr( size, scale );
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
 }
 
 bool SizeVaryingSymbol::isLogScaled() const
 {
-	return m_sizeScale.isLogarithmic();
+	return m_sizeScale->isLog();
 }
 
 double SizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
 {
-	return useNormalisedScale ? m_sizeScale.getSizeNormalisedScale(parameter) : m_sizeScale.getsize(parameter);
+	return useNormalisedScale ? m_sizeScale->getSizeNormalisedScale(parameter) : m_sizeScale->getsize(parameter);
 }
 
-ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( sci::string symbol, splotcolourscale colourScale, splotsizescale sizeScale )
+ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol )
 	:SymbolBase( symbol, 0 )
 {
 	m_colourScale = colourScale;
 	m_sizeScale = sizeScale;
 }
 
-void ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const
+//we must call this prior to each individual symbol being plotted
+void ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = useNormalisedSizeScale ? m_sizeScale.getSizeNormalisedScale( sizeParameter ) : m_sizeScale.getsize( sizeParameter );
-	pl->schr( size, 1.0 );
-	rgbcolour colour = useNormalisedColourScale ? m_colourScale.getRgbNormalisedScale( colourParameter ) : m_colourScale.getRgbOriginalScale( colourParameter );
+	double size = m_sizeScale->getsize( sizeParameter );
+	pl->schr( size, scale );
+	rgbcolour colour = m_colourScale->getRgbOriginalScale( colourParameter );
 	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
 	pl->col0( colourIndex );
 }
 bool ColourAndSizeVaryingSymbol::isColourLogScaled() const
 {
-	return m_colourScale.isLogarithmic();
+	return m_colourScale->isLog();
 }
 bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 {
-	return m_sizeScale.isLogarithmic();
+	return m_sizeScale->isLog();
 }
 double ColourAndSizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
 {
-	return useNormalisedScale ? m_sizeScale.getSizeNormalisedScale(parameter) : m_sizeScale.getsize(parameter);
+	return useNormalisedScale ? m_sizeScale->getSizeNormalisedScale(parameter) : m_sizeScale->getsize(parameter);
 }
 
-DrawableItem::DrawableItem( std::shared_ptr<splotTransformer> transformer )
-	:m_transformer( transformer )
+void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
-	m_scale = 1.0;
+
+	//set the position of the plot area on the page
+	double xPositionStart;
+	double xPositionEnd;
+	double yPositionStart;
+	double yPositionEnd;
+	m_xAxis->getPosition(xPositionStart, xPositionEnd);
+	m_yAxis->getPosition(yPositionStart, yPositionEnd);
+	pl->vpor(xPositionStart, xPositionEnd, yPositionStart, yPositionEnd);
+
+	//set the limits of the plot area in plot coordinates
+	//set the limits of the plot area in terms of plot units
+	//note we have to log the limits for a log axis
+	double xmin = m_xAxis->getMin();
+	double xmax = m_xAxis->getMax();
+	double ymin = m_yAxis->getMin();
+	double ymax = m_yAxis->getMax();
+	if (m_xAxis->isLog())
+	{
+		xmin = std::log10(xmin);
+		xmax = std::log10(xmax);
+	}
+	if (m_yAxis->isLog())
+	{
+		ymin = std::log10(ymin);
+		ymax = std::log10(ymax);
+	}
+	pl->wind(xmin, xmax, ymin, ymax);
+
+	//set the global transform
+	pl->stransform((m_transformer ? splotTransform : NULL), (void*)(m_transformer.get()));
+
+	//plot the data
+	plotData(pl, scale);
+
+	//reset the transform
+	pl->stransform(NULL, NULL);
 }
 
-void DrawableItem::draw( plstream *pl, bool xLog, bool yLog )
+UnstructuredData::UnstructuredData(const std::vector<const std::vector<double>*>& data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer)
 {
-	pl->stransform( (m_transformer ? splotTransform : NULL) , (void*)( m_transformer.get() ) );
-	plotData( pl, xLog, yLog );
+	sci::assertThrow(data.size() == axes.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data and axes of different lengths."));
+	m_data.resize(data.size());
+	for (size_t i = 0; i < data.size(); ++i)
+	{
+		m_data[i] = *(data[i]);
+		if(i>0)
+			sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data in different dimensions having different lengths."));
+	}
+	m_dataLogged = sci::log10(m_data);
+	m_axes = axes;
 }
 
-void XYAxisData::getLimits(  const std::vector<double> &xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount )
+void UnstructuredData::autoscaleAxes()
 {
-	xMin = std::numeric_limits<double>::max();
-	yMin = std::numeric_limits<double>::max();
-	xMax = -xMin;
-	yMax = -yMin;
+	for (size_t i = 0; i < m_data.size(); ++i)
+		m_axes[i]->expand(m_data[i]);
+}
+
+void StructuredData::autoscaleAxes()
+{
+	for (size_t i = 0; i < m_data.size(); ++i)
+		for (auto d : m_data[i])
+			m_axes[i]->expand(d);
+}
+
+StructuredData::StructuredData(const std::vector<const std::vector<std::vector<double>>*>& data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer)
+{
+
+	sci::assertThrow(data.size() == axes.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "StructuredData constructor called with data and axes of different lengths."));
+	m_data.resize(data.size());
+	for (size_t i = 0; i < data.size(); ++i)
+	{
+		m_data[i] = *(data[i]);
+		//removed the test below as it is not valid for GridData
+		//if (i > 0)
+		//	sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "StructuredData constructor called with data in different dimensions having different lengths."));
+		for(size_t j=0; j<m_data[i].size(); ++j)
+			if (j > 0)
+				sci::assertThrow(m_data[i][0].size() == m_data[i][j].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "StructuredData constructor called with data that is not rectanguler."));
+
+	}
+	m_dataLogged = sci::log10(m_data);
+	m_axes = axes;
+}
+
+std::vector<const double*> StructuredData::getPointer(size_t dimension) const
+{
+	std::vector<const double*> result(m_data[dimension].size());
+	if (m_axes[dimension]->isLog())
+		for (size_t i = 0; i < result.size(); ++i)
+			result[i] = &m_dataLogged[dimension][i][0];
+	else
+		for (size_t i = 0; i < result.size(); ++i)
+			result[i] = &m_data[dimension][i][0];
+
+	return result;
+}
+
+LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys }, {xAxis, yAxis}, transformer), m_lineStyle(lineStyle)
+{
+}
+
+void LineData::plotData( plstream *pl, double scale) const
+{
+	if (!hasData())
+		return;
+	m_lineStyle.setupLineStyle( pl, 1, scale );
+	const double* x = getPointer(0);
+	const double* y = getPointer(1);
 	
-	if (xs.size() > 0)
-	{
-		const double *xi = &xs[0];
-		const double *xEnd = xi + xs.size();
-		for (; xi != xEnd; xi++)
-		{
-			if (*xi != std::numeric_limits<double>::infinity() && *xi != -std::numeric_limits<double>::infinity())
-			{
-				if (*xi < xMin)
-					xMin = *xi;
-				if (*xi > xMax)
-					xMax = *xi;
-			}
-		}
-	}
-	if (ys.size() > 0)
-	{
-		const double *yi = &ys[0];
-		const double *yEnd = yi + ys.size();
-		for (; yi != yEnd; yi++)
-		{
-			if( *yi != std::numeric_limits<double>::infinity() && *yi != -std::numeric_limits<double>::infinity() )
-			{
-				if( *yi < yMin )
-					yMin = *yi;
-				if( *yi > yMax )
-					yMax = *yi;
-			}
-		}
-	}
-
-	if( xMax < xMin )
-		xMax = xMin = std::numeric_limits<double>::quiet_NaN();
-	if( yMax < yMin )
-		yMax = yMin = std::numeric_limits<double>::quiet_NaN();
-
-	double xDiff = xMax - xMin;
-	xMax += xDiff * padAmount;
-	xMin -= xDiff * padAmount;
-	double yDiff = yMax - yMin;
-	yMax += yDiff * padAmount;
-	yMin -= yDiff * padAmount;
-}
-
-void XYAxisData::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
-{
-	if( ! m_calculatedLimits )
-	{
-		getLimits( m_xData, m_yData, m_xMin, m_xMax, m_yMin, m_yMax, m_padLimitsAmount );
-		m_calculatedLimits = true;
-	}
-	xMin = m_xMin;
-	xMax = m_xMax;
-	yMin = m_yMin;
-	yMax = m_yMax;
-}
-
-void XYAxisData::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
-{
-	if( !m_calculatedLogLimits )
-	{
-		getLimits( m_xDataLogged, m_yDataLogged, m_xMinLogged, m_xMaxLogged, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount );
-		m_calculatedLogLimits = true;
-	}
-	xMin = m_xMinLogged;
-	xMax = m_xMaxLogged;
-	yMin = m_yMinLogged;
-	yMax = m_yMaxLogged;
-}
-
-XYAxisData::XYAxisData( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:DrawableItem( transformer )
-{
-	m_xData = xs;
-	m_yData = ys;
-	m_xDataLogged = sci::log10( xs );
-	m_yDataLogged = sci::log10( ys );
-	m_padLimitsAmount = autoLimitsPadAmount;
-	m_calculatedLimits = false;
-	m_calculatedLogLimits = false;
-}
-
-PlotData1d::PlotData1d(const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:XYAxisData(xs, ys, transformer, autoLimitsPadAmount)
-{
-	sci::assertThrow(xs.size() == ys.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData1d constructor called with xs and ys of different lengths."));
-}
-
-PlotData2dLinear::PlotData2dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
-{
-	sci::assertThrow( zs.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData2dLinear constructor called with xs and zs of different lengths.") );
-	m_zData = zs;
-	m_zDataLogged = sci::log10( m_zData );
-	double zMin = sci::min<double>( m_zData );
-	double zRange = sci::max<double>( m_zData ) - zMin;
-	m_zDataNormalised = ( m_zData - zMin ) / zRange;
-	double zMinLogged = sci::min<double>( m_zDataLogged );
-	double zRangeLogged = sci::max<double>( m_zDataLogged ) - zMinLogged;
-	m_zDataLoggedNormalised = ( m_zDataLogged - zMinLogged ) / zRangeLogged;
-}
-
-PlotData3dLinear::PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData1d( xs, ys, transformer, autoLimitsPadAmount )
-{
-	sci::assertThrow( zs1.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData3dLinear constructor called with xs and zs1 of different lengths.") );
-	sci::assertThrow( zs2.size() == xs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "PlotData3dLinear constructor called with xs and zs2 of different lengths.") );
-	m_zData1 = zs1;
-	m_zDataLogged1 = sci::log10( m_zData1 );
-	double zMin1 = sci::min<double>( m_zData1 );
-	double zRange1 = sci::max<double>( m_zData1 ) - zMin1;
-	m_zDataNormalised1 = ( m_zData1 - zMin1 ) / zRange1;
-	double zMinLogged1 = sci::min<double>( m_zDataLogged1 );
-	double zRangeLogged1 = sci::max<double>( m_zDataLogged1 ) - zMinLogged1;
-	m_zDataLoggedNormalised1 = ( m_zDataLogged1 - zMinLogged1 ) / zRangeLogged1;
-	
-	m_zData2 = zs2;
-	m_zDataLogged2 = sci::log10( m_zData2 );
-	double zMin2 = sci::min<double>( m_zData2 );
-	double zRange2 = sci::max<double>( m_zData2 ) - zMin2;
-	m_zDataNormalised2 = ( m_zData2 - zMin2 ) / zRange2;
-	double zMinLogged2 = sci::min<double>( m_zDataLogged2 );
-	double zRangeLogged2 = sci::max<double>( m_zDataLogged2 ) - zMinLogged2;
-	m_zDataLoggedNormalised2 = ( m_zDataLogged2 - zMinLogged2 ) / zRangeLogged2;
-
-}
-
-PlotData2dZ::PlotData2dZ(const std::vector<std::vector<double>>& zs)
-{
-	m_zData = zs;
-	m_zDataLogged = sci:: log10( zs );
-
-	m_minZ = std::numeric_limits<double>::infinity();
-	m_maxZ = -std::numeric_limits<double>::infinity();
-	m_minZLogged = std::numeric_limits<double>::infinity();
-	m_maxZLogged = -std::numeric_limits<double>::infinity();
-	double* z;
-	double* zEnd;
-	for (size_t i = 0; i < m_zData.size(); ++i)
-	{
-		z = &m_zData[i][0];
-		zEnd = z + m_zData[i].size();
-		for (; z < zEnd; ++z)
-		{
-			if (*z > m_maxZ&&* z != std::numeric_limits<double>::infinity())
-				m_maxZ = *z;
-			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
-				m_minZ = *z;
-		}
-	}
-	for (size_t i = 0; i < m_zDataLogged.size(); ++i)
-	{
-		z = &m_zDataLogged[i][0];
-		zEnd = z + m_zData[i].size();
-		for (; z < zEnd; ++z)
-		{
-			if (*z > m_maxZ&&* z != std::numeric_limits<double>::infinity())
-				m_maxZLogged = *z;
-			if (*z < m_minZ && *z != -std::numeric_limits<double>::infinity())
-				m_minZLogged = *z;
-		}
-	}
-	if (m_minZ == std::numeric_limits<double>::infinity())
-		m_minZ = std::numeric_limits<double>::quiet_NaN();
-	if (m_maxZ == -std::numeric_limits<double>::infinity())
-		m_maxZ = std::numeric_limits<double>::quiet_NaN();
-	if (m_minZLogged == std::numeric_limits<double>::infinity())
-		m_minZLogged = std::numeric_limits<double>::quiet_NaN();
-	if (m_maxZLogged == -std::numeric_limits<double>::infinity())
-		m_maxZLogged = std::numeric_limits<double>::quiet_NaN();
-
-}
-void PlotData2dZ::getZLimits(double &min, double &max) const
-{
-	min = m_minZ;
-	max = m_maxZ;
-}
-void PlotData2dZ::getLogZLimits(double &min, double &max) const
-{
-	min = m_minZLogged;
-	max = m_maxZLogged;
-}
-
-PlotData2dRectilinear::PlotData2dRectilinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:XYAxisData( xs, ys, transformer, autoLimitsPadAmount ), PlotData2dZ(zs)
-{
-	m_transformer = transformer;
-}
-
-template<bool LOGX, bool LOGY>
-void getXYValuesRectilinear(double xIndex, double yIndex, double *xOutput, double *yOutput, void *data)
-{
-	PlotData2dRectilinear* plotData2dRectilinear = (PlotData2dRectilinear*)data;
-	plotData2dRectilinear->getXYValues<LOGX, LOGY>(xIndex, yIndex, *xOutput, *yOutput);
-}
-
-template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
-void getXYValuesCurvilinear(double xIndex, double yIndex, double* xOutput, double* yOutput, void* data)
-{
-	PlotData2dCurvilinear* plotData2dCurvilinear = (PlotData2dCurvilinear*)data;
-	plotData2dCurvilinear->getXYValues<LOGX, LOGY, X1D, Y1D>(xIndex, yIndex, *xOutput, *yOutput);
-}
-
-template<bool LOGX, bool LOGY>
-void PlotData2dRectilinear::getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const
-{
-	size_t xI = size_t(xIndex);
-	size_t yI = size_t(yIndex);
-	double xRemainder = xIndex - xI;
-	double yRemainder = yIndex - yI;
-
-	if constexpr (LOGX)
-	{
-		if (xRemainder == 0.0)
-			xOutput = m_xDataLogged[xI];
-		else
-			xOutput = (m_xDataLogged[xI + 1] - m_xDataLogged[xI]) * xRemainder + m_xDataLogged[xI];
-	}
-	else
-	{
-		if (xRemainder == 0.0)
-			xOutput = m_xData[xI];
-		else
-			xOutput = (m_xData[xI + 1] - m_xData[xI]) * xRemainder + m_xData[xI];
-	}
-
-	if constexpr (LOGY)
-	{
-		if (yRemainder == 0.0)
-			yOutput = m_yDataLogged[yI];
-		else
-			yOutput = (m_yDataLogged[yI + 1] - m_yDataLogged[yI]) * yRemainder + m_yDataLogged[yI];
-	}
-	else
-	{
-		if (yRemainder == 0.0)
-			yOutput = m_yData[yI];
-		else
-			yOutput = (m_yData[yI + 1] - m_yData[yI]) * yRemainder + m_yData[yI];
-	}
-}
-
-PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:DrawableItem(transformer), PlotData2dZ(zs)
-{
-	m_xData = xs;
-	m_yData = ys;
-	m_transformer = transformer;
-	m_padLimitsAmount = autoLimitsPadAmount;
-	m_x1d = false;
-	m_y1d = false;
-	m_calculatedLimits = false;
-	m_calculatedLogLimits = false;
-}
-
-PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:DrawableItem(transformer), PlotData2dZ(zs)
-{
-	m_xData1d = xs;
-	m_yData = ys;
-	m_transformer = transformer;
-	m_padLimitsAmount = autoLimitsPadAmount;
-	m_x1d = true;
-	m_y1d = false;
-	m_calculatedLimits = false;
-	m_calculatedLogLimits = false;
-}
-
-PlotData2dCurvilinear::PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:DrawableItem(transformer), PlotData2dZ(zs)
-{
-	m_xData = xs;
-	m_yData1d = ys;
-	m_transformer = transformer;
-	m_padLimitsAmount = autoLimitsPadAmount;
-	m_x1d = false;
-	m_y1d = true;
-	m_calculatedLimits = false;
-	m_calculatedLogLimits = false;
-}
-
-template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
-void PlotData2dCurvilinear::getXYValues(double xIndex, double yIndex, double& xOutput, double& yOutput) const
-{
-	size_t xI = size_t(xIndex);
-	size_t yI = size_t(yIndex);
-	double xRemainder = xIndex - xI;
-	double yRemainder = yIndex - yI;
-
-	if constexpr (X1D)
-	{
-		if constexpr (LOGX)
-		{
-			if (xRemainder == 0.0)
-				xOutput = m_xDataLogged1d[xI];
-			else
-				xOutput = (m_xDataLogged1d[xI + 1] - m_xDataLogged1d[xI]) * xRemainder + m_xDataLogged1d[xI];
-		}
-		else
-		{
-			if (xRemainder == 0.0)
-				xOutput = m_xData1d[xI];
-			else
-				xOutput = (m_xData1d[xI + 1] - m_xData1d[xI]) * xRemainder + m_xData1d[xI];
-		}
-	}
-	else
-	{
-		if constexpr (LOGX)
-		{
-			if (xRemainder == 0.0)
-			{
-				if (yRemainder == 0.0)
-					xOutput = m_xDataLogged[xI][yI];
-				else
-					xOutput = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
-			}
-			else
-			{
-				if (yRemainder == 0.0)
-				{
-					xOutput = (m_xDataLogged[xI + 1][yI] - m_xDataLogged[xI][yI]) * xRemainder + m_xDataLogged[xI][yI];
-				}
-				else
-				{
-					double x0 = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
-					double x1 = (m_xDataLogged[xI][yI + 1] - m_xDataLogged[xI][yI]) * yRemainder + m_xDataLogged[xI][yI];
-
-					xOutput = (x1 - x0) * xRemainder + x0;
-				}
-			}
-		}
-		else
-		{
-			if (xRemainder == 0.0)
-			{
-				if (yRemainder == 0.0)
-					xOutput = m_xData[xI][yI];
-				else
-					xOutput = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
-			}
-			else
-			{
-				if (yRemainder == 0.0)
-				{
-					xOutput = (m_xData[xI + 1][yI] - m_xData[xI][yI]) * xRemainder + m_xData[xI][yI];
-				}
-				else
-				{
-					double x0 = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
-					double x1 = (m_xData[xI][yI + 1] - m_xData[xI][yI]) * yRemainder + m_xData[xI][yI];
-
-					xOutput = (x1 - x0) * xRemainder + x0;
-				}
-			}
-		}
-	}
-
-	if constexpr (Y1D)
-	{
-		if constexpr (LOGY)
-		{
-			if (yRemainder == 0.0)
-				yOutput = m_yDataLogged1d[yI];
-			else
-				yOutput = (m_yDataLogged1d[yI + 1] - m_yDataLogged1d[yI]) * yRemainder + m_yDataLogged1d[yI];
-		}
-		else
-		{
-			if (yRemainder == 0.0)
-				yOutput = m_yData1d[yI];
-			else
-				yOutput = (m_yData1d[yI + 1] - m_yData1d[yI]) * yRemainder + m_yData1d[yI];
-		}
-	}
-	else
-	{
-		if constexpr (LOGY)
-		{
-			if (xRemainder == 0.0)
-			{
-				if (yRemainder == 0.0)
-					yOutput = m_yDataLogged[xI][yI];
-				else
-					yOutput = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
-			}
-			else
-			{
-				if (yRemainder == 0.0)
-				{
-					yOutput = (m_yDataLogged[xI + 1][yI] - m_yDataLogged[xI][yI]) * xRemainder + m_yDataLogged[xI][yI];
-				}
-				else
-				{
-					double y0 = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
-					double y1 = (m_yDataLogged[xI][yI + 1] - m_yDataLogged[xI][yI]) * yRemainder + m_yDataLogged[xI][yI];
-
-					yOutput = (y1 - y0) * xRemainder + y0;
-				}
-			}
-		}
-		else
-		{
-			if (xRemainder == 0.0)
-			{
-				if (yRemainder == 0.0)
-					yOutput = m_yData[xI][yI];
-				else
-					yOutput = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
-			}
-			else
-			{
-				if (yRemainder == 0.0)
-				{
-					yOutput = (m_yData[xI + 1][yI] - m_yData[xI][yI]) * xRemainder + m_yData[xI][yI];
-				}
-				else
-				{
-					double y0 = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
-					double y1 = (m_yData[xI][yI + 1] - m_yData[xI][yI]) * yRemainder + m_yData[xI][yI];
-
-					yOutput = (y1 - y0) * xRemainder + y0;
-				}
-			}
-		}
-	}
-}
-
-void PlotData2dCurvilinear::getLimits(const std::vector<std::vector<double>>& axisValues, double& min, double& max, double padAmount)
-{
-	min = std::numeric_limits<double>::max();
-	max = std::numeric_limits<double>::min();
-
-	if (axisValues.size() > 0)
-	{
-		for (size_t i = 0; i < axisValues.size(); ++i)
-		{
-			if (axisValues[i].size() > 0)
-			{
-				const double* valuesi = &axisValues[i][0];
-				const double* valuesEnd = valuesi + axisValues[i].size();
-				for (; valuesi != valuesEnd; valuesi++)
-				{
-					if (*valuesi != std::numeric_limits<double>::infinity() && *valuesi != -std::numeric_limits<double>::infinity())
-					{
-						if (*valuesi < min)
-							min = *valuesi;
-						if (*valuesi > max)
-							max = *valuesi;
-					}
-				}
-			}
-		}
-	}
-
-	if (max < min)
-		max = min = std::numeric_limits<double>::quiet_NaN();
-
-	double diff = max - min;
-	max += diff * padAmount;
-	min -= diff * padAmount;
-}
-void PlotData2dCurvilinear::getLimits(const std::vector<double>& axisValues, double& min, double& max, double padAmount)
-{
-
-	min = std::numeric_limits<double>::max();
-	min = std::numeric_limits<double>::max();
-
-	if (axisValues.size() > 0)
-	{
-		const double* valuesi = &axisValues[0];
-		const double* valuesEnd = valuesi + axisValues.size();
-		for (; valuesi != valuesEnd; valuesi++)
-		{
-			if (*valuesi != std::numeric_limits<double>::infinity() && *valuesi != -std::numeric_limits<double>::infinity())
-			{
-				if (*valuesi < min)
-					min = *valuesi;
-				if (*valuesi > max)
-					max = *valuesi;
-			}
-		}
-	}
-
-	if (max < min)
-		max = min = std::numeric_limits<double>::quiet_NaN();
-
-	double diff = max - min;
-	max += diff * padAmount;
-	min -= diff * padAmount;
-}
-
-void PlotData2dCurvilinear::getLimits(double& xMin, double& xMax, double& yMin, double& yMax) const
-{
-	if (!m_calculatedLimits)
-	{
-		if (m_x1d)
-			getLimits(m_xData1d, m_xMin, m_xMax, m_padLimitsAmount);
-		else
-			getLimits(m_xData, m_xMin, m_xMax, m_padLimitsAmount);
-		if (m_y1d)
-			getLimits(m_yData1d, m_yMin, m_yMax, m_padLimitsAmount);
-		else
-			getLimits(m_yData, m_yMin, m_yMax, m_padLimitsAmount);
-		m_calculatedLimits = true;
-	}
-	xMin = m_xMin;
-	xMax = m_xMax;
-	yMin = m_yMin;
-	yMax = m_yMax;
-}
-
-void PlotData2dCurvilinear::getLogLimits(double& xMin, double& xMax, double& yMin, double& yMax) const
-{
-	if (!m_calculatedLogLimits)
-	{
-		if (m_x1d)
-			getLimits(m_xDataLogged1d, m_xMinLogged, m_xMaxLogged, m_padLimitsAmount);
-		else
-			getLimits(m_xDataLogged, m_xMinLogged, m_xMaxLogged, m_padLimitsAmount);
-		if (m_y1d)
-			getLimits(m_yDataLogged1d, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount);
-		else
-			getLimits(m_yDataLogged, m_yMinLogged, m_yMaxLogged, m_padLimitsAmount);
-		m_calculatedLogLimits = true;
-	}
-	xMin = m_xMinLogged;
-	xMax = m_xMaxLogged;
-	yMin = m_yMinLogged;
-	yMax = m_yMaxLogged;
-}
-
-LineData::LineData( const std::vector<double> &xs, const std::vector<double> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
-	: PlotData1d( xs, ys, transformer ), m_lineStyle( lineStyle )
-{
-}
-
-void LineData::plotData( plstream *pl, bool xLog, bool yLog ) const
-{
-	m_lineStyle.setupLineStyle( pl, 1, m_scale );
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	
-	pl->line( m_xData.size(), x, y );
+	pl->line( getNPoints(), x, y);
 	m_lineStyle.resetLineStyle( pl, 1 );
 }
 
-PointData::PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
-	: PlotData1d( x, y, transformer ), m_symbol( symbol )
+PointData::PointData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &x, &y }, {xAxis, yAxis}, transformer), m_symbol(symbol)
 {
 }
-void PointData::plotData( plstream *pl, bool xLog, bool yLog ) const
+void PointData::plotData( plstream *pl, double scale) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
-	m_symbol.setupSymbol( pl, 1, 1.0 );
+	m_symbol.setupSymbol( pl, 1, scale );
 	sci::string symbol = m_symbol.getSymbol();
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
+	const double* x = getPointer(0);
+	const double* y = getPointer(1);
 	if( symbol.length() > 0)
 		//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-		pl->string(m_xData.size(),x,y,sci::toUtf8(symbol).c_str());
+		pl->string(getNPoints(), x, y, sci::toUtf8(symbol).c_str());
 }
 
-PointDataColourVarying::PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const ColourVaryingSymbol &symbol, bool autoscaleColour, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData2dLinear( xs, ys, zs, transformer, autoLimitsPadAmount )
+PointDataColourVarying::PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys, &zs }, std::vector<std::shared_ptr<PlotScale>>{xAxis, yAxis, std::shared_ptr<PlotScale>(symbol.getColourscale())}, transformer), m_symbol(symbol)
 {
-	m_symbol = symbol;
-	m_autoscaleColour = autoscaleColour;
 }
 
-void PointDataColourVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
+void PointDataColourVarying::plotData( plstream *pl, double scale) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
 	sci::string symbol = m_symbol.getSymbol();
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	const double *z = m_symbol.isLogScaled() ? 
-		( m_autoscaleColour ? &m_zDataLoggedNormalised[0] : &m_zDataLogged[0] )
-		: ( m_autoscaleColour ? &m_zDataNormalised[0] : &m_zData[0] );
+	const double* x = getPointer(0);
+	const double* y = getPointer(1);
+	const double* z = getPointer(2);
 	if( symbol.length() > 0)
 	{
 		const double *xi = x;
 		const double *yi = y;
 		const double *zi = z;
-		const double *xEnd = x + m_xData.size();
+		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleColour, 1.0 );
+			m_symbol.setupSymbol( pl, 1, *zi, scale);
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
 }
 
-PointDataSizeVarying::PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const SizeVaryingSymbol &symbol, bool autoscaleSize, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData2dLinear( xs, ys, zs, transformer, autoLimitsPadAmount )
+PointDataSizeVarying::PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys, &zs }, std::vector<std::shared_ptr<PlotScale>>{xAxis, yAxis, std::shared_ptr<PlotScale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
 {
-	m_symbol = symbol;
-	m_autoscaleSize = autoscaleSize;
 }
 
-void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
+void PointDataSizeVarying::plotData( plstream *pl, double scale) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
 	sci::string symbol = m_symbol.getSymbol();
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	const double *z = m_symbol.isLogScaled() ? 
-		( m_autoscaleSize ? &m_zDataLoggedNormalised[0] : &m_zDataLogged[0] )
-		: ( m_autoscaleSize ? &m_zDataNormalised[0] : &m_zData[0] );
+	const double *x = getPointer(0);
+	const double* y = getPointer(1);
+	const double *z = getPointer(2);
 	if( symbol.length() > 0)
 	{
 		const double *xi = x;
 		const double *yi = y;
 		const double *zi = z;
-		const double *xEnd = x + m_xData.size();
+		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, m_autoscaleSize, 1.0 );
+			m_symbol.setupSymbol( pl, 1, *zi, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			if(m_symbol.getSize(*zi, m_autoscaleSize) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
@@ -956,36 +550,29 @@ void PointDataSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
 	}
 }
 
-PointDataColourAndSizeVarying::PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, const ColourAndSizeVaryingSymbol &symbol, bool autoscaleColour, bool autoscaleSize, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData3dLinear( xs, ys, zsColour, zsSize, transformer, autoLimitsPadAmount )
+PointDataColourAndSizeVarying::PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys, &zsColour, &zsSize }, std::vector<std::shared_ptr<PlotScale>>{xAxis, yAxis, std::shared_ptr<PlotScale>(symbol.getColourscale()), std::shared_ptr<PlotScale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
 {
-	m_symbol = symbol;
-	m_autoscaleColour = autoscaleColour;
-	m_autoscaleSize = autoscaleSize;
 }
-void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog ) const
+void PointDataColourAndSizeVarying::plotData( plstream *pl, double scale) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
 	sci::string symbol = m_symbol.getSymbol();
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	const double *zColour = m_symbol.isColourLogScaled() ? 
-		( m_autoscaleSize ? &m_zDataLoggedNormalised1[0] : &m_zDataLogged1[0] )
-		: ( m_autoscaleSize ? &m_zDataNormalised1[0] : &m_zData1[0] );
-	const double *zSize = m_symbol.isSizeLogScaled() ? 
-		( m_autoscaleSize ? &m_zDataLoggedNormalised2[0] : &m_zDataLogged2[0] )
-		: ( m_autoscaleSize ? &m_zDataNormalised2[0] : &m_zData2[0] );
+	const double* x = getPointer(0);
+	const double* y = getPointer(1);
+	const double* zColour = getPointer(2);
+	const double* zSize = getPointer(3);
 	if( symbol.length() > 0)
 	{
 		const double *xi = x;
 		const double *yi = y;
 		const double *zColouri = zColour;
 		const double *zSizei = zSize;
-		const double *xEnd = x + m_xData.size();
+		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zColouri, ++zSizei )
 		{
-			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, m_autoscaleColour, m_autoscaleSize, 1.0 );
+			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			if (m_symbol.getSize(*zSizei, m_autoscaleSize) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
@@ -993,341 +580,590 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, bool xLog, bool yLog
 	}
 }
 
-HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style )
-	:PlotData3dLinear(xs, ys, xs+plusErrors, xs-minusErrors)
+HorizontalErrorBars::HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &ys, &(const std::vector<double>&)(xs + plusErrors), &(const std::vector<double>&)(xs - minusErrors) }, { yAxis, xAxis, xAxis }, transformer)
 {
+	//a note on the above - the result of xs+plusError and xs-minusError is an r-value, meaning we
+	//can't directly take it's address. However, when we assign it to a const reference the temporary's
+	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address.
 	m_style = style;
 }
-void HorizontalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+void HorizontalErrorBars::plotData( plstream *pl, double scale) const
 {
-	if (m_yData.size() == 0)
+	if (!hasData())
 		return;
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	const double *xMinusErrors = xLog ? &m_zDataLogged1[0] : &m_zData1[0];
-	const double *xPlusErrors = xLog ? &m_zDataLogged2[0] : &m_zData2[0];
+	const double* y = getPointer(0);
+	const double* xPlusErrors = getPointer(1);
+	const double* xMinusErrors = getPointer(2);
 
-	m_style.setupLineStyle( pl, 1, m_scale );	
-	pl->errx( m_xData.size(),xMinusErrors, xPlusErrors, y );
+
+	m_style.setupLineStyle( pl, 1, scale );	
+	pl->errx( getNPoints(), xMinusErrors, xPlusErrors, y);
 	m_style.resetLineStyle( pl, 1 );
 }
 
-VerticalErrorBars::VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style )
-	:PlotData3dLinear(xs, ys, ys+plusErrors, ys-minusErrors)
+VerticalErrorBars::VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &(const std::vector<double>&)(ys + plusErrors), &(const std::vector<double>&)(ys - minusErrors) }, {xAxis, yAxis, yAxis}, transformer)
 {
+	//a note on the above - the result of ys+plusError and ys-minusError is an r-value, meaning we
+	//can't directly take it's address. However, when we assign it to a const reference the temporary's
+	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address.
 	m_style = style;
 }
-void VerticalErrorBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+void VerticalErrorBars::plotData( plstream *pl, double scale ) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *yMinusErrors = yLog ? &m_zDataLogged1[0] : &m_zData1[0];
-	const double *yPlusErrors = yLog ? &m_zDataLogged2[0] : &m_zData2[0];
+	const double* x = getPointer(0);
+	const double* yPlusErrors = getPointer(1);
+	const double* yMinusErrors = getPointer(2);
 
-	m_style.setupLineStyle( pl, 1, m_scale );	
-	pl->erry( m_xData.size(), x, yMinusErrors, yPlusErrors );
+	m_style.setupLineStyle( pl, 1, scale );	
+	pl->erry( getNPoints(), x, yMinusErrors, yPlusErrors);
 	m_style.resetLineStyle( pl, 1 );
 }
 
-VerticalBars::VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount )
-	:PlotData2dLinear( xs - 0.5 * widths, ys, xs  + 0.5 * widths, transformer, autoLimitsPadAmount )
+VerticalBars::VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer )
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &(const std::vector<double>&)(xs - 0.5 * widths), &ys, &(const std::vector<double>&)(xs + 0.5 * widths) }, { xAxis, yAxis, xAxis }, transformer)
 {
+	//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
+	//can't directly take it's address. However, when we assign it to a const reference the temporary's
+	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address. 
 	m_lineStyle = lineStyle;
 	m_fillStyle = fillStyle;
 	m_zeroLine = zeroLine;
 	m_zeroLineLogged = zeroLine > 0.0 ? std::log( m_zeroLine ) : std::numeric_limits<double>::quiet_NaN();
-	m_padLimitsAmount = m_padLimitsAmount;
 }
-void VerticalBars::plotData( plstream *pl, bool xLog, bool yLog ) const
+void VerticalBars::plotData( plstream *pl, double scale) const
 {
-	if (m_xData.size() == 0)
+	if (!hasData())
 		return;
 	double x[4];
 	double y[4];
-	for(size_t i=0; i<m_xData.size(); ++i)
-	{
-		if( xLog )
-		{
-			x[0] = x[1] = m_xDataLogged[i];
-			x[2] = x[3] = m_zDataLogged[i];
-		}
-		else
-		{
-			x[0] = x[1] = m_xData[i];
-			x[2] = x[3] = m_zData[i];
-		}
-		if( yLog )
-		{
-			y[0] = y[3] = m_zeroLineLogged;
-			y[1] = y[2] = m_yDataLogged[i];
-		}
-		else
-		{
-			y[0] = y[3] = m_zeroLine;
-			y[1] = y[2] = m_yData[i];
-		}
-		
+	const double* xMinusWidth = getPointer(0);
+	const double* yData = getPointer(1);
+	const double* xPlusWidth = getPointer(1);
 
+	double zero = isLog(1) ? std::log10(m_zeroLine) : m_zeroLine;
+	for(size_t i=0; i<getNPoints(); ++i)
+	{
+		
+		x[0] = x[1] = xMinusWidth[i];
+		x[2] = x[3] = xPlusWidth[i];
+		
+		y[0] = y[3] = zero;
+		y[1] = y[2] = yData[i];
+		
 		//do fill first
-		m_fillStyle.setupFillStyle( pl, 1, 1.0 );
+		m_fillStyle.setupFillStyle( pl, 1, scale );
 		pl->fill(4,&x[0],&y[0]);
 		
-		m_lineStyle.setupLineStyle( pl, 1, 1.0 );
+		//then the line
+		m_lineStyle.setupLineStyle( pl, 1, scale );
 		pl->line( 4, x, y );
 	}
 }
 
-void VerticalBars::getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
+FillData::FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const FillStyle& fillStyle, const LineStyle& outlineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 {
-	xMin = sci::min<double>( m_xData );
-	xMax = sci::max<double>( m_zData );
-	yMin = sci::min<double>( m_yData );
-	yMax = sci::max<double>( m_yData );
 
-	double xRange = xMax - xMin;
-	xMin -= xRange * m_padLimitsAmount;
-	xMax += xRange * m_padLimitsAmount;
-
-	if( yMin >= m_zeroLine )
-	{
-		yMin = m_zeroLine;
-		double yRange = yMax - yMin;
-		yMax += yRange * m_padLimitsAmount;
-	}
-	else
-	{
-		double yRange = yMax - yMin;
-		yMin -= yRange * m_padLimitsAmount;
-		yMax += yRange * m_padLimitsAmount;
-	}
-}
-void VerticalBars::getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const
-{
-	xMin = sci::min<double>( m_xDataLogged );
-	xMax = sci::max<double>( m_zDataLogged );
-	yMin = sci::min<double>( m_yDataLogged );
-	yMax = sci::max<double>( m_yDataLogged );
-
-	double xRange = xMax - xMin;
-	xMin -= xRange * m_padLimitsAmount;
-	xMax += xRange * m_padLimitsAmount;
-
-	if( yMin >= m_zeroLineLogged )
-	{
-		yMin = m_zeroLineLogged;
-		double yRange = yMax - yMin;
-		yMax += yRange * m_padLimitsAmount;
-	}
-	else
-	{
-		double yRange = yMax - yMin;
-		yMin -= yRange * m_padLimitsAmount;
-		yMax += yRange * m_padLimitsAmount;
-	}
 }
 
-GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:PlotData2dRectilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
+void FillData::plotData(plstream* pl, double scale) const
 {
-	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-	if (zs.size() == 0)
-		sci::assertThrow(ys.size() == 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
-	else
-	{
-		sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs[0] of different lengths."));
-		for (size_t i = 1; i < zs.size(); ++i)
-		{
-			std::stringstream message;
-			message << "GridData constructor called with zs[" << i << "] and zs[0] of different lengths.";
-			sci::assertThrow(zs[i].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, message.str()));
-		}
-	}
-
-	m_colourscale = colourScale;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
-}
-
-void GridData::plotData(plstream *pl, bool xLog, bool yLog) const
-{
-	if (getZData().size() == 0 || getZData()[0].size() == 0)
+	if (!hasData())
 		return;
 
-	//set up a 2d double ** style array for the z data
-	std::vector<const double*> zs(getZData().size());
-	if (m_colourscale.isLogarithmic())
-	{
-		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(getZDataLogged()[i][0]);
-	}
-	else
-	{
-		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(getZData()[i][0]);
-	}
+	const double* x = getPointer(0);
+	const double* y = getPointer(1);
 
-	//set up the colourscale
-	m_colourscale.setup(pl);
+	m_lineStyle.setupLineStyle(pl, 1, scale);
+	pl->line(getNPoints(), x, y);
+	m_lineStyle.resetLineStyle(pl, 1);
 
-	PLTRANSFORM_callback getXY;
-	if (xLog)
-	{
-		if (yLog)
-			getXY = &(::getXYValuesRectilinear<true, true>);
-		else
-			getXY = &(::getXYValuesRectilinear<true, false>);
-	}
-	else
-	{
-		if (yLog)
-			getXY = &(::getXYValuesRectilinear<false, true>);
-		else
-			getXY = &(::getXYValuesRectilinear<false, false>);
-	}
-
-	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
-	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
-	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), std::numeric_limits<double>::quiet_NaN(),
-		std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
-}
-
-GridDataCurvilinear::GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
-{
-	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
-	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
-	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
-
-	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
-	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
-	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
-	
-	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
-	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular xs"));
-	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular ys"));
-
-	m_colourscale = colourScale;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
-}
-
-GridDataCurvilinear::GridDataCurvilinear(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
-{
-	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
-	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
-	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
-
-	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
-	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
-
-	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
-	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular ys"));
-
-	m_colourscale = colourScale;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
-}
-
-GridDataCurvilinear::GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:PlotData2dCurvilinear(xs, ys, zs, transformer, autoLimitsPadAmount)
-{
-	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with zs of zero length."));
-	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
-
-	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with zs of zero length."));
-	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with xs  with a size 1 larger than zs."));
-	sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor must be called with ys  with a size 1 larger than zs."));
-
-	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular zs"));
-	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridDataCurvilinear constructor called with non-rectangular xs"));
-
-	m_colourscale = colourScale;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
-}
-
-void GridDataCurvilinear::plotData(plstream* pl, bool xLog, bool yLog) const
-{
-	if (getZData().size() == 0 || getZData()[0].size() == 0)
-		return;
-
-	//set up a 2d double ** style array for the z data
-	std::vector<const double*> zs(getZData().size());
-	if (m_colourscale.isLogarithmic())
-	{
-		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(getZDataLogged()[i][0]);
-	}
-	else
-	{
-		for (size_t i = 0; i < zs.size(); ++i)
-			zs[i] = &(getZData()[i][0]);
-	}
-
-	//set up the colourscale
-	m_colourscale.setup(pl);
-
-	//select the correct callback
-	PLTRANSFORM_callback getXY;
-	if (xLog && yLog && m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, true, true, true>);
-	else if (xLog && yLog && m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, true, true, false>);
-	else if (xLog && yLog && !m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, true, false, true>);
-	else if (xLog && yLog && !m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, true, false, false>);
-	else if (xLog && !yLog && m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, false, true, true>);
-	else if (xLog && !yLog && m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, false, true, false>);
-	else if (xLog && !yLog && !m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, false, false, true>);
-	else if (xLog && !yLog && !m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<true, false, false, false>);
-	else if (!xLog && yLog && m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, true, true, true>);
-	else if (!xLog && yLog && m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, true, true, false>);
-	else if (!xLog && yLog && !m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, true, false, true>);
-	else if (!xLog && yLog && !m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, true, false, false>);
-	else if (!xLog && !yLog && m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, false, true, true>);
-	else if (!xLog && !yLog && m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, false, true, false>);
-	else if (!xLog && !yLog && !m_x1d && m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, false, false, true>);
-	else if (!xLog && !yLog && !m_x1d && !m_y1d)
-		getXY = &(::getXYValuesCurvilinear<false, false, false, false>);
-		
-
-	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale.getMin();
-	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale.getMax();
-	pl->imagefr(&zs[0], getZData().size(), getZData()[0].size(), std::numeric_limits<double>::quiet_NaN(),
-		std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-		zMin, zMax, m_colourscale.getMin(), m_colourscale.getMax(), getXY, (void*)this);
-}
-
-FillData::FillData(const std::vector<double> &xs, const std::vector<double> &ys, const FillStyle &fillStyle, const LineStyle &outlineStyle, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount)
-	:PlotData1d(xs, ys, transformer, autoLimitsPadAmount), m_fillStyle(fillStyle), m_outlineStyle(outlineStyle)
-{
-
-}
-
-void FillData::plotData(plstream *pl, bool xLog, bool yLog) const
-{
-	const double *x = xLog ? &m_xDataLogged[0] : &m_xData[0];
-	const double *y = yLog ? &m_yDataLogged[0] : &m_yData[0];
-	m_outlineStyle.setupLineStyle(pl, 1, m_scale);
-	pl->line(m_xData.size(), x, y);
-	m_outlineStyle.resetLineStyle(pl, 1);
-
-	m_fillStyle.setupFillStyle(pl, 1, m_scale);
-	pl->fill(m_xData.size(), x, y);
+	m_fillStyle.setupFillStyle(pl, 1, scale);
+	pl->fill(getNPoints(), x, y);
 
 	m_fillStyle.resetFillStyle(pl, 1); //just so we don't have residually selected hatching patterns
+}
+
+
+
+
+
+
+
+template<class T>
+struct is2d
+{
+	static const bool value = false;
+};
+
+template<class T>
+struct is2d<T**>
+{
+	static const bool value = true;
+};
+
+template<class X, class Y, bool INTERPOLATE>
+class GridTransform
+{
+public:
+	GridTransform(X x, Y y)
+	{
+		m_x = x;
+		m_y = y;
+	}
+	template<int N> //N isn't used in this version - included to enable function overloadining
+	static inline constexpr double interpolate(double x, double y, const double **v)
+	{
+		size_t xi = size_t(x);
+		size_t yi = size_t(y);
+		if constexpr (INTERPOLATE)
+		{
+			x = x - double(xi);
+			y = y - double(yi);
+			//we check if we have exactly hit integers. This isn't to optimise
+			//as it's probably slower, but to check we don't read past the end of the array
+			if (x == 0 && y == 0)
+				return (v[xi][yi]);
+			else if (x == 0)
+			{
+				double v0 = v[xi][yi];
+				double v1 = v[xi][yi + 1];
+				return v0 * (1.0 - y) + v1 * y;
+			}
+			else if (y == 0)
+			{
+				double v0 = v[xi][yi];
+				double v1 = v[xi + 1][yi];
+				return v0 * (1.0 - x) + v1 * x;
+			}
+			else
+			{
+				double vx0y0 = v[size_t(x)][size_t(y)];
+				double vx1y0 = v[size_t(x) + 1][size_t(y)];
+				double vx0y1 = v[size_t(x)][size_t(y) + 1];
+				double vx1y1 = v[size_t(x) + 1][size_t(y) + 1];
+				return vx0y0 * (1.0 - x) * (1.0 - y) + vx1y0 * x * (1.0 - y) + vx0y1 * (1.0 - x) * y + vx1y1 * x * y;
+			}
+		}
+		else
+			return(v[xi][yi]);
+	}
+	template<int N> //0 for using x, 1 for using y. We do this so we don't have to check dimensionality in callback
+	static inline constexpr double interpolate(double x, double y, const double *v)
+	{
+		double a;
+		if constexpr (N == 0)
+			a = x;
+		else
+			a = y;
+		if constexpr (INTERPOLATE)
+		{
+			double v0 = v[size_t(a)];
+			double v1 = v[size_t(a) + 1];
+			a = a - std::floor(a);
+			return v1 * a + v0*(1.0 - a);
+		}
+		else
+			return v[size_t(a)];
+	}
+	static void callback(PLFLT x, PLFLT y, PLFLT_NC_SCALAR xp, PLFLT_NC_SCALAR yp, PLPointer data)
+	{
+		GridTransform<X, Y, INTERPOLATE>* gt = (GridTransform*)(data);
+		*xp = GridTransform<X, Y, INTERPOLATE>::interpolate<0>(x, y, gt->m_x);
+		*yp = GridTransform<X, Y, INTERPOLATE>::interpolate<1>(x, y, gt->m_y);
+	}
+
+private:
+	X m_x;
+	Y m_y;
+};
+
+Data2d::Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys }, { xAxis, yAxis }, transformer), StructuredData({ &zs }, { zScale }, transformer)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular zs"));
+
+	m_x1d = true;
+	m_y1d = true;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+	m_xSize = zs.size();
+	m_ySize = zs[0].size();
+}
+
+Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({}, {}, transformer), StructuredData({ &xs, &ys, &zs }, { xAxis, yAxis, zScale }, transformer)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular xs"));
+	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular ys"));
+
+	m_x1d = false;
+	m_y1d = false;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+	m_xSize = zs.size();
+	m_ySize = zs[0].size();
+}
+
+Data2d::Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs }, { xAxis }, transformer), StructuredData({ &ys, &zs }, { yAxis, zScale }, transformer)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(ys), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular ys"));
+
+	m_x1d = true;
+	m_y1d = false;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+	m_xSize = zs.size();
+	m_ySize = zs[0].size();
+}
+
+Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &ys }, { yAxis }, transformer), StructuredData({ &xs, &zs }, { xAxis, zScale }, transformer)
+{
+	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(zs[0].size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
+
+	sci::assertThrow(sci::rectangular(zs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular zs"));
+	sci::assertThrow(sci::rectangular(xs), sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with non-rectangular xs"));
+
+	m_x1d = false;
+	m_y1d = true;
+	m_fillOffscaleBottom = fillOffScaleBottom;
+	m_fillOffscaleTop = fillOffScaleTop;
+	m_xSize = zs.size();
+	m_ySize = zs[0].size();
+}
+
+void Data2d::autoscaleAxes()
+{
+	UnstructuredData::autoscaleAxes();
+	StructuredData::autoscaleAxes();
+}
+
+GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+	
+	m_colourscale = colourScale;
+}
+
+GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+
+	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+	
+
+	m_colourscale = colourScale;
+}
+
+GridData::GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+
+	sci::assertThrow(ys[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+
+
+	m_colourscale = colourScale;
+}
+
+GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+
+	sci::assertThrow(xs[0].size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
+	sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
+
+	m_colourscale = colourScale;
+}
+
+void GridData::plotData(plstream* pl, double scale) const
+{
+	if (!StructuredData::hasData())
+		return;
+
+
+	//set up the colourscale
+	m_colourscale->setupForImage(pl);
+	//set up the minimum z we want to plot - this will depend if we want to plot off the bottom of the colourscale
+	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale->getMin();
+	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale->getMax();
+
+	if (m_x1d && m_y1d)
+	{
+		const double* x = UnstructuredData::getPointer(0);
+		const double* y = UnstructuredData::getPointer(1);
+		std::vector<const double*> zs = StructuredData::getPointer(0);
+		using GT = GridTransform<const double*, const double*, false>;
+
+		GT transform(x, y);
+
+		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
+			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+	}
+	else if (m_x1d)
+	{
+		const double* x = UnstructuredData::getPointer(0);
+		std::vector<const double*> y = StructuredData::getPointer(0);
+		std::vector<const double*> zs = StructuredData::getPointer(1);
+		using GT = GridTransform<const double *, const double **, false>;
+
+		GT transform(x, &y[0]);
+
+		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
+			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+	}
+	else if (m_y1d)
+	{
+		std::vector<const double*> x = StructuredData::getPointer(0);
+		const double* y = UnstructuredData::getPointer(0);
+		std::vector<const double*> zs = StructuredData::getPointer(1);
+		using GT = GridTransform<const double**, const double*, false>;
+
+		GT transform(&x[0], y);
+
+		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
+			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+	}
+	else
+	{
+		std::vector<const double*> x = StructuredData::getPointer(0);
+		std::vector<const double*> y = StructuredData::getPointer(1);
+		std::vector<const double*> zs = StructuredData::getPointer(2);
+		using GT = GridTransform<const double**, const double**, false>;
+
+		GT transform(&x[0], &y[0]);
+
+		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
+			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+	}
+}
+
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = colourScale;
+	m_levelScale = nullptr;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+	sci::assertThrow(ys[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = colourScale;
+	m_levelScale = nullptr;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+	sci::assertThrow(ys[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = colourScale;
+	m_levelScale = nullptr;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = colourScale;
+	m_levelScale = nullptr;
+	m_lineStyle = lineStyle;
+}
+
+
+
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = nullptr;
+	m_levelScale = levelScale;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+	sci::assertThrow(ys[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = nullptr;
+	m_levelScale = levelScale;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+	sci::assertThrow(ys[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = nullptr;
+	m_levelScale = levelScale;
+	m_lineStyle = lineStyle;
+}
+
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+{
+	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+
+	m_colourscale = nullptr;
+	m_levelScale = levelScale;
+	m_lineStyle = lineStyle;
+}
+
+void ContourData::plotData(plstream* pl, double scale) const
+{
+	if (!StructuredData::hasData())
+		return;
+
+
+	//grab the levels from the colourscale
+	std::vector<double> shadeLevels;
+	if (m_colourscale)
+	{
+		//set up the colourscale
+		m_colourscale->setupForShade(pl);
+		shadeLevels = m_colourscale->getDiscreteValues();
+		sci::assertThrow(shadeLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a colourscale with fewer than 2 levels."));
+		if (m_fillOffscaleBottom)
+			shadeLevels.front() = -std::numeric_limits<double>::infinity();
+		if (m_fillOffscaleTop)
+			shadeLevels.back() = std::numeric_limits<double>::infinity();
+	}
+
+	//grab the contour levels from the levelScale
+	std::vector<double> contourLevels;
+	if (m_levelScale)
+	{
+		contourLevels = m_levelScale->getLevels();
+		sci::assertThrow(contourLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a level scale with fewer than 2 levels."));
+	}
+
+	//set up the minimum z we want to plot - this will depend if we want to plot off the bottom of the colourscale
+	//double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale->getMin();
+	//double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale->getMax();
+
+	//set the line style for the contours
+	m_lineStyle.setupLineStyle(pl, 1, scale);
+
+	if (m_x1d && m_y1d)
+	{
+		const double* x = UnstructuredData::getPointer(0);
+		const double* y = UnstructuredData::getPointer(1);
+		std::vector<const double*> zs = StructuredData::getPointer(0);
+		using GT = GridTransform<const double*, const double*, true>;
+
+		GT transform(x, y);
+
+		if(m_colourscale)
+			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
+				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+		if (m_levelScale)
+			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
+	}
+	else if (m_x1d)
+	{
+		const double* x = UnstructuredData::getPointer(0);
+		std::vector<const double*> y = StructuredData::getPointer(0);
+		std::vector<const double*> zs = StructuredData::getPointer(1);
+		using GT = GridTransform<const double*, const double**, true>;
+
+		GT transform(x, &y[0]);
+
+		if (m_colourscale)
+			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
+				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+		if (m_levelScale)
+			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
+	}
+	else if (m_y1d)
+	{
+		std::vector<const double*> x = StructuredData::getPointer(0);
+		const double* y = UnstructuredData::getPointer(0);
+		std::vector<const double*> zs = StructuredData::getPointer(1);
+		using GT = GridTransform<const double**, const double*, true>;
+
+		GT transform(&x[0], y);
+
+		if (m_colourscale)
+			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
+				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+		if (m_levelScale)
+			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
+	}
+	else
+	{
+		std::vector<const double*> x = StructuredData::getPointer(0);
+		std::vector<const double*> y = StructuredData::getPointer(1);
+		std::vector<const double*> zs = StructuredData::getPointer(2);
+		using GT = GridTransform<const double**, const double**, true>;
+
+		GT transform(&x[0], &y[0]);
+
+		if (m_colourscale)
+			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
+				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+		if (m_levelScale)
+			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
+	}
 }

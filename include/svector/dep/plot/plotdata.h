@@ -56,57 +56,50 @@ private:
 class VaryingSymbol : public SymbolBase
 {
 public:
-	VaryingSymbol ( sci::string symbol = sym::filledCircle );
-	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const = 0;
+	VaryingSymbol ( sci::string symbol );
+	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const = 0;
 	virtual bool isLogScaled() const = 0;
-private:
-};
-
-class VaryingSymbolTwoParam : public SymbolBase
-{
-public:
-	VaryingSymbolTwoParam ( sci::string symbol = sym::filledCircle );
-	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale1, bool useNormalisedScale2, double scale ) const = 0;
-	virtual bool isLogScaled1() const = 0;
-	virtual bool isLogScaled2() const = 0;
-
 private:
 };
 
 class ColourVaryingSymbol : public VaryingSymbol
 {
 public:
-	ColourVaryingSymbol ( sci::string symbol = sym::filledCircle, double size = 4.0, splotcolourscale colourScale = splotcolourscale() );
-	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
+	ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, sci::string symbol = sym::filledCircle, double size = 4.0 );
+	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const;
 	bool isLogScaled() const;
+	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
 private:
 	double m_size;
-	splotcolourscale m_colourScale;
+	std::shared_ptr<splotcolourscale> m_colourScale;
 };
 
 class SizeVaryingSymbol : public VaryingSymbol
 {
 public:
-	SizeVaryingSymbol ( sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ), splotsizescale sizeScale = splotsizescale() );
-	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool useNormalisedScale, double scale ) const;
+	SizeVaryingSymbol ( std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ) );
+	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const;
 	bool isLogScaled() const;
 	double getSize(double parameter, bool useNormalisedScale) const;
+	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:
 	rgbcolour m_colour;
-	splotsizescale m_sizeScale;
+	std::shared_ptr<splotsizescale> m_sizeScale;
 };
 
 class ColourAndSizeVaryingSymbol : public SymbolBase
 {
 public:
-	ColourAndSizeVaryingSymbol ( sci::string symbol = sym::filledCircle, splotcolourscale colourScale = splotcolourscale(), splotsizescale sizeScale = splotsizescale() );
-	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, bool useNormalisedColourScale, bool useNormalisedSizeScale, double scale ) const;
+	ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle);
+	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;
 	double getSize(double parameter, bool useNormalisedScale) const;
+	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
+	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:
-	splotcolourscale m_colourScale;
-	splotsizescale m_sizeScale;
+	std::shared_ptr<splotcolourscale> m_colourScale;
+	std::shared_ptr<splotsizescale> m_sizeScale;
 };
 
 class FillStyle
@@ -126,56 +119,99 @@ private:
 	PLINT m_angleDeg[2];
 };
 
+class PlotFrame : public DrawableItem
+{
+public:
+	PlotFrame(double bottomLeftX, double bottomLeftY, double width, double height, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine, sci::string title = sU(""), double titlesize = 12, double titledistance = 2.0, sci::string titlefont = sU(""), int32_t titlestyle = 0, wxColour titlecolour = wxColour(0, 0, 0));
+	void preDraw() override
+	{
+	}
+	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	bool readyToDraw() const override
+	{
+		return true;
+	}
+private:
+	double m_bottomLeftX;
+	double m_bottomLeftY;
+	double m_width;
+	double m_height;
+	FillStyle m_fillStyle;
+	LineStyle m_lineStyle;
+	sci::string m_title;
+	double m_titlesize;
+	double m_titledistance;
+	sci::string m_titlefont;
+	int32_t m_titlestyle;
+	wxColour m_titlecolour;
+};
+
 class splotTransformer;
 
-class DrawableItem
+
+class PlotableItem : public DrawableItem
 {
 public:
-	DrawableItem ( std::shared_ptr<splotTransformer> transformer );
-	void draw( plstream *pl, bool xLog, bool yLog );
-	void setScale( double scale );
-	//virtual void plot( splot3d *targetPlot ) = 0;
-	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const = 0;
-	virtual void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const  = 0;
-protected:
+	PlotableItem(std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotTransformer> transformer)
+		:m_xAxis(xAxis), m_yAxis(yAxis), m_transformer(transformer), m_scaledAxes(false)
+	{}
+	virtual ~PlotableItem() {}
+	void preDraw() override
+	{
+		autoscaleAxes();
+		m_scaledAxes = true;
+	}
+	bool readyToDraw() const override
+	{
+		return m_scaledAxes;
+	}
+	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+private:
+	virtual void autoscaleAxes() = 0;
+	virtual void plotData(plstream* pl, double scale) const = 0;
+	std::shared_ptr<splotaxis> m_xAxis;
+	std::shared_ptr<splotaxis> m_yAxis;
 	std::shared_ptr<splotTransformer> m_transformer;
-	double m_scale;
-private:
-	virtual void plotData( plstream *pl, bool xLog, bool yLog ) const = 0;
+	bool m_scaledAxes;
 };
 
-class XYAxisData : public DrawableItem
+//this class holds data of n dimensions where there is just a 1d
+//vector in each dimension. Eg, x-y scatter data or line data
+//or x y z data where the z data is one value for each x, y point
+class UnstructuredData : virtual public PlotableItem
 {
 public:
-	virtual void getLimits(double &xMin, double &xMax, double &yMin, double &yMax) const;
-	virtual void getLogLimits(double &xMin, double &xMax, double &yMin, double &yMax) const;
+	virtual void autoscaleAxes() override;
+	UnstructuredData(const std::vector<const std::vector<double>*> &data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer);
+	const double* getPointer(size_t dimension) const { return m_axes[dimension]->isLog() ? (&(m_dataLogged[dimension][0])) : (&(m_data[dimension][0])); }
+	bool isLog(size_t dimension) const { return m_axes[dimension]->isLog(); }
+	bool hasData() const { return m_data.size() > 0 && m_data[0].size() > 0; }
+	size_t getNPoints() const { return m_data[0].size(); }
+	size_t getNDimensions() const { return m_data.size(); }
 protected:
-	XYAxisData(const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer, double autoLimitsPadAmount);
-	std::vector<double> m_xData;
-	std::vector<double> m_yData;
-	std::vector<double> m_xDataLogged;
-	std::vector<double> m_yDataLogged;
 private:
-	double m_padLimitsAmount;
-	static void getLimits(const std::vector<double> &xs, const std::vector<double> &ys, double &xMin, double &xMax, double &yMin, double &yMax, double padAmount);
-	mutable double m_xMin;
-	mutable double m_xMax;
-	mutable double m_yMin;
-	mutable double m_yMax;
-	mutable double m_xMinLogged;
-	mutable double m_xMaxLogged;
-	mutable double m_yMinLogged;
-	mutable double m_yMaxLogged;
-	mutable bool m_calculatedLimits;
-	mutable bool m_calculatedLogLimits;
+	std::vector<std::vector<double>> m_data;
+	std::vector<std::vector<double>> m_dataLogged;
+	std::vector<std::shared_ptr<PlotScale>> m_axes;
 };
 
-class PlotData1d : public XYAxisData
+//this class holds data of n dimensions where there is a 2d
+//vector in each dimension. Eg, gridded data over a plane.
+//Note this data can hold x, y and z data for a curvilinear grid
+class StructuredData : virtual public PlotableItem
 {
-protected:
-	PlotData1d( const std::vector<double> &xs, const std::vector<double> &ys, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
+public:
+	virtual void autoscaleAxes() override;
+	StructuredData(const std::vector<const std::vector<std::vector<double>>*>& data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer);
+	std::vector<const double*> getPointer(size_t dimension) const;
+	bool isLog(size_t dimension) const { return m_axes[dimension]->isLog(); }
+	bool hasData() const { return m_data.size() > 0 && m_data[0].size() > 0 && m_data[0][0].size() > 0; }
+	size_t getNDimensions() const { return m_data.size(); }
+private:
+	std::vector<std::vector<std::vector<double>>> m_data;
+	std::vector<std::vector<std::vector<double>>> m_dataLogged;
+	std::vector<std::shared_ptr<PlotScale>> m_axes;
 };
-
 
 template<class X_UNIT, class Y_UNIT>
 class PhysicalPlotData
@@ -211,113 +247,13 @@ public:
 	typedef Y_UNIT yUnitType;
 };
 
-class PlotData2dLinear : public PlotData1d
+class LineData : public UnstructuredData
 {
 public:
-	PlotData2dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-protected:
-	std::vector<double> m_zData;
-	std::vector<double> m_zDataLogged;
-	std::vector<double> m_zDataNormalised;
-	std::vector<double> m_zDataLoggedNormalised;
-};
-
-class PlotData3dLinear : public PlotData1d
-{
-public:
-	PlotData3dLinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs1, const std::vector<double> &zs2, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-protected:
-	std::vector<double> m_zData1;
-	std::vector<double> m_zDataLogged1;
-	std::vector<double> m_zDataNormalised1;
-	std::vector<double> m_zDataLoggedNormalised1;
-	std::vector<double> m_zData2;
-	std::vector<double> m_zDataLogged2;
-	std::vector<double> m_zDataNormalised2;
-	std::vector<double> m_zDataLoggedNormalised2;
-};
-
-class PlotData2dZ
-{
-public:
-	PlotData2dZ(const std::vector<std::vector<double>>& zs);
-	void getZLimits(double& min, double& max) const;
-	void getLogZLimits(double& min, double& max) const;
-	const std::vector<std::vector<double>>& getZData() const { return m_zData; }
-	const std::vector<std::vector<double>>& getZDataLogged() const { return m_zDataLogged; }
-	const std::vector<std::vector<double>>& getZDataNormalised() const { return m_zDataNormalised; }
-	const std::vector<std::vector<double>>& getZDataLoggedNormalised() const { return m_zDataLoggedNormalised; }
-	double getMinZ() const { return m_minZ; }
-	double getMaxZ() const { return m_maxZ; }
-	double getMinZLogged() const { return m_minZLogged; }
-	double getMaxZLogged() const { return m_maxZLogged; }
-private:
-	std::vector<std::vector<double>> m_zData;
-	std::vector<std::vector<double>> m_zDataLogged;
-	std::vector<std::vector<double>> m_zDataNormalised;
-	std::vector<std::vector<double>> m_zDataLoggedNormalised;
-	double m_minZ;
-	double m_maxZ;
-	double m_maxZLogged;
-	double m_minZLogged;
-};
-
-class PlotData2dRectilinear : public XYAxisData, public PlotData2dZ
-{
-public:
-	PlotData2dRectilinear( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0 );
-	template<bool LOGX, bool LOGY>
-	void getXYValues(double xIndex, double yIndex, double &xOutput, double &yOutput) const;
-protected:
-private:
-	std::shared_ptr<splotTransformer> m_transformer;
-};
-
-class PlotData2dCurvilinear : public DrawableItem, public PlotData2dZ
-{
-public:
-	PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	PlotData2dCurvilinear(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	PlotData2dCurvilinear(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	template<bool LOGX, bool LOGY, bool X1D, bool Y1D>
-	void getXYValues(double xIndex, double yIndex, double& xOutput, double& yOutput) const;
-	virtual void getLimits(double& xMin, double& xMax, double& yMin, double& yMax) const override;
-	virtual void getLogLimits(double& xMin, double& xMax, double& yMin, double& yMax) const override;
-	static void getLimits(const std::vector<std::vector<double>>& axisValues, double& min, double& max, double padAmount);
-	static void getLimits(const std::vector<double> &axisValues, double& min, double& max, double padAmount);
-protected:
-	std::vector<std::vector<double>> m_xData;
-	std::vector<std::vector<double>> m_yData;
-	std::vector<std::vector<double>> m_xDataLogged;
-	std::vector<std::vector<double>> m_yDataLogged;
-	std::vector<double> m_xData1d;
-	std::vector<double> m_yData1d;
-	std::vector<double> m_xDataLogged1d;
-	std::vector<double> m_yDataLogged1d;
-	bool m_x1d;
-	bool m_y1d;
-private:
-	double m_padLimitsAmount;
-	std::shared_ptr<splotTransformer> m_transformer;
-	mutable double m_xMin;
-	mutable double m_xMax;
-	mutable double m_yMin;
-	mutable double m_yMax;
-	mutable double m_xMinLogged;
-	mutable double m_xMaxLogged;
-	mutable double m_yMinLogged;
-	mutable double m_yMaxLogged;
-	mutable bool m_calculatedLimits;
-	mutable bool m_calculatedLogLimits;
-};
-
-class LineData : public PlotData1d
-{
-public:
-	LineData( const std::vector<double> &x, const std::vector<double> &y, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
+	LineData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	LineStyle m_lineStyle;
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	void plotData( plstream *pl, double scale) const override;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
@@ -325,19 +261,19 @@ class PhysicalLineData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public L
 {
 public:
 	template<class X, class Y>
-	PhysicalLineData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+	PhysicalLineData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, std::shared_ptr<PlotScale> xAxis, std::shared_ptr<PlotScale> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 		: LineData(sci::physicalsToValues<sci::Physical<IN_X_UNIT,double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), lineStyle, transformer)
 	{
 	}
 };
 
-class PointData : public PlotData1d
+class PointData : public UnstructuredData
 {
 public:
-	PointData( const std::vector<double> &x, const std::vector<double> &y, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
+	PointData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	Symbol m_symbol;
-	void plotData(plstream *pl, bool xLog, bool yLog) const;
+	void plotData(plstream *pl, double scale) const override;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
@@ -345,68 +281,66 @@ class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public 
 {
 public:
 	template<class X, class Y>
-	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
 		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), symbol, transformer)
 	{
 	}
 };
 
-class PointDataColourVarying : public PlotData2dLinear
+class PointDataColourVarying : public UnstructuredData
 {
 public:
-	PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const ColourVaryingSymbol &symbol, bool autoscaleColour = false, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData( plstream *pl, double scale) const override;
 private:
 	ColourVaryingSymbol m_symbol;
 	bool m_autoscaleColour;
 };
 
-class PointDataSizeVarying : public PlotData2dLinear
+class PointDataSizeVarying : public UnstructuredData
 {
 public:
-	PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const SizeVaryingSymbol &symbol, bool autoscaleSize = false, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData( plstream *pl, double scale) const override;
 private:
 	SizeVaryingSymbol m_symbol;
 	bool m_autoscaleSize;
 };
 
-class PointDataColourAndSizeVarying : public PlotData3dLinear
+class PointDataColourAndSizeVarying : public UnstructuredData
 {
 public:
-	PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, const ColourAndSizeVaryingSymbol &symbol, bool autoscaleColour = false, bool autoscaleSize = false, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData( plstream *pl, double scale) const override;
 private:
 	ColourAndSizeVaryingSymbol m_symbol;
 	bool m_autoscaleColour;
 	bool m_autoscaleSize;
 };
 
-class HorizontalErrorBars : public PlotData3dLinear
+class HorizontalErrorBars : public UnstructuredData
 {
 public:
-	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer);
+	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;
 };
 
-class VerticalErrorBars : public PlotData3dLinear
+class VerticalErrorBars : public UnstructuredData
 {
 public:
-	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, const LineStyle style );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
+	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer);
+	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;
 };
 
-class VerticalBars : public PlotData2dLinear
+class VerticalBars : public UnstructuredData
 {
 public:
-	VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.05 );
-	void plotData( plstream *pl, bool xLog, bool yLog ) const;
-	virtual void getLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
-	virtual void getLogLimits( double &xMin, double &xMax, double &yMin, double &yMax ) const;
+	VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr );
+	void plotData( plstream *pl, double scale) const override;
 private:
 	FillStyle m_fillStyle;
 	LineStyle m_lineStyle;
@@ -415,15 +349,43 @@ private:
 	double m_padLimitsAmount;
 };
 
-class GridData : public PlotData2dRectilinear
+class FillData : public UnstructuredData
 {
 public:
-	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, const splotcolourscale &colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	void plotData(plstream *pl, bool xLog, bool yLog) const;
+	FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData(plstream* pl, double scale) const override;
 private:
-	splotcolourscale m_colourscale;
+	FillStyle m_fillStyle;
+	LineStyle m_lineStyle;
+};
+
+class Data2d : public UnstructuredData, public StructuredData
+{
+public:
+	Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	virtual void autoscaleAxes() override;//because this class inherits this function from both UnstructuredData and StructuredData, it must override in this class
+protected:
+	bool m_x1d;
+	bool m_y1d;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
+	size_t m_xSize;
+	size_t m_ySize;
+};
+
+class GridData : public Data2d
+{
+public:
+	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData(plstream *pl, double scale) const override;
+private:
+	std::shared_ptr<splotcolourscale> m_colourscale;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class IN_Z_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>
@@ -442,28 +404,24 @@ public:
 	}*/
 };
 
-
-class GridDataCurvilinear : public PlotData2dCurvilinear
+class ContourData : public Data2d
 {
 public:
-	GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	GridDataCurvilinear(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	GridDataCurvilinear(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, const splotcolourscale& colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	void plotData(plstream* pl, bool xLog, bool yLog) const;
-private:
-	splotcolourscale m_colourscale;
-	bool m_fillOffscaleBottom;
-	bool m_fillOffscaleTop;
-};
+	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 
-class FillData : public PlotData1d
-{
-public:
-	FillData(const std::vector<double> &xs, const std::vector<double> &ys, const FillStyle &fillStyle = FillStyle(), const LineStyle &outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr, double autoLimitsPadAmount = 0.0);
-	void plotData(plstream *pl, bool xLog, bool yLog) const;
+	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	void plotData(plstream* pl, double scale) const override;
 private:
-	FillStyle m_fillStyle;
-	LineStyle m_outlineStyle;
+	
+	std::shared_ptr<splotcolourscale> m_colourscale;
+	std::shared_ptr<splotlevelscale> m_levelScale;
+	LineStyle m_lineStyle;
 };
 
 

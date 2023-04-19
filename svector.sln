@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29411.108
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svector", "svector\svector.vcxproj", "{B1A56281-2E8C-4BA8-9207-F90F1440AC7E}"
 EndProject
@@ -25,6 +25,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestGrid", "TestGrid\TestGrid.vcxproj", "{C3A6A5A8-95A8-40C5-9D05-54F4532FFE90}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMinimiser", "TestMinimiser\TestMinimiser.vcxproj", "{A0DD1388-0E61-4B5D-BFAE-ECC7A4A42120}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPlot", "TestPlot\TestPlot.vcxproj", "{06C2344F-52C4-4DC3-A61B-5357BB216BEE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B1A56281-2E8C-4BA8-9207-F90F1440AC7E} = {B1A56281-2E8C-4BA8-9207-F90F1440AC7E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -190,6 +195,22 @@ Global
 		{A0DD1388-0E61-4B5D-BFAE-ECC7A4A42120}.Unicode Release|x64.Build.0 = Release|x64
 		{A0DD1388-0E61-4B5D-BFAE-ECC7A4A42120}.Unicode Release|x86.ActiveCfg = Release|Win32
 		{A0DD1388-0E61-4B5D-BFAE-ECC7A4A42120}.Unicode Release|x86.Build.0 = Release|Win32
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Debug|x64.ActiveCfg = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Debug|x64.Build.0 = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Debug|x86.ActiveCfg = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Debug|x86.Build.0 = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Release|x64.ActiveCfg = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Release|x64.Build.0 = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Release|x86.ActiveCfg = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Release|x86.Build.0 = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Debug|x64.ActiveCfg = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Debug|x64.Build.0 = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Debug|x86.ActiveCfg = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Debug|x86.Build.0 = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Release|x64.ActiveCfg = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Release|x64.Build.0 = Release|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Release|x86.ActiveCfg = Debug|x64
+		{06C2344F-52C4-4DC3-A61B-5357BB216BEE}.Unicode Release|x86.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
