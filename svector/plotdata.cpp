@@ -322,9 +322,9 @@ bool SizeVaryingSymbol::isLogScaled() const
 	return m_sizeScale->isLog();
 }
 
-double SizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
+double SizeVaryingSymbol::getSize(double parameter) const
 {
-	return useNormalisedScale ? m_sizeScale->getSizeNormalisedScale(parameter) : m_sizeScale->getsize(parameter);
+	return m_sizeScale->getsize(parameter);
 }
 
 ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol )
@@ -353,9 +353,9 @@ bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 {
 	return m_sizeScale->isLog();
 }
-double ColourAndSizeVaryingSymbol::getSize(double parameter, bool useNormalisedScale) const
+double ColourAndSizeVaryingSymbol::getSize(double parameter) const
 {
-	return useNormalisedScale ? m_sizeScale->getSizeNormalisedScale(parameter) : m_sizeScale->getsize(parameter);
+	return m_sizeScale->getsize(parameter);
 }
 
 void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
@@ -416,14 +416,16 @@ UnstructuredData::UnstructuredData(const std::vector<const std::vector<double>*>
 void UnstructuredData::autoscaleAxes()
 {
 	for (size_t i = 0; i < m_data.size(); ++i)
-		m_axes[i]->expand(m_data[i]);
+		if(m_axes[i])
+			m_axes[i]->expand(m_data[i]);
 }
 
 void StructuredData::autoscaleAxes()
 {
 	for (size_t i = 0; i < m_data.size(); ++i)
 		for (auto d : m_data[i])
-			m_axes[i]->expand(d);
+			if(m_axes[i])
+				m_axes[i]->expand(d);
 }
 
 StructuredData::StructuredData(const std::vector<const std::vector<std::vector<double>>*>& data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer)
@@ -544,7 +546,7 @@ void PointDataSizeVarying::plotData( plstream *pl, double scale) const
 		{
 			m_symbol.setupSymbol( pl, 1, *zi, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if(m_symbol.getSize(*zi, m_autoscaleSize) > 0.0)
+			if(m_symbol.getSize(*zi) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
@@ -574,7 +576,7 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, double scale) const
 		{
 			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if (m_symbol.getSize(*zSizei, m_autoscaleSize) > 0.0)
+			if (m_symbol.getSize(*zSizei) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
@@ -903,9 +905,24 @@ void GridData::plotData(plstream* pl, double scale) const
 
 	//set up the colourscale
 	m_colourscale->setupForImage(pl);
-	//set up the minimum z we want to plot - this will depend if we want to plot off the bottom of the colourscale
-	double zMin = m_colourscale->fillOffscaleBottom() ? -std::numeric_limits<double>::infinity() : m_colourscale->getMin();
-	double zMax = m_colourscale->fillOffscaleTop() ? std::numeric_limits<double>::infinity() : m_colourscale->getMax();
+
+	//get the limits of the clourscale
+	double colourscaleMin = m_colourscale->getMin();
+	double colourscaleMax = m_colourscale->getMax();
+	if (m_colourscale->isLog())
+	{
+		colourscaleMin = std::log10(colourscaleMin);
+		colourscaleMax = std::log10(colourscaleMax);
+	}
+
+	//either limit the data we plot to within the colourscale or off the limits as appropriate
+	double zMin = colourscaleMin;
+	double zMax = colourscaleMax;
+	if (m_colourscale->fillOffscaleBottom())
+		zMin = -std::numeric_limits<double>::infinity();
+	if (m_colourscale->fillOffscaleTop())
+		zMax = std::numeric_limits<double>::infinity();
+
 
 	if (m_x1d && m_y1d)
 	{
@@ -918,7 +935,7 @@ void GridData::plotData(plstream* pl, double scale) const
 
 		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
 			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+			zMin, zMax, colourscaleMin, colourscaleMax, GT::callback, (void*)&transform);
 	}
 	else if (m_x1d)
 	{
@@ -931,7 +948,7 @@ void GridData::plotData(plstream* pl, double scale) const
 
 		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
 			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+			zMin, zMax, colourscaleMin, colourscaleMax, GT::callback, (void*)&transform);
 	}
 	else if (m_y1d)
 	{
@@ -944,7 +961,7 @@ void GridData::plotData(plstream* pl, double scale) const
 
 		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
 			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+			zMin, zMax, colourscaleMin, colourscaleMax, GT::callback, (void*)&transform);
 	}
 	else
 	{
@@ -957,7 +974,7 @@ void GridData::plotData(plstream* pl, double scale) const
 
 		pl->imagefr(&zs[0], m_xSize, m_ySize, std::numeric_limits<double>::quiet_NaN(),
 			std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-			zMin, zMax, m_colourscale->getMin(), m_colourscale->getMax(), GT::callback, (void*)&transform);
+			zMin, zMax, colourscaleMin, colourscaleMax, GT::callback, (void*)&transform);
 	}
 }
 
@@ -1072,6 +1089,9 @@ void ContourData::plotData(plstream* pl, double scale) const
 		//set up the colourscale
 		m_colourscale->setupForShade(pl);
 		shadeLevels = m_colourscale->getDiscreteValues();
+		if (m_colourscale->isLog())
+			for (auto& s : shadeLevels)
+				s = log10(s);
 		sci::assertThrow(shadeLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a colourscale with fewer than 2 levels."));
 		if (m_colourscale->fillOffscaleBottom())
 			shadeLevels.front() = -std::numeric_limits<double>::infinity();
@@ -1084,6 +1104,9 @@ void ContourData::plotData(plstream* pl, double scale) const
 	if (m_levelScale)
 	{
 		contourLevels = m_levelScale->getLevels();
+		if (m_levelScale->isLog())
+			for (auto& c : contourLevels)
+				c = log10(c);
 		sci::assertThrow(contourLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a level scale with fewer than 2 levels."));
 	}
 

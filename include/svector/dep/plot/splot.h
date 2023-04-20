@@ -162,15 +162,24 @@ public:
 			return;
 		if (m_minPoint != m_minPoint || value < m_minPoint)
 		{
-			m_minPoint = value;
-			m_min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-			m_max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+			if (!m_log || value > 0.0)
+			{
+				m_minPoint = value;
+				m_min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				m_max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				m_logMinPoint = std::log10(value);
+				m_logMin = m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
+				m_logMax = m_logMaxPoint + m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
+			}
 		}
 		if (m_maxPoint != m_maxPoint || value > m_maxPoint)
 		{
 			m_maxPoint = value;
 			m_min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
 			m_max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+			m_logMaxPoint = std::log10(value);
+			m_logMin = m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
+			m_logMax = m_logMaxPoint + m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
 		}
 	}
 	void contract()
@@ -179,34 +188,50 @@ public:
 			return;
 		m_min = std::numeric_limits<double>::quiet_NaN();
 		m_max = std::numeric_limits<double>::quiet_NaN();
+		m_logMin = std::numeric_limits<double>::quiet_NaN();
+		m_logMax = std::numeric_limits<double>::quiet_NaN();
 		m_minPoint = std::numeric_limits<double>::quiet_NaN();
 		m_maxPoint = std::numeric_limits<double>::quiet_NaN();
+		m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
+		m_logMaxPoint = std::numeric_limits<double>::quiet_NaN();
 	}
-	void setAutoscale()
+	void setAutoscale(double autoscaleEndSpace)
 	{
 		m_autoscale = true;
+		m_autoscaleEndSpace = autoscaleEndSpace;
 		contract();
 	}
-	void setFixedscale(double min, double max)
+	void setFixedScale(double min, double max)
 	{
 		m_autoscale = false;
 		m_min = min;
 		m_max = max;
+		m_logMin = std::log10(min);
+		m_logMax = std::log10(max);
+		m_minPoint = std::numeric_limits<double>::quiet_NaN();
+		m_maxPoint = std::numeric_limits<double>::quiet_NaN();
+		m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
+		m_logMaxPoint = std::numeric_limits<double>::quiet_NaN();
+		m_autoscaleEndSpace = std::numeric_limits<double>::quiet_NaN();
 	}
 	void setLog()
 	{
 		m_log = true;
+		if (m_autoscale)
+			contract();
 	}
 	void setLinear()
 	{
 		m_log = false;
+		if (m_autoscale)
+			contract();
 	}
 	Direction getDirection()
 	{
 		return m_direction;
 	}
 	template<class T>
-	void setupInterpolatingScale(std::vector<double>& value, std::vector<T>& output, bool autostretch)
+	void setupInterpolatingScale(std::vector<double>& value, std::vector<double>& logValue, std::vector<T>& output, bool autostretch)
 	{
 		sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "PlotScale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
 		//check values are ascending or descending, catch Nans at the same time
@@ -236,47 +261,55 @@ public:
 
 		if (!autostretch)
 		{
-			setFixedscale(value.front(), value.back());
+			setFixedScale(value.front(), value.back());
 		}
+
+		logValue.resize(value.size());
+		for (size_t i = 0; i < value.size(); ++i)
+			logValue[i] = std::log10(value[i]);
 
 		//scale to 0.0-1.0 range
 		double offset = value.front();
 		double range = value.back() - value.front();
 		value -= offset;
 		value /= range;
+
+		double logOffset = logValue.front();
+		double logRange = logValue.back() - logValue.front();
+		logValue -= logOffset;
+		logValue /= logRange;
 	}
 private:
-	PlotScale(double min, double max, bool log, Direction direction, double autoscaleEndSpace)
+	PlotScale(double min, double max, bool log, Direction direction)
 	{
-		m_min = min;
-		m_max = max;
-		m_log = log;
-		m_autoscale = false;
-		m_minPoint = std::numeric_limits<double>::quiet_NaN();
-		m_maxPoint = std::numeric_limits<double>::quiet_NaN();
-		m_autoscaleEndSpace = autoscaleEndSpace;
 		m_direction = direction;
+		setFixedScale(min, max);
+		m_log = log;
 	}
 	PlotScale(bool log, Direction direction, double autoscaleEndSpace)
 	{
-		m_log = log;
-		m_autoscale = true;
-		contract();
-		m_autoscaleEndSpace = autoscaleEndSpace;
 		m_direction = direction;
+		m_autoscale = true;
+		m_log = log;
+		m_autoscaleEndSpace = autoscaleEndSpace;
+		contract();
 	}
 	PlotScale(Direction direction, double autoscaleEndSpace)
 	{
-		m_log = false;
-		m_autoscale = true;
-		contract();
-		m_autoscaleEndSpace = autoscaleEndSpace;
 		m_direction = direction;
+		m_autoscale = true;
+		m_log = false;
+		m_autoscaleEndSpace = autoscaleEndSpace;
+		contract();
 	}
 	double m_min;
 	double m_max;
+	double m_logMin;
+	double m_logMax;
 	double m_minPoint;
 	double m_maxPoint;
+	double m_logMinPoint;
+	double m_logMaxPoint;
 	bool m_log;
 	bool m_autoscale;
 	double m_autoscaleEndSpace;
@@ -294,11 +327,8 @@ public:
 	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
 	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
-	rgbcolour getRgbNormalisedScale( double value ) const;
 	rgbcolour getRgbOriginalScale( double value ) const;
-	hlscolour getHlsNormalisedScale( double value ) const;
 	hlscolour getHlsOriginalScale( double value ) const;
-	double getNormalisedValue( double value ) const;
 	rgbcolour getRgbOffscaleBottom() const;
 	rgbcolour getRgbOffscaleTop() const;
 	hlscolour getHlsOffscaleBottom() const;
@@ -317,6 +347,7 @@ private:
 	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
 	void setup(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
 	std::vector<double> m_value;
+	std::vector<double> m_logValue;
 	std::vector< double > m_colour1;
 	std::vector< double > m_colour2;
 	std::vector< double > m_colour3;
@@ -338,13 +369,13 @@ public:
 	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	~splotsizescale(){};
 	double getsize(double value) const;
-	double getSizeNormalisedScale(double value) const;
 	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
 	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
 	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
 	bool setFilOffscaleTop(bool fill) { m_fillOffscaleTop = fill; }
 private:
 	std::vector<double> m_value;
+	std::vector<double> m_logValue;
 	std::vector<double> m_size;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
@@ -362,29 +393,9 @@ public:
 	std::vector<double> getLevels() const;
 private:
 	std::vector<double> m_value;
+	std::vector<double> m_logValue;
 };
 
-
-class splotinterpolatedscale : public PlotScale
-{
-	friend class splot;
-	friend class splot2d;
-	friend class splotlegend;
-public:
-	splotinterpolatedscale(const std::vector<double>& value = std::vector<double>(0), const std::vector<double>& level = std::vector<double>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
-	~splotinterpolatedscale() {};
-	double getLevel(double value) const;
-	double getLevelNormalisedScale(double value) const;
-	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
-	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
-	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
-	bool setFilOffscaleTop(bool fill) { m_fillOffscaleTop = fill; }
-private:
-	std::vector<double> m_value;
-	std::vector<double> m_level;
-	bool m_fillOffscaleBottom;
-	bool m_fillOffscaleTop;
-};
 
 //this is simply an interface to a 2d std::vector
 class splot2dmatrix : public Contourable_Data

@@ -301,7 +301,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 {
 	m_value = value;
 	std::vector<rgbcolour> colourCopy = colour;
-	setupInterpolatingScale(m_value, colourCopy, autostretch);
+	setupInterpolatingScale(m_value, m_logValue, colourCopy, autostretch);
 
 	//assign colours
 	m_colour1.resize(colour.size());
@@ -347,7 +347,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 {
 	m_value = value;
 	std::vector<hlscolour> colourCopy = colour;
-	setupInterpolatingScale(m_value, colourCopy, autostretch);
+	setupInterpolatingScale(m_value, m_logValue, colourCopy, autostretch);
 
 	m_colour1.resize(colour.size());
 	m_colour2.resize(colour.size());
@@ -434,84 +434,110 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 	}
 }
 
+//interpolate the given value to a colour
 void splotcolourscale::interpolate( double value, double &c1, double &c2, double &c3, double &a) const
 {
-	if( value<= 0.0 )
+	if (value < getMin())
 	{
-		c1=m_colour1[0];
-		c2=m_colour2[0];
-		c3=m_colour3[0];
-		a=m_alpha[0];
+		if (m_fillOffscaleBottom)
+		{
+			c1 = m_colour1[0];
+			c2 = m_colour2[0];
+			c3 = m_colour3[0];
+			a = m_alpha[0];
+		}
+		else
+		{
+			c1 = std::numeric_limits<double>::quiet_NaN();
+			c2 = std::numeric_limits<double>::quiet_NaN();
+			c3 = std::numeric_limits<double>::quiet_NaN();
+			a = std::numeric_limits<double>::quiet_NaN();
+		}
 		return;
 	}
-	else if( value>=1.0 )
+
+	if (value > getMax())
 	{
-		c1=m_colour1.back();
-		c2=m_colour2.back();
-		c3=m_colour3.back();
-		a=m_alpha.back();
+		if (m_fillOffscaleTop)
+		{
+			c1 = m_colour1.back();
+			c2 = m_colour2.back();
+			c3 = m_colour3.back();
+			a = m_alpha.back();
+		}
+		else
+		{
+			c1 = std::numeric_limits<double>::quiet_NaN();
+			c2 = std::numeric_limits<double>::quiet_NaN();
+			c3 = std::numeric_limits<double>::quiet_NaN();
+			a = std::numeric_limits<double>::quiet_NaN();
+		}
 		return;
+	}
+
+	if (value == getMin())
+	{
+		c1 = m_colour1[0];
+		c2 = m_colour2[0];
+		c3 = m_colour3[0];
+		a = m_alpha[0];
+	}
+
+	size_t maxIndex = 1;
+	double highWeight;
+	if (isLog())
+	{
+		value = std::log10(value/ getMin())/std::log10(getMax()/getMin());
+
+		while (value > m_logValue[maxIndex])
+			maxIndex++;
+
+		highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+	}
+	else
+	{
+		value = (value - getMin()) / (getMin() - getMax());
+		
+		while (value > m_value[maxIndex])
+			maxIndex++;
+
+		highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
 	}
 	
-	size_t maxIndex=1;
-	while(value>m_value[maxIndex])
-		maxIndex++;
-	double highWeight=(value-m_value[maxIndex-1])/(m_value[maxIndex]-m_value[maxIndex-1]);
 	c1=m_colour1[maxIndex]*highWeight+m_colour1[maxIndex-1]*(1.0-highWeight);
 	c2=m_colour2[maxIndex]*highWeight+m_colour2[maxIndex-1]*(1.0-highWeight);
 	c3=m_colour3[maxIndex]*highWeight+m_colour3[maxIndex-1]*(1.0-highWeight);
 	a=m_alpha[maxIndex]*highWeight+m_alpha[maxIndex-1]*(1.0-highWeight);
 }
 
-rgbcolour splotcolourscale::getRgbNormalisedScale( double value ) const
-{
-	if (value < 0.0)
-		return m_fillOffscaleBottom ? getRgbOffscaleBottom() : rgbcolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
-	if (value > 1.0)
-		return m_fillOffscaleTop ? getRgbOffscaleTop() : rgbcolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
-	if( m_hls )
-	{
-		hlscolour hls=getHlsNormalisedScale( value );
-		double r, g, b;
-		plhlsrgb( hls.h(), hls.l(), hls.s(), &r, &g, &b );
-		return rgbcolour( r, g, b, hls.a() );
-	}
-	double r, g, b, a;
-	interpolate( value, r, g, b, a );
-	return rgbcolour(r, g, b, a);
-}
-
 rgbcolour splotcolourscale::getRgbOriginalScale( double value ) const
 {
-	return getRgbNormalisedScale(getNormalisedValue( value ) );
-}
-
-hlscolour splotcolourscale::getHlsNormalisedScale( double value ) const
-{
-	if (value < getMin())
-		return m_fillOffscaleBottom ? getHlsOffscaleBottom() : hlscolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
-	if (value > getMax())
-		return m_fillOffscaleTop ? getHlsOffscaleTop() : hlscolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
-	if( !m_hls )
+	if (m_hls)
 	{
-		rgbcolour rgb=getRgbNormalisedScale( value );
-		double h, l, s;
-		plrgbhls( rgb.r(), rgb.g(), rgb.b(), &h, &l, &s );
-		return hlscolour( h, l, s, rgb.a() );
+		hlscolour hls = getHlsOriginalScale(value);
+		double r, g, b;
+		plhlsrgb(hls.h(), hls.l(), hls.s(), &r, &g, &b);
+		return (rgbcolour(r, g, b, hls.a()));
 	}
-	double h, l, s, a;
-	interpolate( value, h, l, s, a );
-	return hlscolour(h, l, s, a);
+
+	double r, g, b, a;
+	interpolate(value, r, g, b, a);
+	return rgbcolour(r, g, b, a);
 }
 
 hlscolour splotcolourscale::getHlsOriginalScale( double value ) const
 {
-	return getHlsNormalisedScale(getNormalisedValue( value ) );
-}
-	
-double splotcolourscale::getNormalisedValue( double value ) const
-{
-	return (value-getMin())/(getMax() - getMin());
+	if (!m_hls)
+	{
+		rgbcolour rgb = getRgbOriginalScale(value);
+		double h, l, s;
+		plrgbhls(rgb.r(), rgb.g(), rgb.b(), &h, &l, &s);
+		return hlscolour(h, l, s, rgb.a());
+	}
+
+	double h, l, s, a;
+	interpolate(value, h, l, s, a);
+	return hlscolour(h, l, s, a);
 }
 
 void splotcolourscale::setupdefault()
@@ -567,7 +593,7 @@ hlscolour splotcolourscale::getHlsOffscaleTop() const
 
 void splotcolourscale::setupForImage(plstream *pl) const
 {
-	const double * intensity = &m_value[0];
+	const double* intensity = isLog() ? &m_logValue[0] : &m_value[0];
 	pl->scmap1n(256);
 	pl->scmap1la(!m_hls, m_colour1.size(), intensity, &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
 }
@@ -604,12 +630,26 @@ std::vector<double> splotcolourscale::getDiscreteValues() const
 	sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::getDiscreteValues called with a not discrete colour scale."));
 
 	std::vector<double> result(m_value.size() / 2 + 1);
-	for (size_t i = 0; i < result.size() - 1; ++i)
-		result[i] = m_value[i * 2];
-	result.back() = m_value.back();
+	if (isLog())
+	{
+		for (size_t i = 0; i < result.size() - 1; ++i)
+			result[i] = m_logValue[i * 2];
+		result.back() = m_logValue.back();
 
-	for (auto& r : result)
-		r = getMin() + r * (getMax() - getMin());
+		double logMin = std::log10(getMin());
+		double logMax = std::log10(getMax());
+		for (auto& r : result)
+			r = std::pow(10.0, logMin + r * (logMax - logMin));
+	}
+	else
+	{
+		for (size_t i = 0; i < result.size() - 1; ++i)
+			result[i] = m_value[i * 2];
+		result.back() = m_value.back();
+
+		for (auto& r : result)
+			r = getMin() + r * (getMax() - getMin());
+	}
 	return result;
 }
 
@@ -618,38 +658,54 @@ splotsizescale::splotsizescale(const std::vector<double> &value, const std::vect
 {
 	m_value = value;
 	m_size = size;
-	setupInterpolatingScale(m_value, m_size, autostretch);
+	setupInterpolatingScale(m_value, m_logValue, m_size, autostretch);
 	m_fillOffscaleBottom = fillOffscaleBottom;
 	m_fillOffscaleTop = fillOffscaleTop;
 }
 
 double splotsizescale::getsize(double value) const
 {
-	value -= getMin();
-	value /= getMax() - getMin();
+	if (value < getMin())
+	{
+		if (m_fillOffscaleBottom)
+			return m_size[0];
+		else
+			return std::numeric_limits<double>::quiet_NaN();
+	}
 
-	if(value<m_value[0])
-		return m_fillOffscaleBottom ? m_size[0] : std::numeric_limits<double>::quiet_NaN();
-	if(value>m_value.back())
-		return m_fillOffscaleTop ? m_size.back() : std::numeric_limits<double>::quiet_NaN();
-	if (value == m_value.back())
-		return m_size.back();
-	size_t lowerindex=0;
-	while(value<m_value[lowerindex])
-		++lowerindex;
-	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
-}
+	if (value > getMax())
+	{
+		if (m_fillOffscaleTop)
+			return m_size.back();
+		else
+			return std::numeric_limits<double>::quiet_NaN();
+	}
 
-double splotsizescale::getSizeNormalisedScale(double value) const
-{
-	if(value<=m_value[0])
+	if (value == getMin())
 		return m_size[0];
-	if(value>=m_value.back())
-		return m_size.back();
-	size_t lowerindex=0;
-	while(value<m_value[lowerindex])
-		++lowerindex;
-	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
+
+	size_t maxIndex = 1;
+	double highWeight;
+	if (isLog())
+	{
+		value = std::log10(value / getMin()) / std::log10(getMax() / getMin());
+
+		while (value > m_logValue[maxIndex])
+			maxIndex++;
+
+		highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+	}
+	else
+	{
+		value = (value - getMin()) / (getMin() - getMax());
+
+		while (value > m_value[maxIndex])
+			maxIndex++;
+
+		highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
+	}
+
+	return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 }
 
 splotlevelscale::splotlevelscale(const std::vector<double>& value, bool logarithmic, bool autostretch)
@@ -657,58 +713,33 @@ splotlevelscale::splotlevelscale(const std::vector<double>& value, bool logarith
 {
 	m_value = value;
 	std::vector<double> dummy = m_value;
-	setupInterpolatingScale(m_value, dummy, autostretch);
+	setupInterpolatingScale(m_value, m_logValue, dummy, autostretch);
 }
 
 std::vector<double> splotlevelscale::getLevels() const
 {
-	std::vector<double> result = m_value;
-	for (auto& r : result)
-		r = getMin() + r * (getMax() - getMin());
+	std::vector<double> result;;
+	if (isLog())
+	{
+		result = m_logValue;
+
+		double logMin = std::log10(getMin());
+		double logMax = std::log10(getMax());
+		for (auto& r : result)
+			r = std::pow(10.0, logMin + r * (logMax - logMin));
+	}
+	else
+	{
+		result = m_value;
+
+		for (auto& r : result)
+			r = getMin() + r * (getMax() - getMin());
+	}
 	return result;
 }
 
-splotinterpolatedscale::splotinterpolatedscale(const std::vector<double>& value, const std::vector<double>& level, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
-	:PlotScale(logarithmic, Direction::none, 0.0)
-{
-	m_value = value;
-	m_level = level;
-	setupInterpolatingScale(m_value, m_level, autostretch);
-	m_fillOffscaleBottom = fillOffscaleBottom;
-	m_fillOffscaleTop = fillOffscaleTop;
-}
-
-double splotinterpolatedscale::getLevel(double value) const
-{
-	value -= getMin();
-	value /= getMax() - getMin();
-
-	if (value < m_value[0])
-		return m_fillOffscaleBottom ? m_level[0] : std::numeric_limits<double>::quiet_NaN();
-	if (value > m_value.back())
-		return m_fillOffscaleTop ? m_level.back() : std::numeric_limits<double>::quiet_NaN();
-	if (value == m_value.back())
-		return m_level.back();
-	size_t lowerindex = 0;
-	while (value < m_value[lowerindex])
-		++lowerindex;
-	return (m_level[lowerindex] - m_level[lowerindex + 1]) / (m_value[lowerindex] - m_value[lowerindex + 1]) * (value - m_value[lowerindex]) + m_level[lowerindex];
-}
-
-double splotinterpolatedscale::getLevelNormalisedScale(double value) const
-{
-	if (value <= m_value[0])
-		return m_level[0];
-	if (value >= m_value.back())
-		return m_level.back();
-	size_t lowerindex = 0;
-	while (value < m_value[lowerindex])
-		++lowerindex;
-	return (m_level[lowerindex] - m_level[lowerindex + 1]) / (m_value[lowerindex] - m_value[lowerindex + 1]) * (value - m_value[lowerindex]) + m_level[lowerindex];
-}
-
 splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
-	:PlotScale(min, max, log, direction, 0.05)
+	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = 0;
 	m_nsubticks = 0;
@@ -719,7 +750,7 @@ splotaxis::splotaxis(double min, double max, bool log, Direction direction, doub
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
-	:PlotScale(min, max, log, direction, 0.05)
+	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = majorinterval;
 	m_nsubticks = nsubticks;
@@ -2670,7 +2701,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 			}*/
 		}
 		//shading and contours
-		else
+		/*else
 		{
 			//set up a plotting matrix and check if the transform is rectilinear
 			splot2dmatrix matrix(&m_structzs[i]);
@@ -2741,28 +2772,6 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 						std::numeric_limits<double>::infinity(), 0, 1, 1, 0, 0, 0, 0, rectilinear, transformer);
 				}
 
-				/*
-				//set the colour scale
-				pl->scmap1la(!m_colourscale[i].m_hls,m_colourscale[i].m_value.size(),&m_colourscale[i].m_value[0],&m_colourscale[i].m_colour1[0],&m_colourscale[i].m_colour2[0],&m_colourscale[i].m_colour3[0],&m_colourscale[i].m_alpha[0],&m_colourscale[i].m_rbgr[0]);
-
-				//plot the lower out of bounds if needed, note that if there is no out of bounds plplot just does nothing because minlevel>maxlevel
-				if(m_filloffscalebottom[i] && m_minstructz[i]<m_colourscale[i].m_bottom)pl->shade(matrix,minx,maxx,miny,maxy,m_minstructz[i],m_colourscale[i].m_bottom,1,0.0,1,0,0,0,0,rectilinear,transformer);
-				//plot the rest of the colour scale
-				for(size_t j=0; j<m_colourlevels[i].size()-1; ++j)
-				{
-					//draw the shade - note we use shade not shades because shade has an interface for countourable
-					// objects and shades doesn't. see the manual for plshade1 for descriptions. 
-					//note sh_col is 0 to use colmap0 and 1 to use colmap1 (we want 1 for continuous mapping)
-					double colour=std::max(0.0,std::min(1.0,((m_colourlevels[i][j]+m_colourlevels[i][j+1])/2.0-m_colourscale[i].m_bottom)/(m_colourscale[i].m_top-m_colourscale[i].m_bottom)));
-					//double colour=m_colourscale[i].m
-					//draw each segment, including lower contour if needed, except for last segment which has both contours
-					pl->shade(matrix,minx,maxx,miny,maxy,m_colourlevels[i][j],m_colourlevels[i][j+1],1,colour,1,0,0,0,0,rectilinear,transformer);
-					//pl->shade(matrix,m_xs[i][0],m_xs[i].back(),m_ys[i][0],m_ys[i].back(),m_colourlevels[i][j],m_colourlevels[i][j+1],0,1,1,0,0,0,0,rectilinear,&matrix.m_transformer);
-					//pl->shade(matrix,m_xs[i][0],m_xs[i].back(),m_ys[i][0],m_ys[i].back(),m_contourlevels[i][j],100000000.0,1,colour,1,0,0,0,0,rectilinear,&matrix.m_transformer);
-				}
-				//plot the upper out of bounds if needed, note that if there is no out of bounds plplot just does nothing because minlevel>maxlevel
-				if(m_filloffscaletop[i] && m_maxstructz[i]>m_colourscale[i].m_top)pl->shade(matrix,minx,maxx,miny,maxy,m_colourscale[i].m_top,m_maxstructz[i],1,1.0,1,0,0,0,0,rectilinear,transformer);
-				*/
 			}
 			//now contours
 			if(m_contourlevels[i].size()>0 || (m_colourlevels[i].size()>0 && m_linkcontoursandcolours[i]))
@@ -2802,7 +2811,7 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 				pl->styl(0,NULL, NULL);
 
 			}
-		}
+		}*/
 	};
 
 	/*//draw the axes last otherwise they get overdrawn
@@ -3701,7 +3710,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 
 			//draw the first point
 			sizeVaryingSymbol.setupSymbol(pl, 1, values[0], 1.0);
-			double size = sizeVaryingSymbol.getSize(values[0], false);
+			double size = sizeVaryingSymbol.getSize(values[0]);
 			position+=positionstep+0.5*std::max(size*0.8,m_textsize[i]*1.6);
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
@@ -3724,7 +3733,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			for(size_t j=1; j<m_nlines[i]; ++j)
 			{
 				double lastSize = size;
-				size = sizeVaryingSymbol.getSize(values[j], false);
+				size = sizeVaryingSymbol.getSize(values[j]);
 				//points
 				sizeVaryingSymbol.setupSymbol(pl, 1, values[j], 1.0);
 				position+=std::max((size+lastSize)*0.8 /2.0,m_textsize[i]*1.6);
@@ -3795,7 +3804,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				
 			rgbcolour rgb;
 			//fill the different levels
-			for( size_t j=1; j<m_colourlevels[i].size(); ++j )
+			/*for (size_t j = 1; j<m_colourlevels[i].size(); ++j)
 			{
 				//check if this level is in bounds
 				if( m_colourscale[i]->getNormalisedValue( m_colourlevels[i][j] ) < 0.0 )
@@ -3816,7 +3825,7 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 				//draw the band
 				pl->shade( matrix, x[0], x.back(), y[0], y.back(), lowLimit, 
 					highLimit, 0, 1, 1, 0, 0, 0, 0, true, nullptr);
-			}
+			}*/
 			if(m_contours[i])
 			{
 				pl->scol0(1,0,0,0);

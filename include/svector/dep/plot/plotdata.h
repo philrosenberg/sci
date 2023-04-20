@@ -80,7 +80,7 @@ public:
 	SizeVaryingSymbol ( std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ) );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const;
 	bool isLogScaled() const;
-	double getSize(double parameter, bool useNormalisedScale) const;
+	double getSize(double parameter) const;
 	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:
 	rgbcolour m_colour;
@@ -94,7 +94,7 @@ public:
 	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;
-	double getSize(double parameter, bool useNormalisedScale) const;
+	double getSize(double parameter) const;
 	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
 	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:

@@ -34,7 +34,7 @@ void mainFrame::OnExit(wxCommandEvent& event)
 	Close();
 }
 
-void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double scaleEnd, bool autoscale, bool fillOffscaleBottom, bool fillOffscaleTop)
+void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double scaleEnd, bool log, bool autoscale, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
 	//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 	// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
@@ -88,7 +88,10 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 		{
 			double x = (x1d[i] + x1d[i + 1]) / 2.0;
 			double y = (y1d[j] + y1d[j + 1]) / 2.0;
-			zGrid[i][j] = 1.0 + 1.0 / (1.0 + x * x + 2.0 * y * y);
+			if (log)
+				zGrid[i][j] = std::pow(10.0, y);
+			else
+				zGrid[i][j] = 1.0 + 1.0 / (1.0 + x * x + 2.0 * y * y);
 		}
 	}
 
@@ -98,8 +101,17 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 		zCont[i].resize(ny);
 		for (size_t j = 0; j < ny; ++j)
 		{
-			zCont[i][j] = 1.0 + 1.0 / (1.0 + x1d[i] * x1d[i] + 2.0 * y1d[j] * y1d[j]);
+			if (log)
+				zCont[i][j] = std::pow(10.0, y1d[j]);
+			else
+				zCont[i][j] = 1.0 + 1.0 / (1.0 + x1d[i] * x1d[i] + 2.0 * y1d[j] * y1d[j]);
 		}
+	}
+
+	if (log)
+	{
+		scaleBegin = std::log10(scaleBegin);
+		scaleEnd = std::log10(scaleEnd);
 	}
 
 	double scaleRange = scaleEnd - scaleBegin;
@@ -113,12 +125,18 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 		colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
 	for (size_t i = 0; i < nColours + 1; ++i)
 		values[i] = scaleBegin + i * valueInterval;
-	std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, false, autoscale, fillOffscaleBottom, fillOffscaleTop));
+
+	if (log)
+		for (auto& v : values)
+			v = std::pow(10.0, v);
+
+	std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	LineStyle lineStyle(0);
 
-	std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, false, autoscale));
+	std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, log, autoscale));
 
-	std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale({ scaleBegin, scaleEnd }, { colours.front(), colours.back() }, false, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale({ values.front(), values.back()}, {colours.front(), colours.back()}, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	
 	std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleGrid));
 	std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleGrid));
 	std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleGrid));
@@ -268,7 +286,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleBottom = false;
 		bool fillOffscaleTop = false;
 
-		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
+		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
 
 	{
@@ -279,8 +297,8 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleBottom = false;
 		bool fillOffscaleTop = false;
 
-		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}*/
+		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
 
 	{
 		sci::string title = sU("Plot 7: This plot shows the same function as plot 5 and 6 with the same fixed range\ncolour scale as plot 6, but set to fill offscale at the bottom");
@@ -290,7 +308,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleBottom = true;
 		bool fillOffscaleTop = false;
 
-		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
+		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
 	{
 		sci::string title = sU("Plot 8: This plot shows the same function as plot 5 and 6 with the same fixed range\ncolour scale as plot 6, but set to fill offscale at the top");
@@ -300,8 +318,58 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleBottom = false;
 		bool fillOffscaleTop = true;
 
-		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
+		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
+	{
+		sci::string title = sU("Plot 9: This plot shows a set of grid and contour plots for the function z=10#uy#d, with\na log colourscale. It should show even horizontal stripes.");
+		double scaleBegin = 1.0;
+		double scaleEnd = 10.0;
+		bool autoscale = false;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = false;
+
+		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}*/
+	{
+		sci::string title = sU("Plot 10: This plot shows the same plot as plot 9, but with autoscale on for the colourscale. It\nshould look identical as plot 9 used exactly the full scale.");
+		double scaleBegin = 2.0;
+		double scaleEnd = 3.0;
+		bool autoscale = true;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = false;
+
+		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
+	/*{
+		sci::string title = sU("Plot 11: This plot shows the same data as Plot 9, but with a scale from 2-5, rather than 1-10.");
+		double scaleBegin = 2.0;
+		double scaleEnd = 5.0;
+		bool autoscale = false;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = false;
+
+		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
+	{
+		sci::string title = sU("Plot 12: This plot shows the same data as Plot 11, but with filloffscalebottom.");
+		double scaleBegin = 2.0;
+		double scaleEnd = 5.0;
+		bool autoscale = false;
+		bool fillOffscaleBottom = true;
+		bool fillOffscaleTop = false;
+
+		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
+	{
+		sci::string title = sU("Plot 13: This plot shows the same data as Plot 11, but with filloffscaletop.");
+		double scaleBegin = 2.0;
+		double scaleEnd = 5.0;
+		bool autoscale = false;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = true;
+
+		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}*/
 }
 
 void mainFrame::OnAbout(wxCommandEvent& event)
