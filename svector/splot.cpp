@@ -636,7 +636,23 @@ double splotsizescale::getSizeNormalisedScale(double value) const
 	return (m_size[lowerindex]-m_size[lowerindex+1])/(m_value[lowerindex]-m_value[lowerindex+1])*(value-m_value[lowerindex])+m_size[lowerindex];
 }
 
-splotlevelscale::splotlevelscale(const std::vector<double>& value, const std::vector<double>& level, bool logarithmic, bool autostretch)
+splotlevelscale::splotlevelscale(const std::vector<double>& value, bool logarithmic, bool autostretch)
+	:PlotScale(logarithmic, Direction::none, 0.0)
+{
+	m_value = value;
+	std::vector<double> dummy = m_value;
+	setupInterpolatingScale(m_value, dummy, autostretch);
+}
+
+std::vector<double> splotlevelscale::getLevels() const
+{
+	std::vector<double> result = m_value;
+	for (auto& r : result)
+		r = getMin() + r * (getMax() - getMin());
+	return result;
+}
+
+splotinterpolatedscale::splotinterpolatedscale(const std::vector<double>& value, const std::vector<double>& level, bool logarithmic, bool autostretch)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
 	m_value = value;
@@ -644,7 +660,7 @@ splotlevelscale::splotlevelscale(const std::vector<double>& value, const std::ve
 	setupInterpolatingScale(m_value, m_level, autostretch);
 }
 
-double splotlevelscale::getLevel(double value) const
+double splotinterpolatedscale::getLevel(double value) const
 {
 	value -= getMin();
 	value /= getMax() - getMin();
@@ -659,7 +675,7 @@ double splotlevelscale::getLevel(double value) const
 	return (m_level[lowerindex] - m_level[lowerindex + 1]) / (m_value[lowerindex] - m_value[lowerindex + 1]) * (value - m_value[lowerindex]) + m_level[lowerindex];
 }
 
-double splotlevelscale::getLevelNormalisedScale(double value) const
+double splotinterpolatedscale::getLevelNormalisedScale(double value) const
 {
 	if (value <= m_value[0])
 		return m_level[0];
@@ -669,14 +685,6 @@ double splotlevelscale::getLevelNormalisedScale(double value) const
 	while (value < m_value[lowerindex])
 		++lowerindex;
 	return (m_level[lowerindex] - m_level[lowerindex + 1]) / (m_value[lowerindex] - m_value[lowerindex + 1]) * (value - m_value[lowerindex]) + m_level[lowerindex];
-}
-
-std::vector<double> splotlevelscale::getLevels() const
-{
-	std::vector<double> result = m_level;
-	for (auto& r : result)
-		r = getMin() + r * (getMax() - getMin());
-	return result;
 }
 
 splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)

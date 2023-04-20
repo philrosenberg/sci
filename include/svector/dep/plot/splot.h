@@ -134,6 +134,7 @@ class PlotScale
 	friend class splotcolourscale;
 	friend class splotsizescale;
 	friend class splotlevelscale;
+	friend class splotinterpolatedscale;
 public:
 	virtual ~PlotScale() {}
 	enum class Direction
@@ -344,8 +345,22 @@ class splotlevelscale : public PlotScale
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	splotlevelscale(const std::vector<double>& value = std::vector<double>(0), const std::vector<double>& level = std::vector<double>(0), bool logarithmic = false, bool autostretch = false);
+	splotlevelscale(const std::vector<double>& value = std::vector<double>(0), bool logarithmic = false, bool autostretch = false);
 	~splotlevelscale() {};
+	std::vector<double> getLevels() const;
+private:
+	std::vector<double> m_value;
+};
+
+
+class splotinterpolatedscale : public PlotScale
+{
+	friend class splot;
+	friend class splot2d;
+	friend class splotlegend;
+public:
+	splotinterpolatedscale(const std::vector<double>& value = std::vector<double>(0), const std::vector<double>& level = std::vector<double>(0), bool logarithmic = false, bool autostretch = false);
+	~splotinterpolatedscale() {};
 	double getLevel(double value) const;
 	double getLevelNormalisedScale(double value) const;
 	std::vector<double> getLevels() const;
@@ -353,7 +368,6 @@ private:
 	std::vector<double> m_value;
 	std::vector<double> m_level;
 };
-
 
 //this is simply an interface to a 2d std::vector
 class splot2dmatrix : public Contourable_Data
