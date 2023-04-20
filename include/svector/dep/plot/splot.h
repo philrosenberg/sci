@@ -291,27 +291,31 @@ class splotcolourscale : public PlotScale
 public:
 	splotcolourscale();
 	//create a colourscale from rgb colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false);
+	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false);
+	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	rgbcolour getRgbNormalisedScale( double value ) const;
 	rgbcolour getRgbOriginalScale( double value ) const;
 	hlscolour getHlsNormalisedScale( double value ) const;
 	hlscolour getHlsOriginalScale( double value ) const;
 	double getNormalisedValue( double value ) const;
-	rgbcolour getRgbOffscaleBottom();
-	rgbcolour getRgbOffscaleTop();
-	hlscolour getHlsOffscaleBottom();
-	hlscolour getHlsOffscaleTop();
+	rgbcolour getRgbOffscaleBottom() const;
+	rgbcolour getRgbOffscaleTop() const;
+	hlscolour getHlsOffscaleBottom() const;
+	hlscolour getHlsOffscaleTop() const;
 	virtual ~splotcolourscale(){};
 	void setupForImage(plstream* pl) const;
 	void setupForShade(plstream *pl) const;
 	bool isDiscrete() const { return m_discrete; }
 	std::vector<double> getDiscreteValues() const;
+	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
+	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
+	bool setFilOffscaleBottom(bool fill) {m_fillOffscaleBottom = fill; }
+	bool setFilOffscaleTop(bool fill) {m_fillOffscaleTop = fill; }
 private:
 	void setupdefault();
-	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool autostretch = false);
-	void setup(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool autostretch = false);
+	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
+	void setup(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
 	std::vector<double> m_value;
 	std::vector< double > m_colour1;
 	std::vector< double > m_colour2;
@@ -320,6 +324,8 @@ private:
 	bool m_hls; //true for hls, false for rgb colour representation
 	bool m_discrete;
 	void interpolate( double value, double &c1, double &c2, double &c3, double &a) const;
+	bool m_fillOffscaleBottom;
+	bool m_fillOffscaleTop;
 };
 
 
@@ -329,13 +335,19 @@ class splotsizescale : public PlotScale
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false, bool autostretch = false);
+	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	~splotsizescale(){};
 	double getsize(double value) const;
 	double getSizeNormalisedScale(double value) const;
+	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
+	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
+	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
+	bool setFilOffscaleTop(bool fill) { m_fillOffscaleTop = fill; }
 private:
 	std::vector<double> m_value;
 	std::vector<double> m_size;
+	bool m_fillOffscaleBottom;
+	bool m_fillOffscaleTop;
 };
 
 
@@ -359,14 +371,19 @@ class splotinterpolatedscale : public PlotScale
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	splotinterpolatedscale(const std::vector<double>& value = std::vector<double>(0), const std::vector<double>& level = std::vector<double>(0), bool logarithmic = false, bool autostretch = false);
+	splotinterpolatedscale(const std::vector<double>& value = std::vector<double>(0), const std::vector<double>& level = std::vector<double>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	~splotinterpolatedscale() {};
 	double getLevel(double value) const;
 	double getLevelNormalisedScale(double value) const;
-	std::vector<double> getLevels() const;
+	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
+	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
+	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
+	bool setFilOffscaleTop(bool fill) { m_fillOffscaleTop = fill; }
 private:
 	std::vector<double> m_value;
 	std::vector<double> m_level;
+	bool m_fillOffscaleBottom;
+	bool m_fillOffscaleTop;
 };
 
 //this is simply an interface to a 2d std::vector

@@ -782,7 +782,7 @@ private:
 	Y m_y;
 };
 
-Data2d::Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+Data2d::Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys }, { xAxis, yAxis }, transformer), StructuredData({ &zs }, { zScale }, transformer)
 {
 	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -791,13 +791,11 @@ Data2d::Data2d(const std::vector<double>& xs, const std::vector<double>& ys, con
 
 	m_x1d = true;
 	m_y1d = true;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
 	m_xSize = zs.size();
 	m_ySize = zs[0].size();
 }
 
-Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({}, {}, transformer), StructuredData({ &xs, &ys, &zs }, { xAxis, yAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -810,13 +808,11 @@ Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector <
 
 	m_x1d = false;
 	m_y1d = false;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
 	m_xSize = zs.size();
 	m_ySize = zs[0].size();
 }
 
-Data2d::Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+Data2d::Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs }, { xAxis }, transformer), StructuredData({ &ys, &zs }, { yAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -828,13 +824,11 @@ Data2d::Data2d(const std::vector<double>& xs, const std::vector < std::vector<do
 
 	m_x1d = true;
 	m_y1d = false;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
 	m_xSize = zs.size();
 	m_ySize = zs[0].size();
 }
 
-Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
+Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &ys }, { yAxis }, transformer), StructuredData({ &xs, &zs }, { xAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.size() > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -846,8 +840,6 @@ Data2d::Data2d(const std::vector < std::vector<double>>& xs, const std::vector<d
 
 	m_x1d = false;
 	m_y1d = true;
-	m_fillOffscaleBottom = fillOffScaleBottom;
-	m_fillOffscaleTop = fillOffScaleTop;
 	m_xSize = zs.size();
 	m_ySize = zs[0].size();
 }
@@ -858,8 +850,8 @@ void Data2d::autoscaleAxes()
 	StructuredData::autoscaleAxes();
 }
 
-GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 	sci::assertThrow(ys.size() == zs[0].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -867,8 +859,8 @@ GridData::GridData(const std::vector<double> &xs, const std::vector<double> &ys,
 	m_colourscale = colourScale;
 }
 
-GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -880,8 +872,8 @@ GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vect
 	m_colourscale = colourScale;
 }
 
-GridData::GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+GridData::GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 	sci::assertThrow(ys.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -892,8 +884,8 @@ GridData::GridData(const std::vector<double>& xs, const std::vector < std::vecto
 	m_colourscale = colourScale;
 }
 
-GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+GridData::GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 
@@ -912,8 +904,8 @@ void GridData::plotData(plstream* pl, double scale) const
 	//set up the colourscale
 	m_colourscale->setupForImage(pl);
 	//set up the minimum z we want to plot - this will depend if we want to plot off the bottom of the colourscale
-	double zMin = m_fillOffscaleBottom ? -std::numeric_limits<double>::infinity() : m_colourscale->getMin();
-	double zMax = m_fillOffscaleTop ? std::numeric_limits<double>::infinity() : m_colourscale->getMax();
+	double zMin = m_colourscale->fillOffscaleBottom() ? -std::numeric_limits<double>::infinity() : m_colourscale->getMin();
+	double zMax = m_colourscale->fillOffscaleTop() ? std::numeric_limits<double>::infinity() : m_colourscale->getMax();
 
 	if (m_x1d && m_y1d)
 	{
@@ -969,8 +961,8 @@ void GridData::plotData(plstream* pl, double scale) const
 	}
 }
 
-ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(ys.size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -980,8 +972,8 @@ ContourData::ContourData(const std::vector<double>& xs, const std::vector<double
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -993,8 +985,8 @@ ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -1005,8 +997,8 @@ ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::v
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1019,8 +1011,8 @@ ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::
 
 
 
-ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(ys.size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -1030,8 +1022,8 @@ ContourData::ContourData(const std::vector<double>& xs, const std::vector<double
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1043,8 +1035,8 @@ ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -1055,8 +1047,8 @@ ContourData::ContourData(const std::vector<double>& xs, const std::vector<std::v
 	m_lineStyle = lineStyle;
 }
 
-ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, bool fillOffScaleBottom, bool fillOffScaleTop, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, fillOffScaleBottom, fillOffScaleTop, transformer)
+ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1081,9 +1073,9 @@ void ContourData::plotData(plstream* pl, double scale) const
 		m_colourscale->setupForShade(pl);
 		shadeLevels = m_colourscale->getDiscreteValues();
 		sci::assertThrow(shadeLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a colourscale with fewer than 2 levels."));
-		if (m_fillOffscaleBottom)
+		if (m_colourscale->fillOffscaleBottom())
 			shadeLevels.front() = -std::numeric_limits<double>::infinity();
-		if (m_fillOffscaleTop)
+		if (m_colourscale->fillOffscaleTop())
 			shadeLevels.back() = std::numeric_limits<double>::infinity();
 	}
 

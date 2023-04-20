@@ -34,6 +34,130 @@ void mainFrame::OnExit(wxCommandEvent& event)
 	Close();
 }
 
+void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double scaleEnd, bool autoscale, bool fillOffscaleBottom, bool fillOffscaleTop)
+{
+	//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
+	// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
+	// we do both axes correctly and tests the weird autoscaling of plshades
+	splotframe* frame = new splotframe(parent, true);
+	frame->SetClientSize(800, 800);
+	auto canvas = frame->getCanvas();
+
+	std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(2.0), title));
+	std::vector<double> limits{ 0.1, 0.1 + 0.8 / 4.0, 0.1 + 2.0 * 0.8 / 4.0, 0.1 + 3.0 * 0.8 / 4.0, 0.1 + 0.8 };
+	std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[0], limits[1], 0.1, sU("")));
+	std::shared_ptr<splotaxis> xAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[1], limits[2], 0.1, sU("")));
+	std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[2], limits[3], 0.1, sU("")));
+	std::shared_ptr<splotaxis> xAxis4(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[3], limits[4], 0.1, sU("")));
+	std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[0], limits[1], 0.1, sU("")));
+	std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[1], limits[2], 0.1, sU("")));
+	std::shared_ptr<splotaxis> yAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[2], limits[3], 0.1, sU("")));
+
+	size_t nx = 21;
+	size_t ny = 21;
+
+	std::vector<double> x1d(nx);
+	std::vector<double> y1d(ny);
+	for (size_t i = 0; i < nx; ++i)
+		x1d[i] = i * 1.0 / (double)(nx - 1);
+	for (size_t i = 0; i < ny; ++i)
+		y1d[i] = i * 1.0 / (double)(ny - 1);
+
+	std::vector<std::vector<double>> x2d(nx);
+	std::vector<std::vector<double>> y2d(nx);
+	for (size_t i = 0; i < nx; ++i)
+	{
+		x2d[i].resize(ny);
+		for (size_t j = 0; j < ny; ++j)
+			x2d[i][j] = i * 1.0 / (double)(nx - 1);
+	}
+	for (size_t i = 0; i < nx; ++i)
+	{
+		y2d[i].resize(ny);
+		for (size_t j = 0; j < ny; ++j)
+			y2d[i][j] = j * 1.0 / (double)(ny - 1);
+	}
+
+
+
+	std::vector<std::vector<double>> zGrid(nx - 1);
+	for (size_t i = 0; i < nx - 1; ++i)
+	{
+		zGrid[i].resize(ny - 1);
+		for (size_t j = 0; j < ny - 1; ++j)
+		{
+			double x = (x1d[i] + x1d[i + 1]) / 2.0;
+			double y = (y1d[j] + y1d[j + 1]) / 2.0;
+			zGrid[i][j] = 1.0 + 1.0 / (1.0 + x * x + 2.0 * y * y);
+		}
+	}
+
+	std::vector<std::vector<double>> zCont(nx);
+	for (size_t i = 0; i < nx; ++i)
+	{
+		zCont[i].resize(ny);
+		for (size_t j = 0; j < ny; ++j)
+		{
+			zCont[i][j] = 1.0 + 1.0 / (1.0 + x1d[i] * x1d[i] + 2.0 * y1d[j] * y1d[j]);
+		}
+	}
+
+	double scaleRange = scaleEnd - scaleBegin;
+
+	size_t nColours = 10;
+	std::vector<hlscolour> colours(nColours);
+	std::vector<double> values(nColours + 1);
+	double hueInterval = 240.0 / (nColours - 1);
+	double valueInterval = scaleRange / nColours;
+	for (size_t i = 0; i < nColours; ++i)
+		colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
+	for (size_t i = 0; i < nColours + 1; ++i)
+		values[i] = scaleBegin + i * valueInterval;
+	std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, false, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	LineStyle lineStyle(0);
+
+	std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, false, autoscale));
+
+	std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale({ scaleBegin, scaleEnd }, { colours.front(), colours.back() }, false, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleGrid));
+	std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleGrid));
+	std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleGrid));
+	std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleGrid));
+
+	std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleCont, lineStyle));
+	std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleCont, lineStyle));
+	std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleCont, lineStyle));
+	std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleCont, lineStyle));
+
+	std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, lineStyle));
+	std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, lineStyle));
+	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, lineStyle));
+	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, lineStyle));
+
+	canvas->addItem(box);
+	canvas->addItem(grid1);
+	canvas->addItem(grid2);
+	canvas->addItem(grid3);
+	canvas->addItem(grid4);
+	canvas->addItem(shade1);
+	canvas->addItem(shade2);
+	canvas->addItem(shade3);
+	canvas->addItem(shade4);
+	canvas->addItem(contour1);
+	canvas->addItem(contour2);
+	canvas->addItem(contour3);
+	canvas->addItem(contour4);
+	canvas->addItem(xAxis1);
+	canvas->addItem(xAxis2);
+	canvas->addItem(xAxis3);
+	canvas->addItem(xAxis4);
+	canvas->addItem(yAxis1);
+	canvas->addItem(yAxis2);
+	canvas->addItem(yAxis3);
+
+	frame->Show(true);
+}
+
 void mainFrame::OnRun(wxCommandEvent& event)
 {
 	/* {
@@ -132,296 +256,52 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		frame->Show(true);
 	}*/
 
-	/* {
+	/*{
 		//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 		// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
 		// we do both axes correctly and tests the weird autoscaling of plshades
-		splotframe* frame = new splotframe(this, true);
-		frame->SetClientSize(800, 800);
-		auto canvas = frame->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(2.0), sU("Plot 5: This plot should show a set of grid and contour plots of 1+1/(1+x#u2#d+2y#u2#d)")));
-		std::vector<double> limits{ 0.1, 0.1 + 0.8 / 4.0, 0.1 + 2.0 * 0.8 / 4.0, 0.1 + 3.0 * 0.8 / 4.0, 0.1 + 0.8 };
-		std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[0], limits[1], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[1], limits[2], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[2], limits[3], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis4(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[3], limits[4], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[0], limits[1], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[1], limits[2], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[2], limits[3], 0.1, sU("")));
+		sci::string title = sU("Plot 5: This plot should show a set of grid and contour plots of 1+1/(1+x#u2#d+2y#u2#d) with colour scale autoscaled");
+		double scaleBegin = 0.0;
+		double scaleEnd = 1.0;
+		bool autoscale = true;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = false;
 
-		size_t nx = 21;
-		size_t ny = 21;
+		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
 
-		std::vector<double> x1d(nx);
-		std::vector<double> y1d(ny);
-		for (size_t i = 0; i < nx; ++i)
-			x1d[i] = i * 1.0 / (double)(nx-1);
-		for (size_t i = 0; i < ny; ++i)
-			y1d[i] = i * 1.0 / (double)(ny - 1);
+	{
+		sci::string title = sU("Plot 6: This plot shows the same function as plot 5, but the colour scale is fixed and goes from 1.5 to 1.9");
+		double scaleBegin = 1.5;
+		double scaleEnd = 1.9;
+		bool autoscale = false;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = false;
 
-		std::vector<std::vector<double>> x2d(nx);
-		std::vector<std::vector<double>> y2d(nx);
-		for (size_t i = 0; i < nx; ++i)
-		{
-			x2d[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-				x2d[i][j] = i * 1.0 / (double)(nx - 1);
-		}
-		for (size_t i = 0; i < nx; ++i)
-		{
-			y2d[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-				y2d[i][j] = j * 1.0 / (double)(ny - 1);
-		}
-
-
-
-		std::vector<std::vector<double>> zGrid(nx-1);
-		for (size_t i = 0; i < nx - 1; ++i)
-		{
-			zGrid[i].resize(ny - 1);
-			for (size_t j = 0; j < ny - 1; ++j)
-			{
-				double x = (x1d[i] + x1d[i + 1]) / 2.0;
-				double y = (y1d[j] + y1d[j + 1]) / 2.0;
-				zGrid[i][j] = 1.0 + 1.0 / (1.0 + x * x + 2.0 * y * y);
-			}
-		}
-
-		std::vector<std::vector<double>> zCont(nx);
-		for (size_t i = 0; i < nx; ++i)
-		{
-			zCont[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-			{
-				zCont[i][j] = 1.0 + 1.0 / (1.0 + x1d[i] * x1d[i] + 2.0 * y1d[j] * y1d[j]);
-			}
-		}
-
-		size_t nColours = 10;
-		std::vector<hlscolour> colours(nColours);
-		std::vector<double> values(nColours + 1);
-		double hueInterval = 240.0 / (nColours - 1);
-		double valueInterval = 1.0 / nColours;
-		for (size_t i = 0; i < nColours; ++i)
-			colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
-		for (size_t i = 0; i < nColours + 1; ++i)
-			values[i] = i * valueInterval;
-		std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, false, true));
-		LineStyle lineStyle(0);
-
-		std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, values, false, true));
-
-		std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale());
-		std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleGrid, false, false));
-
-		std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleCont, false, false, lineStyle));
-
-		std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, false, false, lineStyle));
-
-		canvas->addItem(box);
-		canvas->addItem(grid1);
-		canvas->addItem(grid2);
-		canvas->addItem(grid3);
-		canvas->addItem(grid4);
-		canvas->addItem(shade1);
-		canvas->addItem(shade2);
-		canvas->addItem(shade3);
-		canvas->addItem(shade4);
-		canvas->addItem(contour1);
-		canvas->addItem(contour2);
-		canvas->addItem(contour3);
-		canvas->addItem(contour4);
-		canvas->addItem(xAxis1);
-		canvas->addItem(xAxis2);
-		canvas->addItem(xAxis3);
-		canvas->addItem(xAxis4);
-		canvas->addItem(yAxis1);
-		canvas->addItem(yAxis2);
-		canvas->addItem(yAxis3);
-
-		frame->Show(true);
+		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}*/
 
 	{
-		//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
-		// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
-		// we do both axes correctly and tests the weird autoscaling of plshades
-		splotframe* frame = new splotframe(this, true);
-		frame->SetClientSize(800, 800);
-		auto canvas = frame->getCanvas();
+		sci::string title = sU("Plot 7: This plot shows the same function as plot 5 and 6 with the same fixed range\ncolour scale as plot 6, but set to fill offscale at the bottom");
+		double scaleBegin = 1.5;
+		double scaleEnd = 1.9;
+		bool autoscale = false;
+		bool fillOffscaleBottom = true;
+		bool fillOffscaleTop = false;
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(2.0), sU("Plot 5: This plot should show a set of grid and contour plots of 1+1/(1+x#u2#d+2y#u2#d)")));
-		std::vector<double> limits{ 0.1, 0.1 + 0.8 / 4.0, 0.1 + 2.0 * 0.8 / 4.0, 0.1 + 3.0 * 0.8 / 4.0, 0.1 + 0.8 };
-		std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[0], limits[1], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[1], limits[2], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[2], limits[3], 0.1, sU("")));
-		std::shared_ptr<splotaxis> xAxis4(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, limits[3], limits[4], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[0], limits[1], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[1], limits[2], 0.1, sU("")));
-		std::shared_ptr<splotaxis> yAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, limits[2], limits[3], 0.1, sU("")));
-
-		size_t nx = 21;
-		size_t ny = 21;
-
-		std::vector<double> x1d(nx);
-		std::vector<double> y1d(ny);
-		for (size_t i = 0; i < nx; ++i)
-			x1d[i] = i * 1.0 / (double)(nx - 1);
-		for (size_t i = 0; i < ny; ++i)
-			y1d[i] = i * 1.0 / (double)(ny - 1);
-
-		std::vector<std::vector<double>> x2d(nx);
-		std::vector<std::vector<double>> y2d(nx);
-		for (size_t i = 0; i < nx; ++i)
-		{
-			x2d[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-				x2d[i][j] = i * 1.0 / (double)(nx - 1);
-		}
-		for (size_t i = 0; i < nx; ++i)
-		{
-			y2d[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-				y2d[i][j] = j * 1.0 / (double)(ny - 1);
-		}
-
-
-
-		std::vector<std::vector<double>> zGrid(nx - 1);
-		for (size_t i = 0; i < nx - 1; ++i)
-		{
-			zGrid[i].resize(ny - 1);
-			for (size_t j = 0; j < ny - 1; ++j)
-			{
-				double x = (x1d[i] + x1d[i + 1]) / 2.0;
-				double y = (y1d[j] + y1d[j + 1]) / 2.0;
-				zGrid[i][j] = 1.0 + 1.0 / (1.0 + x * x + 2.0 * y * y);
-			}
-		}
-
-		std::vector<std::vector<double>> zCont(nx);
-		for (size_t i = 0; i < nx; ++i)
-		{
-			zCont[i].resize(ny);
-			for (size_t j = 0; j < ny; ++j)
-			{
-				zCont[i][j] = 1.0 + 1.0 / (1.0 + x1d[i] * x1d[i] + 2.0 * y1d[j] * y1d[j]);
-			}
-		}
-
-		double begin = 1.5;
-		double end = 1.9;
-		double range = end - begin;
-
-		size_t nColours = 10;
-		std::vector<hlscolour> colours(nColours);
-		std::vector<double> values(nColours + 1);
-		double hueInterval = 240.0 / (nColours - 1);
-		double valueInterval = range / nColours;
-		for (size_t i = 0; i < nColours; ++i)
-			colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
-		for (size_t i = 0; i < nColours + 1; ++i)
-			values[i] = begin + i * valueInterval;
-		std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, false, false)); //fixed scale
-		LineStyle lineStyle(0);
-
-		std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, false, false));
-
-		std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale({begin, end}, {colours.front(), colours.back()}, false, false));
-		std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleGrid, false, false));
-		std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleGrid, false, false));
-
-		std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleCont, false, false, lineStyle));
-		std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleCont, false, false, lineStyle));
-
-		std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, false, false, lineStyle));
-		std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, false, false, lineStyle));
-
-		canvas->addItem(box);
-		canvas->addItem(grid1);
-		canvas->addItem(grid2);
-		canvas->addItem(grid3);
-		canvas->addItem(grid4);
-		canvas->addItem(shade1);
-		canvas->addItem(shade2);
-		canvas->addItem(shade3);
-		canvas->addItem(shade4);
-		canvas->addItem(contour1);
-		canvas->addItem(contour2);
-		canvas->addItem(contour3);
-		canvas->addItem(contour4);
-		canvas->addItem(xAxis1);
-		canvas->addItem(xAxis2);
-		canvas->addItem(xAxis3);
-		canvas->addItem(xAxis4);
-		canvas->addItem(yAxis1);
-		canvas->addItem(yAxis2);
-		canvas->addItem(yAxis3);
-
-		frame->Show(true);
+		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
-	/*{
-		//create a frame with axes running from 0-1 and 3 circular points
-		splotframe* frame = new splotframe(this, true);
-		frame->SetClientSize(800, 800);
-		auto canvas = frame->getCanvas();
+	{
+		sci::string title = sU("Plot 8: This plot shows the same function as plot 5 and 6 with the same fixed range\ncolour scale as plot 6, but set to fill offscale at the top");
+		double scaleBegin = 1.5;
+		double scaleEnd = 1.9;
+		bool autoscale = false;
+		bool fillOffscaleBottom = false;
+		bool fillOffscaleTop = true;
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(2.0), sU("Plot 5: This plot should show a contour plot of 1/(1+x#u2#d+y#u2#d)")));
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, 0.1, 0.9, 0.1, sU("x")));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, 0.1, 0.9, 0.1, sU("y")));
-
-		std::vector<double> x(21);
-		std::vector<double> y(21);
-		for (size_t i = 0; i < x.size(); ++i)
-			x[i] = i * 1.0 / (double)(x.size() - 1);
-		for (size_t i = 0; i < y.size(); ++i)
-			y[i] = i * 1.0 / (double)(y.size() - 1);
-		std::vector<std::vector<double>> z(x.size());
-		for (size_t i = 0; i < z.size(); ++i)
-		{
-			z[i].resize(y.size());
-			for (size_t j = 0; j < z[i].size(); ++j)
-				z[i][j] = 1.0 / (1.0 + x[i] * x[i] + y[j] * y[j]);
-		}
-
-		//GridData g(x, y, z, xAxis, yAxis, new colourscale(), false, false);
-		size_t nColours = 10;
-		std::vector<hlscolour> colours(nColours);
-		std::vector<double> values(nColours+1);
-		double hueInterval = 240.0 / (nColours - 1);
-		double valueInterval = 1.0 / nColours;
-		for (size_t i = 0; i < nColours; ++i)
-			colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
-		for (size_t i = 0; i < nColours + 1; ++i)
-			values[i] = i * valueInterval;
-		std::shared_ptr<splotcolourscale> colourScale(new splotcolourscale(values, colours, false, false));
-		LineStyle lineStyle(0);
-		std::shared_ptr<ContourData> contour(new ContourData(x, y, z, xAxis, yAxis, colourScale, false, false, lineStyle));
-
-		canvas->addItem(box);
-		canvas->addItem(xAxis);
-		canvas->addItem(yAxis);
-		canvas->addItem(contour);
-
-		frame->Show(true);
-	}*/
+		do2dplot(this, title, scaleBegin, scaleEnd, autoscale, fillOffscaleBottom, fillOffscaleTop);
+	}
 }
 
 void mainFrame::OnAbout(wxCommandEvent& event)

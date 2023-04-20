@@ -270,7 +270,7 @@ splotcolourscale::splotcolourscale()
 	setupdefault();
 }
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool logarithmic, bool autostretch)
+splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
 {
 	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
@@ -278,7 +278,7 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	{
 		//setup continuous colour scale
 		m_discrete = false;
-		setup(value, colour, autostretch);
+		setup(value, colour, autostretch, fillOffscaleBottom, fillOffscaleTop);
 	}
 	else
 	{
@@ -293,11 +293,11 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 			newValues[i * 2] = value[i];
 			newValues[i * 2 + 1] = value[i + 1];
 		}
-		setup(newValues, newColours, autostretch);
+		setup(newValues, newColours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 	}
 }
 
-void splotcolourscale::setup(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool autostretch)
+void splotcolourscale::setup(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
 	m_value = value;
 	std::vector<rgbcolour> colourCopy = colour;
@@ -316,16 +316,17 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		m_alpha[i]=(double)colour[i].a();
 	}
 	m_hls = false;
-	
+	m_fillOffscaleBottom = fillOffscaleBottom;
+	m_fillOffscaleTop = fillOffscaleTop;
 }
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool logarithmic, bool autostretch)
+splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
 	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
 		//setup continuous colour scale
-		setup(value, colour, autostretch);
+		setup(value, colour, autostretch, fillOffscaleBottom, fillOffscaleTop);
 	else
 	{
 		//setup discrete colour scale
@@ -338,11 +339,11 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 			newValues[i * 2] = value[i];
 			newValues[i * 2 + 1] = value[i + 1];
 		}
-		setup(newValues, newColours, autostretch);
+		setup(newValues, newColours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 	}
 }
 
-void splotcolourscale::setup(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool autostretch)
+void splotcolourscale::setup(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
 	m_value = value;
 	std::vector<hlscolour> colourCopy = colour;
@@ -360,7 +361,8 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		m_alpha[i] = colour[i].a();
 	}
 	m_hls = true;
-
+	m_fillOffscaleBottom = fillOffscaleBottom;
+	m_fillOffscaleTop = fillOffscaleTop;
 
 	//deal with nans for hues: hue should be a nan for greys which will help with blending
 	//if they are all nans then set them all to 0.0;
@@ -463,6 +465,10 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 
 rgbcolour splotcolourscale::getRgbNormalisedScale( double value ) const
 {
+	if (value < 0.0)
+		return m_fillOffscaleBottom ? getRgbOffscaleBottom() : rgbcolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+	if (value > 1.0)
+		return m_fillOffscaleTop ? getRgbOffscaleTop() : rgbcolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 	if( m_hls )
 	{
 		hlscolour hls=getHlsNormalisedScale( value );
@@ -482,6 +488,10 @@ rgbcolour splotcolourscale::getRgbOriginalScale( double value ) const
 
 hlscolour splotcolourscale::getHlsNormalisedScale( double value ) const
 {
+	if (value < getMin())
+		return m_fillOffscaleBottom ? getHlsOffscaleBottom() : hlscolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+	if (value > getMax())
+		return m_fillOffscaleTop ? getHlsOffscaleTop() : hlscolour(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 	if( !m_hls )
 	{
 		rgbcolour rgb=getRgbNormalisedScale( value );
@@ -523,29 +533,31 @@ void splotcolourscale::setupdefault()
 	m_value.push_back(0.0);
 	m_value.push_back(1.0);
 	m_hls=true;
+	m_fillOffscaleBottom = false;
+	m_fillOffscaleTop = false;
 }	
-rgbcolour splotcolourscale::getRgbOffscaleBottom()
+rgbcolour splotcolourscale::getRgbOffscaleBottom() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
 	else
 		return hlscolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
 }
-rgbcolour splotcolourscale::getRgbOffscaleTop()
+rgbcolour splotcolourscale::getRgbOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
 	else
 		return hlscolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
 }
-hlscolour splotcolourscale::getHlsOffscaleBottom()
+hlscolour splotcolourscale::getHlsOffscaleBottom() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToHls();
 	else
 		return hlscolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
 }
-hlscolour splotcolourscale::getHlsOffscaleTop()
+hlscolour splotcolourscale::getHlsOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToHls();
@@ -601,12 +613,14 @@ std::vector<double> splotcolourscale::getDiscreteValues() const
 	return result;
 }
 
-splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic, bool autostretch)
+splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
 	m_value = value;
 	m_size = size;
 	setupInterpolatingScale(m_value, m_size, autostretch);
+	m_fillOffscaleBottom = fillOffscaleBottom;
+	m_fillOffscaleTop = fillOffscaleTop;
 }
 
 double splotsizescale::getsize(double value) const
@@ -614,9 +628,11 @@ double splotsizescale::getsize(double value) const
 	value -= getMin();
 	value /= getMax() - getMin();
 
-	if(value<=m_value[0])
-		return m_size[0];
-	if(value>=m_value.back())
+	if(value<m_value[0])
+		return m_fillOffscaleBottom ? m_size[0] : std::numeric_limits<double>::quiet_NaN();
+	if(value>m_value.back())
+		return m_fillOffscaleTop ? m_size.back() : std::numeric_limits<double>::quiet_NaN();
+	if (value == m_value.back())
 		return m_size.back();
 	size_t lowerindex=0;
 	while(value<m_value[lowerindex])
@@ -652,12 +668,14 @@ std::vector<double> splotlevelscale::getLevels() const
 	return result;
 }
 
-splotinterpolatedscale::splotinterpolatedscale(const std::vector<double>& value, const std::vector<double>& level, bool logarithmic, bool autostretch)
+splotinterpolatedscale::splotinterpolatedscale(const std::vector<double>& value, const std::vector<double>& level, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
 	m_value = value;
 	m_level = level;
 	setupInterpolatingScale(m_value, m_level, autostretch);
+	m_fillOffscaleBottom = fillOffscaleBottom;
+	m_fillOffscaleTop = fillOffscaleTop;
 }
 
 double splotinterpolatedscale::getLevel(double value) const
@@ -665,9 +683,11 @@ double splotinterpolatedscale::getLevel(double value) const
 	value -= getMin();
 	value /= getMax() - getMin();
 
-	if (value <= m_value[0])
-		return m_level[0];
-	if (value >= m_value.back())
+	if (value < m_value[0])
+		return m_fillOffscaleBottom ? m_level[0] : std::numeric_limits<double>::quiet_NaN();
+	if (value > m_value.back())
+		return m_fillOffscaleTop ? m_level.back() : std::numeric_limits<double>::quiet_NaN();
+	if (value == m_value.back())
 		return m_level.back();
 	size_t lowerindex = 0;
 	while (value < m_value[lowerindex])
