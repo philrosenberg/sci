@@ -815,18 +815,12 @@ private:
 	void calculateautolimits(){}; //do nothing - function only created as it is pure virtual
 };
 
-class splotwindow : public wxScrolledWindow 
+class PlotCanvas
 {
-	friend class splotPrintout;
 public:
-	splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize=false, wxWindowID winid=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize, long style=wxHSCROLL | wxVSCROLL, const wxString& name = wxT("sci++ plot"));
-	virtual ~splotwindow();
-	void setfixedsize(int width, int height);
-	void setautofitplots();
 	void addItem(std::shared_ptr<DrawableItem> item)
 	{
 		m_drawableItems.push_back(item);
-		m_plotsupdated = true;
 	}
 	void removeItem(std::shared_ptr<DrawableItem> item)
 	{
@@ -835,34 +829,55 @@ public:
 			if (*i == item)
 			{
 				m_drawableItems.erase(i);
-				m_plotsupdated = true;
 				--i;
 			}
 		}
 	}
+	void render(wxDC *dc, int width, int height, double linewidthmultiplier);
+	bool writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier = 1.0, bool preferInkscape = false);
+private:
+	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
+
+};
+
+class splotwindow : public wxScrolledWindow 
+{
+	friend class splotPrintout;
+public:
+	splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize=false, wxWindowID winid=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize, long style=wxHSCROLL | wxVSCROLL, const wxString& name = wxT("sci++ plot"));
+	virtual ~splotwindow();
+	void setfixedsize(int width, int height);
+	void setautofitplots();
 	//plotlegend* addlegend(double xpos, double ypos, double width, double height, sci::string title=sU(""), double titlesize=12, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
 	bool writetofile(sci::string filename, double sizemultiplier, bool preferInkscape);
 	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
 	bool print( bool showDialog );
+	void forceRerender()
+	{
+		m_needRerender = true;
+		Refresh();
+	}
+	std::shared_ptr<PlotCanvas> getCanvas()
+	{
+		return m_plotCanvas;
+	}
 private:
+	std::shared_ptr<PlotCanvas> m_plotCanvas;
 	bool print( bool showDialog, sci::string printerName );
 	//vector of plots
 	std::vector<splotlegend*> m_legends;
-	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
 	static void collectErrors(void* log, char* message)
 	{
 		(*((wxString*)(log))) << message;
 	}
 	
 
-	//bools to indicate the plots have changed
-	bool m_plotsupdated;
-
 	//bitmap we draw on
-	wxBitmap *m_bitmap;
+	wxBitmap* m_bitmap;
 	bool m_fixedsize; //if this is true then the bitmap/plots do not scale with the window;
 	int m_bitmapwidth;
 	int m_bitmapheight;
+
 
 	//location and size of each plot  within window normalised to the bitmap size 0.0-1.0
 	std::vector<double> m_plotxloc; 
@@ -878,12 +893,12 @@ private:
 
 	wxString m_log;
 	bool m_antialiasing;
+	bool m_needRerender;
 
 	void OnPaint(wxPaintEvent &event);
 	
 	
 	//note the backends are 0 = DC, 1 = AGG, 2 = GC
-	void DrawPlots(wxDC *dc, int width, int height, double linewidthmultiplier=1.0);
 	void OnEraseBackGround(wxEraseEvent& event) {};//this is overloaded to stop flicker when resizing
 
 	DECLARE_EVENT_TABLE();
@@ -900,9 +915,9 @@ public:
 	bool writetofile(sci::string filename, int sizemultiplier=1, bool preferInkscape=false){return m_plotwind->writetofile(filename,sizemultiplier, preferInkscape);};
 	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier=1.0, bool preferInkscape=false){return m_plotwind->writetofile(filename,width,height,linewidthmultiplier, preferInkscape);};
 	bool print(bool showDialog){return m_plotwind->print( showDialog );}
-	splotwindow* getCanvas()
+	std::shared_ptr<PlotCanvas> getCanvas()
 	{
-		return m_plotwind;
+		return m_plotwind->getCanvas();
 	}
 private:
 	splotwindow *m_plotwind;

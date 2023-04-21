@@ -325,11 +325,15 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 {
 	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
+	{
 		//setup continuous colour scale
+		m_discrete = false;
 		setup(value, colour, autostretch, fillOffscaleBottom, fillOffscaleTop);
+	}
 	else
 	{
 		//setup discrete colour scale
+		m_discrete = true;
 		std::vector<double> newValues(colour.size() * 2);
 		std::vector<hlscolour> newColours(colour.size() * 2);
 		for (size_t i = 0; i < colour.size(); ++i)
@@ -2971,218 +2975,131 @@ void splot2d::plot(plstream *pl, wxDC *dc, int width, int height, bool antialias
 	
 }
 
-
-splotwindow::splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize, wxWindowID winid, const wxPoint &pos, const wxSize &size, long style, const wxString& name)
-:wxScrolledWindow(parent,winid,pos,size,style|wxFULL_REPAINT_ON_RESIZE ,name)
+void PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultiplier)
 {
-	m_fixedsize=fixedsize;
-	m_plotsupdated=true;
-	m_bitmapwidth=size.GetWidth();
-	m_bitmapheight=size.GetHeight();
-	if( m_bitmapwidth > 0 && m_bitmapheight > 0 )
-		m_bitmap = new wxBitmap(size.GetWidth(),size.GetWidth());
-	else
-		m_bitmap = nullptr;
-	m_antialiasing=antialiasing;
+
+	//no point in messing around if the size is zero
+	if (height == 0 || width == 0) return;
+
+	//create the stream
+	plstream* pl = new plstream();
+	pl->scol0(0, 255, 255, 255);
+	pl->sexit(&splotexitcatcher);
+	plsabort(&splotabortcatcher);
+	//pl->sabort(&splotabortcatcher);
+	//set the device to wxwidgets
+	pl->sdev("wxwidgets");
+	//pl->sdev("psc");
+	//pl->sfnam("D:\\contourtest.ps");
+	//pl->setopt("name", "d:\\contourtest.ps");
+
+	//set up the page to the size of the bitmap
+	//with 90 dpi resolution (for text sizing)
+	pl->spage(90.0, 90.0, width, height, 0, 0);
+	//pass in the dc
+	pl->sdevdata(dc);
+	//initialize the stream
+	pl->init();
+	//pass the dc to the stream
+	pl->cmd(PLESC_DEVINIT, dc);
+	//Advance to the next ( i.e. first ) page
+	pl->adv(0);
+
+
+	//cycle through all the Drawable Items ensuring they are ready to draw
+	//not this may need calling multiple times are predraw on one item may
+	//invalidate the predraw on another item
+	bool ready;
+	do
+	{
+		for (auto& d : m_drawableItems)
+			if (!d->readyToDraw())
+				d->preDraw();
+		ready = true;
+		for (auto& d : m_drawableItems)
+			ready = ready && d->readyToDraw();
+	} while (!ready);
+
+
+	//draw the Drawable Items
+	for (auto& d : m_drawableItems)
+		d->draw(pl, linewidthmultiplier, width, height);
+
+
+	//draw each legend in turn
+	//for (size_t i = 0; i < m_legends.size(); ++i)
+	//{
+	//	//set the area covered by this legend
+	//	pl->vpor(m_legendxloc[i], m_legendxloc[i] + m_legendwidth[i], m_legendyloc[i], m_legendyloc[i] + m_legendheight[i]);
+	//
+	//	//draw the legend
+	//	m_legends[i]->plot(pl, linewidthmultiplier);
+	//}
+
+	//we're done drawing so delete pl
+	delete pl;
 }
 
-splotwindow::~splotwindow()
-{
-	delete m_bitmap;
-	for(size_t i=0; i<m_legends.size(); ++i)
-		delete m_legends[i];
-}
-
-void splotwindow::setfixedsize(int width, int height)
-{
-	m_fixedsize=false;
-	m_bitmapwidth=width;
-	m_bitmapheight=height;
-	this->SetScrollbars(1,1,width,height);
-}
-
-void splotwindow::setautofitplots()
-{
-	m_fixedsize=true;
-	m_bitmapwidth=this->GetClientSize().x;
-	m_bitmapheight=this->GetClientSize().y;
-	Refresh();
-}
-
-/*splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize, double titledistance, double titlespacing, sci::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
-{
-	splotlegend *newlegend=new splotlegend(title,titlesize,titledistance,titlespacing,titlefont,titlestyle,titlecolour,outlinecolour,outlinewidth);
-	m_legends.push_back(newlegend);
-	m_legendxloc.push_back(xpos);
-	m_legendyloc.push_back(ypos);
-	m_legendheight.push_back(height);
-	m_legendwidth.push_back(width);
-	m_plotsupdated=true;
-	Refresh();
-	return newlegend;
-}*/
-
-void splotwindow::OnPaint(wxPaintEvent &event)
-{
-	//wxBeginBusyCursor();
-
-	int width;
-	int height;
-	if(m_fixedsize)
-	{
-		width=m_bitmapwidth;
-		height=m_bitmapheight;
-	}
-	else
-	{
-		width=GetClientSize().GetX();
-		height=GetClientSize().GetY();
-	}
-
-	//create the device context for drawing with. Note that OnPaint must 
-	//ALWAY create a paintdc even if it isn't used. the wxPaintDC is linked to the
-	//screen output 
-	wxPaintDC pagedc(this);
-	PrepareDC(pagedc); //this should set all coordinates if we have a scrollable window
-
-
-	//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
-	//except if using AGG then we create an image instead which we'll need to copy to the bitmap
-	wxMemoryDC memdc;
-
-	//if the plots have been resized or if any plots have been updated since the last redraw then
-	//we need to regenerate the plot bitmap. Otherwise we can just use the old bitmap to redraw the plot
-	if(width!=m_bitmapwidth || height!=m_bitmapheight || m_plotsupdated==true)
-	{
-
-		//If it has then we need to redraw the plot from scratch
-
-		//create a new bitmap that is the correct size and link it to the memory dc
-		if(width!=m_bitmapwidth||height!=m_bitmapheight)
-		{
-			if( m_bitmap )
-				delete m_bitmap;
-			m_bitmap = nullptr;
-			if( width > 0 && height >0 )
-			{
-				m_bitmap = new wxBitmap(width,height,32);
-				memdc.SelectObject(*m_bitmap);
-			}
-		}
-		else if ( m_bitmap )
-		{
-			memdc.SelectObject(*m_bitmap);
-		}
-		//fill the bitmap with white giving a white background for plplot
-		//or to show blank if there are no plots
-		memdc.SetBackground(*wxWHITE_BRUSH);
-		memdc.Clear();
-		memdc.SetBackground(wxNullBrush);
-
-		//remember the new size, so that on the next refresh we can check if the size has changed
-		m_bitmapwidth=width;
-		m_bitmapheight=height;
-
-		//set that an update is no longer needed
-		m_plotsupdated=false;
-		//the plots themselve update their own status in the plot function
-		//DrawPlots(&memdc,0,false); //testing dc
-		//DrawPlots(&memdc,1,false); //testing agg no freetype
-		//DrawPlots(&memdc,1,true); //testing agg with freetype
-		if ( m_bitmap )
-		{
-			//select the backend
-			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
-			//if(m_antialiasing) DrawPlots(&memdc,2,false);
-			if(m_antialiasing) 
-			{
-				wxGCDC gcdc(memdc);
-				DrawPlots(&gcdc,width,height);
-			}
-			else 
-			{
-				DrawPlots(&memdc,width,height);
-			}
-		}
-	}
-	else if ( m_bitmap )
-	{
-		//The plots haven't changed so just select the bitmap as it already exists if we haven't resized
-		memdc.SelectObject(*m_bitmap);
-	}
-
-	if( m_bitmap )
-	{
-		//copy the memorydc bitmap to the panel
-		//pagedc.Blit(0,0,width,height,&memdc,0,0);
-		//reselect null bitmap for the memdc
-		pagedc.Blit(0,0,width,height,&memdc,0,0);
-		memdc.SelectObject(wxNullBitmap);
-	}
-
-	//wxEndBusyCursor();
-}
-
-//Write the plot window to an image file. This can be either a bitmap
+//Write the plot window to an image file. This can be either a raster
 //or vector graphic image. The file extension defines the type of image saved. 
 //Valid extensions are png, jpg, bmp, tif, pcx, xpm, xbm, pnm for bitmaps and
-//ps for vector. If the extension does not correspond to any of these 
+//ps, svg, emf for vector. If the extension does not correspond to any of these 
 //strings then png is used, although the given extension will still be used 
-//in the filename
+//in the filename. the antialiasing parameter is ignored for vector graphics.
 
-bool splotwindow::writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
+bool PlotCanvas::writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier, bool preferInkscape)
 {
 	//get the extension
-	wxFileName fullfile=wxString(sci::nativeUnicode(filename));
-	wxString extension=fullfile.GetExt().Lower();
-	
-	bool result=true;
+	wxFileName fullfile = wxString(sci::nativeUnicode(filename));
+	wxString extension = fullfile.GetExt().Lower();
+
+	bool result = true;
 
 	//write the image to file - if we are using inkscape then we write it to an svg first then use inkscape
 	//to convert to the apropriate format - of course if we want an svg then no conversion is needed
-	if(extension=="svg")
+	if (extension == "svg")
 	{
 		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
-		DrawPlots(&dc, width, height, linewidthmultiplier);
+		render(&dc, width, height, linewidthmultiplier);
 	}
-	else if(preferInkscape)
+	else if (preferInkscape)
 	{
 		TempFile tempFile;
-		if(tempFile.getFilename()=="")
+		if (tempFile.getFilename() == "")
 			return false;
 		{
 			//put the dc in its own context so that it closes the file
 			//before we try to convert it
 			wxSVGFileDC dc(tempFile.getFilename(), width, height, 72);
-			if(!dc.IsOk())
+			if (!dc.IsOk())
 				return false;
-			DrawPlots(&dc, width, height, linewidthmultiplier);
-			if(!dc.IsOk())
+			render(&dc, width, height, linewidthmultiplier);
+			if (!dc.IsOk())
 				return false;
 		}
 		//wxString inkscapePath="C:\\Program Files (x86)\\Inkscape\\Inkscape.exe";
-		wxString inkscapePath="D:\\usr\\local\\bin\\InkscapePortable\\InkscapePortable.exe";
-		if(!wxFileExists(inkscapePath))
+		wxString inkscapePath = "D:\\usr\\local\\bin\\InkscapePortable\\InkscapePortable.exe";
+		if (!wxFileExists(inkscapePath))
 			return false;
-		if(extension=="ps")
-			wxExecute("\""+inkscapePath+"\" --export-ps \""+sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
-		else if(extension=="pdf")
-			wxExecute("\""+inkscapePath+"\" --export-pdf \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
-		else if(extension=="eps")
-			wxExecute("\""+inkscapePath+"\" --export-eps \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
-		else if(extension=="png")
-			wxExecute("\""+inkscapePath+"\" --export-dpi 72 --export-png \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
-		else if(extension=="emf")
-			wxExecute("\""+inkscapePath+"\" --export-emf \""+ sci::toUtf8(filename)+"\" -f \""+tempFile.getFilename()+"\"",wxEXEC_SYNC|wxEXEC_HIDE_CONSOLE);
+		if (extension == "ps")
+			wxExecute("\"" + inkscapePath + "\" --export-ps \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
+		else if (extension == "pdf")
+			wxExecute("\"" + inkscapePath + "\" --export-pdf \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
+		else if (extension == "eps")
+			wxExecute("\"" + inkscapePath + "\" --export-eps \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
+		else if (extension == "png")
+			wxExecute("\"" + inkscapePath + "\" --export-dpi 72 --export-png \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
+		else if (extension == "emf")
+			wxExecute("\"" + inkscapePath + "\" --export-emf \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
 		else
-			result=writetofile(filename,width,height,linewidthmultiplier,false);
+			result = writetofile(filename, width, height, antialiasing, linewidthmultiplier, false);
 	}
 	else
 	{
 		//some file types we can only deal with using inkscape test these first
-		if(extension=="eps" || extension=="pdf")
-			result=writetofile(filename,width,height,linewidthmultiplier,true);
-		
+		if (extension == "eps" || extension == "pdf")
+			result = writetofile(filename, width, height, antialiasing, linewidthmultiplier, true);
+
 		//old code from using pdfcreator
 		/*if(extension =="eps" || extension =="pdf")
 		{
@@ -3226,7 +3143,7 @@ bool splotwindow::writetofile(sci::string filename, int width, int height, doubl
 				result=false;
 		}*/
 
-		else if(extension=="ps")
+		else if (extension == "ps")
 		{
 			//here we redraw the plot like OnPaint but using a postscript DC.
 			wxPrintData setupdata;
@@ -3237,39 +3154,39 @@ bool splotwindow::writetofile(sci::string filename, int width, int height, doubl
 			//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
 			//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
 			//than the screen. Here we've multiplied by 10 to get 30 times better.
-			int sizemultiplier=10;
-			setupdata.SetPaperSize(wxSize(width*sizemultiplier,height*sizemultiplier));
+			int sizemultiplier = 10;
+			setupdata.SetPaperSize(wxSize(width * sizemultiplier, height * sizemultiplier));
 			setupdata.SetPrintMode(wxPRINT_MODE_FILE);
 			//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
 			wxPostScriptDC psdc(setupdata);
-			result=psdc.StartDoc(sci::nativeUnicode(sU("Writing ")+filename));
-			if(result==false) return result;
-			DrawPlots(&psdc,width*sizemultiplier,height*sizemultiplier,linewidthmultiplier*sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
+			result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
+			if (result == false) return result;
+			render(&psdc, width * sizemultiplier, height * sizemultiplier, linewidthmultiplier * sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
 			psdc.EndDoc();
 		}
 #ifdef _WIN32
-		else if(extension=="emf")
+		else if (extension == "emf")
 		{
 			//here we redraw the plot like OnPaint but using a wxMetafile DC.
-			wxMetafileDC metadc(sci::nativeUnicode(filename),width,height);
-			DrawPlots(&metadc,width,height,linewidthmultiplier);//0 gives vector output
+			wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
+			render(&metadc, width, height, linewidthmultiplier);//0 gives vector output
 			//close the file - note this gives us a copy of the file in memory which we must delete
-			wxMetafile *metafile=metadc.Close();
-			result=metafile!=NULL;
+			wxMetafile* metafile = metadc.Close();
+			result = metafile != NULL;
 			delete metafile;
 			//we must call this function to make the file importable into other software
-			int minx=metadc.MinX();
-			int maxx=metadc.MaxX();
-			int miny=metadc.MinY();
-			int maxy=metadc.MaxY();
+			int minx = metadc.MinX();
+			int maxx = metadc.MaxX();
+			int miny = metadc.MinY();
+			int maxy = metadc.MaxY();
 			//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
 		}
 #endif
-		else if (extension=="svg")
+		else if (extension == "svg")
 		{
 			wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
-			DrawPlots(&dc, width, height, linewidthmultiplier);
-			result=true;
+			render(&dc, width, height, linewidthmultiplier);
+			result = true;
 		}
 		else
 		{
@@ -3277,76 +3194,262 @@ bool splotwindow::writetofile(sci::string filename, int width, int height, doubl
 			wxInitAllImageHandlers();
 			//create a wxBitmapType to define the type saved as
 			//use PNG as default
-			wxBitmapType type=wxBITMAP_TYPE_PNG;
-			if(extension==wxT("jpg")) type=wxBITMAP_TYPE_JPEG;
-			else if(extension==wxT("bmp")) type=wxBITMAP_TYPE_BMP;
-			else if(extension==wxT("tif")) type=wxBITMAP_TYPE_TIF;
-			else if(extension==wxT("pcx")) type=wxBITMAP_TYPE_PCX;
-			else if(extension==wxT("xpm")) type=wxBITMAP_TYPE_XPM;
-			else if(extension==wxT("xbm")) type=wxBITMAP_TYPE_XBM;
-			else if(extension==wxT("pnm")) type=wxBITMAP_TYPE_PNM;
+			wxBitmapType type = wxBITMAP_TYPE_PNG;
+			if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
+			else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
+			else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
+			else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
+			else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
+			else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
+			else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
 
-			//we are outputting as a bitmap type, basically here we want to draw the plot then write the 
-			//pixels to a file
-			if(width==m_bitmapwidth && height==m_bitmapheight)
+			
+			//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
+			//except if using AGG then we create an image instead which we'll need to copy to the bitmap
+			wxMemoryDC memdc;
+			wxBitmap bitmap(width, height, 32);
+			if (!bitmap.IsOk())
+				return false;
+			memdc.SelectObject(bitmap);
+			//fill the bitmap with white giving a white background for plplot
+			//or to show blank if there are no plots
+			memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
+
+			//the plots themselve update their own status in the plot function
+			//DrawPlots(&memdc,0,false); //testing dc
+			//DrawPlots(&memdc,1,false); //testing agg no freetype
+			//DrawPlots(&memdc,1,true); //testing agg with freetype
+			//DrawPlots(&memdc,0,false);
+
+			//select the backend
+			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
+			if (antialiasing)
 			{
-				//first refresh the screen because this function can get called before the panels have been painted
-				Refresh();
-				Update();
-				wxSafeYield();
-				//write the bitmap to file
-				result=m_bitmap->SaveFile(sci::nativeUnicode(filename),type);
+				wxGCDC gcdc(memdc);
+				render(&gcdc, width, height, linewidthmultiplier);
+				//DrawPlots(&memdc,width,height,linewidthmultiplier);
 			}
 			else
-			{
-				//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
-				//except if using AGG then we create an image instead which we'll need to copy to the bitmap
-				wxMemoryDC memdc;
-				wxBitmap bitmap(width,height,32);
-				if (!bitmap.IsOk())
-					return false;
-				memdc.SelectObject(bitmap);
-				//fill the bitmap with white giving a white background for plplot
-				//or to show blank if there are no plots
-				memdc.FloodFill(0,0,*wxWHITE,wxFLOOD_BORDER);
+				render(&memdc, width, height, linewidthmultiplier);
 
-				//the plots themselve update their own status in the plot function
-				//DrawPlots(&memdc,0,false); //testing dc
-				//DrawPlots(&memdc,1,false); //testing agg no freetype
-				//DrawPlots(&memdc,1,true); //testing agg with freetype
-				//DrawPlots(&memdc,0,false);
-		
-				//select the backend
-				//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
-				if (m_antialiasing)
-				{
-					wxGCDC gcdc(memdc);
-					DrawPlots(&gcdc,width,height,linewidthmultiplier);
-					//DrawPlots(&memdc,width,height,linewidthmultiplier);
-				}
-				else DrawPlots(&memdc,width,height,linewidthmultiplier);
+			//reselect null bitmap for the memdc
+			memdc.SelectObject(wxNullBitmap);
 
-				//reselect null bitmap for the memdc
-				memdc.SelectObject(wxNullBitmap);
-
-				//write the bitmap to file
-				result=bitmap.SaveFile(sci::nativeUnicode(filename),type);
-			}
+			//write the bitmap to file
+			result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
+			
 		}
 	}
 
 	return result;
 }
 
-//asabove, but the size will be a multiple of the window size
+splotwindow::splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize, wxWindowID winid, const wxPoint &pos, const wxSize &size, long style, const wxString& name)
+:wxScrolledWindow(parent,winid,pos,size,style|wxFULL_REPAINT_ON_RESIZE ,name)
+{
+	m_fixedsize=fixedsize;
+	m_bitmapwidth=size.GetWidth();
+	m_bitmapheight=size.GetHeight();
+	m_antialiasing=antialiasing;
+	if (m_bitmapwidth > 0 && m_bitmapheight > 0)
+		m_bitmap = new wxBitmap(m_bitmapwidth, m_bitmapheight);
+	else
+		m_bitmap = nullptr;
+	m_plotCanvas.reset(new PlotCanvas());
+	m_needRerender = true;
+}
+
+splotwindow::~splotwindow()
+{
+	for(size_t i=0; i<m_legends.size(); ++i)
+		delete m_legends[i];
+	delete m_bitmap;
+}
+
+void splotwindow::setfixedsize(int width, int height)
+{
+	m_fixedsize=false;
+	this->SetScrollbars(1,1,width,height);
+	if (width != m_bitmapwidth || height != m_bitmapheight)
+	{
+		if (m_bitmap)
+			delete m_bitmap;
+		m_bitmap = nullptr;
+		if (width > 0 && height > 0)
+			m_bitmap = new wxBitmap(width, height, 32);
+		m_bitmapwidth = width;
+		m_bitmapheight = height;
+		m_needRerender = true;
+		Refresh();
+	}
+}
+
+void splotwindow::setautofitplots()
+{
+	m_fixedsize=true;
+	m_bitmapwidth=this->GetClientSize().x;
+	m_bitmapheight=this->GetClientSize().y;
+	m_needRerender = true;
+	Refresh();
+}
+
+/*splotlegend* splotwindow::addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize, double titledistance, double titlespacing, sci::string titlefont, int32_t titlestyle, wxColour titlecolour, wxColour outlinecolour, int outlinewidth)
+{
+	splotlegend *newlegend=new splotlegend(title,titlesize,titledistance,titlespacing,titlefont,titlestyle,titlecolour,outlinecolour,outlinewidth);
+	m_legends.push_back(newlegend);
+	m_legendxloc.push_back(xpos);
+	m_legendyloc.push_back(ypos);
+	m_legendheight.push_back(height);
+	m_legendwidth.push_back(width);
+	m_plotsupdated=true;
+	Refresh();
+	return newlegend;
+}*/
+
+
 bool splotwindow::writetofile(sci::string filename, double sizemultiplier, bool preferInkscape)
 {
-	Refresh();
-	Update();
-	wxSafeYield();
-	int width=sci::round(GetClientSize().GetX()*sizemultiplier);
-	int height=sci::round(GetClientSize().GetY()*sizemultiplier);
-	return writetofile(filename,width,height,sizemultiplier, preferInkscape);
+	return writetofile(filename, GetClientSize().GetWidth() * sizemultiplier, GetClientSize().GetHeight() * sizemultiplier, sizemultiplier, preferInkscape);
+}
+bool splotwindow::writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape)
+{
+	bool result = false;
+
+	//get the extension
+	wxFileName fullfile = wxString(sci::nativeUnicode(filename));
+	wxString extension = fullfile.GetExt().Lower();
+
+	bool isBitmapExtension = extension == "jpg" || extension == "bmp" || extension == "tif" ||
+		extension == "pcx" || extension == "xpm" || extension == "xbm" || extension == "pnm" || extension == "png";
+
+	if (isBitmapExtension && width == m_bitmapwidth && height == m_bitmapheight)
+	{
+		//we can avoid rerendering by just outputting the bitmap
+
+		//we might need to update the display first
+		if (m_needRerender)
+			Refresh();
+
+		wxInitAllImageHandlers();
+		//create a wxBitmapType to define the type saved as
+		//use PNG as default
+		wxBitmapType type = wxBITMAP_TYPE_PNG;
+		if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
+		else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
+		else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
+		else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
+		else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
+		else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
+		else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
+
+		return m_bitmap->SaveFile(sci::nativeUnicode(filename), type);
+	}
+
+	else
+		return m_plotCanvas->writetofile(filename, width, height, m_antialiasing, linewidthmultiplier, preferInkscape);
+
+	
+}
+
+void splotwindow::OnPaint(wxPaintEvent &event)
+{
+	//wxBeginBusyCursor();
+
+	int width;
+	int height;
+	if(m_fixedsize)
+	{
+		width=m_bitmapwidth;
+		height=m_bitmapheight;
+	}
+	else
+	{
+		width=GetClientSize().GetX();
+		height=GetClientSize().GetY();
+	}
+
+	//create the device context for drawing with. Note that OnPaint must 
+	//ALWAY create a paintdc even if it isn't used. the wxPaintDC is linked to the
+	//screen output 
+	wxPaintDC pagedc(this);
+	PrepareDC(pagedc); //this should set all coordinates if we have a scrollable window
+
+	//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
+	//except if using AGG then we create an image instead which we'll need to copy to the bitmap
+	wxMemoryDC memdc;
+
+	//if the plots have been resized or if any plots have been updated since the last redraw then
+	//we need to regenerate the plot bitmap. Otherwise we can just use the old bitmap to redraw the plot
+	if (width != m_bitmapwidth || height != m_bitmapheight || m_needRerender)
+	{
+
+		//If it has then we need to redraw the plot from scratch
+
+		//create a new bitmap that is the correct size and link it to the memory dc
+		if (width != m_bitmapwidth || height != m_bitmapheight)
+		{
+			if (m_bitmap)
+				delete m_bitmap;
+			m_bitmap = nullptr;
+			if (width > 0 && height > 0)
+			{
+				m_bitmap = new wxBitmap(width, height, 32);
+				memdc.SelectObject(*m_bitmap);
+			}
+		}
+		else if (m_bitmap)
+		{
+			memdc.SelectObject(*m_bitmap);
+		}
+		//fill the bitmap with white giving a white background for plplot
+		//or to show blank if there are no plots
+		memdc.SetBackground(*wxWHITE_BRUSH);
+		memdc.Clear();
+		memdc.SetBackground(wxNullBrush);
+
+		//remember the new size, so that on the next refresh we can check if the size has changed
+		m_bitmapwidth = width;
+		m_bitmapheight = height;
+
+		//the plots themselve update their own status in the plot function
+		//DrawPlots(&memdc,0,false); //testing dc
+		//DrawPlots(&memdc,1,false); //testing agg no freetype
+		//DrawPlots(&memdc,1,true); //testing agg with freetype
+		if (m_bitmap)
+		{
+			//select the backend
+			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
+			//if(m_antialiasing) DrawPlots(&memdc,2,false);
+			if (m_antialiasing)
+			{
+				wxGCDC gcdc(memdc);
+				m_plotCanvas->render(&gcdc, width, height, 1);
+			}
+			else
+			{
+				m_plotCanvas->render(&memdc, width, height, 1);
+			}
+		}
+		//set that an update is no longer needed
+		m_needRerender = false;
+	}
+	else if (m_bitmap)
+	{
+		//The plots haven't changed so just select the bitmap as it already exists if we haven't resized
+		memdc.SelectObject(*m_bitmap);
+	}
+	
+
+	if( m_bitmap )
+	{
+		//copy the memorydc bitmap to the panel
+		//pagedc.Blit(0,0,width,height,&memdc,0,0);
+		//reselect null bitmap for the memdc
+		pagedc.Blit(0,0,width,height,&memdc,0,0);
+		memdc.SelectObject(wxNullBitmap);
+	}
+
+	//wxEndBusyCursor();
 }
 
 bool splotwindow::print( bool showDialog )
@@ -3363,71 +3466,6 @@ bool splotwindow::print( bool showDialog, sci::string printerName )
 	wxPrintDialogData printDialogData(printout.getPrintDialogData());
     wxPrinter printer(&printDialogData);
     return printer.Print(NULL, &printout, showDialog);
-}
-
-void splotwindow::DrawPlots(wxDC *dc, int width, int height, double linewidthmultiplier)
-{
-
-	//no point in messing around if the size is zero
-	if(height==0 || width==0) return;
-
-	//create the stream
-	plstream *pl=new plstream();
-	pl->scol0(0, 255, 255, 255);
-	pl->sexit(&splotexitcatcher);
-	plsabort(&splotabortcatcher);
-	//pl->sabort(&splotabortcatcher);
-	//set the device to wxwidgets
-	pl->sdev("wxwidgets");
-	//pl->sdev("psc");
-	//pl->sfnam("D:\\contourtest.ps");
-	//pl->setopt("name", "d:\\contourtest.ps");
-
-	//set up the page to the size of the bitmap
-	//with 90 dpi resolution (for text sizing)
-	pl->spage(90.0, 90.0, width, height, 0, 0);
-	//pass in the dc
-	pl->sdevdata( dc );
-	//initialize the stream
-	pl->init();
-	//pass the dc to the stream
-	pl->cmd( PLESC_DEVINIT, dc );
-	//Advance to the next ( i.e. first ) page
-	pl->adv(0);
-
-
-	//cycle through all the Drawable Items ensuring they are ready to draw
-	//not this may need calling multiple times are predraw on one item may
-	//invalidate the predraw on another item
-	bool ready;
-	do
-	{
-		for (auto& d : m_drawableItems)
-			if (!d->readyToDraw())
-				d->preDraw();
-		ready = true;
-		for (auto& d : m_drawableItems)
-			ready = ready && d->readyToDraw();
-	} while (!ready);
-
-
-	//draw the Drawable Items
-	for (auto& d : m_drawableItems)
-		d->draw(pl, linewidthmultiplier, width, height);
-
-	
-	//draw each legend in turn
-	for(size_t i=0; i<m_legends.size(); ++i)
-	{
-		//set the area covered by this legend
-		pl->vpor(m_legendxloc[i],m_legendxloc[i]+m_legendwidth[i],m_legendyloc[i],m_legendyloc[i]+m_legendheight[i]);
-
-		//draw the legend
-		m_legends[i]->plot(pl,linewidthmultiplier);
-	}
-	
-	//we're done drawing so delete pl
-	delete pl;
 }
 
 splotframe::splotframe(wxWindow* parent, bool antialiasing, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
@@ -3962,7 +4000,7 @@ bool splotPrintout::OnPrintPage(int pageNum)
         return false;
     }
 
-	m_window->DrawPlots( ptr,m_coord_system_width, m_coord_system_height, 1.0);
+	m_window->getCanvas()->render(ptr, m_coord_system_width, m_coord_system_height, 1.0);
  
     return true;
 }

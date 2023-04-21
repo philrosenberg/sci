@@ -406,8 +406,8 @@ UnstructuredData::UnstructuredData(const std::vector<const std::vector<double>*>
 	for (size_t i = 0; i < data.size(); ++i)
 	{
 		m_data[i] = *(data[i]);
-		if(i>0)
-			sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data in different dimensions having different lengths."));
+		//if(i>0)
+		//	sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data in different dimensions having different lengths."));
 	}
 	m_dataLogged = sci::log10(m_data);
 	m_axes = axes;

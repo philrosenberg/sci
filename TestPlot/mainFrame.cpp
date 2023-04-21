@@ -178,7 +178,7 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 
 void mainFrame::OnRun(wxCommandEvent& event)
 {
-	/* {
+	{
 		//create a frame with empty axes running from 0-1
 		//this just tests that drawing axes works
 		splotframe* frame = new splotframe(this, true);
@@ -272,9 +272,9 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		canvas->addItem(line3);
 
 		frame->Show(true);
-	}*/
+	}
 
-	/*{
+	{
 		//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 		// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
 		// we do both axes correctly and tests the weird autoscaling of plshades
@@ -329,7 +329,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleTop = false;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}*/
+	}
 	{
 		sci::string title = sU("Plot 10: This plot shows the same plot as plot 9, but with autoscale on for the colourscale. It\nshould look identical as plot 9 used exactly the full scale.");
 		double scaleBegin = 2.0;
@@ -340,7 +340,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
-	/*{
+	{
 		sci::string title = sU("Plot 11: This plot shows the same data as Plot 9, but with a scale from 2-5, rather than 1-10.");
 		double scaleBegin = 2.0;
 		double scaleEnd = 5.0;
@@ -369,7 +369,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleTop = true;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}*/
+	}
 }
 
 void mainFrame::OnAbout(wxCommandEvent& event)
