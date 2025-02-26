@@ -657,6 +657,43 @@ struct ExponentTraits<VALUE>\
 		};
 	}
 
+	template<class T>
+	concept IsUnit =
+		requires(std::remove_cvref_t < T > t)
+	{
+		t.needsScaling;
+		t.basePowersNumerators;
+		t.basePowersDenominators;
+		t.exponentNumerator;
+		t.exponentDenominator;
+		typename T::baseClass;
+		typename T::unit;
+		typename T::template Converter<double>;
+		t.isUnitless();
+		t.template compatibleWith<T>();
+	};
+
+	template<class T>
+	constexpr bool get_is_unit_v()
+	{
+		return false;
+	}
+
+	template<IsUnit T>
+	constexpr bool get_is_unit_v()
+	{
+		return true;
+	}
+
+	template<class T>
+	const bool is_unit_v=get_is_unit_v<T>();
+
+	template<class T>
+	struct is_unit
+	{
+		const static bool value = is_unit_v<T>;
+	};
+	
 	//This is a class that represents an encoded unit to a power. It is still an EncodedUnit
 	//by inheritance, so you can multiply, divide or raise to the power many units
 	template<class ENCODEDUNIT, int8_t POW_NUMERATOR, int8_t POW_DENOMINATOR=1>
@@ -1490,52 +1527,53 @@ struct ExponentTraits<VALUE>\
 	
 
 
-	template < class ENCODED_UNIT, class VALUE_TYPE>
+	template < IsUnit ENCODED_UNIT, class VALUE_TYPE>
 	class Physical
 	{
 	public:
-		typedef VALUE_TYPE valueType;
+		using valueType = VALUE_TYPE;
+		using  unit = typename ENCODED_UNIT;
 
 #pragma warning(push)
 #pragma warning(disable : 26495)
-		constexpr Physical() {}
+		constexpr Physical() = default;
 #pragma warning(pop)
 		constexpr explicit Physical(VALUE_TYPE v) : m_v(v) {} //explicit so we cannot accidentally create a Physical from a VALUE_TYPE
 		template<class U, class V>
 		constexpr Physical(const Physical<U, V> &other)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only convert between units with the same dimensions.");
-			m_v = (VALUE_TYPE)other.template value<ENCODED_UNIT>();
+			m_v = (VALUE_TYPE)other.template value<unit>();
 		}
 		template<class U, class V>
-		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const Physical<U, V>& other)
+		constexpr Physical<unit, VALUE_TYPE> &operator=(const Physical<U, V>& other)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only convert between units with the same dimensions.");
-			m_v = other.template value<ENCODED_UNIT>();
+			m_v = other.template value<unit>();
 			return *this;
 		}
 
 		//+= operator
 		template <class U, class V>
-		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
+		constexpr Physical<unit, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only add assign units with the same dimensions.");
-			m_v += second.template value<ENCODED_UNIT>();
+			m_v += second.template value<unit>();
 			return *this;
 		}
 
 		//-= operator
 		template <class U, class V>
-		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
+		constexpr Physical<unit, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only minus assign units with the same dimensions.");
-			m_v -= second.template value<ENCODED_UNIT>();
+			m_v -= second.template value<unit>();
 			return *this;
 		}
 
 		// /= operator
 		template <class U, class V>
-		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
+		constexpr Physical<unit, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only divide assign with a dimensionless quantity.");
 			m_v /= second.template value<Unitless>();
@@ -1544,7 +1582,7 @@ struct ExponentTraits<VALUE>\
 
 		//*= operator
 		template <class U, class V>
-		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
+		constexpr Physical<unit, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only multiply assign with a dimensionless quantity.");
 			m_v *= second.template value<Unitless>();
@@ -1553,45 +1591,225 @@ struct ExponentTraits<VALUE>\
 		//although trying to set a Physical with a VALUE_TYPE causes a compile error with just
 		//the above, the error message is pretty cryptic. This should give something more
 		//sensible
-		Physical<ENCODED_UNIT, VALUE_TYPE>& operator=(const VALUE_TYPE& other)
+		Physical<unit, VALUE_TYPE>& operator=(const VALUE_TYPE& other)
 		{
 			//use std::is_same to ensure we always fail the assert, but avoid a constant false that can be
 			//seen by some compilers as a reason to throw an error without the template being instantiated
-			static_assert(std::is_same<ENCODED_UNIT, VALUE_TYPE>::value, "Cannot assign a physical value from a raw value type. Use the Physical constructor to create a Physical first.");
+			static_assert(std::is_same<unit, VALUE_TYPE>::value, "Cannot assign a physical value from a raw value type. Use the Physical constructor to create a Physical first.");
 		}
 
 		template<class STRING>
 		static STRING getShortUnitString(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
-			return ENCODED_UNIT::getShortRepresentation(exponentPrefix, exponentSuffix);
+			return unit::getShortRepresentation(exponentPrefix, exponentSuffix);
 		}
 
 		template<class STRING>
 		static STRING getLongUnitString(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
-			return ENCODED_UNIT:: template getLongRepresentation<STRING>();
+			return unit::template getLongRepresentation<STRING>();
 		}
 
-		typedef ENCODED_UNIT unit;
 		template <class REQUIRED>
 		constexpr VALUE_TYPE value() const
 		{
-			if (std::is_same< REQUIRED, ENCODED_UNIT>::value)
+			if (std::is_same< REQUIRED, unit>::value)
 				return m_v;
-			if (std::is_same< REQUIRED, Physical<ENCODED_UNIT, VALUE_TYPE>>::value)
+			if (std::is_same< REQUIRED, Physical<unit, VALUE_TYPE>>::value)
 				return m_v;
 			//this should work whether REQUIRED is a Physical or an Encoded Unit
-			return ENCODED_UNIT::template Converter<VALUE_TYPE>::template convertTo<typename REQUIRED::unit>(m_v);
+			using Converter = typename unit::template Converter<valueType>;
+			return Converter::template convertTo<typename REQUIRED::unit>(m_v);
 		}
 
 		template<class OTHER>
 		static constexpr bool compatibleWith()
 		{
-			return unitsPrivate::unitCompatible<ENCODED_UNIT, OTHER::unit>();
+			return unitsPrivate::unitCompatible<unit, OTHER::unit>();
 		}
 	private:
 		VALUE_TYPE m_v;
 	};
+
+	template<class T, class V = void>
+	struct is_physical
+	{
+		const static bool value = false;
+	};
+
+	template<class T, class V>
+	struct is_physical<Physical<T, V>>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<const Physical<T, V>>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<volatile Physical<T, V>>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<const volatile Physical<T, V>>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<Physical<T, V>&>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<const Physical<T, V>&>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<volatile Physical<T, V>&>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V>
+	struct is_physical<const volatile Physical<T, V>&>
+	{
+		const static bool value = true;
+	};
+
+	template<class T, class V = void>
+	struct is_unitless_physical
+	{
+		const static bool value = false;
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< Physical<T, V>>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< const Physical<T, V>>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< volatile Physical<T, V>>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< const volatile Physical<T, V>>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< Physical<T, V>&>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< const Physical<T, V>&>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< volatile Physical<T, V>&>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitless_physical< const volatile Physical<T, V>&>
+	{
+		const static bool value = Physical<T, V>::unit::isUnitless();
+	};
+	
+	template<class T, class V = void>
+		struct is_unitful_physical
+	{
+		const static bool value = false;
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<Physical<T, V>>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<const Physical<T, V>>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<volatile Physical<T, V>>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<const volatile Physical<T, V>>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<Physical<T, V>&>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<const Physical<T, V>&>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<volatile Physical<T, V>&>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T, class V>
+	struct is_unitful_physical<const volatile Physical<T, V>&>
+	{
+		const static bool value = !Physical<T, V>::unit::isUnitless();
+	};
+
+	template<class T>
+	const bool is_physical_v = is_physical<T>::value;
+
+	template<class T>
+	concept IsPhysical = is_physical_v<T>;
+
+	template<class T>
+	const bool is_unitless_physical_v = is_unitless_physical<T>::value;
+
+	template<class T>
+	concept IsUnitlessPhysical = is_unitless_physical_v<T>;
+
+	template<class T>
+	const bool is_unitful_physical_v = is_unitful_physical<T>::value;
+
+	template<class T>
+	concept IsUnitfulPhysical = is_unitful_physical_v<T>;
 
 	namespace unitsPrivate
 	{
@@ -1634,292 +1852,298 @@ struct ExponentTraits<VALUE>\
 	}
 
 	//* operator
-	template <class T, class U, class V, class W>
-	constexpr Physical<MultipliedUnit<T, U>, typename sci::Promoted<V, W>::type> operator*(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr Physical<MultipliedUnit<typename T::unit, typename U::unit>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> operator*(const T &first, const U &second)
 	{
-		return Physical<MultipliedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>()*second.template value<U>());
+		return Physical<MultipliedUnit<typename T::unit, typename U::unit>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type>(first.template value<T>()*second.template value<U>());
 	}
 
 	// / operator
-	template <class T, class U, class V, class W>
-	constexpr Physical<DividedUnit<T, U>, typename sci::Promoted<V, W>::type> operator/(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr Physical<DividedUnit<typename T::unit, typename U::unit>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> operator/(const T& first, const U& second)
 	{
-		return Physical <DividedUnit<T, U>, typename sci::Promoted<V, W>::type>(first.template value<T>() / second.template value<U>());
+		return Physical<DividedUnit<typename T::unit, typename U::unit>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type>(first.template value<T>() / second.template value<U>());
 	}
 
 	//+ operator
-	template <class T, class U, class V, class W>
-	constexpr Physical<T, typename sci::Promoted<V, W>::type> operator+(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr Physical<typename T::unit, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> operator+(const T &first, const U &second)
 	{
-		return Physical<T, typename sci::Promoted<V, W>::type>(first.template value<T>() + second.template value<T>());
+		return Physical<typename T::unit, typename sci::Promoted<typename T::valueType, typename U::valueType>::type>(first.template value<T>() + second.template value<T>());
 	}
 
 	//- operator
-	template <class T, class U, class V, class W>
-	constexpr Physical<T, typename sci::Promoted<V, W>::type> operator-(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr Physical<typename T::unit, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> operator-(const T& first, const U& second)
 	{
-		return Physical<T, typename sci::Promoted<V, W>::type>(first.template value<T>() - second.template value<T>());
+		return Physical<typename T::unit, typename sci::Promoted<typename T::valueType, typename U::valueType>::type>(first.template value<T>() - second.template value<T>());
 	}
 
 	//uniary- operator
-	template <class T, class V>
-	constexpr Physical<T, V> operator-(const Physical<T, V> &val)
+	template <IsPhysical T>
+	constexpr T operator-(const T &val)
 	{
-		return Physical<T, V>(-val.template value<T>());
+		return T(-val.template value<T>());
 	}
 
 	//> operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator>(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator>(const T &first, const U &second)
 	{
 		return first.template value<T>() > second.template value<T>();
 	}
 
 	//< operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator<(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator<(const T &first, const U &second)
 	{
 		return first.template value<T>() < second.template value<T>();
 	}
 
 	//== operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator==(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator==(const T &first, const U &second)
 	{
 		return first.template value<T>() == second.template value<T>();
 	}
 
 	//!= operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator!=(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator!=(const T &first, const U &second)
 	{
 		return first.template value<T>() != second.template value<T>();
 	}
 
 	//>= operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator>=(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator>=(const T &first, const U &second)
 	{
 		return first.template value<T>() >= second.template value<T>();
 	}
 
 	//<= operator
-	template <class T, class U, class V, class W>
-	constexpr bool operator<=(const Physical<T, V> &first, const Physical<U, W> &second)
+	template <IsPhysical T, IsPhysical U>
+	constexpr bool operator<=(const T &first, const U &second)
 	{
 		return first.template value<T>() <= second.template value<T>();
 	}
 
 	// power - this case deals with dimensionless exponents and bases
-	template <class T, class U, class V, class W>
-	constexpr Physical<T, typename sci::Promoted<V,W>::type> pow(const Physical<T, V> &base, const Physical<U, W> &power)
+	template <IsPhysical T, IsPhysical U>
+	//constexpr Physical<T, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> pow(const T& base, const U& power)
+	Physical<typename T::unit, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> pow(const T &base, const U &power)
 	{
-		static_assert(U::isUnitless(), "We can only raise a physical value to the power of a dimensionless quantity.");
-		static_assert(T::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless, try pow<POWER>(base) instead.");
+		static_assert(U::unit::isUnitless(), "We can only raise a physical value to the power of a dimensionless quantity.");
+		static_assert(T::unit::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless, try pow<POWER>(base) instead.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
-		typedef sci::Promoted<V, W>::type promotedType;
+		typedef sci::Promoted<typename T::valueType, typename U::valueType>::type promotedType;
 		promotedType powerVal = power.template value<Unitless>();
 		promotedType baseVal = base.template value<T>();
-		return Physical<T, promotedType>(std::pow(baseVal, powerVal) * std::pow(promotedType(10), promotedType(T::exponentNumerator)/ promotedType(T::exponentDenominator)* (powerVal - promotedType(1.0))));
+		return Physical<typename T::unit, promotedType>(std::pow(baseVal, powerVal) * std::pow(promotedType(10), promotedType(T::unit::exponentNumerator)/ promotedType(T::unit::exponentDenominator)* (powerVal - promotedType(1.0))));
 	}
 
 	// power - this case deals with raising to the power of an integer.
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
-	template <int POWER, class T, class V>
-	constexpr Physical<PoweredUnit<T, POWER>, V> pow(const Physical<T, V> &base)
+	template <int POWER, IsUnitfulPhysical T>
+	constexpr Physical<PoweredUnit<typename T::unit, POWER>, typename T::valueType> pow(const T& base)
 	{
-		static_assert(!T::isUnitless(), "When raising a unitless quantity to a power, please explicitly cast it to sci::Physical<sci::Unitless, VALUE_TYPE>, where VALUE_TYPE is some value type. This ensures the output is not Unitless to some power, which makes no physical sense. You may also use sci::Percent, sci::PerMille and sci::BasisPoint, which will be converted to sci::Unitless for you.");
-		return Physical<PoweredUnit<T, POWER>, V>(V(std::pow(base.template value<T>(), POWER)));
+		return Physical<PoweredUnit<typename T::unit, POWER>, typename T::valueType>(typename T::valueType(std::pow(base.template value<T>(), POWER)));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
-	template <int POWER, class V>
-	constexpr Physical<Unitless, V> pow(const Physical<Unitless, V> &base)
+	template <int POWER, IsUnitlessPhysical V>
+	constexpr V pow(const V &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
+		return V(std::pow(base.template value<Unitless>(), POWER));
 	}
-	//same but for percent
-	template <int POWER, class V>
-	constexpr Physical<Unitless, V> pow(const Physical<Percent, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
-	}
-	//same but for per mille
-	template <int POWER, class V>
-	constexpr Physical<Unitless, V> pow(const Physical<PerMille, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
-	}
-	//same but for basis point
-	template <int POWER, class V>
-	constexpr Physical<Unitless, V> pow(const Physical<BasisPoint, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), POWER));
-	}
-	
 
 	// root - this case deals with geting an integer root.
 	//Note is has a templated argument otherwise we would not know at
 	//compile time what the return type would be.
-	template <int ROOT, class T, class V>
-	constexpr Physical<RootedUnit<T, ROOT>, V> root(const Physical<T, V> &base)
+	template <int ROOT, IsUnitfulPhysical T>
+	constexpr Physical<RootedUnit<typename T::unit, ROOT>, typename T::valueType> root(const T &base)
 	{
-		return Physical<RootedUnit<T, ROOT>, V>(std::pow(base.template value<T>(), V(1.0)/V(ROOT)));
+		using valueType = typename T::valueType;
+		if constexpr (ROOT == 2)
+			return Physical<RootedUnit<typename T::unit, ROOT>, valueType>(std::sqrt(base.template value<T>()));
+		return Physical<RootedUnit<typename T::unit, ROOT>, valueType>(std::pow(base.template value<T>(), valueType(1.0)/ valueType(ROOT)));
 	}
 	//root a Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
-	template <int ROOT, class V>
-	constexpr Physical<Unitless, V> root(const Physical<Unitless, V> &base)
+	template <int ROOT, IsUnitlessPhysical T>
+	constexpr T root(const T &base)
 	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
-	}
-	//root a percent, note we convert to unitless
-	template <int ROOT, class V>
-	constexpr Physical<Unitless, V> root(const Physical<Percent, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
-	}
-	//root a per mille, note we convert to unitless
-	template <int ROOT, class V>
-	constexpr Physical<Unitless, V> root(const Physical<PerMille, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
-	}
-	//root a basis point, note we convert to unitless
-	template <int ROOT, class V>
-	constexpr Physical<Unitless, V> root(const Physical<BasisPoint, V> &base)
-	{
-		return Physical<Unitless, V>(std::pow(base.template value<Unitless>(), V(1.0) / V(ROOT)));
+		using valueType = typename T::valueType;
+		if constexpr (ROOT == 2)
+			return T(std::sqrt(base.template value<Unitless>()));
+		return T(std::pow(base.template value<Unitless>(), valueType(1.0) / valueType(ROOT)));
 	}
 	//sqrt
-	template<class T, class V>
-	constexpr Physical<RootedUnit<T, 2>, V> sqrt(const Physical<T, V> &base)
+	template<IsPhysical T>
+	constexpr auto sqrt(const T &base)
 	{
-		return Physical<RootedUnit<T, 2>, V>(std::sqrt(base.template value<T>()));
+		return root<2>(base);
 	}
 
-	template <class T, class V>
-	constexpr Physical<Unitless, V> log(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> log(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
-		return Physical<Unitless, V>(std::log(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only log a dimensionless quantity.");
+		return Physical<Unitless, typename T::valueType>(std::log(value.template value<Unitless>()));
 	}
 
-	template <class T, class V>
-	constexpr Physical<Unitless, V> log10(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> log10(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
-		return Physical<Unitless, V>(std::log10(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only log a dimensionless quantity.");
+		return Physical<Unitless, typename T::valueType>(std::log10(value.template value<Unitless>()));
 	}
 
-	template <class T, class V>
-	constexpr Physical<Unitless, V> log2(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> log2(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only log a dimensionless quantity.");
-		return Physical<Unitless, V>(std::log2(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only log a dimensionless quantity.");
+		return Physical<Unitless, typename T::valueType>(std::log2(value.template value<Unitless>()));
 	}
 
-	template <class T, class V>
-	constexpr Physical<Unitless, V> ln(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> ln(const T &value)
 	{
 		return log(value);
 	}
 
-	template <class T, class V>
-	constexpr Physical<Unitless, V> exp(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> exp(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only take the exponent of a dimensionless quantity.");
-		return Physical<Unitless, V>(std::exp(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only take the exponent of a dimensionless quantity.");
+		return Physical<Unitless, typename T::valueType>(std::exp(value.template value<Unitless>()));
 	}
 
 
-	template <class T, class V>
-	constexpr Physical<Radian<>, V> asin(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Radian<>, typename T::valueType> asin(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only asin a dimensionless quantity.");
-		return Physical<Radian<>, V>(std::asin(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only asin a dimensionless quantity.");
+		return Physical<Radian<>, typename T::valueType>(std::asin(value.template value<Unitless>()));
 	}
 
-	template <class T, class V>
-	constexpr Physical<Radian<>, V> acos(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Radian<>, typename T::valueType> acos(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only acos a dimensionless quantity.");
-		return Physical<Radian<>, V>(std::acos(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only acos a dimensionless quantity.");
+		return Physical<Radian<>, typename T::valueType>(std::acos(value.template value<Unitless>()));
 	}
 
-	template <class T, class V>
-	constexpr Physical<Radian<>, V> atan(const Physical<T, V> &value)
+	template <IsPhysical T>
+	constexpr Physical<Radian<>, typename T::valueType> atan(const T &value)
 	{
-		static_assert(T::isUnitless(), "We can only atan a dimensionless quantity.");
-		return Physical<Radian<>, V>(std::atan(value.template value<Unitless>()));
+		static_assert(T::unit::isUnitless(), "We can only atan a dimensionless quantity.");
+		return Physical<Radian<>, typename T::valueType>(std::atan(value.template value<Unitless>()));
 	}
 
-	template <class T, class U, class V, class W>
-	Physical<Radian<>, typename sci::Promoted<V, W>::type> atan2(const Physical<T, V> &y, const Physical<U, W> &x)
+	template <IsPhysical T, IsPhysical U>
+	Physical<Radian<>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type> atan2(const T &y, const U &x)
 	{
-		static_assert(decltype(y/x)::isUnitless(), "We can only atan a dimensionless quantity.");
+		static_assert(decltype(y/x)::unit::isUnitless(), "We can only atan a dimensionless quantity.");
 		//note that when we get the value we use the unit of y in both cases. This is because
 		//although the two values have the same dimension, they may have different exponents
-		return Physical<Radian<>, typename sci::Promoted<V, W>::type>(std::atan2(y.template value<T>(), x.template value<T>()));
+		return Physical<Radian<>, typename sci::Promoted<typename T::valueType, typename U::valueType>::type>(std::atan2(y.template value<T>(), x.template value<T>()));
 	}
 
-	template <class T, class V>
-	Physical<Radian<>, V> atan2(const Physical<T, V> &y, const Physical<T, V> &x)
+	template <IsPhysical T>
+	Physical<Radian<>, typename T::valueType> atan2(const T &y, const T &x)
 	{
 		//we need this version with both parameters identical types in case we have 
 		// another specialization <template<class T> sci::atan2(const T&y, const T&x)
-		return Physical<Radian<>, V>(std::atan2(y.template value<T>(), x.template value<T>()));
+		return Physical<Radian<>, typename T::valueType>(std::atan2(y.template value<T>(), x.template value<T>()));
 	}
 
-	template <class T, class V>
-	Physical<Unitless, V> sin(const Physical<T, V> &value)
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> sin(const T &value)
 	{
-		return Physical<Unitless, V>(std::sin(value.template value<Radian<>>()));
+		return Physical<Unitless, typename T::valueType>(std::sin(value.template value<Radian<>>()));
 	}
 
-	template <class T, class V>
-	Physical<Unitless, V> cos(const Physical<T, V> &value)
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> cos(const T &value)
 	{
-		return Physical<Unitless, V>(std::cos(value.template value<Radian<>>()));
+		return Physical<Unitless, typename T::valueType>(std::cos(value.template value<Radian<>>()));
 	}
 
-	template <class T, class V>
-	Physical<Unitless, V> tan(const Physical<T, V> &value)
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> tan(const T &value)
 	{
-		return Physical<Unitless, V>(std::atan(value.template value<Radian<>>()));
+		return Physical<Unitless, typename T::valueType>(std::tan(value.template value<Radian<>>()));
 	}
 
-	template <class T, class V>
-	Physical<T, V> abs(const Physical<T, V> &value)
+
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> asih(const T& value)
 	{
-		return Physical<T, V>(std::abs(value.template value<T>()));
+		return Physical<Unitless, typename T::valueType>(std::asinh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> acosh(const T& value)
+	{
+		return Physical<Unitless, typename T::valueType>(std::acosh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	constexpr Physical<Unitless, typename T::valueType> atanh(const T& value)
+	{
+		return Physical<Unitless, typename T::valueType>(std::atanh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> sinh(const T& value)
+	{
+		return Physical<Unitless, typename T::valueType>(std::sinh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> cosh(const T& value)
+	{
+		return Physical<Unitless, typename T::valueType>(std::cosh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	Physical<Unitless, typename T::valueType> tanh(const T& value)
+	{
+		return Physical<Unitless, typename T::valueType>(std::tanh(value.template value<Unitless>()));
+	}
+
+	template <IsPhysical T>
+	T abs(const T &value)
+	{
+		return T(std::abs(value.template value<T>()));
 	}
 
 	//floor a Physical - the first template parameter is the unit that
 	//you want the Physical to be converted to before doing the floor.
 	//The result will be in this unit.
-	template< class UNIT, class T, class V>
-	Physical< typename UNIT::unit, V> floor(const Physical<T, V>& value)
+	template< class UNIT, IsPhysical T>
+	Physical< typename UNIT::unit, typename T::valueType> floor(const T& value)
 	{
-		return Physical<typename UNIT::unit, V>(std::floor(value.template value<typename UNIT::unit>()));
+		return Physical<typename UNIT::unit, typename T::valueType>(std::floor(value.template value<typename UNIT::unit>()));
 	}
 
 	//ceil a Physical - the first template parameter is the unit that
 	//you want the Physical to be converted to before doing the ceil.
 	//The result will be in this unit.
-	template< class UNIT, class T, class V>
-	Physical<typename UNIT::unit, V> ceil(const Physical<T, V>& value)
+	template< class UNIT, IsPhysical T>
+	Physical<typename UNIT::unit, typename T::valueType> ceil(const T& value)
 	{
-		return Physical<typename UNIT::unit, V>(std::ceil(value.template value<typename UNIT::unit>()));
+		return Physical<typename UNIT::unit, typename T::valueType>(std::ceil(value.template value<typename UNIT::unit>()));
 	}
 
 	//round a Physical - the first template parameter is the unit that
 	//you want the Physical to be converted to before doing the ceil.
 	//The result will be in this unit.
-	template< class UNIT, class T, class V>
-	Physical<typename UNIT::unit, V> round(const Physical<T, V>& value)
+	template< class UNIT, IsPhysical T>
+	Physical<typename UNIT::unit, typename T::valueType> round(const T& value)
 	{
-		return Physical<typename UNIT::unit, V>(std::round(value.template value<typename UNIT::unit>()));
+		return Physical<typename UNIT::unit, typename T::valueType>(std::round(value.template value<typename UNIT::unit>()));
 	}
 
 
@@ -1931,27 +2155,23 @@ struct ExponentTraits<VALUE>\
 	struct TypeTraits;
 
 	//the typetraits for Physicals
-	template<class T, class V>
-	struct TypeTraits<Physical<T, V>>
+	template<IsPhysical T>
+	struct TypeTraits<T>
 	{
-		typedef Physical<Unitless, V> unitlessType;
-		static constexpr unitlessType unitless(size_t v) { return unitlessType(V(v)); }
-		static constexpr unitlessType unitless(double v) { return unitlessType(V(v)); }
-		static constexpr auto sqrt(const Physical<T, V> &v) ->decltype(sqrt(v)) { return sci::sqrt(v); }
-		static const Physical<T, V> unity;
-		static const Physical<T, V> zero;
+		typedef Physical<Unitless, typename T::valueType> unitlessType;
+		static constexpr unitlessType unitless(size_t v) { return unitlessType(typename T::valueType(v)); }
+		static constexpr unitlessType unitless(double v) { return unitlessType(typename T::valueType(v)); }
+		static constexpr auto sqrt(const T &v) ->decltype(sci::sqrt(v)) { return sci::sqrt(v); }
+		inline static const T unity = T(1);
+		inline static const T zero = T(0);
 	};
-	template<class T, class V>
-	const Physical<T, V> TypeTraits<Physical<T, V>>::unity = Physical<T, V>(V(1));
-	template<class T, class V>
-	const Physical<T, V> TypeTraits<Physical<T, V>>::zero = Physical<T, V>(V(0));
 
 	//This is used by averaging algorithms where simply casting size_t to the
 	//same type as the type we are averaging doesn't work
-	template <class T, class V>
-	Physical<T, V> PhysicalDivide(const Physical<T, V> &numerator, size_t denominator)
+	template <IsPhysical T>
+	T PhysicalDivide(const T &numerator, size_t denominator)
 	{
-		return numerator / Physical<Unitless, V>((V)denominator);
+		return numerator / Physical<Unitless, typename T::valueType>((typename T::valueType)denominator);
 	}
 
 	//this struct can be used to get the unitless type
@@ -1965,112 +2185,115 @@ struct ExponentTraits<VALUE>\
 	{
 		typedef T type;
 	};
-	template<class T, class U>
-	struct UnitlessType<Physical<T, U>>
+	template<IsPhysical T>
+	struct UnitlessType<T>
 	{
-		typedef Physical<Unitless, U> type;
+		typedef Physical<Unitless, typename T::valueType> type;
 	};
 
 }
 
-template<class T, class V, class CHAR_TYPE>
-std::basic_ostream<CHAR_TYPE>& operator<< (std::basic_ostream<CHAR_TYPE>& stream, const sci::Physical<T, V>& physical)
+template<sci::IsPhysical T, class CHAR_TYPE>
+std::basic_ostream<CHAR_TYPE>& operator<< (std::basic_ostream<CHAR_TYPE>& stream, const T& physical)
 {
-	stream << physical.template value<T>() << " " << T::template getShortRepresentation<std::basic_string<CHAR_TYPE>>();
+	stream << physical.template value<T>() << " " << T::template getShortUnitString<std::basic_string<CHAR_TYPE>>();
 	return stream;
 }
 
-template<class T, class V, class CHAR_TYPE>
-std::basic_istream<CHAR_TYPE> & operator>> (std::basic_istream<CHAR_TYPE> &stream, sci::Physical<T, V> &physical)
+template<sci::IsPhysical T, class CHAR_TYPE>
+std::basic_istream<CHAR_TYPE> & operator>> (std::basic_istream<CHAR_TYPE> &stream, T &physical)
 {
-	V temp;
+	typename T::valueType temp;
 	stream >> temp;
-	physical = sci::Physical<T, V>(temp);
+	physical = T(temp);
 	return stream;
 }
 
 namespace std
 {
-	template <class T, class V>
-	class numeric_limits<sci::Physical<T, V>> : public numeric_limits<V>
+	template <sci::IsPhysical T>
+	class numeric_limits<T> : public numeric_limits<typename T::valueType>
 	{
 	public:
-		static constexpr sci::Physical<T, V>(min)() noexcept
+		static constexpr T(min)() noexcept
 		{
-			return sci::Physical<T, V>((numeric_limits<V>::min)());
+			return T((numeric_limits<typename T::valueType>::min)());
 		}
 
-		static constexpr sci::Physical<T, V>(max)() noexcept
+		static constexpr T(max)() noexcept
 		{
-			return sci::Physical<T, V>((numeric_limits<V>::max)());
+			return T((numeric_limits<typename T::valueType>::max)());
 		}
 
-		static constexpr sci::Physical<T, V> lowest() noexcept
+		static constexpr T lowest() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::lowest());
+			return T(numeric_limits<typename T::valueType>::lowest());
 		}
 
-		static constexpr sci::Physical<T, V> epsilon() noexcept
+		static constexpr sci::Physical<sci::Unitless, typename T::valueType> epsilon() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::epsilon());
+			return sci::Physical<sci::Unitless, typename T::valueType>(numeric_limits<typename T::valueType>::epsilon());
 		}
 
-		static constexpr sci::Physical<T, V> round_error() noexcept
+		static constexpr T round_error() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::round_error());
+			return T(numeric_limits<typename T::valueType>::round_error());
 		}
 
-		static constexpr sci::Physical<T, V> denorm_min() noexcept
+		static constexpr T denorm_min() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::denorm_min());
+			return T(numeric_limits<typename T::valueType>::denorm_min());
 		}
 
-		static constexpr sci::Physical<T, V> infinity() noexcept
+		static constexpr T infinity() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::infinity());
+			return T(numeric_limits<typename T::valueType>::infinity());
 		}
 
-		static constexpr sci::Physical<T, V> quiet_NaN() noexcept
+		static constexpr T quiet_NaN() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::quiet_NaN());
+			return T(numeric_limits<typename T::valueType>::quiet_NaN());
 		}
 
-		static constexpr sci::Physical<T, V> signaling_NaN() noexcept
+		static constexpr T signaling_NaN() noexcept
 		{
-			return sci::Physical<T, V>(numeric_limits<V>::signaling_NaN());
+			return T(numeric_limits<typename T::valueType>::signaling_NaN());
 		}
 	};
 
-	template <class T, class V>
-	class numeric_limits<const sci::Physical<T, V>> : public numeric_limits<sci::Physical<T, V>>
+	template <sci::IsPhysical T >
+	class numeric_limits<const T> : public numeric_limits<T>
 	{
 	};
-	template <class T, class V>
-	class numeric_limits<volatile sci::Physical<T, V>> : public numeric_limits<sci::Physical<T, V>>
+	template <sci::IsPhysical T>
+	class numeric_limits<volatile T> : public numeric_limits<T>
 	{
 	};
-	template <class T, class V>
-	class numeric_limits<const volatile sci::Physical<T, V>> : public numeric_limits<sci::Physical<T, V>>
+	template <sci::IsPhysical T>
+	class numeric_limits<const volatile T> : public numeric_limits<T>
 	{
 	};
 
-	template <class T, class V>
-	inline bool isnan(sci::Physical<T, V> physical)
+	template <sci::IsPhysical T>
+	inline bool isnan(const T &physical)
 	{
 		return isnan(physical.template value<T>());
 	}
-	template <class T, class V>
-	inline bool isinf(sci::Physical<T, V> physical)
+
+	template <sci::IsPhysical T>
+	inline bool isinf(const T &physical)
 	{
 		return isinf(physical.template value<T>());
 	}
-	template <class T, class V>
-	inline bool isfinite(sci::Physical<T, V> physical)
+
+	template <sci::IsPhysical T>
+	inline bool isfinite(const T &physical)
 	{
 		return isfinite(physical.template value<T>());
 	}
-	template <class T, class V>
-	inline bool isnormal(sci::Physical<T, V> physical)
+
+	template <sci::IsPhysical T>
+	inline bool isnormal(const T &physical)
 	{
 		return isnormal(physical.template value<T>());
 	}

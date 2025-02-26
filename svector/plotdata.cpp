@@ -284,12 +284,12 @@ ColourVaryingSymbol::ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> col
 }
 
 //we must call this prior to each individual symbol being plotted
-void ColourVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const
+void ColourVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
 	pl->schr( m_size, scale );
-	rgbcolour colour = m_colourScale->getRgbOriginalScale(parameter);
+	rgbcolour colour = m_colourScale->getRgbOriginalScale(parameter, parameterPreLogged);
 	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
 	pl->col0( colourIndex );
 }
@@ -307,11 +307,11 @@ SizeVaryingSymbol::SizeVaryingSymbol (std::shared_ptr<splotsizescale> sizeScale,
 }
 
 //we must call this prior to each individual symbol being plotted
-void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const
+void SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = m_sizeScale->getsize(parameter);
+	double size = m_sizeScale->getsize(parameter, parameterPreLogged);
 	pl->schr( size, scale );
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
@@ -322,9 +322,9 @@ bool SizeVaryingSymbol::isLogScaled() const
 	return m_sizeScale->isLog();
 }
 
-double SizeVaryingSymbol::getSize(double parameter) const
+double SizeVaryingSymbol::getSize(double parameter, bool parameterPreLogged) const
 {
-	return m_sizeScale->getsize(parameter);
+	return m_sizeScale->getsize(parameter, parameterPreLogged);
 }
 
 ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol )
@@ -335,13 +335,13 @@ ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<splotco
 }
 
 //we must call this prior to each individual symbol being plotted
-void ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, double scale ) const
+void ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, bool colourParameterPreLogged, double sizeParameter, bool sizeParameterPreLogged, double scale ) const
 {
 	pl->sfci( getFci() );
 	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = m_sizeScale->getsize( sizeParameter );
+	double size = m_sizeScale->getsize( sizeParameter, sizeParameterPreLogged );
 	pl->schr( size, scale );
-	rgbcolour colour = m_colourScale->getRgbOriginalScale( colourParameter );
+	rgbcolour colour = m_colourScale->getRgbOriginalScale( colourParameter, colourParameterPreLogged );
 	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
 	pl->col0( colourIndex );
 }
@@ -353,9 +353,9 @@ bool ColourAndSizeVaryingSymbol::isSizeLogScaled() const
 {
 	return m_sizeScale->isLog();
 }
-double ColourAndSizeVaryingSymbol::getSize(double parameter) const
+double ColourAndSizeVaryingSymbol::getSize(double parameter, bool parameterPreLogged) const
 {
-	return m_sizeScale->getsize(parameter);
+	return m_sizeScale->getsize(parameter, parameterPreLogged);
 }
 
 void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
@@ -409,7 +409,21 @@ UnstructuredData::UnstructuredData(const std::vector<const std::vector<double>*>
 		//if(i>0)
 		//	sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data in different dimensions having different lengths."));
 	}
-	m_dataLogged = sci::log10(m_data);
+	m_dataLogged.resize(m_data.size());
+	for (size_t i = 0; i < m_data.size(); ++i)
+	{
+		m_dataLogged[i].resize(m_data[i].size());
+			for(size_t j=0; j< m_dataLogged[i].size(); ++j)
+				m_dataLogged[i][j] = sci::log10(m_data[i][j]);
+	}
+	//m_dataLogged = std::vector<std::vector<double>>(m_data.size());
+	//for (size_t i = 0; i < m_dataLogged.size(); ++i)
+	//{
+	//	m_dataLogged[i] = std::vector<double>(m_data[i].size());
+	//	for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
+	//		m_dataLogged[i][j] = std::max(std::log10(m_data[i][j]), std::numeric_limits<double>::min()); //don't let logged data get to -infinity, it causes problems in plplot
+	//}
+
 	m_axes = axes;
 }
 
@@ -444,7 +458,27 @@ StructuredData::StructuredData(const std::vector<const std::vector<std::vector<d
 				sci::assertThrow(m_data[i][0].size() == m_data[i][j].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "StructuredData constructor called with data that is not rectanguler."));
 
 	}
-	m_dataLogged = sci::log10(m_data);
+	m_dataLogged.resize(m_data.size());
+	for (size_t i = 0; i < m_data.size(); ++i)
+	{
+		m_dataLogged[i].resize(m_data[i].size());
+		for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
+		{
+			for (size_t k = 0; k < m_dataLogged[i][j].size(); ++k)
+			m_dataLogged[i][j][k] = sci::log10(m_data[i][j][k]);
+		}
+	}
+	//m_dataLogged = std::vector<std::vector<std::vector<double>>>(m_data.size());
+	//for (size_t i = 0; i < m_dataLogged.size(); ++i)
+	//{
+	//	m_dataLogged[i] = std::vector<std::vector<double>>(m_data[i].size());
+	//	for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
+	//	{
+	//		m_dataLogged[i][j] = std::vector<double>(m_data[i][j].size());
+	//		for (size_t k = 0; k < m_dataLogged[i][j].size(); ++k)
+	//			m_dataLogged[i][j][k] = std::max(std::log10(m_data[i][j][k]), std::numeric_limits<double>::min()); //don't let logged data get to -infinity, it causes problems in plplot
+	//	}
+	//}
 	m_axes = axes;
 }
 
@@ -516,7 +550,7 @@ void PointDataColourVarying::plotData( plstream *pl, double scale) const
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, scale);
+			m_symbol.setupSymbol( pl, 1, *zi, scale, true);
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
@@ -544,9 +578,9 @@ void PointDataSizeVarying::plotData( plstream *pl, double scale) const
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, scale );
+			m_symbol.setupSymbol( pl, 1, *zi, scale, true );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if(m_symbol.getSize(*zi) > 0.0)
+			if(m_symbol.getSize(*zi, true) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
@@ -574,9 +608,9 @@ void PointDataColourAndSizeVarying::plotData( plstream *pl, double scale) const
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zColouri, ++zSizei )
 		{
-			m_symbol.setupSymbol( pl, 1, *zColouri, *zSizei, scale );
+			m_symbol.setupSymbol( pl, 1, *zColouri, true, *zSizei, true, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if (m_symbol.getSize(*zSizei) > 0.0)
+			if (m_symbol.getSize(*zSizei, true) > 0.0)
 				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
@@ -1019,7 +1053,7 @@ ContourData::ContourData(const std::vector<std::vector<double>>& xs, const std::
 {
 	sci::assertThrow(xs.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 	sci::assertThrow(xs[0].size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-	sci::assertThrow(ys.size() == zs.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
+	sci::assertThrow(ys.size() == zs[0].size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
 
 	m_colourscale = colourScale;
 	m_levelScale = nullptr;
@@ -1093,10 +1127,10 @@ void ContourData::plotData(plstream* pl, double scale) const
 			for (auto& s : shadeLevels)
 				s = log10(s);
 		sci::assertThrow(shadeLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a colourscale with fewer than 2 levels."));
-		if (m_colourscale->fillOffscaleBottom())
-			shadeLevels.front() = -std::numeric_limits<double>::infinity();
-		if (m_colourscale->fillOffscaleTop())
-			shadeLevels.back() = std::numeric_limits<double>::infinity();
+		//if (m_colourscale->fillOffscaleBottom())
+		//	shadeLevels.front() = -std::numeric_limits<double>::infinity();
+		//if (m_colourscale->fillOffscaleTop())
+		//	shadeLevels.back() = std::numeric_limits<double>::infinity();
 	}
 
 	//grab the contour levels from the levelScale

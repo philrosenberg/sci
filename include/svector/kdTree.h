@@ -318,7 +318,8 @@ namespace sci
 			m_nSplits = 0;
 			m_weights = weights;
 			m_totalWeight = sci::sum(weights);
-			sci::assertThrow(sci::allTrue(weights >= 0.0), sci::err(SERR_ANALYSIS, -9999, "Negative weights or nan weights in kdtree data are not permited"));
+			for (double & w : weights)
+				sci::assertThrow(w >= 0.0, sci::err(SERR_ANALYSIS, -9999, "Negative weights or nan weights in kdtree data are not permited"));
 			sci::assertThrow(m_totalWeight > 0.0 && m_totalWeight < std::numeric_limits<double>::infinity(), sci::err(SERR_ANALYSIS, -9999, "The total weight of all data passed into a kdtree must be non-zero and not infinite."));
 			m_permitPointSplitting = permitPointSplitting;
 			split(nSplits);

@@ -564,6 +564,18 @@ namespace sci
 		{
 			reshape(std::array<size_t, 1>{ size }, value);
 		}
+		constexpr iterator erase(const_iterator pos) requires (NDIMS == 1)
+		{
+			iterator result = members::m_data.erase(pos);
+			setShape(std::array<size_t, NDIMS> {members::m_data.size()});
+			return result;
+		}
+		constexpr iterator erase(const_iterator first, const_iterator last) requires (NDIMS == 1)
+		{
+			iterator result = members::m_data.erase(first, last);
+			setShape(std::array<size_t, NDIMS> {members::m_data.size()});
+			return result;
+		}
 		void swap(GridData<T, NDIMS> &other)
 		{
 			members::swap(other);
@@ -672,6 +684,17 @@ namespace sci
 		constexpr void assign(size_t count, const T& value) requires(NDIMS == 1)
 		{
 			members::m_data.assign(count, value);
+		}
+		template<IsGridDims<NDIMS - 1> GRID>
+		constexpr void assign(size_t count, const GRID& value)
+		{
+			std::array<size_t, NDIMS> shape;
+			shape[0] = count;
+			for (size_t i = 0; i < NDIMS - 1; ++i)
+				shape[i + 1] = value.shape()[i];
+			reshape(shape);
+			for (size_t i = 0; i < count; ++i)
+				(*this)[i].assign(value);
 		}
 		template<class ITER>
 		constexpr void assign(ITER first, ITER last) requires(NDIMS == 1)
@@ -801,7 +824,7 @@ namespace sci
 			else
 				return &members::m_data;
 		}
-		const pointer data() const
+		const_pointer data() const
 		{
 			if constexpr (NDIMS > 0)
 				return members::m_data.data();
@@ -843,7 +866,6 @@ namespace sci
 		}
 		GridData<T, NDIMS, Allocator>& operator=(const GridData<T, NDIMS, Allocator>& rhs) = default;
 		GridData<T, NDIMS, Allocator>& operator=(GridData<T, NDIMS, Allocator>&& rhs) = default;
-
 	private:
 		void setShape(const std::array<size_t, NDIMS>& shape)
 		{

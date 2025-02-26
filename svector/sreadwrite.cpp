@@ -420,56 +420,6 @@ size_t sci::splitcommastring(const std::string &datastring, std::vector <double>
 	return n+1;
 }
 		
-sci::csv_err sci::writecsvcolumns(std::string filename, std::string header, const std::vector< std::vector <double> > &data)
-{
-	std::ofstream fout;
-	fout.open(filename.c_str(), std::ios::out);
-	return sci::writecsvcolumns(fout, header, data);
-}
-#ifdef _WIN32
-sci::csv_err sci::writecsvcolumns(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data)
-{
-	std::ofstream fout;
-	fout.open(filename.c_str(), std::ios::out);
-	return sci::writecsvcolumns(fout, header, data);
-}
-#endif
-sci::csv_err sci::writecsvcolumns(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data)
-{
-	
-	if(!fout.is_open()) return sci::csv_filefail;
-	if(header.length()>0)fout << header.c_str() << "\n";
-	if(data.size()==0) 
-	{
-		fout.close();
-		return sci::csv_ok;
-	}
-	if(sci::rectangular(data))
-	{
-		for(size_t i=0; i<data[0].size(); ++i)
-		{
-			fout <<data[0][i];
-			for(size_t j=1; j<data.size(); j++) fout << "," << data[j][i];
-			fout << "\n";
-		}
-	}
-	else
-	{
-		for(size_t i=0; i<data[0].size(); ++i)
-		{
-			if(i<data[0].size())fout << data[0][i];
-			for(size_t j=1; j<data.size(); j++) 
-			{
-				if(i<data[j].size())fout << "," << data[j][i];
-				else fout << ",";
-			}
-			fout << "\n";
-		}
-	}
-	fout.close();
-	return sci::csv_ok;
-}
-		
 sci::csv_err sci::writecsvcolumn(std::string filename, std::string header, const std::vector<double>  &data)
 {
 	std::vector<std::vector<double> > data2d;

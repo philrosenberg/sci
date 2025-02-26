@@ -1,5 +1,4 @@
 #include"../include/svector/svector.h"
-#include<libresample.h>
 //#include <alg/ap.h>
 //#include <alg/fasttransforms.h>
 //#include <alg/interpolation.h>
@@ -12,186 +11,7 @@
 #include"eigeneng/eigeneng.h"
 
 
-void sci::resample(const std::vector<double> &input, double factor, std::vector<double> &output)
-{
-	size_t outputSize=(size_t)ceil((input.size()+1)*factor);
-	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err(SERR_VECTOR, -999, "sci::resample called with input too large - it can only be the maximum int in size."));
-	output.resize(outputSize);
-	void *rs=resample_opend(1,factor,factor);
-	int used;
-	int nwritten=resample_processd(rs,factor,&input[0], (int)input.size(),1,&used,&output[0],(int)output.size());
-	resample_closed(rs);
-	if(nwritten<0)
-	{
-		//we have an error - tbd how we pass that back
-	}
 
-}
-void sci::resample(const std::vector<float> &input, float factor, std::vector<float> &output)
-{
-	size_t outputSize=(size_t)ceil((input.size()+1)*factor);
-	sci::assertThrow(outputSize<=(size_t)std::numeric_limits<int>::max(),sci::err(SERR_VECTOR, -999, "sci::resample called with input too large - it can only be the maximum int in size."));
-	output.resize(outputSize);
-	void *rs=resample_open(1,factor,factor);
-	int used;
-	int nwritten=resample_process(rs,factor,&input[0], (int)input.size(),1,&used,&output[0],(int)output.size());
-	resample_close(rs);
-	if(nwritten<0)
-	{
-		//we have an error - tbd how we pass that back
-	}
-
-}
-
-#include"kiss_fft/kiss_fftr.h"
-//Fast Fourier Transform. The input is real, so the output will only include the amplitude for positive frequencies. You can choose to normalise
-//the output for the number of points and for the missing amplitude in the negative frequencies. If you wish to do this yourself then to normalise
-//for the number of points divide the outputs by the number of points and to normalise for the missing negative frequencies multiply all elements
-//of the output except the first and last by 2.
-void sci::fft(const std::vector<double> &re_input, std::vector<double> &re_output, std::vector<double> &im_output, bool normaliseForNumberOfPoints, bool performNegativeFrequencyAmplitudedoubling)
-{
-	sci::assertThrow(re_input.size() % 2 == 0, sci::err(SERR_KISSFFT, 1, "Can only do a FFT with an even number of points."));
-	sci::assertThrow(re_input.size() <= std::numeric_limits<int>::max(), sci::err(SERR_KISSFFT, 3, "Too many points for fft"));
-
-	size_t n = re_input.size();
-
-	//set up the state
-	kiss_fftr_cfg myCfg = NULL;
-	myCfg = kiss_fftr_alloc((int)re_input.size(), 0, NULL, NULL);
-
-	sci::assertThrow(myCfg, sci::err(SERR_KISSFFT, 2, "Error allocating memeory for FFT"));
-	
-	try
-	{
-		//allocate working memory
-		std::vector<kiss_fft_cpx> result(re_input.size() / 2 + 1);
-		//do fft
-		kiss_fftr(myCfg, &re_input[0], &result[0]);
-
-		//copy the data to the output
-		re_output.resize(re_input.size()/2+1);
-		im_output.resize(re_input.size() / 2 + 1);
-		if (normaliseForNumberOfPoints || performNegativeFrequencyAmplitudedoubling)
-		{
-			double normalisationConstant = performNegativeFrequencyAmplitudedoubling ? 2.0 : 1.0;
-			double endNormalisationConstant = 1.0;
-			if (normaliseForNumberOfPoints)
-			{
-				normalisationConstant /= n;
-				endNormalisationConstant /= n;
-			}
-
-			re_output[0] = result[0].r * endNormalisationConstant;
-			im_output[0] = result[0].i * endNormalisationConstant;
-			for (size_t i = 1; i < re_output.size()-1; ++i)
-			{
-				re_output[i] = result[i].r * normalisationConstant;
-				im_output[i] = result[i].i * normalisationConstant;
-			}
-			re_output.back() = result.back().r * endNormalisationConstant;
-			im_output.back() = result.back().i * endNormalisationConstant;
-		}
-		else
-		{
-			for (size_t i = 0; i < re_output.size(); ++i)
-			{
-				re_output[i] = result[i].r;
-				im_output[i] = result[i].i;
-			}
-		}
-	}
-	catch (...)
-	{
-		kiss_fftr_free(myCfg);
-		throw;
-	}
-	kiss_fftr_free(myCfg);
-}
-
-//This assumes that the input is just the positive frequencies, hence it will provide a real output. Unlike the fft function this implementation outputs results which
-//are normalised for the number of points by default. This means if you are using this function to undo a sci::fft call, the undoNormalisedNumberOfPoints parameter
-//here, must be the opposite of the normaliseForNumberOfPoints parameter of sci::fft. However, if you have doubled the positive frequency values to account for
-//the negative frequencies, then you must pass true for normaliseForNegativeFrequencies. Hence the following two function calls will undo each other
-//sci::fft(wave, freqReal, freqIm, true, true);
-//sci::ifft(freqReal, freqIm, wave, false, true);
-void sci::ifft(const std::vector<double> &re_input, std::vector<double> &im_input, std::vector<double> &re_output, bool undoNormaliseForNumberOfPoints, bool performNegativeFrequencyAmplitudedoubling)
-{
-	size_t nOutputPoints = (re_input.size() - 1) * 2;
-
-	sci::assertThrow(nOutputPoints<=std::numeric_limits<int>::max(), sci::err(SERR_KISSFFT, 3, "Too many points for ifft"));
-
-	//set up the state
-	kiss_fftr_cfg myCfg = NULL;
-	myCfg = kiss_fftr_alloc((int)nOutputPoints, 1, NULL, NULL);
-
-	sci::assertThrow(myCfg, sci::err(SERR_KISSFFT, 2, "Error allocating memeory for FFT"));
-
-	try
-	{
-		//copy the input
-		std::vector<kiss_fft_cpx> intermediate(re_input.size());
-		//The normalisation is done by default in the ifft, so we need to undo it 
-		if (undoNormaliseForNumberOfPoints || performNegativeFrequencyAmplitudedoubling)
-		{
-			double normalisationConstant = performNegativeFrequencyAmplitudedoubling ? 0.5 : 1.0;
-			double endNormalisationConstant = 1.0;
-			if (undoNormaliseForNumberOfPoints)
-			{
-				normalisationConstant /= nOutputPoints;
-				endNormalisationConstant /= nOutputPoints;
-			}
-			intermediate[0].r = re_input[0] * endNormalisationConstant;
-			intermediate[0].i = im_input[0] * endNormalisationConstant;
-			for (size_t i = 0; i < re_input.size(); ++i)
-			{
-				intermediate[i].r = re_input[i] * normalisationConstant;
-				intermediate[i].i = im_input[i] * normalisationConstant;
-			}
-			intermediate.back().r = re_input.back() * endNormalisationConstant;
-			intermediate.back().i = im_input.back() * endNormalisationConstant;
-		}
-		else
-		{
-			for (size_t i = 0; i < re_input.size(); ++i)
-			{
-				intermediate[i].r = re_input[i];
-				intermediate[i].i = im_input[i];
-			}
-		}
-		//do ifft
-		re_output.resize(nOutputPoints);
-		kiss_fftri(myCfg, &intermediate[0], &re_output[0]);
-		
-	}
-	catch (...)
-	{
-		kiss_fftr_free(myCfg);
-		throw;
-	}
-	kiss_fftr_free(myCfg);
-}
-
-std::vector<double> sci::powerspectrum(const std::vector<double> &v)
-{
-	std::vector<double>im;
-	std::vector<double>re;
-	sci::fft(v,re,im);
-	double size=(double)re.size();
-	return (re*re+im*im)/size/size;
-}
-
-std::vector<double> sci::cospectrum(const std::vector<double> &x, const std::vector<double> &y)
-{
-	if(x.size()!=y.size()) return std::vector<double>(0);
-	std::vector<double>imX;
-	std::vector<double>reX;
-	std::vector<double>imY;
-	std::vector<double>reY;
-	sci::fft(x,reX,imX);
-	sci::fft(y,reY,imY);
-	double size=(double)reX.size();
-	return(reX*reY+imX*imY)/size/size;
-}
 
 
 double sci::round(double n)
@@ -263,101 +83,7 @@ void sci::logspace(double xstart, double xinterval, std::vector<double> y, doubl
 	}
 }
 
-void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept)
-{
-	sci::assertThrow(x.size() == y.size(), sci::err(sci::SERR_VECTOR, 0));
-	sci::assertThrow(x.size() > 1, sci::err(sci::SERR_VECTOR, 0));
-	double meanX;
-	double varX;
-	double meanY;
-	double covarXY;
 
-	meanX = sci::mean(x);
-	varX = sci::varianceNoBessel(x, meanX);
-	meanY = sci::mean(y);
-	covarXY = 0.0;
-	const double* xIter = &x[0];
-	const double* yIter = &y[0];
-	const double* xEnd = xIter + x.size();
-	for (; xIter != xEnd; ++xIter, ++yIter)
-	{
-		covarXY += (*xIter - meanX) * (*yIter - meanY);
-	}
-	covarXY /= (double)(y.size());
-
-	grad = covarXY / varX;
-	intercept = meanY - grad * meanX;
-}
-
-//fits a straight line, removing any outliers with residuals bigger than maxresiduals
-//This is performed one at a time, removing the worst residual then fitting to the
-//remaining data set
-//Returns the number of data points used in the fit
-size_t sci::fitstraightlinewithoutlierremoval(const std::vector<double>& x, const std::vector<double>& y, double& grad, double& intercept, double maxresidual)
-{
-	sci::assertThrow(x.size() > 1, sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with 1 or fewer x values."));
-	sci::assertThrow(x.size() == y.size(), sci::err(SERR_VECTOR, -999, "sci::fitstraightlinewithoutlierremoval called with a different number of x and y values."));
-	std::vector<double> fitx = x;
-	std::vector<double> fity = y;
-	double maxresidualsquared = maxresidual * maxresidual;
-	fitstraightline(fitx, fity, grad, intercept);
-	std::vector<double> residualssquared = (sci::pow(fity - fitx * grad - intercept, 2));
-	size_t maxindex = indexofmax(residualssquared);
-	double thismaxresidualsquared = residualssquared[maxindex];
-	while (thismaxresidualsquared > maxresidualsquared)
-	{
-		fitx.erase(fitx.begin() + maxindex);
-		fity.erase(fity.begin() + maxindex);
-		fitstraightline(fitx, fity, grad, intercept);
-		residualssquared = (sci::pow(fity - fitx * grad - intercept, 2));
-		maxindex = indexofmax(residualssquared);
-		thismaxresidualsquared = residualssquared[maxindex];
-	}
-
-	return fitx.size();
-}
-
-
-void sci::fitstraightline(const std::vector<double> &x, const std::vector<double> &y, double &grad, double &intercept, double &vargrad, double &varintercept, double &covar)
-{
-	sci::assertThrow(x.size() == y.size(), sci::err(sci::SERR_VECTOR, 0));
-	sci::assertThrow(x.size() > 1, sci::err(sci::SERR_VECTOR, 0));
-	double meanX;
-	double varX;
-	double meanY;
-	double covarXY;
-
-	meanX = sci::mean(x);
-	varX = sci::varianceNoBessel(x, meanX);
-	meanY = sci::mean(y);
-	covarXY = 0.0;
-	const double* xIter = &x[0];
-	const double* yIter = &y[0];
-	const double* xEnd = xIter + x.size();
-	for (; xIter != xEnd; ++xIter, ++yIter)
-	{
-		covarXY += (*xIter - meanX) * (*yIter - meanY);
-	}
-	covarXY /= (double)(y.size());
-
-	grad = covarXY / varX;
-	intercept = meanY - grad * meanX;
-
-	double varYResiduals = 0.0;
-	xIter = &x[0];
-	yIter = &y[0];
-	xEnd = xIter + x.size();
-	for (; xIter != xEnd; ++xIter, ++yIter)
-	{
-		double residual = *yIter - (grad * *xIter + intercept);
-		varYResiduals += residual*residual;
-	}
-	varYResiduals /= (double)(y.size() - 2);
-
-	vargrad = varYResiduals / varX / (double)y.size();
-	varintercept = varYResiduals / (double)y.size() * (1.0 + meanX * meanX / varX);
-	covar = -varYResiduals * meanX / varX * double(y.size() - 2) / double(y.size());
-}
 /*
 //fit y=mx[i]+c, i.e. multiple x parameters. The covariance matrix returned had size x.size()+1
 // in both dimensions. The last element represents the covariance with the intercept.
@@ -1041,74 +767,6 @@ void sci::intersect(double xline1point1, double yline1point1, double xline1point
 	intersecty=m1*(intersectx-xline1point1)+yline1point1;
 }
 
-
-
-void sci::eigenvalues(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary)
-{
-	sci::assertThrow(sci::square(matrix), sci::err(SERR_VECTOR, -999, "sci::eigenvalues called with a non-square matrix."));
-	if (matrix.size() == 0)
-	{
-		eigenvaluesReal.resize(0);
-		eigenvaluesImaginary.resize(0);
-		return;
-	}
-	size_t n = matrix.size();
-	eigenvaluesReal.resize(n);
-	eigenvaluesImaginary.resize(n);
-	std::vector<double> workingMatrix(n*n);
-	for (size_t i = 0; i < n; ++i)
-		for (size_t j = 0; j < n; ++j)
-			workingMatrix[i*n + j] = matrix[i][j];
-
-	int result = n_eigeng(&workingMatrix[0], n, &eigenvaluesReal[0], &eigenvaluesImaginary[0], NULL);
-	sci::assertThrow(result == 0, sci::err(sci::SERR_EIGENENG, result, sU("Error calculating eigen values.")));
-}
-
-void sci::eigenvectors(const std::vector<std::vector<double>> &matrix, std::vector<double> &eigenvaluesReal, std::vector<double> &eigenvaluesImaginary, std::vector<std::vector<double>> &eigenvectorsReal, std::vector<std::vector<double>> &eigenvectorsImaginary)
-{
-	sci::assertThrow(sci::square(matrix), sci::err(SERR_VECTOR, -999, "sci::eigenvalues called with a non-square matrix."));
-	if (matrix.size() == 0)
-	{
-		eigenvaluesReal.resize(0);
-		eigenvaluesImaginary.resize(0);
-		return;
-	}
-	size_t n = matrix.size();
-	eigenvaluesReal.resize(n);
-	eigenvaluesImaginary.resize(n);
-	std::vector<double> workingMatrix(n*n);
-	for (size_t i = 0; i < n; ++i)
-		for (size_t j = 0; j < n; ++j)
-			workingMatrix[i*n + j] = matrix[i][j];
-
-	std::vector<double> workingVector;
-
-	int result = n_eigeng(&workingMatrix[0], n, &eigenvaluesReal[0], &eigenvaluesImaginary[0], &workingVector[0]);
-	sci::assertThrow(result == 0, sci::err(sci::SERR_EIGENENG, result, sU("Error calculating eigen values.")));
-
-	eigenvectorsReal.resize(n);
-	eigenvectorsImaginary.resize(n);
-	for (size_t i = 0; i < n; ++i)
-	{
-		eigenvectorsReal[i].resize(n);
-		eigenvectorsImaginary[i].resize(n);
-		for (size_t j = 0; j < n; ++j)
-		{
-			eigenvectorsReal[i][j] = workingVector[i*n + j];
-		}
-	}
-
-	for (size_t i = 0; i < n-1; ++i)
-	{
-		if (eigenvaluesImaginary[i] != 0.0)
-		{
-			eigenvectorsImaginary[i] = eigenvectorsReal[i + 1];
-			eigenvectorsReal[i + 1] = eigenvectorsReal[i];
-			eigenvectorsImaginary[i + 1] = -eigenvectorsImaginary[i];
-		}
-	}
-}
-
 struct IntegrableData
 {
 	double (*functionToIntegrate)(double x, const std::vector<double> &params);
@@ -1598,8 +1256,16 @@ std::vector<std::vector<double>> sci::MarkovChain::getMoments(size_t nIntegratio
 	means /= (double)nIntegrationSteps;
 
 	std::vector<std::vector<double>> result(moments.size());
-	for (size_t i = 0; i < moments.size(); ++i)
-		result[i] = sci::pow(samples[0] - means, moments[i]);
+	//for (size_t i = 0; i < moments.size(); ++i)
+	//	result[i] = sci::pow(samples[0] - means, moments[i]);
+	//the below for loop should replace the above more compact but deprecated and commented out lines
+	for (size_t i = 0; i < result.size(); ++i)
+	{
+		result[i].resize(samples[0].size());
+		for (size_t j = 0; j < result[i].size(); ++j)
+			result[i][j] = std::pow(samples[0][j] - means[j], moments[i]);
+	}
+
 	int *momentsBegin = &moments[0];
 	int *momentsEnd = momentsBegin + moments.size();
 	std::vector<double>*resultBegin = &result[0];
@@ -1608,7 +1274,8 @@ std::vector<std::vector<double>> sci::MarkovChain::getMoments(size_t nIntegratio
 		std::vector<double>* resulti = resultBegin;
 		for (int* momentsi = momentsBegin; momentsi < momentsEnd; ++momentsi,++resulti)
 		{
-			*resulti += sci::pow(*samplesi - means, *momentsi);
+			for (size_t j = 0; j < resulti->size(); ++j)
+			(*resulti)[j] += sci::pow((*samplesi)[j] - means[j], *momentsi);
 		}
 	}
 	result /= double(nIntegrationSteps);

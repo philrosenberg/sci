@@ -439,9 +439,17 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 }
 
 //interpolate the given value to a colour
-void splotcolourscale::interpolate( double value, double &c1, double &c2, double &c3, double &a) const
+void splotcolourscale::interpolate( double value, double &c1, double &c2, double &c3, double &a, bool valuePreLogged) const
 {
-	if (value < getMin())
+	if (isLog() && !valuePreLogged)
+		value = std::log10(value);
+
+	bool offscaleBottom = (isLog() && value < getLogMin()) || (!isLog() && value < getMin());
+	bool offscaleTop = (isLog() && value > getLogMax()) || (!isLog() && value > getMax());
+	bool onMin = (isLog() && value == getLogMin()) || (!isLog() && value == getMin());
+
+	
+	if (offscaleBottom)
 	{
 		if (m_fillOffscaleBottom)
 		{
@@ -460,7 +468,7 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 		return;
 	}
 
-	if (value > getMax())
+	if (offscaleTop)
 	{
 		if (m_fillOffscaleTop)
 		{
@@ -479,19 +487,21 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 		return;
 	}
 
-	if (value == getMin())
+	if (onMin)
 	{
 		c1 = m_colour1[0];
 		c2 = m_colour2[0];
 		c3 = m_colour3[0];
 		a = m_alpha[0];
+		return;
 	}
+	
 
 	size_t maxIndex = 1;
 	double highWeight;
 	if (isLog())
 	{
-		value = std::log10(value/ getMin())/std::log10(getMax()/getMin());
+		value = (value - getLogMin())/(getLogMax() - getLogMin());
 
 		while (value > m_logValue[maxIndex])
 			maxIndex++;
@@ -500,7 +510,7 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 	}
 	else
 	{
-		value = (value - getMin()) / (getMin() - getMax());
+		value = (value - getMin()) / (getMax() - getMin());
 		
 		while (value > m_value[maxIndex])
 			maxIndex++;
@@ -514,33 +524,33 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 	a=m_alpha[maxIndex]*highWeight+m_alpha[maxIndex-1]*(1.0-highWeight);
 }
 
-rgbcolour splotcolourscale::getRgbOriginalScale( double value ) const
+rgbcolour splotcolourscale::getRgbOriginalScale( double value, bool valuePrelogged ) const
 {
 	if (m_hls)
 	{
-		hlscolour hls = getHlsOriginalScale(value);
+		hlscolour hls = getHlsOriginalScale(value, valuePrelogged);
 		double r, g, b;
 		plhlsrgb(hls.h(), hls.l(), hls.s(), &r, &g, &b);
 		return (rgbcolour(r, g, b, hls.a()));
 	}
 
 	double r, g, b, a;
-	interpolate(value, r, g, b, a);
+	interpolate(value, r, g, b, a, valuePrelogged);
 	return rgbcolour(r, g, b, a);
 }
 
-hlscolour splotcolourscale::getHlsOriginalScale( double value ) const
+hlscolour splotcolourscale::getHlsOriginalScale( double value, bool valuePreLogged ) const
 {
 	if (!m_hls)
 	{
-		rgbcolour rgb = getRgbOriginalScale(value);
+		rgbcolour rgb = getRgbOriginalScale(value, valuePreLogged);
 		double h, l, s;
 		plrgbhls(rgb.r(), rgb.g(), rgb.b(), &h, &l, &s);
 		return hlscolour(h, l, s, rgb.a());
 	}
 
 	double h, l, s, a;
-	interpolate(value, h, l, s, a);
+	interpolate(value, h, l, s, a, valuePreLogged);
 	return hlscolour(h, l, s, a);
 }
 
@@ -667,9 +677,16 @@ splotsizescale::splotsizescale(const std::vector<double> &value, const std::vect
 	m_fillOffscaleTop = fillOffscaleTop;
 }
 
-double splotsizescale::getsize(double value) const
+double splotsizescale::getsize(double value, bool valuePreLogged) const
 {
-	if (value < getMin())
+	if (isLog() && !valuePreLogged)
+		value = std::log10(value);
+
+	bool offscaleBottom = (isLog() && value < getLogMin()) || (!isLog() && value < getMin());
+	bool offscaleTop = (isLog() && value > getLogMax()) || (!isLog() && value > getMax());
+	bool onMin = (isLog() && value == getLogMin()) || (!isLog() && value == getMin());
+
+	if (offscaleBottom)
 	{
 		if (m_fillOffscaleBottom)
 			return m_size[0];
@@ -677,7 +694,7 @@ double splotsizescale::getsize(double value) const
 			return std::numeric_limits<double>::quiet_NaN();
 	}
 
-	if (value > getMax())
+	if (offscaleTop)
 	{
 		if (m_fillOffscaleTop)
 			return m_size.back();
@@ -685,14 +702,14 @@ double splotsizescale::getsize(double value) const
 			return std::numeric_limits<double>::quiet_NaN();
 	}
 
-	if (value == getMin())
+	if (onMin)
 		return m_size[0];
 
 	size_t maxIndex = 1;
 	double highWeight;
 	if (isLog())
 	{
-		value = std::log10(value / getMin()) / std::log10(getMax() / getMin());
+		value = (value - getLogMin()) / (getLogMax() - getLogMin());
 
 		while (value > m_logValue[maxIndex])
 			maxIndex++;
@@ -742,7 +759,7 @@ std::vector<double> splotlevelscale::getLevels() const
 	return result;
 }
 
-splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = 0;
@@ -750,10 +767,10 @@ splotaxis::splotaxis(double min, double max, bool log, Direction direction, doub
 	m_automajorinterval=true;
 	m_autonsubticks=true;
 	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
-		linethickness, time, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
+		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
-splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour &titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = majorinterval;
@@ -761,11 +778,11 @@ splotaxis::splotaxis(double min, double max, bool log, Direction direction, doub
 	m_automajorinterval = false;
 	m_autonsubticks = false;
 	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
-		linethickness, time, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
+		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(log, direction, 0.05)
 {
 	m_majorinterval = 0;
@@ -773,11 +790,11 @@ splotaxis::splotaxis(bool log, Direction direction, double positionStart, double
 	m_automajorinterval = true;
 	m_autonsubticks = true;
 	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
-		linethickness, time, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
+		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(log, direction, 0.05)
 {
 	m_majorinterval = majorinterval;
@@ -785,14 +802,21 @@ splotaxis::splotaxis(bool log, Direction direction, double positionStart, double
 	m_automajorinterval = false;
 	m_autonsubticks = false;
 	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
-		linethickness, time, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
+		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-void splotaxis::setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+void splotaxis::setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_positionStart = positionStart;
 	m_positionEnd = positionEnd;
+	if (m_positionStart > m_positionEnd)
+	{
+		std::swap(m_positionStart, m_positionEnd);
+		m_reversed = true;
+	}
+	else
+		m_reversed = false;
 	m_perpendicularPosition = perpendicularPosition;
 	m_intersect = intersectpoint;
 	m_timeformat = sU("");
@@ -870,21 +894,26 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	//get the tick interval and subintervals
 	//double ymajint = m_yaxis.m_automajorinterval ? 0.0 : m_yaxis.m_majorinterval;
 	//unsigned int ynsub = m_yaxis.m_autonsubticks ? 0.0 : m_yaxis.m_nsubticks + 1;
+	double min = getMin();
+	double max = getMax();
+	if (m_reversed)
+		std::swap(min, max);
+
 	if (m_direction == Direction::horizontal)
 	{
 		pl->vpor(m_positionStart, m_positionEnd, m_perpendicularPosition, m_perpendicularPosition + 1.0);
 		if(isLog())
-			pl->wind(std::log10(getMin()), std::log10(getMax()), 0.0, 1.0);
+			pl->wind(std::log10(min), std::log10(max), 0.0, 1.0);
 		else
-			pl->wind(getMin(), getMax(), 0.0, 1.0);
+			pl->wind(min, max, 0.0, 1.0);
 	}
 	else if (m_direction == Direction::vertical)
 	{
 		pl->vpor(m_perpendicularPosition, m_perpendicularPosition + 1.0, m_positionStart, m_positionEnd);
 		if (isLog())
-			pl->wind(0.0, 1.0, std::log10(getMin()), std::log10(getMax()));
+			pl->wind(0.0, 1.0, std::log10(min), std::log10(max));
 		else
-			pl->wind(0.0, 1.0, getMin(), getMax());
+			pl->wind(0.0, 1.0, min, max);
 	}
 
 
@@ -948,6 +977,88 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 
 }
 
+void splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+{
+	pl->vpor(0.0, 1.0, 0.0, 1.0);
+	pl->wind(0.0, 1.0, 0.0, 1.0);
+	pl->sfci(m_style);
+	pl->schr(1.0, m_size * scale / 72.0 * 25.4);
+	pl->scol0a(1, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a());
+	pl->col0(1);
+	pl->ptex(m_xPosition, m_yPosition, 1, 0, m_alignment, sci::toUtf8(m_text).c_str());
+}
+
+void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+{
+	if (m_colourscale->isDiscrete())
+	{
+		std::vector<std::vector<double>> cb(2);
+		cb[0] = std::vector<double>(2, m_colourscale->getMin());
+		cb[1] = std::vector<double>(2, m_colourscale->getMax());
+		std::vector<double> cbX{ cb[0][0], cb[1][0] };
+		std::vector<double> cbY{ 0.0, 1.0 };
+
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal, m_horizontalStart,
+			m_horizontalEnd, m_verticalStart, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
+			m_minorticklength, m_tickspos, m_ticksneg, m_showlabels, m_labelpositionpositive, m_labelfont, m_labelfci, m_rotatelabels, m_labelsize, m_labelcolour,
+			m_autodecimalplaces, m_ndecimalplaces, m_maxndigits == 0, m_maxndigits));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_verticalStart, m_verticalEnd, m_horizontalStart, sU(""), sU(""), 0, 0.0, 0.0, wxColour(0, 0, 0), 0.0, wxColour(0, 0, 0), 0, false, 0.0, 0.0));
+
+		ContourData data(cbX, cbY, cb, xAxis, yAxis, m_colourscale, LineStyle(0));
+
+		data.draw(pl, scale, pageWidth, pageHeight);
+		xAxis->draw(pl, scale, pageWidth, pageHeight);
+	}
+	else
+	{
+		std::vector<std::vector<double>> cb(256);
+		std::vector<double> cbX(cb.size()+1);
+
+
+		double min = m_colourscale->getMin();
+		double max = m_colourscale->getMax();
+
+		if (m_colourscale->isLog())
+		{
+			min = std::log10(min);
+			max = std::log10(max);
+
+			double range = max-min;
+			double step = range / (cb.size());
+
+			for (size_t i = 0; i < cbX.size(); ++i)
+				cbX[i] = std::pow(10, min + i * step);
+
+			for (size_t i = 0; i < cb.size(); ++i)
+				cb[i]= std::vector<double>(1, std::pow(10.0, (min + (i+0.5) * step)));
+		}
+		else
+		{
+			double range = max - min;
+			double step = range / (cb.size());
+
+			for (size_t i = 0; i < cbX.size(); ++i)
+				cbX[i] = min + i * step;
+
+			for (size_t i = 0; i < cb.size(); ++i)
+				cb[i] = std::vector<double>(1, (cbX[i] + cbX[i + 1]) / 2.0);
+		}
+		
+		std::vector<double> cbY{ 0.0, 1.0 };
+
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal, m_horizontalStart,
+			m_horizontalEnd, m_verticalStart, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
+			m_minorticklength, m_tickspos, m_ticksneg, m_showlabels, m_labelpositionpositive, m_labelfont, m_labelfci, m_rotatelabels, m_labelsize, m_labelcolour,
+			m_autodecimalplaces, m_ndecimalplaces, m_maxndigits == 0, m_maxndigits));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_verticalStart, m_verticalEnd, m_horizontalStart, sU(""), sU(""), 0, 0.0, 0.0, wxColour(0, 0, 0), 0.0, wxColour(0, 0, 0), 0, false, 0.0, 0.0));
+
+		GridData data(cbX, cbY, cb, xAxis, yAxis, m_colourscale);
+
+		data.draw(pl, scale, pageWidth, pageHeight);
+		xAxis->draw(pl, scale, pageWidth, pageHeight);
+	}
+}
+
 void splot2d::setallparams(sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
 {
 	//these aren't given in the constructor parameters but must be true for this constructor
@@ -1000,6 +1111,23 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xint
 	m_xaxis.m_intersect=xintersect;
 	m_yaxis.m_intersect=yintersect;
 	m_yaxis.m_rotatelabels=true;
+}
+
+std::vector<double> log10Vec(const std::vector<double>& v)
+{
+	std::vector<double> result = v;
+	for (double& r : result)
+		r = std::log10(r);
+	return result;
+}
+
+std::vector<std::vector<double>> log10Vec(const std::vector<std::vector<double>>& v)
+{
+	std::vector<std::vector<double>> result = v;
+	for (std::vector<double>& r : result)
+		for(double &rr : r)
+			rr = std::log10(rr);
+	return result;
 }
 
 //scatter
@@ -1064,9 +1192,9 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	
 	if(m_xaxis.isLog()) 
 	{
-		m_xsl.back()=sci::log10(xs);
-		m_xpluserrsl.back()=sci::log10(m_xpluserrs.back());
-		m_xminuserrsl.back()=sci::log10(m_xminuserrs.back());
+		m_xsl.back()=log10Vec(xs);
+		m_xpluserrsl.back()=log10Vec(m_xpluserrs.back());
+		m_xminuserrsl.back()=log10Vec(m_xminuserrs.back());
 		for(size_t i=0; i<m_xminuserrsl.back().size(); ++i)
 		{
 			if(m_xminuserrsl.back()[i]!=m_xminuserrsl.back()[i])
@@ -1075,9 +1203,9 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	}
 	if(m_yaxis.isLog())
 	{
-		m_ysl.back()=sci::log10(ys);
-		m_ypluserrsl.back()=sci::log10(m_ypluserrs.back());
-		m_yminuserrsl.back()=sci::log10(m_yminuserrs.back());
+		m_ysl.back()=log10Vec(ys);
+		m_ypluserrsl.back()=log10Vec(m_ypluserrs.back());
+		m_yminuserrsl.back()=log10Vec(m_yminuserrs.back());
 		for(size_t i=0; i<m_yminuserrsl.back().size(); ++i)
 		{
 			if(m_yminuserrsl.back()[i]!=m_yminuserrsl.back()[i])
@@ -1141,20 +1269,20 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 
 	if(m_xaxis.isLog())
 	{
-		m_xsl.back()=sci::log10(xs);
-		m_xpluserrsl.back()=sci::log10(m_xpluserrs.back());
-		m_xminuserrsl.back()=sci::log10(m_xminuserrs.back());
+		m_xsl.back()=log10Vec(xs);
+		m_xpluserrsl.back()=log10Vec(m_xpluserrs.back());
+		m_xminuserrsl.back()=log10Vec(m_xminuserrs.back());
 	}
 	if(m_yaxis.isLog())
 	{
-		m_ysl.back()=sci::log10(ys);
-		m_ypluserrsl.back()=sci::log10(m_ypluserrs.back());
-		m_yminuserrsl.back()=sci::log10(m_yminuserrs.back());
+		m_ysl.back()=log10Vec(ys);
+		m_ypluserrsl.back()=log10Vec(m_ypluserrs.back());
+		m_yminuserrsl.back()=log10Vec(m_yminuserrs.back());
 	}
 
 	if(colourscale.isLog()) 
 	{
-		m_colunstructzsl.back()=sci::log10(m_colunstructzs.back());
+		m_colunstructzsl.back()=log10Vec(m_colunstructzs.back());
 		sci::replaceNegativeInfs(m_colunstructzsl, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_colunstructzsl, std::numeric_limits<double>::max());
 	}
@@ -1245,15 +1373,15 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	
 	if(m_xaxis.isLog())
 	{
-		m_xsl.back()=sci::log10(xs);
-		m_xpluserrsl.back()=sci::log10(m_xpluserrs.back());
-		m_xminuserrsl.back()=sci::log10(m_xminuserrs.back());
+		m_xsl.back()=log10Vec(xs);
+		m_xpluserrsl.back()=log10Vec(m_xpluserrs.back());
+		m_xminuserrsl.back()=log10Vec(m_xminuserrs.back());
 	}
 	if(m_yaxis.isLog())
 	{
-		m_ysl.back()=sci::log10(ys);
-		m_ypluserrsl.back()=sci::log10(m_ypluserrs.back());
-		m_yminuserrsl.back()=sci::log10(m_yminuserrs.back());
+		m_ysl.back()=log10Vec(ys);
+		m_ypluserrsl.back()=log10Vec(m_ypluserrs.back());
+		m_yminuserrsl.back()=log10Vec(m_yminuserrs.back());
 	}
 	m_transformers.back()=transformer;
 
@@ -1314,19 +1442,19 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 
 	if(m_xaxis.isLog())
 	{
-		m_xsl.back()=sci::log10(xs);
-		m_xpluserrsl.back()=sci::log10(m_xpluserrs.back());
-		m_xminuserrsl.back()=sci::log10(m_xminuserrs.back());
+		m_xsl.back()=log10Vec(xs);
+		m_xpluserrsl.back()=log10Vec(m_xpluserrs.back());
+		m_xminuserrsl.back()=log10Vec(m_xminuserrs.back());
 	}
 	if(m_yaxis.isLog())
 	{
-		m_ysl.back()=sci::log10(ys);
-		m_ypluserrsl.back()=sci::log10(m_ypluserrs.back());
-		m_yminuserrsl.back()=sci::log10(m_yminuserrs.back());
+		m_ysl.back()=log10Vec(ys);
+		m_ypluserrsl.back()=log10Vec(m_ypluserrs.back());
+		m_yminuserrsl.back()=log10Vec(m_yminuserrs.back());
 	}
 	if(colourscale.isLog()) 
 	{
-		m_colunstructzsl.back()=sci::log10(m_colunstructzs.back());
+		m_colunstructzsl.back()=log10Vec(m_colunstructzs.back());
 		sci::replaceNegativeInfs(m_colunstructzsl, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_colunstructzsl, std::numeric_limits<double>::max());
 	}
@@ -1416,7 +1544,7 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	//generate logged values if needed and replace infinities with max/lowest doubles
 	if(colourscale.isLog()) 
 	{
-		m_structzsl.back()=sci::log10(m_structzs.back());
+		m_structzsl.back()=log10Vec(m_structzs.back());
 		sci::replaceNegativeInfs(m_structzsl, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_structzsl, std::numeric_limits<double>::max());
 	}
@@ -1425,8 +1553,8 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 		sci::replaceNegativeInfs(m_structzs, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_structzs, std::numeric_limits<double>::max());
 	}
-	if(m_xaxis.isLog())m_xsl.back()=sci::log10(xs);
-	if(m_yaxis.isLog())m_ysl.back()=sci::log10(ys);
+	if(m_xaxis.isLog())m_xsl.back()=log10Vec(xs);
+	if(m_yaxis.isLog())m_ysl.back()=log10Vec(ys);
 
 	//replace any nans in the z data with max double
 	//sci::replacenans(m_structzs.back(),std::numeric_limits<double>::max());
@@ -1464,9 +1592,9 @@ void splot2d::adddata(const std::vector< std::vector <double> > &xs, const std::
 
 
 	//generate logged values if needed
-	if(m_xaxis.isLog())m_xs2dl.back()=sci::log10(xs);
-	if(m_yaxis.isLog())m_ys2dl.back()=sci::log10(ys);
-	if(colourscale.isLog()) m_structzsl.back()=sci::log10(m_structzs.back());
+	if(m_xaxis.isLog())m_xs2dl.back()=log10Vec(xs);
+	if(m_yaxis.isLog())m_ys2dl.back()=log10Vec(ys);
+	if(colourscale.isLog()) m_structzsl.back()=log10Vec(m_structzs.back());
 
 	//replace any nans in the z data with max double
 	sci::replacenans(m_structzs.back(),std::numeric_limits<double>::max());
@@ -1504,12 +1632,12 @@ void splot2d::adddata(const std::vector<double> &minedges, const std::vector<dou
 	
 	if(m_xaxis.isLog())
 	{
-		m_lowerxlimitsl.back()=sci::log10(minedges);
-		m_upperxlimitsl.back()=sci::log10(maxedges);
+		m_lowerxlimitsl.back()=log10Vec(minedges);
+		m_upperxlimitsl.back()=log10Vec(maxedges);
 	}
 	if(m_yaxis.isLog())
 	{
-		m_ysl.back()=sci::log10(heights);
+		m_ysl.back()=log10Vec(heights);
 	}
 
 	calculateautolimits();
@@ -1542,8 +1670,8 @@ void splot2d::adddata(const std::vector<double> &xs, const std::vector<double> &
 	m_ys.back()=ys;
 	m_us.back()=us;
 	m_vs.back()=vs;
-	if(m_xaxis.isLog())m_xsl.back()=sci::log10(xs);
-	if(m_yaxis.isLog())m_ysl.back()=sci::log10(ys);
+	if(m_xaxis.isLog())m_xsl.back()=log10Vec(xs);
+	if(m_yaxis.isLog())m_ysl.back()=log10Vec(ys);
 
 	//set properties as needed
 	m_linecolour.back()=linecolour;
@@ -1580,8 +1708,8 @@ void splot2d::adddata(const std::vector<std::vector<double>> &xs, const std::vec
 	m_ys2d.back()=ys;
 	m_us.back()=us;
 	m_vs.back()=vs;
-	if(m_xaxis.isLog())m_xs2dl.back()=sci::log10(xs);
-	if(m_yaxis.isLog())m_ys2dl.back()=sci::log10(ys);
+	if(m_xaxis.isLog())m_xs2dl.back()=log10Vec(xs);
+	if(m_yaxis.isLog())m_ys2dl.back()=log10Vec(ys);
 	m_transformers.back()=transformer;
 
 	//set properties as needed
@@ -1645,7 +1773,7 @@ void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<dou
 	//generate logged values if needed and replace infinities with max/lowest doubles
 	if(colourscale.isLog()) 
 	{
-		m_structzsl.back()=sci::log10(m_structzs.back());
+		m_structzsl.back()=log10Vec(m_structzs.back());
 		sci::replaceNegativeInfs(m_structzsl, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_structzsl, std::numeric_limits<double>::max());
 	}
@@ -1654,8 +1782,8 @@ void splot2d::addShadedGrid(const std::vector<double> &xs, const std::vector<dou
 		sci::replaceNegativeInfs(m_structzs, std::numeric_limits<double>::lowest());
 		sci::replacePositiveInfs(m_structzs, std::numeric_limits<double>::max());
 	}
-	if(m_xaxis.isLog())m_xsl.back()=sci::log10(xs);
-	if(m_yaxis.isLog())m_ysl.back()=sci::log10(ys);
+	if(m_xaxis.isLog())m_xsl.back()=log10Vec(xs);
+	if(m_yaxis.isLog())m_ysl.back()=log10Vec(ys);
 
 	//replace any nans in the z data with max double
 	//sci::replacenans(m_structzs.back(),std::numeric_limits<double>::max());
@@ -3734,21 +3862,33 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			SizeVaryingSymbol sizeVaryingSymbol(m_sizescale[i], m_pointchar[i], colour);
 
 			std::vector< double> values(m_nlines[i]);
+			double min;
+			double max;
+			if (m_sizescale[i]->isLog())
+			{
+				min = m_sizescale[i]->getLogMin();
+				max = m_sizescale[i]->getLogMax();
+			}
+			else
+			{
+				min = m_sizescale[i]->getMin();
+				max = m_sizescale[i]->getMax();
+			}
 			if (m_nlines[i] == 1)
 			{
-				values[0] = (m_sizescale[i]->m_value[0] + m_sizescale[i]->m_value.back()) / 2.0;
+				values[0] = (min + max) / 2.0;
 			}
 			else
 			{
 				for (size_t j = 0; j < m_nlines[i]; ++j)
 				{
-					values[j] = m_sizescale[i]->m_value[0] + (m_sizescale[i]->m_value.back() - m_sizescale[i]->m_value[0])*(double)j / ((double)m_nlines[i] - 1.0);
+					values[j] = min + (max - min)*(double)j / ((double)m_nlines[i] - 1.0);
 				}
 			}
 
 			//draw the first point
-			sizeVaryingSymbol.setupSymbol(pl, 1, values[0], 1.0);
-			double size = sizeVaryingSymbol.getSize(values[0]);
+			sizeVaryingSymbol.setupSymbol(pl, 1, values[0], 1.0, true);
+			double size = sizeVaryingSymbol.getSize(values[0], true);
 			position+=positionstep+0.5*std::max(size*0.8,m_textsize[i]*1.6);
 			double x=m_textoffset[i]*0.5;
 			double y=1.0-position*scaledcharheightworld;
@@ -3771,9 +3911,9 @@ void splotlegend::plot(plstream *pl, double linewidthmultiplier)
 			for(size_t j=1; j<m_nlines[i]; ++j)
 			{
 				double lastSize = size;
-				size = sizeVaryingSymbol.getSize(values[j]);
+				size = sizeVaryingSymbol.getSize(values[j], true);
 				//points
-				sizeVaryingSymbol.setupSymbol(pl, 1, values[j], 1.0);
+				sizeVaryingSymbol.setupSymbol(pl, 1, values[j], 1.0, true);
 				position+=std::max((size+lastSize)*0.8 /2.0,m_textsize[i]*1.6);
 				double x=m_textoffset[i]*0.5;
 				double y=1.0-position*scaledcharheightworld;

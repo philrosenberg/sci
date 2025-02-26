@@ -273,7 +273,7 @@ namespace sci
 			else if constexpr (std::is_same< Control_Type_Traits<T>::ControlType, wxComboBox>::value)
 				return wxEVT_COMBOBOX;
 			else 
-				static_assert(false, "Error with types in GenericControl");
+				static_assert(std::is_same< Control_Type_Traits<T>::ControlType, wxTextCtrl>::value, "Error with types in GenericControl");//got to have some comparison in static assert even though it's in a constexpr if
 		}
 
 		void setColour(wxColour colour)

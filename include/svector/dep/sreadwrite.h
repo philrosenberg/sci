@@ -83,10 +83,51 @@ namespace sci
 	//a number of elements equal to the number of commas in the string plus one.
 	size_t splitcommastring(const std::string &datastring, std::vector <double> &data);
 
-	//write csv data from 2D array data into file filename. If the vector is not rectangular then blanks are put in to fill the gaps
-	csv_err writecsvcolumns(std::ofstream &fout, std::string header, const std::vector< std::vector <double> > &data);
-	csv_err writecsvcolumns(std::string filename, std::string header, const std::vector< std::vector <double> > &data);
-	csv_err writecsvcolumns(std::wstring filename, std::string header, const std::vector< std::vector <double> > &data);
+	//write csv data from 2D array data into file filename. The data must be able to be called with two [][] operators
+	template<class T>
+	csv_err writecsvcolumns(std::ofstream &fout, std::string header, const T &data)
+	{
+
+		if (!fout.is_open()) return sci::csv_filefail;
+		if (header.length() > 0)fout << header.c_str() << "\n";
+		if (data.size() == 0)
+		{
+			fout.close();
+			return sci::csv_ok;
+		}
+		for (size_t i = 0; i < data[0].size(); ++i)
+		{
+			fout << data[0][i];
+			for (size_t j = 1; j < data.size(); j++) fout << "," << data[j][i];
+			fout << "\n";
+		}
+		
+		fout.close();
+		return sci::csv_ok;
+	}
+	template<class T>
+	csv_err writecsvcolumns(sci::string filename, sci::string header, const T& data)
+	{
+		std::ofstream fout;
+		fout.open(sci::nativeUnicode(filename).c_str(), std::ios::out);
+		return sci::writecsvcolumns(fout, sci::nativeCodepage(header), data);
+	}
+	template<class T>
+	csv_err writecsvcolumns(std::string filename, std::string header, const T& data)
+	{
+		std::ofstream fout;
+		fout.open(filename.c_str(), std::ios::out);
+		return sci::writecsvcolumns(fout, header, data);
+	}
+#ifdef _WIN32
+	template<class T>
+	csv_err writecsvcolumns(std::wstring filename, std::string header, const T &data)
+	{
+		std::ofstream fout;
+		fout.open(filename.c_str(), std::ios::out);
+		return sci::writecsvcolumns(fout, header, data);
+	}
+#endif
 	//write csv data from 1D array into file filename.
 	csv_err writecsvcolumn(std::string filename, std::string header, const std::vector<double>  &data);
 	csv_err writecsvcolumn(std::wstring filename, std::string header, const std::vector<double>  &data);
@@ -111,6 +152,7 @@ namespace sci
 	
 
 #ifdef _WIN32
+	/*
 	//reads variable called varname from netcdf file filename and puts it in vector var.
 	//var must be a vector and must have the correct number of dimensions to hold the variable.
 	//If the file cannot be opened var will be emptied and the function will return false
@@ -231,7 +273,7 @@ namespace sci
 			//simply grab each one in turn
 
 			//resize our output to hold the correct number of variables
-			vars.resize(sci::max<size_t>(indices) + size_t(1));
+			vars.resize(sci::max(indices) + size_t(1));
 			for (size_t i = 0; i < varlist.size(); ++i)
 			{
 				vars[indices[i]] = file.getVariable<T>(varlist[i]); 
@@ -356,7 +398,7 @@ namespace sci
 	{
 		return false;
 	}
-	/*
+	
 	bool readncglobalattribute(const std::string &filename, const std::string &attributename, std::string &attributevalue);
 	bool readncglobalattribute(const std::string &filename, const std::string &attributename, std::vector<std::string> &attributevalues);
 

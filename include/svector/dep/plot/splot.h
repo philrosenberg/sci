@@ -143,10 +143,12 @@ public:
 		vertical,
 		none
 	};
-	void setMin(double min) { m_min = min; }
-	void setMax(double max) { m_max = max; }
-	double getMin() const { return m_min; }
-	double getMax() const { return m_max; }
+	//void setMin(double min) { m_min = min; }
+	//void setMax(double max) { m_max = max; }
+	double getMin() const { return m_log ? std::pow(10, m_logMin) : m_min; }
+	double getMax() const { return m_log ? std::pow(10, m_logMax) : m_max; }
+	double getLogMin() const { return m_logMin; }
+	double getLogMax() const { return m_logMax; }
 	bool isAutoscale() const { return m_autoscale; }
 	bool isLog() const { return m_log; }
 	void expand(const std::vector<double>& data);
@@ -327,8 +329,10 @@ public:
 	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
 	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
-	rgbcolour getRgbOriginalScale( double value ) const;
-	hlscolour getHlsOriginalScale( double value ) const;
+	//note that valuePrelogged is only utilised if this is a log scale
+	rgbcolour getRgbOriginalScale( double value, bool valuePrelogged) const;
+	//note that valuePrelogged is only utilised if this is a log scale
+	hlscolour getHlsOriginalScale( double value, bool valuePrelogged) const;
 	rgbcolour getRgbOffscaleBottom() const;
 	rgbcolour getRgbOffscaleTop() const;
 	hlscolour getHlsOffscaleBottom() const;
@@ -354,9 +358,10 @@ private:
 	std::vector< double > m_alpha;
 	bool m_hls; //true for hls, false for rgb colour representation
 	bool m_discrete;
-	void interpolate( double value, double &c1, double &c2, double &c3, double &a) const;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
+	//note that valuePrelogged is only utilised if this is a log scale
+	void interpolate( double value, double &c1, double &c2, double &c3, double &a, bool valuePrelogged) const;
 };
 
 
@@ -368,7 +373,8 @@ class splotsizescale : public PlotScale
 public:
 	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	~splotsizescale(){};
-	double getsize(double value) const;
+	//note that valuePrelogged is only utilised if this is a log scale
+	double getsize(double value, bool valuePreLogged) const;
 	bool fillOffscaleBottom() const { return m_fillOffscaleBottom; }
 	bool fillOffscaleTop() const { return m_fillOffscaleTop; }
 	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
@@ -456,10 +462,10 @@ class splotaxis: public PlotScale, public DrawableItem
 	friend class splot;
 	friend class splot2d;
 public:
-	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, bool time = false, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, bool time = false, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, bool time = false, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, bool time = false, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
 	~splotaxis(){};
 	inline void setcolour(wxColour colour){m_colour=colour; m_haschanged=true;};
 	inline void setlinethickness(int thickness){m_linethickness=thickness; m_haschanged=true;};
@@ -492,6 +498,7 @@ public:
 	inline void setcustomlabel(sci::string (*customlabelcreator)(double axisvalue)){m_customlabelcreator=customlabelcreator; m_timeformat=sU("");}; //set to NULL to use normal formatting or a pointer to a function to interpret the axis value otherwise
 	inline void setPosition(double start, double end) { m_positionStart = start; m_positionEnd = end; }
 	inline void getPosition(double& start, double& end) { start = m_positionStart; end = m_positionEnd; }
+	inline const sci::string& getTitle() const { return m_title; }
 																																					//note no public function to set limits, or intersect or set the axis as logarithmic as the 
 	//splot class needs to keep track of these parameters for autolimits and log plotting
 	//purposes
@@ -506,7 +513,7 @@ public:
 	}
 private:
 	
-	void setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, bool time, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits);
+	void setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits);
 	
 	std::string createploptstring() const;
 	//keep track of if the axis has changed
@@ -565,8 +572,263 @@ private:
 	double m_positionStart;
 	double m_positionEnd;
 	double m_perpendicularPosition;
+	bool m_reversed;
 };
 
+class CubehelixColourscale : public splotcolourscale
+{
+public:
+	CubehelixColourscale(const std::vector<double>& values, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+		: splotcolourscale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
+			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
+	{
+
+	}
+	CubehelixColourscale(double minValue, double maxValue, size_t nPoints, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+		: splotcolourscale(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
+			getCubehelixColours(minValue, maxValue, nPoints, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
+			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
+	{
+
+	}
+	CubehelixColourscale(const std::vector<double>& values, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+		: splotcolourscale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, 180, 540, 0.8, 0.2, 1.0, 1.0, discrete),
+			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
+	{
+
+	}
+	CubehelixColourscale(double minValue, double maxValue, size_t nPoints, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+		: splotcolourscale(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
+			getCubehelixColours(minValue, maxValue, nPoints, logarithmic, 180, 540, 0.8, 0.2, 1.0, 1.0, discrete),
+			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
+	{
+
+	}
+	static std::vector<rgbcolour> getCubehelixColours(double minValue, double maxValue, size_t nPoints, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
+	{
+		if (logarithmic)
+		{
+			minValue = std::log10(minValue);
+			maxValue = std::log10(maxValue);
+		}
+		std::vector<double> values(nPoints);
+		for (size_t i = 0; i < nPoints; ++i)
+		{
+			double f = (double)i / double(nPoints - 1);
+			values[i] = minValue * (1 - f) + maxValue * f;
+		}
+		//call the other get colours funtion with the derived values. Note we always set logaritmic to false in this call as we have already logged the values.
+		return getCubehelixColours(values, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete);
+	}
+	static std::vector<rgbcolour> getCubehelixColours(std::vector<double> values, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
+	{
+		if (logarithmic)
+			for (double& v : values)
+				v = std::log10(v);
+		if (discrete)
+		{
+			std::vector<double> newValues(values.size() - 1);
+
+			for (size_t i = 0; i < newValues.size(); ++i)
+				newValues[i] = (values[i] + values[i + 1]) / 2.0;
+			return getCubehelixColours(newValues, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, false);
+		}
+		//make the hue consistent with the start parameter used in D. A. Green 2011
+		startHue -= std::floor(startHue / 360.0) * 360.0;
+		startHue /= 120;
+		startHue += 1;
+
+		//create a vector to hold the colours
+		std::vector<rgbcolour> colours(values.size());
+
+		//calculate each colour
+		double valuesRange = values.back() - values.front();
+		double brightnessRange = endBrightness - startBrightness;
+		for (size_t i = 0; i < colours.size(); ++i)
+		{
+			double brightness = startBrightness + (values[i] - values[0]) / valuesRange * brightnessRange;
+			double angle = M_2PI * (startHue / 3.0 + 1.0 + hueRotation / 360.0 * brightness);
+			double gammaBrightness = std::pow(brightness, gamma);
+			double amplitude = saturation * gammaBrightness * (1 - gammaBrightness) / 2.0;
+			double red = gammaBrightness + amplitude * (-0.14861 * std::cos(angle) + 1.78277 * std::sin(angle));
+			double green = gammaBrightness + amplitude * (-0.29227 * std::cos(angle) - 0.90649 * std::sin(angle));
+			double blue = gammaBrightness + amplitude * (1.97294 * std::cos(angle));
+			colours[i] = rgbcolour(red, green, blue);
+		}
+		//std::fstream fout;
+		//fout.open("colourscale", std::ios::out);
+		//for (size_t i = 0; i < colours.size(); ++i)
+		//	fout << values[i] << "," << colours[i].r() << "," << colours[i].g() << "," << colours[i].b() << "\n";
+		//fout.close();
+		return colours;
+	}
+private:
+	static std::vector<double> getEvenlyDistributedValues(double minValue, double maxValue, size_t nPoints, bool logarithmic)
+	{
+		if (logarithmic)
+		{
+			minValue = std::log10(minValue);
+			maxValue = std::log10(maxValue);
+			std::vector<double> values(nPoints);
+			for (size_t i = 0; i < nPoints; ++i)
+			{
+				double f = (double)i / double(nPoints - 1);
+				values[i] = std::pow(10,minValue * (1 - f) + maxValue * f);
+			}
+			return values;
+		}
+		std::vector<double> values(nPoints);
+		for (size_t i = 0; i < nPoints; ++i)
+		{
+			double f = (double)i / double(nPoints - 1);
+			values[i] = minValue * (1 - f) + maxValue * f;
+		}
+		return values;
+	}
+};
+
+class splothorizontalcolourbar : public DrawableItem
+{
+public:
+	splothorizontalcolourbar(double horizontalStart, double horizontalEnd, double verticalStart, double verticalEnd,
+		std::shared_ptr<splotcolourscale> colourscale, sci::string title, sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0,
+		double titledistance = 2.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0),
+		int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false,
+		bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
+		bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true,
+		unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0)
+	{
+		m_horizontalStart = horizontalStart;
+		m_horizontalEnd = horizontalEnd;
+		m_verticalStart = verticalStart;
+		m_verticalEnd = verticalEnd;
+		m_title = title;
+		m_colourscale = colourscale;
+
+		m_timeformat = sU("");
+		m_customlabelcreator = NULL;
+		m_colour = colour;
+		m_linethickness = linethickness;
+		m_tickspos = tickspositive;
+		m_ticksneg = ticksnegative;
+		m_majorticklength = std::abs(majorticklength);
+		m_minorticklength = std::abs(minorticklength);
+		m_showlabels = showlabels;
+		m_labelfont = labelfont;
+		m_labelfci = labelstyle;
+		m_rotatelabels = labelsrotated;
+		m_labelsize = labelsize;
+		m_labelcolour = labelcolour;
+		m_labelpositionpositive = labelpositionpositive;
+		m_title = title;
+		m_titlefont = titlefont;
+		m_titlefci = titlestyle;
+		m_rotatetitle = false;
+		m_titlesize = titlesize;
+		m_titledistance = titledistance;
+		m_titlecolour = titlecolour;
+		m_autodecimalplaces = autodecimalplaces;
+		m_ndecimalplaces = ndecimalplaces;
+		if (automaxndigits == true)
+			m_maxndigits = 0;
+		else
+			m_maxndigits = maxndigits;
+	}
+	void preDraw() override
+	{
+	}
+	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	bool readyToDraw() const override
+	{
+		return true;
+	}
+	void setTitle(sci::string title)
+	{
+		m_title = title;
+	}
+private:
+	std::shared_ptr<splotcolourscale> m_colourscale;
+	double m_horizontalStart;
+	double m_horizontalEnd;
+	double m_verticalStart;
+	double m_verticalEnd;
+
+	wxColour m_colour;
+
+	//line thickness
+	double m_linethickness;
+
+	//intervals
+	bool m_automajorinterval;
+	bool m_autonsubticks;
+	double m_majorinterval;
+	unsigned int m_nsubticks;
+
+	//tickmark length //scale to be defined, 0.0 is off, if either has a negative number passes
+	//then the positive value is recorded but ticksinward is set true
+	double m_majorticklength;
+	double m_minorticklength;
+	bool m_tickspos;
+	bool m_ticksneg;
+	bool m_showlabels;
+
+	//label details
+	bool m_labelpositionpositive;
+	bool m_rotatelabels;
+	double m_labelsize;
+	sci::string m_labelfont;
+	PLUNICODE m_labelfci;
+	wxColour m_labelcolour;
+
+	//axis title
+	sci::string m_title;
+	bool m_rotatetitle;
+	double m_titlesize; //scale to be defined
+	sci::string m_titlefont;
+	PLUNICODE m_titlefci;
+	wxColour m_titlecolour;
+	double m_titledistance; //distance from the axis in multiples of character height
+
+
+	//time/custom format options
+	sci::string m_timeformat;
+	sci::string(*m_customlabelcreator)(double axisvalue);
+
+	bool m_autodecimalplaces;
+	unsigned int m_ndecimalplaces;
+
+	unsigned int m_maxndigits; //maximum number of digits before going to exponents, set to zero for auto
+
+	double m_positionStart;
+	double m_positionEnd;
+	double m_perpendicularPosition;
+};
+
+class splotLabel : public DrawableItem
+{
+public:
+	splotLabel(sci::string text, double xPosition, double yPosition, double size = 12.0, double alignment = 0.0, sci::string font = sU(""), PLUNICODE style = 0, rgbcolour colour = rgbcolour(0.0, 0.0, 0.0))
+		:m_text(text), m_xPosition(xPosition), m_yPosition(yPosition), m_size(size), m_alignment(alignment), m_font(font), m_style(style), m_colour(colour)
+	{
+
+	}
+	virtual void preDraw() override
+	{};
+	virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight);
+	virtual bool readyToDraw() const override
+	{
+		return true;
+	}
+private:
+	sci::string m_text;
+	double m_xPosition;
+	double m_yPosition;
+	double m_size;
+	double m_alignment;
+	sci::string m_font;
+	PLUNICODE m_style;
+	rgbcolour m_colour;
+};
 
 
 //have to #include this down here as classes in here need some of the declarations from

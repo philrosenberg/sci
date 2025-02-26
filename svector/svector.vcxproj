@@ -184,7 +184,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/Zc:char8_t %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -223,7 +223,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/Zc:char8_t %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -265,7 +265,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/Zc:char8_t %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>
@@ -308,7 +308,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/Zc:char8_t %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -323,6 +323,7 @@
     <ClCompile Include="eigeneng\eigeng.c" />
     <ClCompile Include="kiss_fft\kiss_fft.c" />
     <ClCompile Include="kiss_fft\kiss_fftr.c" />
+    <ClCompile Include="LinearAlgebra.cpp" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="nc.cpp" />
     <ClCompile Include="NumberFromTextValidator.cpp" />
@@ -334,6 +335,7 @@
     <ClCompile Include="sframe.cpp" />
     <ClCompile Include="smath.cpp" />
     <ClCompile Include="sminimiser.cpp" />
+    <ClCompile Include="spectral.cpp" />
     <ClCompile Include="splot.cpp" />
     <ClCompile Include="sreadwrite.cpp" />
     <ClCompile Include="sstring.cpp" />
@@ -365,21 +367,27 @@
     <ClInclude Include="..\include\svector\gridtupleview.h" />
     <ClInclude Include="..\include\svector\gridview.h" />
     <ClInclude Include="..\include\svector\kdTree.h" />
+    <ClInclude Include="..\include\svector\LinearAlgebra.h" />
     <ClInclude Include="..\include\svector\math.h" />
     <ClInclude Include="..\include\svector\MemoryMap.h" />
     <ClInclude Include="..\include\svector\NumberFromTextValidator.h" />
     <ClInclude Include="..\include\svector\operators.h" />
+    <ClInclude Include="..\include\svector\Ranges.h" />
+    <ClInclude Include="..\include\svector\RangeTree.h" />
+    <ClInclude Include="..\include\svector\rendering.h" />
     <ClInclude Include="..\include\svector\sdialog.h" />
     <ClInclude Include="..\include\svector\serr.h" />
     <ClInclude Include="..\include\svector\sframe.h" />
     <ClInclude Include="..\include\svector\sminimiser.h" />
     <ClInclude Include="..\include\svector\sminimiser2.h" />
+    <ClInclude Include="..\include\svector\Spectral.h" />
     <ClInclude Include="..\include\svector\splot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="..\include\svector\sstdwrappers.h" />
     <ClInclude Include="..\include\svector\sstring.h" />
     <ClInclude Include="..\include\svector\stable.h" />
     <ClInclude Include="..\include\svector\stashcodes.h" />
+    <ClInclude Include="..\include\svector\Statistics.h" />
     <ClInclude Include="..\include\svector\sterminal.h" />
     <ClInclude Include="..\include\svector\svector.h" />
     <ClInclude Include="..\include\svector\svi.h" />

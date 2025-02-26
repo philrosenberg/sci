@@ -6,7 +6,8 @@
 void sci::checkNcCall(long errorCode)
 {
 	sci::NcError err(errorCode);
-	sci::assertThrow(errorCode == NC_NOERR, err.getError());
+	if (errorCode != NC_NOERR)
+		throw(err);
 }
 
 sci::NcError::NcError(long code)
@@ -94,156 +95,6 @@ std::vector<sci::string> sci::InputNcFile::getVariableNames()
 		}
 		++id;
 	}
-	return result;
-}
-
-template<>
-std::vector<double> sci::InputNcFile::getVariableFromId<double>(int id, size_t nValues)
-{
-	std::vector<double> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_double(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<float> sci::InputNcFile::getVariableFromId<float>(int id, size_t nValues)
-{
-	std::vector<float> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_float(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<short> sci::InputNcFile::getVariableFromId<short>(int id, size_t nValues)
-{
-	std::vector<short> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_short(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<int> sci::InputNcFile::getVariableFromId<int>(int id, size_t nValues)
-{
-	std::vector<int> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_int(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<long> sci::InputNcFile::getVariableFromId<long>(int id, size_t nValues)
-{
-	std::vector<long> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_long(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<int8_t> sci::InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues)
-{
-	std::vector<int8_t> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_schar(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<char> sci::InputNcFile::getVariableFromId<char>(int id, size_t nValues)
-{
-	std::vector<char> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_text(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues)
-{
-	std::vector<uint8_t> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_var_uchar(getId(), id, &result[0]));
-
-	return result;
-}
-
-template<>
-std::vector<double> sci::InputNcFile::getVariableFromId<double>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<double> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_double(getId(), id, &start[0], &shape[0],&result[0]));
-	return result;
-}
-
-template<>
-std::vector<float> sci::InputNcFile::getVariableFromId<float>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<float> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_float(getId(), id, &start[0], &shape[0], &result[0]));
-	return result;
-}
-
-template<>
-std::vector<short> sci::InputNcFile::getVariableFromId<short>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<short> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_short(getId(), id, &start[0], &shape[0], &result[0]));
-	return result;
-}
-
-template<>
-std::vector<int> sci::InputNcFile::getVariableFromId<int>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<int> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_int(getId(), id, &start[0], &shape[0], &result[0]));
-	return result;
-}
-
-template<>
-std::vector<long> sci::InputNcFile::getVariableFromId<long>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<long> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_long(getId(), id, &start[0], &shape[0], &result[0]));
-	return result;
-}
-
-template<>
-std::vector<int8_t> sci::InputNcFile::getVariableFromId<int8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<int8_t> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_schar(getId(), id, &start[0], &shape[0], &result[0]));
-	return result;
-}
-
-template<>
-std::vector<uint8_t> sci::InputNcFile::getVariableFromId<uint8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape)
-{
-	size_t nValues = sci::product(shape);
-	std::vector<uint8_t> result(nValues);
-	if (nValues > 0)
-		checkNcCall(nc_get_vara_uchar(getId(), id, &start[0], &shape[0], &result[0]));
 	return result;
 }
 
@@ -612,7 +463,8 @@ sci::string sci::InputNcFile::getVariableAttribute<sci::string>(const sci::strin
 	}
 	else
 	{
-		std::vector<char> utf8String(nValues);
+		std::vector<char> utf8String(nValues+1);
+		utf8String[nValues] = '\0';
 		checkNcCall(nc_get_att_text(getId(), id, sci::toUtf8(attributeName).c_str(), &utf8String[0]));
 		result = sci::fromUtf8(std::string(&utf8String[0]));
 	}

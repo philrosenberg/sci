@@ -58,6 +58,25 @@ float sumstd()
 
 int main()
 {
+	static_assert(std::is_standard_layout_v<dMetre> && std::is_trivial_v<dMetre>, "sci::Physicals should be pod");
+
+
+	bool isPhysMetre = sci::is_physical_v<dMetre>;
+	bool isPhysDouble = sci::is_physical_v<double>;
+	bool isUnitdMetre = sci::is_unit<dMetre>::value;
+	bool isUnitMetre = sci::is_unit<sci::Metre<>>::value;
+	auto shouldBeUnitlessPhysical = dMetre(5) / dMetre(2);
+	bool isUnitlessWhenShouldBe = sci::is_unitless_physical_v<decltype(shouldBeUnitlessPhysical)>;
+	bool isUnitlessWhenShouldBe2 = sci::is_unitless_physical_v<decltype(dMetre(5) / dMetre(2))>;
+
+	sci::pow(shouldBeUnitlessPhysical, shouldBeUnitlessPhysical);
+
+	std::wcout << "sci::is_physical_v<dMetre> = " << isPhysMetre << "\n";
+	std::wcout << "sci::is_physical_v<double> = " << isPhysDouble << "\n";
+	std::wcout << "sci::is_unit_v<dMetre> = " << isUnitdMetre << "\n";
+	std::wcout << "sci::is_unit_v<sci::Metre<>> = " << isUnitMetre << "\n";
+
+
 
 	bool is2Valid = sci::ExponentTraits<2>::validSi;
 	bool is4Valid = sci::ExponentTraits<4>::validSi;
@@ -74,6 +93,11 @@ int main()
 	dUnitless unitlessValue(0.001);
 	dGramPerKilogram gramPerKilogramValue = unitlessValue;
 	std::wcout << unitlessValue << L" = " << gramPerKilogramValue << "\n";
+
+	dMetre negativeDistance(-5);
+	dMetre positiveDistance(5);
+	dMetre abs_negativeDistance = sci::abs(negativeDistance);
+	dMetre abs_positiveDistance = sci::abs(positiveDistance);
 
 	dMetreSquared bigArea(2e12);
 	dMegametreSquared bigArea2 = bigArea; //test conversion of a powered unit from base type to type with exponent
@@ -150,25 +174,25 @@ int main()
 	end = clock();
 	std::cout << "Sum std::sqrt " << sum << " duration " << end - start << std::endl;
 
-	/*sum = 0;
-	start = clock();
-	if constexpr (sumsci() > 100000.0)
-	{
-		end = clock();
-		std::cout << "Sum sci::sqrtfunc first duration " << end - start << std::endl;
-	}
-	else
-	{
-		end = clock();
-		std::cout << "Sum sci::sqrtfunc second duration " << end - start << std::endl;
-	}
-
-	sum = 0;
-	start = clock();
-	for (size_t i = 0; i < n; ++i)
-		sum += std::sqrt((float)i / (float)RAND_MAX * max);
-	end = clock();
-	std::cout << "Sum std::sqrt func " << sum << " duration " << end - start << std::endl;*/
+	//sum = 0;
+	//start = clock();
+	//if constexpr (sumsci() > 100000.0)
+	//{
+	//	end = clock();
+	//	std::cout << "Sum sci::sqrtfunc first duration " << end - start << std::endl;
+	//}
+	//else
+	//{
+	//	end = clock();
+	//	std::cout << "Sum sci::sqrtfunc second duration " << end - start << std::endl;
+	//}
+	//
+	//sum = 0;
+	//start = clock();
+	//for (size_t i = 0; i < n; ++i)
+	//	sum += std::sqrt((float)i / (float)RAND_MAX * max);
+	//end = clock();
+	//std::cout << "Sum std::sqrt func " << sum << " duration " << end - start << std::endl;
 
 	sum = 0;
 	start = clock();
@@ -211,6 +235,7 @@ int main()
 
 	dMetre length1(1.0);
 	dMegaMetre length2(0.1);
+	length1 + length2;
 	dMetre length3 = length1 + length2;
 	std::cout << "length3 = " << length3 << "\n";
 	std::wcout << "length3 = " << length3 << "\n";
@@ -257,7 +282,7 @@ int main()
 	std::wcout << cuberootSpeed << L" " << cuberootSpeed.getLongUnitString<std::wstring>() << "\n";
 	std::cout << cuberootSpeed << " " << cuberootSpeed.getLongUnitString<std::string>() << "\n";
 	std::cout << "3 m1/3 s-1/3 metre to the power 1/3 per second to the power 1/3\n\n";
-
+	
 	std::wcout << dMetreSquared(dCentimetre(20) * dCentimetre(20)) << "\n";
 	std::wcout << dMetreSquared(sci::pow<2>(dCentimetre(20))) << "\n";
 	std::cout << "0.04 m2\n\n";
@@ -289,7 +314,7 @@ int main()
 	std::wcout << time1.getShortUnitString<std::wstring>() << L" " << time1.getLongUnitString<std::wstring>() << "\n";
 	//dDegree degree1 = dUnitless(100.0) * dmicroDegree(10.0);
 	//std::wcout << degree1.getShortUnitString<std::wstring>() << L" " << degree1.getLongUnitString<std::wstring>() << "\n";
-
+	
 
 	//Time
 
@@ -501,5 +526,6 @@ int main()
 		std::cout << "problem with gteq nan\n";
 	if (gpsTime <= std::numeric_limits<sci::TaiTime>::quiet_NaN())
 		std::cout << "problem with lteq nan\n";
+	
 }
 

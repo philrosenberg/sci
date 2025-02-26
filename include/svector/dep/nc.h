@@ -5,11 +5,13 @@
 #include<netcdf.h>
 #include<algorithm>
 #include"../serr.h"
-#include"../svector.h"
+//#include"../svector.h"
 #include"../sstring.h"
 #include"../Units.h"
 #include"../gridview.h"
+#include"../Statistics.h"
 #include<cstdint>
+#include<span>
 
 namespace sci_internal
 {
@@ -18,14 +20,19 @@ namespace sci_internal
 	{
 	};
 	template <>
-	struct NcTraits<int8_t>
+	struct NcTraits<char>
 	{
 		const static nc_type ncType = NC_CHAR;
 	};
 	template <>
-	struct NcTraits<uint8_t>
+	struct NcTraits<int8_t>
 	{
 		const static nc_type ncType = NC_BYTE;
+	};
+	template <>
+	struct NcTraits<uint8_t>
+	{
+		const static nc_type ncType = NC_UBYTE;
 	};
 	template <>
 	struct NcTraits<int16_t>
@@ -33,9 +40,29 @@ namespace sci_internal
 		const static nc_type ncType = NC_SHORT;
 	};
 	template <>
+	struct NcTraits<uint16_t>
+	{
+		const static nc_type ncType = NC_USHORT;
+	};
+	template <>
 	struct NcTraits<int32_t>
 	{
 		const static nc_type ncType = NC_INT;
+	};
+	template <>
+	struct NcTraits<uint64_t>
+	{
+		const static nc_type ncType = NC_UINT64;
+	};
+	template <>
+	struct NcTraits<int64_t>
+	{
+		const static nc_type ncType = NC_INT64;
+	};
+	template <>
+	struct NcTraits<uint32_t>
+	{
+		const static nc_type ncType = NC_UINT;
 	};
 	template <>
 	struct NcTraits<float>
@@ -250,6 +277,10 @@ namespace sci
 		std::vector<T> getVariable(const sci::string &name, std::vector<size_t> &shape);
 		template<class T>
 		std::vector<T> getVariable(const sci::string& name, const std::vector<size_t> &start, const std::vector<size_t> &shape);
+		template<IsGrid T>
+		T getVariable(const sci::string& name);
+		template<IsGrid T>
+		T getVariable(const sci::string& name, std::array<size_t, T::ndims>& shape);
 		std::vector<size_t> getVariableShape(const sci::string& name);
 		std::vector<sci::string>getVariableNames();
 		template<class T>
@@ -260,47 +291,33 @@ namespace sci
 		std::vector<sci::string> getVariableAttributeList(const sci::string& variableName);
 		std::vector<sci::string> getVariableDimensions(const sci::string& variableName);
 	private:
-		template<class T>
-		std::vector<T> getVariableFromId(int id, size_t nValues);
-		template<class T>
-		std::vector<T> getVariableFromId(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-		//template<class T>
-		//T getVariableAttributeFromId(int variableId, const sci::string& AttributeName);
+		template<class T, size_t EXTENT>
+		void getVariableFromId(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape, std::span<T, EXTENT> dest)
+		{
+			if constexpr (std::is_same_v<T, double>)
+				checkNcCall(nc_get_vara_double(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, float>)
+				checkNcCall(nc_get_vara_float(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, short>)
+				checkNcCall(nc_get_vara_short(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, int>)
+				checkNcCall(nc_get_vara_int(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, long>)
+				checkNcCall(nc_get_vara_long(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, int8_t>)
+				checkNcCall(nc_get_vara_schar(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, char>)
+				checkNcCall(nc_get_vara_text(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, uint8_t>)
+				checkNcCall(nc_get_vara_uchar(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, uint16_t>)
+				checkNcCall(nc_get_vara_ushort(getId(), id, &start[0], &shape[0], &dest[0]));
+			else if constexpr (std::is_same_v<T, uint32_t>)
+				checkNcCall(nc_get_vara_uint(getId(), id, &start[0], &shape[0], &dest[0]));
+			else
+				static_assert (std::is_same_v<T, double>, "Tried to read a netCDF variable with a type not compatible with netCDF types");
+		}
 	};
-
-	template<>
-	std::vector<double> InputNcFile::getVariableFromId<double>(int id, size_t nValues);
-	template<>
-	std::vector<float> InputNcFile::getVariableFromId<float>(int id, size_t nValues);
-	template<>
-	std::vector<short> InputNcFile::getVariableFromId<short>(int id, size_t nValues);
-	template<>
-	std::vector<int> InputNcFile::getVariableFromId<int>(int id, size_t nValues);
-	template<>
-	std::vector<long> InputNcFile::getVariableFromId<long>(int id, size_t nValues);
-	template<>
-	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, size_t nValues);
-	template<>
-	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, size_t nValues);
-	template<>
-	std::vector<char> InputNcFile::getVariableFromId<char>(int id, size_t nValues);
-
-
-	template<>
-	std::vector<double> InputNcFile::getVariableFromId<double>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<float> InputNcFile::getVariableFromId<float>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<short> InputNcFile::getVariableFromId<short>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<int> InputNcFile::getVariableFromId<int>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<long> InputNcFile::getVariableFromId<long>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<int8_t> InputNcFile::getVariableFromId<int8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-	template<>
-	std::vector<uint8_t> InputNcFile::getVariableFromId<uint8_t>(int id, const std::vector<size_t>& start, const std::vector<size_t>& shape);
-
 
 	template<>
 	double InputNcFile::getGlobalAttribute<double>(const sci::string &name);
@@ -512,6 +529,19 @@ namespace sci
 				checkNcCall(nc_put_vara(getId(), variable.getId(), &starts[0], &variableShape[0], &(dataCopy.first())));
 			}
 		}
+		template<class T, size_t NDIMS>
+		void write(const NcVariable<T>& variable, std::span<const T> data, const std::array<size_t, NDIMS> &shape)
+		{
+			auto strides = GridPremultipliedStridesReference<NDIMS>::premultipliedStridesFromSize(shape);
+			auto gridView = data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&strides[0]));
+			write(variable, gridView);
+		}
+		template<class T>
+		void write(const NcVariable<T>& variable, std::span<const T> data)
+		{
+			auto gridView = data | views::grid<1>(GridPremultipliedStridesReference<1>());
+			write(variable, gridView);
+		}
 	private:
 		bool m_inDefineMode;
 		int m_flags;
@@ -678,14 +708,23 @@ namespace sci
 				nValues *= shape[i];
 			}
 		}
-
-		return getVariableFromId<T>(varId, nValues);
+		std::vector<T> result(sci::product(shape));
+		std::vector<size_t> start(shape.size(), 0);
+		getVariableFromId(varId, start, shape, std::span<T, std::dynamic_extent>(result));
+		return result;
 	}
 
 	template<class T>
 	std::vector<T> InputNcFile::getVariable(const sci::string &name)
 	{
 		std::vector<size_t> shape;
+		return getVariable<T>(name, shape);
+	}
+
+	template<IsGrid T>
+	T InputNcFile::getVariable(const sci::string& name)
+	{
+		std::array<size_t, T::ndims> shape;
 		return getVariable<T>(name, shape);
 	}
 
@@ -700,7 +739,38 @@ namespace sci
 		for(size_t i=0; i<start.size(); ++i)
 			sci::assertThrow(start[i]+shape[i]<=variableShape[i], sci::err(sci::SERR_NC, 0, sU("Attempted to read past the end of a netcdf variable")));
 
-		return getVariableFromId<T>(varId, start, shape);
+
+		std::vector<T> result(sci::product(shape));
+		getVariableFromId<T>(varId, start, shape, result);
+		return result;
+	}
+
+
+	template<IsGrid T>
+	T InputNcFile::getVariable(const sci::string& name, std::array<size_t, T::ndims>& shape)
+	{
+		int varId;
+		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+		int nDims;
+		checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
+		sci::assertThrow(nDims == T::ndims, sci::err(sci::SERR_NC, 0, sU("Attempted to read a netcdf file into GridData with the wrong number of dimensions")));
+		size_t nValues = 1;
+		if (nDims > 0)
+		{
+			std::vector<int> dimIds(nDims);
+			checkNcCall(nc_inq_vardimid(getId(), varId, &dimIds[0]));
+			for (int i = 0; i < nDims; ++i)
+			{
+				checkNcCall(nc_inq_dimlen(getId(), dimIds[i], &shape[i]));
+				nValues *= shape[i];
+			}
+		}
+
+		T result(shape);
+		std::vector<size_t> start(shape.size(), 0);
+		std::vector<size_t> shapeV(shape.begin(), shape.end());
+		getVariableFromId(varId, start, shapeV, std::span(result));
+		return result;
 	}
 
 	template<class T>

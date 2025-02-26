@@ -213,7 +213,7 @@ namespace std
 		static size_t _Getcat(const locale::facet** _Ppf = nullptr, const locale* _Ploc = nullptr) {
 			// return locale category mask and construct standard facet
 			if (_Ppf && !*_Ppf) {
-				*_Ppf = new numpunct<sci::char_t>(_Locinfo(_Ploc->c_str()), 0, false);
+				*_Ppf = new numpunct<sci::char_t>(_Locinfo(_Ploc->name().c_str()), 0, false);
 			}
 			return _X_NUMERIC;
 		}

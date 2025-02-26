@@ -1,10 +1,6 @@
 #include"../include/svector/math.h"
 
 //from https://stackoverflow.com/questions/27229371/inverse-error-function-in-c
-double sci::erfInverse(double a)
-{
-	return (double)sci::erfInverse((float)a);
-}
 
 float sci::erfInverse(float a)
 {
@@ -36,4 +32,9 @@ float sci::erfInverse(float a)
 	}
 	r = a * p;
 	return float(r);
+}
+
+double sci::erfInverse(double a)
+{
+	return (double)sci::erfInverse((float)a);
 }

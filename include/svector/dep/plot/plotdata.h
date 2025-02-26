@@ -57,7 +57,7 @@ class VaryingSymbol : public SymbolBase
 {
 public:
 	VaryingSymbol ( sci::string symbol );
-	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const = 0;
+	virtual void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const = 0;
 	virtual bool isLogScaled() const = 0;
 private:
 };
@@ -66,8 +66,8 @@ class ColourVaryingSymbol : public VaryingSymbol
 {
 public:
 	ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, sci::string symbol = sym::filledCircle, double size = 4.0 );
-	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const;
-	bool isLogScaled() const;
+	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const override;
+	bool isLogScaled() const override;
 	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
 private:
 	double m_size;
@@ -78,9 +78,10 @@ class SizeVaryingSymbol : public VaryingSymbol
 {
 public:
 	SizeVaryingSymbol ( std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ) );
-	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, double scale ) const;
-	bool isLogScaled() const;
-	double getSize(double parameter) const;
+	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const override;
+	bool isLogScaled() const override;
+	//parameterPreLogged is only utilised for log scales
+	double getSize(double parameter, bool parameterPreLogged) const;
 	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:
 	rgbcolour m_colour;
@@ -91,10 +92,11 @@ class ColourAndSizeVaryingSymbol : public SymbolBase
 {
 public:
 	ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle);
-	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, double sizeParameter, double scale ) const;
+	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, bool colourParameterPreLogged, double sizeParameter, bool sizeParameterPreLogged, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;
-	double getSize(double parameter) const;
+	//parameterPreLogged is only utilised for log scales
+	double getSize(double parameter, bool parameterPreLogged) const;
 	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
 	std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
 private:
@@ -321,7 +323,7 @@ private:
 class HorizontalErrorBars : public UnstructuredData
 {
 public:
-	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer);
+	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;
@@ -330,7 +332,7 @@ private:
 class VerticalErrorBars : public UnstructuredData
 {
 public:
-	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer);
+	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;

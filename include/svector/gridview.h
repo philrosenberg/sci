@@ -5,6 +5,7 @@
 #include<memory>
 #include<assert.h>
 #include<stdexcept>
+#include<type_traits>
 
 namespace sci
 {
@@ -22,9 +23,9 @@ namespace sci
 	{
 		t.shape();
 		t.ndims;
-		t[std::array<size_t, T::ndims>()];
+		t.operator[](std::array<size_t, T::ndims>());
 		t.getView();
-		T::value_type;
+		typename T::value_type;
 	};
 	template<class T, size_t NDIMS>
 	concept IsGridDims = IsGrid<T> &&
@@ -152,6 +153,15 @@ namespace sci
 					result += index[i] * m_ptr.ptr[i];
 				return result + index[NDIMS - 1];
 			}
+		}
+
+		static constexpr std::array<size_t, NDIMS - 1> premultipliedStridesFromSize(const std::array<size_t, NDIMS>& size)
+		{
+			std::array<size_t, NDIMS - 1> result;
+			result[NDIMS - 2] = size[NDIMS-1];
+			for (size_t i = 1; i < NDIMS-1; ++i)
+				result[NDIMS - 2 - i] = result[NDIMS - 1 - i] * size[NDIMS - 1 - i];
+			return result;
 		}
 	private:
 		GridPremultipliedStridesPointer<NDIMS> m_ptr;
@@ -452,20 +462,15 @@ namespace sci
 		constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS> const& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
-		constexpr grid_view& operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
-		template<IsGrid GRID>
-		constexpr grid_view& operator=(const GRID &rhs)
+		constexpr grid_view operator=(grid_view<RANGE, NDIMS> const& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
+		constexpr grid_view operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
+		template<IsGridDims<NDIMS> GRID>
+		constexpr grid_view operator=(const GRID &rhs)
 		{
-			assert(rhs.shape() == shape());
-			auto iter = begin();
-			auto rhsIter = rhs.begin();
-			for (; iter != end(); ++iter, ++rhsIter)
-				*iter = *rhsIter;
-			return *this;
+			return assign(rhs.getView());
 		}
 		template<class T>
-		constexpr grid_view& operator=(const T& rhs)
+		constexpr grid_view operator=(const T& rhs)
 		{
 			for (auto& element : (*this))
 				element = rhs;
@@ -641,7 +646,7 @@ namespace sci
 			return *this;
 		}
 		template<IsGridDims<NDIMS> GRID>
-		void assign(const GRID &other)
+		grid_view<RANGE, NDIMS> assign(const GRID &other)
 		{
 			if (other.shape() != shape())
 				throw(std::out_of_range("Attempted to assign to a grid_view with a grid of differing shape."));
@@ -649,6 +654,7 @@ namespace sci
 			auto otherIter = other.begin();
 			for (; iter != end(); ++iter, ++otherIter)
 				*iter = *otherIter;
+			return *this;
 		}
 
 	private:
@@ -660,6 +666,11 @@ namespace sci
 		GridPremultipliedStridesReference<NDIMS> m_strides;
 	};
 
+	template<class RANGE1, class RANGE2, size_t NDIMS>
+	grid_view<RANGE1, NDIMS> assign(grid_view<RANGE1, NDIMS> destination, const grid_view<RANGE2, NDIMS>& source)
+	{
+		return destination.assign(source);
+	}
 
 	template <size_t NDIMS, class RANGE>
 	requires std::ranges::random_access_range<RANGE>

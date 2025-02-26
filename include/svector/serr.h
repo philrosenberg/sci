@@ -28,7 +28,8 @@ namespace sci
 		SERR_KISSFFT,
 		SERR_STRING,
 		SERR_EIGENENG,
-		SERR_CONTROLS
+		SERR_CONTROLS,
+		SERR_LIBRESAMPLE
 	};
 	//error codes should be selected from this list based on their errcategory
 

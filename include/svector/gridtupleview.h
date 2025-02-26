@@ -3,6 +3,7 @@
 #include<tuple>
 #include<assert.h>
 #include"array.h"
+#include"math.h"
 
 namespace sci
 {
@@ -495,7 +496,17 @@ namespace sci
 
 			difference_type operator-(const Iterator& right) const noexcept
 			{
-				return static_cast<const base_type1&>(this->first) - static_cast<const base_type1&>(right.first);
+				if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
+				{
+					difference_type firstDifference = this->first - right.first;
+					difference_type secondDifference = this->second - right.second;
+					assert(firstDifference == secondDifference);
+					return firstDifference;
+				}
+				else if constexpr (NDIMS1 >0)
+					return this->first - right.first;
+				else 
+					return this->second - right.second;
 			}
 
 			value_type operator[](const difference_type offset) const noexcept
@@ -800,7 +811,7 @@ namespace sci
 	//template<class GRID1, class TRANSFORM>
 	//using gridtransform_view = gridpairtransform_view<GRID1, uint8_t, decltype(&discardSecond<GRID1::value_type, uint8_t, TRANSFORM>)>;
 
-	template<class GRID1, class TRANSFORM>
+	template<IsGrid GRID1, class TRANSFORM>
 	auto make_gridtransform_view(const GRID1& grid1, TRANSFORM transform)
 	{
 		uint8_t grid2(0);
@@ -1156,5 +1167,41 @@ namespace sci
 			a--;
 		return temp;
 		//return make_ncgridtransform_view(a, postfixDecrement<decltype(getGridView(a))::value_type>);
+	}
+
+	template<IsGrid T>
+	auto log10(const T& a)
+	{
+		return make_gridtransform_view(a, sci::log10<typename T::value_type>);
+	}
+
+	template<IsGrid T>
+	auto sqrt(const T& a)
+	{
+		return make_gridtransform_view(a, sci::sqrt<typename T::value_type> );
+	}
+
+	template<int POW, IsGrid T>
+	auto pow(const T& a)
+	{
+		return make_gridtransform_view(a, sci::pow<POW, typename T::value_type>);
+	}
+
+	template<IsGrid T, class U>
+	auto pow(const T& a, const U &s)
+	{
+		return make_gridpairtransform_view(a,s,sci::pow<typename T::value_type, U>);
+	}
+	
+	template<class T, IsGrid U >
+	auto pow(const T &a, const U& s )
+	{
+		return make_gridpairtransform_view(a, s, sci::pow<T, typename U::value_type>);
+	}
+
+	template<IsGrid T, IsGrid U>
+	auto pow(const T &a, const U& s)
+	{
+		return make_gridpairtransform_view(a, s, sci::pow<typename T::value_type, typename U::value_type>);
 	}
 }

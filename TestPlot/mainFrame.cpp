@@ -152,6 +152,9 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, lineStyle));
 	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, lineStyle));
 
+	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(limits[0], limits[4], limits[3] + 0.06, limits[3] + 0.09, colourScaleCont, sU("Contour Colourbar")));
+	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(limits[0], limits[4], limits[3] + 0.15, limits[3] + 0.18, colourScaleGrid, sU("Grid Colourbar")));
+
 	canvas->addItem(box);
 	canvas->addItem(grid1);
 	canvas->addItem(grid2);
@@ -172,6 +175,8 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 	canvas->addItem(yAxis1);
 	canvas->addItem(yAxis2);
 	canvas->addItem(yAxis3);
+	canvas->addItem(colourbarContour);
+	canvas->addItem(colourbarGrid);
 
 	frame->Show(true);
 }
@@ -274,7 +279,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		frame->Show(true);
 	}
 
-	{
+	/* {
 		//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 		// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
 		// we do both axes correctly and tests the weird autoscaling of plshades
@@ -319,7 +324,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleTop = true;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}
+	}*/
 	{
 		sci::string title = sU("Plot 9: This plot shows a set of grid and contour plots for the function z=10#uy#d, with\na log colourscale. It should show even horizontal stripes.");
 		double scaleBegin = 1.0;
@@ -340,7 +345,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
-	{
+	/* {
 		sci::string title = sU("Plot 11: This plot shows the same data as Plot 9, but with a scale from 2-5, rather than 1-10.");
 		double scaleBegin = 2.0;
 		double scaleEnd = 5.0;
@@ -369,7 +374,7 @@ void mainFrame::OnRun(wxCommandEvent& event)
 		bool fillOffscaleTop = true;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}
+	}*/
 }
 
 void mainFrame::OnAbout(wxCommandEvent& event)

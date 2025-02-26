@@ -181,6 +181,40 @@ namespace sci
 			m_cTime.tm_mday = dayOfMonth;
 			m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 		}
+		//parse a date/time the date must be in the order year, month, day of month, followed by the time as hours, minutes seconds.
+		//Each part of the date must be separated by the dateSeparator. Each part of the time must be separated by the timeSeparator.
+		//The date and time must be separated by the dateTimeSeparator. Two digit years are not permitted, but leading zeros on any
+		//value can be omitted. Any text following the second is ignored as per the std::stod function
+		//seconds without checking for a valid decimal number.
+		void set(const std::string& dateTimeString, std::string dateSeparator = "-", std::string timeSeparator = ":", std::string dateTimeSeparator = "T")
+		{
+			std::string part;
+			size_t partBegin = 0;
+
+			size_t partEnd = dateTimeString.find(dateSeparator, partBegin);
+			int year = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
+			partBegin = partEnd + dateSeparator.length();
+
+			partEnd = dateTimeString.find(dateSeparator, partBegin);
+			int month = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
+			partBegin = partEnd + dateSeparator.length();
+
+			partEnd = dateTimeString.find(dateTimeSeparator, partBegin);
+			int day = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
+			partBegin = partEnd + dateTimeSeparator.length();
+
+			partEnd = dateTimeString.find(timeSeparator, partBegin);
+			int hour = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
+			partBegin = partEnd + timeSeparator.length();
+
+			partEnd = dateTimeString.find(timeSeparator, partBegin);
+			int minute = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
+			partBegin = partEnd + timeSeparator.length();
+
+			double second = std::stod(dateTimeString.substr(partBegin));
+
+			set(year, month, day, hour, minute, second);
+		}
 		constexpr int getYear() const
 		{
 			return m_cTime.tm_year + 1900;
@@ -283,7 +317,7 @@ namespace sci
 			time.tm_wday = (internal::yearStartDay[yearStartIndex] + time.tm_yday) % 7;
 
 			std::time_t repeatingPeriods = time.tm_year / 400;
-			if (repeatingPeriods < 0)
+			if (time.tm_year < 0 && time.tm_year % 400 != 0)
 				repeatingPeriods -= 1;
 			int partYears = (time.tm_year - repeatingPeriods * 400) % 400;
 
@@ -322,7 +356,7 @@ namespace sci
 
 			//now reference to a 400 year multiple before the date in question
 			std::time_t reference400YearChunk = time / secondsIn400Years;
-			if (reference400YearChunk < 0)
+			if (time < 0 && time % secondsIn400Years != 0)
 				reference400YearChunk -= 1;
 
 			std::time_t remainingSeconds = time - reference400YearChunk * secondsIn400Years; // this will always be positive, because we ensured referenceYear is before time.
@@ -406,9 +440,7 @@ namespace sci
 	constexpr sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...> operator+(const sci::GregorianTime<BASE_OFFSET, LEAP_SECONDS...>& time, const sci::TimeInterval& interval)
 	{
 		time_t integerSeconds = time.m_secsAfterPosixEpoch;
-		time_t integerInterval = (time_t)interval.value<sci::Second<>>();
-		if (integerInterval < 0)
-			--integerInterval;//this makes it equivalent to floor
+		time_t integerInterval = (time_t)std::floor(interval.value<sci::Second<>>());
 		integerSeconds += integerInterval;
 		double fraction = time.m_secondFraction + (interval.value<sci::Second<>>() - (double)integerInterval);
 		if (fraction >= 1.0)
