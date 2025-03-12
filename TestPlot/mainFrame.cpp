@@ -4,12 +4,14 @@
 //#include<svector/plotdata.h>
 
 const int mainFrame::ID_FILE_EXIT = ::wxNewId();
-const int mainFrame::ID_FILE_RUN = ::wxNewId();
+const int mainFrame::ID_FILE_RUN_PLOT_TESTS = ::wxNewId();
+const int mainFrame::ID_FILE_RUN_GRAPHICS_TESTS = ::wxNewId();
 const int mainFrame::ID_HELP_ABOUT = ::wxNewId();
 
 BEGIN_EVENT_TABLE(mainFrame, wxFrame)
 EVT_MENU(ID_FILE_EXIT, mainFrame::OnExit)
-EVT_MENU(ID_FILE_RUN, mainFrame::OnRun)
+EVT_MENU(ID_FILE_RUN_PLOT_TESTS, mainFrame::OnRunPlotTests)
+EVT_MENU(ID_FILE_RUN_GRAPHICS_TESTS, mainFrame::OnRunGraphicsTests)
 EVT_MENU(ID_HELP_ABOUT, mainFrame::OnAbout)
 END_EVENT_TABLE()
 
@@ -19,7 +21,8 @@ mainFrame::mainFrame(wxFrame *frame, const wxString& title)
 	wxMenuBar* mbar = new wxMenuBar();
 	wxMenu* fileMenu = new wxMenu(wxT(""));
 	fileMenu->Append(ID_FILE_EXIT, wxT("E&xit\tAlt+F4"), wxT("Exit the application"));
-	fileMenu->Append(ID_FILE_RUN, wxT("Run\tCtrl+R"), wxT("Run Code"));
+	fileMenu->Append(ID_FILE_RUN_PLOT_TESTS, wxT("Run Plot Tests\tCtrl+P"), wxT("Run Code"));
+	fileMenu->Append(ID_FILE_RUN_GRAPHICS_TESTS, wxT("Run Graphics Tests\tCtrl+G"), wxT("Run Code"));
 	mbar->Append(fileMenu, wxT("&File"));
 
 	wxMenu* helpMenu = new wxMenu(wxT(""));
@@ -181,7 +184,7 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 	frame->Show(true);
 }
 
-void mainFrame::OnRun(wxCommandEvent& event)
+void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 {
 	{
 		//create a frame with empty axes running from 0-1
@@ -377,6 +380,29 @@ void mainFrame::OnRun(wxCommandEvent& event)
 	}*/
 }
 
+void mainFrame::OnRunGraphicsTests(wxCommandEvent& event)
+{
+	{
+		//unit test for Point
+		grMillimetre x(0.5);
+		grMillimetre y(0.6);
+		const Point p1(x, y);
+		Point p2;
+		p2 = p1;
+		assert(x == p1.getX(grMillimetre(10), grMillimetre(10)));
+		assert(y == p1.getY(grMillimetre(10), grMillimetre(10)));
+	}
+
+	GraphicsFrame<>* frame = new GraphicsFrame<>(this);
+	frame->Show();
+
+	GraphicsFrame<GraphicsPanel1>* frame1 = new GraphicsFrame<GraphicsPanel1>(this);
+	frame1->Show();
+
+	GraphicsFrame<GraphicsPanel2>* frame2 = new GraphicsFrame<GraphicsPanel2>(this);
+	frame2->Show();
+}
+
 void mainFrame::OnAbout(wxCommandEvent& event)
 {
 	wxMessageBox(wxT("$projectname$ Version 1.00.0"), wxT("About $projectname$..."));
@@ -384,4 +410,151 @@ void mainFrame::OnAbout(wxCommandEvent& event)
 
 mainFrame::~mainFrame()
 {
+}
+
+void GraphicsPanel1::OnPaint(wxPaintEvent& event)
+{
+	wxPaintDC dc(this);
+	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	Point p1 = Point(grUnitless(0.1), grUnitless(0.1));
+	Point p2 = Point(grUnitless(0.1), grUnitless(0.7));
+	Point p3 = Point(grUnitless(0.3), grUnitless(0.7));
+	Point p4 = Point(grUnitless(0.3), grUnitless(0.1));
+
+	renderer.line(p1, p2);
+	renderer.line(p2, p3);
+	renderer.line(p3, p4);
+	renderer.line(p4, p1);
+
+
+	Point p5 = Point(grUnitless(0.4), grUnitless(0.1));
+	Point p6 = Point(grUnitless(0.4), grUnitless(0.1)) + Distance(grMillimetre(0), grMillimetre(70));
+	Point p7 = Point(grUnitless(0.4), grUnitless(0.1)) + Distance(grMillimetre(20), grMillimetre(70));
+	Point p8 = Point(grUnitless(0.4), grUnitless(0.1)) + Distance(grMillimetre(20), grMillimetre(0));
+
+	renderer.line(p5, p6);
+	renderer.line(p6, p7);
+	renderer.line(p7, p8);
+	renderer.line(p8, p5);
+
+	Point p9 = Point(grUnitless(0.7), grUnitless(0.1));
+	Point p10 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0), grUnitless(0.5), GraphicsVector::Scale::xDirection);
+	Point p11 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0.5), GraphicsVector::Scale::xDirection);
+	Point p12 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0), GraphicsVector::Scale::xDirection);
+
+	renderer.line(p9, p10);
+	renderer.line(p10, p11);
+	renderer.line(p11, p12);
+	renderer.line(p12, p9);
+
+	renderer.text(sU("The left box will scale with resize, middle is fixed size and right will scale only with the window x size"),
+		Point(grUnitless(0.5), grUnitless(0.8)), grUnitless(0.5), grUnitless(0.0));
+}
+
+Distance boundingBox(const TextMetric& textMetric)
+{
+	return (Distance(textMetric.width, textMetric.ascent + textMetric.descent));
+}
+
+void GraphicsPanel2::OnPaint(wxPaintEvent& event)
+{
+	wxPaintDC dc(this);
+	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+
+	Distance size(grMillimetre(2.0), grMillimetre(2.0));
+
+	Point p1(grUnitless(0.02), grUnitless(0.1));
+	renderer.rectangle(p1, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p1, size);
+	TextMetric size1 = renderer.text(sU("text aligned 0.0,0.0 with the circle centre"), p1, grUnitless(0.0), grUnitless(0.0));
+	renderer.rectangle(p1, boundingBox(size1), grUnitless(0.0), grUnitless(0.0));
+	renderer.text(sU("text aligned 0.0,0.0 with the circle centre"), p1, grUnitless(0.0), grUnitless(0.0));
+
+	Point p2(grUnitless(0.5), grUnitless(0.1));
+	renderer.rectangle(p2, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p2, size);
+	TextMetric size2 = renderer.text(sU("text aligned 0.5,0.0 with the circle centre"), p2, grUnitless(0.5), grUnitless(0.0));
+	renderer.rectangle(p2, boundingBox(size2), grUnitless(0.5), grUnitless(0.0));
+	renderer.text(sU("text aligned 0.5,0.0 with the circle centre"), p2, grUnitless(0.5), grUnitless(0.0));
+
+	Point p3(grUnitless(0.98), grUnitless(0.1));
+	renderer.rectangle(p3, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p3, size);
+	TextMetric size3 = renderer.text(sU("text aligned 1.0,0.0 with the circle centre"), p3, grUnitless(1.0), grUnitless(0.0));
+	renderer.rectangle(p3, boundingBox(size3), grUnitless(1.0), grUnitless(0.0));
+	renderer.text(sU("text aligned 1.0,0.0 with the circle centre"), p3, grUnitless(1.0), grUnitless(0.0));
+
+	Point p4 = p1+Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p4, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p4, size);
+	renderer.text(sU("text aligned 0.0,0.5 with the circle centre"), p4, grUnitless(0.0), grUnitless(0.5));
+
+	Point p5 = p2 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p5, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p5, size);
+	renderer.text(sU("text aligned 0.5,0.5 with the circle centre"), p5, grUnitless(0.5), grUnitless(0.5));
+
+	Point p6 = p3 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p6, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p6, size);
+	renderer.text(sU("text aligned 1.0,0.5 with the circle centre"), p6, grUnitless(1.0), grUnitless(0.5));
+
+	Point p7 = p4 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p7, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p7, size);
+	renderer.text(sU("text aligned 0.0,1.0 with the circle centre"), p7, grUnitless(0.0), grUnitless(1.0));
+
+	Point p8 = p5 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p8, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p8, size);
+	renderer.text(sU("text aligned 0.5,1.0 with the circle centre"), p8, grUnitless(0.5), grUnitless(1.0));
+
+	Point p9 = p6 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rectangle(p9, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(p9, size);
+	renderer.text(sU("text aligned 1.0,1.0 with the circle centre"), p9, grUnitless(1.0), grUnitless(1.0));
+
+	Point pr1 = p8 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rotatedText(sU("Rotated with 0.0,0.0 alignment"), pr1, grUnitless(0.0), grUnitless(0.0), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 0.0,0.0 alignment"), pr1, grUnitless(0.0), grUnitless(0.0), grDegree(180.0));
+
+	Point pr2 = pr1 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rotatedText(sU("Rotated with 0.5,0.0 alignment"), pr2, grUnitless(0.5), grUnitless(0.0), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 0.5,0.0 alignment"), pr2, grUnitless(0.5), grUnitless(0.0), grDegree(180.0));
+
+	Point pr3 = pr2 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rotatedText(sU("Rotated with 0.0,0.0 alignment"), pr3, grUnitless(1.0), grUnitless(0.0), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 1.0,0.0 alignment"), pr3, grUnitless(1.0), grUnitless(0.0), grDegree(180.0));
+
+	Point pr4 = pr3 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rotatedText(sU("Rotated with 0.0,0.5 alignment"), pr4, grUnitless(0.0), grUnitless(0.5), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 0.0,0.5 alignment"), pr4, grUnitless(0.0), grUnitless(0.5), grDegree(180.0));
+	
+	Point pr5 = pr4 + Distance(grMillimetre(0.0), grMillimetre(10.0));
+	renderer.rotatedText(sU("Rotated with 0.0,1.0 alignment"), pr5, grUnitless(0.0), grUnitless(1.0), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 0.0,1.0 alignment"), pr5, grUnitless(0.0), grUnitless(1.0), grDegree(180.0));
+
+
+	Point pr6 = pr3 + Distance(grMillimetre(0.0), grMillimetre(90.0));
+	renderer.rectangle(pr6, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
+	renderer.elipse(pr6, size);
+	renderer.rotatedText(sU("Rotated with 0.5,0.5 alignment 000 deg       Rotated with 0.5,0.5 alignment 000 deg"), pr6, grUnitless(0.5), grUnitless(0.5), grDegree(0.0));
+	renderer.rotatedText(sU("Rotated with 0.5,0.5 alignment 045 deg       Rotated with 0.5,0.5 alignment 045 deg"), pr6, grUnitless(0.5), grUnitless(0.5), grDegree(45.0));
+	renderer.rotatedText(sU("Rotated with 0.5,0.5 alignment 090 deg       Rotated with 0.5,0.5 alignment 090 deg"), pr6, grUnitless(0.5), grUnitless(0.5), grDegree(90.0));
+	renderer.rotatedText(sU("Rotated with 0.5,0.5 alignment 135 deg       Rotated with 0.5,0.5 alignment 135 deg"), pr6, grUnitless(0.5), grUnitless(0.5), grDegree(135.0));
+	
+	renderer.line(Point(grUnitless(0.5), grUnitless(0.0)), Point(grUnitless(0.5), grUnitless(1.0)));
+
+
+	renderer.setFont(sci::string(sU("Arial") ), Length(grTextPoint(40)), rgbcolour(0, 0, 0));
+	TextMetric AlphabetSize = renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
+		Point(grUnitless(0.05), grUnitless(0.7)), grUnitless(0.0), grUnitless(0.0));
+	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.7)), boundingBox(AlphabetSize));
+	renderer.setFont(sci::string(sU("Arial")), Length(grTextPoint(40)), rgbcolour(0, 0, 0));
+	renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
+		Point(grUnitless(0.05), grUnitless(0.7)), grUnitless(0.0), grUnitless(0.0));
+
+	TextMetric xSize = renderer.formattedText(sU("M^2"), Point(grUnitless(0.05), grUnitless(0.8)));
+	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.8)), boundingBox(xSize));
+	renderer.formattedText(sU("M^2"), Point(grUnitless(0.05), grUnitless(0.8)));
 }

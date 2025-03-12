@@ -19,6 +19,7 @@
 #include"../../sstring.h"
 #include"../../serr.h"
 #include"../../svector.h"
+#include"../../graphics.h"
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #undef _CRT_SECURE_NO_WARNINGS
@@ -79,44 +80,6 @@ sci::string loglonghand(double axisvalue);
 void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,PLPointer function);
 typedef  sci::string(*customlabeler)(double);
 
-// rgb colour. the hue colour wheel goes from 0-360, but numbers outside this range are permitted.
-// lightness, saturation and alpha are in the 0-1 range and will be set to the apropriate limit if
-//outside these values
-class rgbcolour;
-
-class hlscolour
-{
-public:
-	hlscolour(double hue, double lightness, double saturation, double alpha=1.0);
-	hlscolour();
-	rgbcolour convertToRgb() const;
-	inline double h() const {return m_h;}
-	inline double l() const {return m_l;}
-	inline double s() const {return m_s;}
-	inline double a() const {return m_a;}
-	double m_h;
-	double m_l;
-	double m_s;
-	double m_a;
-};
-
-// rgb colour, all three colours and alpha are in the 0-1 range and will be set to 
-//the apropriate limit if outside these values
-class rgbcolour
-{
-public:
-	rgbcolour(double red, double green, double blue, double alpha=1.0);
-	rgbcolour();
-	hlscolour convertToHls() const;
-	inline double r() const {return m_r;}
-	inline double g() const {return m_g;}
-	inline double b() const {return m_b;}
-	inline double a() const {return m_a;}
-	double m_r;
-	double m_g;
-	double m_b;
-	double m_a;
-};
 
 
 int sploterrorcatcher(const char *message);
@@ -454,6 +417,9 @@ public:
 	virtual ~DrawableItem() {}
 	virtual void preDraw() = 0;
 	virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight) = 0;
+	virtual void draw(Renderer& renderer, grPerMillimetre scale)
+	{
+	}
 	virtual bool readyToDraw() const = 0;
 };
 
@@ -462,12 +428,12 @@ class splotaxis: public PlotScale, public DrawableItem
 	friend class splot;
 	friend class splot2d;
 public:
-	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0), int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), int linethickness = 1, double majorticklength = 4.0, double minorticklength = 2.0, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), int linethickness = 1, double majorticklength = 4.0, double minorticklength = 2.0, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), int linethickness = 1, double majorticklength = 4.0, double minorticklength = 2.0, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), int linethickness = 1, double majorticklength = 4.0, double minorticklength = 2.0, bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
 	~splotaxis(){};
-	inline void setcolour(wxColour colour){m_colour=colour; m_haschanged=true;};
+	inline void setcolour(rgbcolour colour){m_colour=colour; m_haschanged=true;};
 	inline void setlinethickness(int thickness){m_linethickness=thickness; m_haschanged=true;};
 	inline void automajorintervalon(){m_automajorinterval=true; m_haschanged=true;};
 	inline void autominorintervalon(){m_autonsubticks=true; m_haschanged=true;};
@@ -477,7 +443,7 @@ public:
 	inline void settitle(sci::string title){m_title=title; m_haschanged=true;};
 	inline void setrotatetitle(bool rotated){m_rotatetitle=rotated; m_haschanged=true;};
 	inline void settitlesize(double size){m_titlesize=size; m_haschanged=true;};
-	inline void settitlecolour(wxColour colour){m_titlecolour=colour; m_haschanged=true;};
+	inline void settitlecolour(rgbcolour colour){m_titlecolour=colour; m_haschanged=true;};
 	inline void settitledistance(double distance){m_titledistance=distance; m_haschanged=true;};
 	inline void settitlefont(sci::string fontface){m_titlefont=fontface; m_haschanged=true;};
 	inline void setmajorticklength(double length){m_majorticklength=std::abs(length); m_haschanged=true;};
@@ -489,7 +455,7 @@ public:
 	inline void setlabelstyle(PLUNICODE style){m_labelfci=style; m_haschanged=true;};
 	inline void setrotatedlabels(bool rotated){m_rotatelabels=rotated; m_haschanged=true;};
 	inline void setlabelsize(double size){m_labelsize=size; m_haschanged=true;};
-	inline void setlabelcolour(wxColour colour){m_labelcolour=colour; m_haschanged=true;};
+	inline void setlabelcolour(rgbcolour colour){m_labelcolour=colour; m_haschanged=true;};
 	inline void setndecimalplaces(unsigned int ndecimalplaces){m_autodecimalplaces=false; m_ndecimalplaces=ndecimalplaces;};
 	inline void setautodecimalplaces(){m_autodecimalplaces=true;};
 	inline void setmaxndigits(int maxndigits){m_maxndigits=maxndigits;};
@@ -507,14 +473,41 @@ public:
 	{
 	}
 	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	void draw(Renderer& renderer, grPerMillimetre scale) override;
 	bool readyToDraw() const override
 	{
 		return true;
 	}
+	double plotToPage(double value)
+	{
+		double fraction;
+		if(isLog())
+			fraction = (std::log10(value) - getLogMin()) / (getLogMax() - getLogMin());
+		else
+			fraction = (value - getMin()) / (getMax() - getMin());
+		if (m_reversed)
+			fraction = 1.0 - fraction;
+		return m_positionStart + (m_positionEnd - m_positionStart) * fraction;
+	}
+	double pageToPlot(double value)
+	{
+		double fraction = (value - m_positionStart) / (m_positionEnd - m_positionStart);
+		if (m_reversed)
+			fraction = 1.0 - fraction;
+		if (isLog())
+			return std::pow(10, fraction * (getLogMax() - getLogMin()) + getLogMin());
+		return fraction * (getMax() - getMin()) + getMin();
+	}
 private:
 	
-	void setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const wxColour& titlecolour, double intersectpoint, wxColour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const wxColour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits);
-	
+	void setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits);
+
+	void drawLinear(Renderer& renderer, grPerMillimetre scale);
+	void drawLog(Renderer& renderer, grPerMillimetre scale);
+	void drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor);
+	grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition); //returns the sise of the label perpedicular to the axis
+	void drawTitle(Renderer& renderer, grPerMillimetre scale, grMillimetre distanceFromAxis);
+
 	std::string createploptstring() const;
 	//keep track of if the axis has changed
 	bool m_haschanged;
@@ -523,7 +516,7 @@ private:
 	double m_intersect;
 
 	//colour
-	wxColour m_colour;
+	rgbcolour m_colour;
 
 	//line thickness
 	double m_linethickness;
@@ -548,7 +541,7 @@ private:
 	double m_labelsize;
 	sci::string m_labelfont;
 	PLUNICODE m_labelfci;
-	wxColour m_labelcolour;
+	rgbcolour m_labelcolour;
 
 	//axis title
 	sci::string m_title;
@@ -556,7 +549,7 @@ private:
 	double m_titlesize; //scale to be defined
 	sci::string m_titlefont;
 	PLUNICODE m_titlefci;
-	wxColour m_titlecolour;
+	rgbcolour m_titlecolour;
 	double m_titledistance; //distance from the axis in multiples of character height
 	
 
@@ -692,10 +685,10 @@ class splothorizontalcolourbar : public DrawableItem
 public:
 	splothorizontalcolourbar(double horizontalStart, double horizontalEnd, double verticalStart, double verticalEnd,
 		std::shared_ptr<splotcolourscale> colourscale, sci::string title, sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0,
-		double titledistance = 2.5, const wxColour& titlecolour = wxColour(0, 0, 0), double intersectpoint = 0.0, wxColour colour = wxColour(0, 0, 0),
+		double titledistance = 2.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0),
 		int linethickness = 1, double majorticklength = 0.8, double minorticklength = 0.5, bool tickspositive = false,
 		bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
-		bool labelsrotated = false, double labelsize = 9.6, const wxColour& labelcolour = wxColour(0, 0, 0), bool autodecimalplaces = true,
+		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true,
 		unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0)
 	{
 		m_horizontalStart = horizontalStart;
@@ -753,7 +746,7 @@ private:
 	double m_verticalStart;
 	double m_verticalEnd;
 
-	wxColour m_colour;
+	rgbcolour m_colour;
 
 	//line thickness
 	double m_linethickness;
@@ -778,7 +771,7 @@ private:
 	double m_labelsize;
 	sci::string m_labelfont;
 	PLUNICODE m_labelfci;
-	wxColour m_labelcolour;
+	rgbcolour m_labelcolour;
 
 	//axis title
 	sci::string m_title;
@@ -786,7 +779,7 @@ private:
 	double m_titlesize; //scale to be defined
 	sci::string m_titlefont;
 	PLUNICODE m_titlefci;
-	wxColour m_titlecolour;
+	rgbcolour m_titlecolour;
 	double m_titledistance; //distance from the axis in multiples of character height
 
 
@@ -853,7 +846,7 @@ public:
 	inline void settitledistance(double distance){m_titledistance=distance; m_haschanged=true;};
 	inline void settitlefont(sci::string fontface){m_titlefont=fontface; m_haschanged=true;};
 	inline void settitlestyle(uint32_t style){m_titlefci=style; m_haschanged=true;};
-	inline void settitlecolour(wxColour colour){m_titlecolour=colour; m_haschanged=true;};
+	inline void settitlecolour(rgbcolour colour){m_titlecolour=colour; m_haschanged=true;};
 	bool inline gethaschanged(){return m_haschanged;};
 
 	virtual void removeAllData();
@@ -899,8 +892,8 @@ private:
 	std::vector<sci::string> m_pointfont; //this is the fontface name of the font we want for the plot points. If not accessible we default to the fci family
 	std::vector<double> m_linethickness; //0.0 for no line/contour
 	std::vector<double> m_pointsize; //0.0 for no point, ignored for contour/shade datasets
-	std::vector<wxColour> m_pointcolour;
-	std::vector<wxColour> m_linecolour;
+	std::vector<rgbcolour> m_pointcolour;
+	std::vector<rgbcolour> m_linecolour;
 	std::vector<sci::string> m_linestyle;
 	std::vector<std::shared_ptr<splotcolourscale>> m_colourscale; //if null shading won't be used for stuctured z data. Will be used for point colour for unstructured z data
 	std::vector<std::shared_ptr<splotsizescale>> m_sizescale; //will be used to adjust point size for unstructured z
@@ -921,7 +914,7 @@ private:
 	double m_titledistance;//in multiples of title character height
 	sci::string m_titlefont;
 	PLUNICODE m_titlefci;
-	wxColour m_titlecolour;
+	rgbcolour m_titlecolour;
 
 	//function pointer transformation xindex, yindex to x value, y value
 	void (*m_transfunc1dxy)(double xindex, double yindex, const std::vector<double> &x, const std::vector<double> &y, double &xout, double &yout);
@@ -929,7 +922,7 @@ private:
 	virtual void calculateautolimits()=0;
 	static void calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints, double existingMin, double existingMax);
 
-	void adddatasetproperties(wxColour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, wxColour linecolour, int linewidth, sci::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, sci::string map, const std::vector<double> &arrowstyle);
+	void adddatasetproperties(rgbcolour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, rgbcolour linecolour, int linewidth, sci::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, sci::string map, const std::vector<double> &arrowstyle);
 	void incrementdatasize();
 	void setupcolourscale(int ncolours, const splotcolourscale& colourscale, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double maxcontour, double mincontour, int contourlabelssize)
 	{
@@ -950,23 +943,23 @@ public:
 	//functions to add data to the plots
 
 	//x y scatter with constant colours and sizes
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), rgbcolour pointcolour=rgbcolour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
 	//x y scatter with varying point colour
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), double pointsize=0.5, sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
 	//x y scatter with varying point size
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotsizescale> sizescale, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), wxColour pointcolour=wxColour(0,0,0), sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotsizescale> sizescale, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), rgbcolour pointcolour=rgbcolour(0,0,0), sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
 	//x y scatter with varying point colour and size
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, std::shared_ptr<splotsizescale> sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, std::shared_ptr<splotsizescale> sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
 	//colourscale and/or contour plot
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, wxColour contourcolour=wxColour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, rgbcolour contourcolour=rgbcolour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
 	//colourscale and/or contour plot with 2d x and y
-	void adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, wxColour contourcolour=wxColour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), unsigned int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, rgbcolour contourcolour=rgbcolour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), unsigned int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
 	//bar chart
-	void adddata(const std::vector<double> &minedges, const std::vector<double> &maxedges, const std::vector<double> heights, wxColour fillcolour=wxColour(0,0,0),wxColour linecolour=wxColour(0,0,0), double linewidth=0.0, sci::string linestyle=sU(""), bool beginatzero=false);
+	void adddata(const std::vector<double> &minedges, const std::vector<double> &maxedges, const std::vector<double> heights, rgbcolour fillcolour=rgbcolour(0,0,0),rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=0.0, sci::string linestyle=sU(""), bool beginatzero=false);
 	//vector/arrow plot
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
 	//vector/arrow plot
-	void adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
+	void adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
 	//grid plot
 	void addShadedGrid(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, std::shared_ptr<splotTransformer> transformer = NULL);
 	//grid plot with 2d x and y
@@ -975,10 +968,10 @@ public:
 	//add a DrawableItem
 	void addData( std::shared_ptr<DrawableItem> drawableItem );
 
-	void addmap(sci::string map=sU("globe"), wxColour linecolour=wxColour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
+	void addmap(sci::string map=sU("globe"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
 	void addImage(sci::string picture, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0=0, int cropY0=0, int cropWidth=-1, int cropHeight=-1, double brightnessCorrection=0.0, double contrastCorrection=0.0);
-	void addText(sci::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const sci::string &font=sU(""), uint32_t style=0, wxColour colour=wxColour(0,0,0));
-	void setdatasetproperties(size_t setindex, wxColour pointcolour=wxColour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), wxColour linecolour=wxColour(0,0,0), int linewidth=1.0, wxColour xerrcolour=wxColour(0,0,0), wxColour yerrcolour=wxColour(0,0,0), int xerrwidth=1, int yerrwidth=1);
+	void addText(sci::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const sci::string &font=sU(""), uint32_t style=0, rgbcolour colour=rgbcolour(0,0,0));
+	void setdatasetproperties(size_t setindex, rgbcolour pointcolour=rgbcolour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), int linewidth=1.0, rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), int xerrwidth=1, int yerrwidth=1);
 
 	void removeAllData();
 	void removeData(std::shared_ptr<DrawableItem> drawableItem);
@@ -993,9 +986,9 @@ public:
 
 private:
 	//private constructor so only friends can create a plot
-	splot2d(bool logx=false, bool logy=false,sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
-	splot2d(double minx, double maxx, double miny, double maxy, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
-	splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
+	splot2d(bool logx=false, bool logy=false,sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
+	splot2d(double minx, double maxx, double miny, double maxy, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
+	splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
 	//private plot function so only friends can update a plot
 	void plot(plstream *pl, wxDC *dc, int width, int height, bool antialiasing, double linewidthmultiplier=1.0);
 
@@ -1016,8 +1009,8 @@ private:
 	std::vector< std::vector< double > > m_xminuserrsl;
 	std::vector< std::vector< double > > m_ypluserrsl;
 	std::vector< std::vector< double > > m_yminuserrsl;
-	std::vector<wxColour> m_xerrcolour;
-	std::vector<wxColour> m_yerrcolour;
+	std::vector<rgbcolour> m_xerrcolour;
+	std::vector<rgbcolour> m_yerrcolour;
 	std::vector<double>m_xerrthickness;
 	std::vector<double>m_yerrthickness;
 	//image properties
@@ -1039,23 +1032,22 @@ private:
 
 
 	void incrementdatasize();
-	void setallparams(sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&));
+	void setallparams(sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&));
 };
 
 class splotlegend : public splot
 {
 	friend class splotwindow;
 public:
-	void addentry(sci::string text, double textoffset = 0.2, double textsize = 9.6, const sci::string &textfont = sU(""), uint32_t textstyle = 0, double textspacing = 0.2, wxColour textcolour = wxColour(0, 0, 0), wxColour pointcolour = wxColour(0, 0, 0), double pointsize = 0.5, sci::string pointsymbol = sU("A"), wxColour linecolour = wxColour(0, 0, 0), int linewidth = 1, sci::string linestyle = sU(""));
 	void addentry(sci::string text, double textoffset = 0.2, double textsize = 9.6, const sci::string &textfont = sU(""), uint32_t textstyle = 0, double textspacing = 0.2, rgbcolour textcolour = rgbcolour(0, 0, 0), rgbcolour pointcolour = rgbcolour(0, 0, 0), double pointsize = 0.5, sci::string pointsymbol = sU("A"), rgbcolour linecolour = rgbcolour(0, 0, 0), int linewidth = 1, sci::string linestyle = sU(""));
 	void addentry(sci::string text, double textoffset = 0.2, double textsize = 9.6, const sci::string &textfont = sU(""), uint32_t textstyle = 0, double textspacing = 0.2, hlscolour textcolour = hlscolour(0, 0, 0), hlscolour pointcolour = hlscolour(0, 0, 0), double pointsize = 0.5, sci::string pointsymbol = sU("A"), hlscolour linecolour = hlscolour(0, 0, 0), int linewidth = 1, sci::string linestyle = sU(""));
-	void addentry(sci::string text, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
-	void addentry(sci::string text, std::shared_ptr<splotsizescale> sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, wxColour textcolour=wxColour(0,0,0), wxColour pointcolour=wxColour(0,0,0), sci::string pointsymbol=sU("A"), size_t nlines=5);
+	void addentry(sci::string text, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, rgbcolour textcolour=rgbcolour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
+	void addentry(sci::string text, std::shared_ptr<splotsizescale> sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, rgbcolour textcolour=rgbcolour(0,0,0), rgbcolour pointcolour=rgbcolour(0,0,0), sci::string pointsymbol=sU("A"), size_t nlines=5);
 	virtual ~splotlegend(){}
 private:
 	//private constructor so only friends can create a legend
-	splotlegend(sci::string title=sU(""), double titlesize=12.0, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
-	wxColour m_outlinecolour;
+	splotlegend(sci::string title=sU(""), double titlesize=12.0, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0), rgbcolour outlinecolour=rgbcolour(0,0,0), int outlinewidth=1);
+	rgbcolour m_outlinecolour;
 	int m_outlinethickness;
 	double m_titlespacing;
 	std::vector<double> m_headingoffset;
@@ -1065,14 +1057,14 @@ private:
 	std::vector<PLUNICODE> m_textfci;
 	std::vector<double> m_textsize;
 	std::vector<double> m_textspacing;
-	std::vector<wxColour> m_textcolour;
+	std::vector<rgbcolour> m_textcolour;
 	std::vector<bool> m_contours;
 	std::vector<bool> m_horizontal;
 	std::vector<bool> m_filloffscaletop;
 	std::vector<bool> m_filloffscalebottom;
 
 	std::vector<size_t> m_nlines;
-	void adddatasetproperties(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, wxColour textcolour, wxColour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, wxColour linecolour, int linewidth, sci::string linestyle, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, std::shared_ptr<splotsizescale> sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal);
+	void adddatasetproperties(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, rgbcolour textcolour, rgbcolour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, rgbcolour linecolour, int linewidth, sci::string linestyle, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, std::shared_ptr<splotsizescale> sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal);
 	void plot(plstream *pl, double linewidthmultiplier=1.0);
 	void calculateautolimits(){}; //do nothing - function only created as it is pure virtual
 };
@@ -1096,6 +1088,7 @@ public:
 		}
 	}
 	void render(wxDC *dc, int width, int height, double linewidthmultiplier);
+	void render(Renderer& renderer, grPerMillimetre scale);
 	bool writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier = 1.0, bool preferInkscape = false);
 private:
 	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;

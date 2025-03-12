@@ -176,7 +176,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(WXWIN)/include;$(WXADDITIONS)/include;$(WXWIN)/contrib/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;STRICT;__WXMSW__;__WX__;_DEBUG;__WXDEBUG__;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;STRICT;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;NOMINMAX;__WXMSW__;__WX__;_DEBUG;__WXDEBUG__;_WINDOWS;wxUSE_UNICODE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
@@ -215,7 +215,7 @@
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(WXWIN)/include;$(WXADDITIONS)/include;$(WXWIN)/contrib/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;wxUSE_GUI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_LIB;wxUSE_GUI=1;wxUSE_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
@@ -364,6 +364,7 @@
     <ClInclude Include="..\include\svector\dep\sreadwrite.h" />
     <ClInclude Include="..\include\svector\dep\svector.h" />
     <ClInclude Include="..\include\svector\dep\windows.h" />
+    <ClInclude Include="..\include\svector\graphics.h" />
     <ClInclude Include="..\include\svector\gridtupleview.h" />
     <ClInclude Include="..\include\svector\gridview.h" />
     <ClInclude Include="..\include\svector\kdTree.h" />

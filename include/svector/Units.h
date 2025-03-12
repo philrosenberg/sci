@@ -1518,6 +1518,7 @@ struct ExponentTraits<VALUE>\
 	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, "US fl oz", "US fluid ounce")
 	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, "imp pt", "imperial pint")
 	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, "US pt", "US pint")
+	MAKE_SCALED_UNIT(TextPoint, Metre, 1, 0.9144 / (36.0 * 72.0), "pt", "point")
 	//weight units are defined from the definition of a pound being 453.59237 g
 	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, "t", "ton")
 	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, "cwt", "hundredweight")
