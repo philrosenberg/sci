@@ -61,7 +61,7 @@ namespace sci
 	template<>
 	inline bool textToValue<sci::string>(const wxString& source, sci::string& destination)
 	{
-		destination = sci::fromWxString(source);
+		destination = sci::fromUtf8(std::string(source.ToUTF8()));
 		return true;
 	}
 
@@ -199,7 +199,7 @@ namespace sci
 				{
 					for (size_t i = 0; i < result.second.size(); ++i)
 					{
-						result.second[i] = sci::fromWxString(controlElements[i]);
+						result.second[i] = sci::fromUtf8(controlElements[i].ToUTF8());
 					}
 				}
 				return result;
