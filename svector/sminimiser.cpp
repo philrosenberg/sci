@@ -76,8 +76,9 @@ void sci::Minimiser::setXs(const std::vector<double> &xs)
 	//will change may not be of the same order as the guess -e.g. a guess might be 0.0
 	//but we might expect the result to be in the range +/- 100 so the scale should be 100
 	m_scales=xs;
-	m_scales==m_scales;
-	//sci::assign(m_scales, m_scales==0.0, 1.0);
+	for (auto& s : m_scales)
+		if (s == 0.0)
+			s = 1.0;
 }
 
 void sci::Minimiser::setXs(const std::vector<double> &xs, const std::vector<double> &scales)
