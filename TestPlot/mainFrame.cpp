@@ -554,7 +554,7 @@ void GraphicsPanel2::OnPaint(wxPaintEvent& event)
 	renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
 		Point(grUnitless(0.05), grUnitless(0.7)), grUnitless(0.0), grUnitless(0.0));
 
-	TextMetric xSize = renderer.formattedText(sU("M^2"), Point(grUnitless(0.05), grUnitless(0.8)));
+	TextMetric xSize = renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
 	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.8)), boundingBox(xSize));
-	renderer.formattedText(sU("M^2"), Point(grUnitless(0.05), grUnitless(0.8)));
+	renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
 }

@@ -568,14 +568,14 @@ public:
 		if (next == m_nodes.end())
 		{
 			TrieNode newNode;
-			newNode.add(string, start + 1, length - 1);
+			newNode.add(string, data, start + 1, length - 1);
 			m_nodes.insert(std::pair<char16_t, TrieNode>(string[start], newNode));
 		}
 	}
 	std::optional<size_t> startsWithContainedWord(const sci::string& string, size_t start = 0) const
 	{
-		if (m_isEnd == 0)
-			return start + 1;
+		if (m_isEnd)
+			return start;
 
 		auto next = m_nodes.find(string[start]);
 		if (next == m_nodes.end())
@@ -723,6 +723,7 @@ public:
 
 				if (openCount == 0)
 					return position;
+				++position;
 			}
 
 			return std::string::npos;
@@ -751,7 +752,7 @@ public:
 			if (string[start] == sU('^') || string[0] == sU('^'))
 			{
 				if (string[start + 1] == sU('{'))
-					return findClosingBracket(string, start + 1);
+					return findClosingBracket(string, start + 1) + 1;
 				else
 					return start + 2;
 			}
@@ -777,7 +778,7 @@ public:
 
 			//if this is a chunk where the whole string is a sub or super script then sort that out
 			if ((m_text[0] == sU('^') || m_text[0] == sU('_'))
-				&& (m_text.length() <=2 ||(m_text[2]==sU('{') && m_text.back() == sU('}'))))
+				&& (m_text.length() <=2 ||(m_text[1]==sU('{') && m_text.back() == sU('}'))))
 			{
 				m_size = grUnitless(0.66);
 				if (m_text[0] == sU('^'))
@@ -1015,7 +1016,7 @@ public:
 	virtual TextMetric text(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment) override
 	{
 		wxPoint wxPosition = getWxPoint(position);
-		wxString wxStr = wxString(sci::toUtf8(str));
+		wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
 		wxCoord width, ascentPlusDescent, descent, leading;
 		m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 		wxCoord ascent = ascentPlusDescent - descent;
@@ -1035,7 +1036,7 @@ public:
 	virtual TextMetric rotatedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment, grDegree rotation) override
 	{
 		wxPoint wxPosition = getWxPoint(position);
-		wxString wxStr = wxString(sci::toUtf8(str));
+		wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
 		//wxSize extent = m_dc->GetTextExtent(wxStr);
 		wxCoord width, ascentPlusDescent, descent, leading;
 		m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
@@ -1116,7 +1117,7 @@ private:
 	TextMetric getUnformattedTextExtent(const sci::string& str)
 	{
 		wxCoord width, ascentPlusDescent, descent, leading;
-		wxString wxStr = str.length() > 0 ? wxString(sci::toUtf8(str)) : wxString("M"); // ensure the string isn't empty so it gets a non-zero height
+		wxString wxStr = str.length() > 0 ? wxString::FromUTF8(sci::toUtf8(str)) : wxString("M"); // ensure the string isn't empty so it gets a non-zero height
 		m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 		wxCoord ascent = ascentPlusDescent - descent;
 		if (str.length() == 0)
