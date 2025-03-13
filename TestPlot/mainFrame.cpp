@@ -557,4 +557,8 @@ void GraphicsPanel2::OnPaint(wxPaintEvent& event)
 	TextMetric xSize = renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
 	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.8)), boundingBox(xSize));
 	renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
+
+	renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.9), grUnitless(0.5)), grUnitless(0.0), grUnitless(0.0), grDegree(90.0));
+	renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.9), grUnitless(0.5)), grUnitless(0.0), grUnitless(0.0), grDegree(225.0));
+	renderer.elipse(Point(grUnitless(0.9), grUnitless(0.5)), size);
 }

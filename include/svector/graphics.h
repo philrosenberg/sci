@@ -646,10 +646,15 @@ public:
 	virtual void line(const Point& p1, const Point& p2) = 0;
 	virtual void line(const Point& point, const Distance& distance) = 0;
 	virtual TextMetric text(const sci::string &str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment) = 0;
-	TextMetric formattedText(const sci::string& str, const Point& position, grTextPoint minTextSize = grTextPoint(5))
+	TextMetric formattedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment = grUnitless(0.0), grUnitless verticalAlignment = grUnitless(0.0), grDegree rotation = grDegree(0.0), grTextPoint minTextSize = grTextPoint(5))
 	{
 		textChunk text(str);
-		return text.render(*this, minTextSize, position);
+
+		TextMetric extent = text.getExtent(*this, minTextSize);
+		Distance alignmentOffset(grMillimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (extent.ascent * verticalAlignment) * sci::sin(rotation)),
+			grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (extent.ascent * verticalAlignment) * sci::cos(rotation));
+
+		return text.render(*this, minTextSize, position-alignmentOffset, rotation);
 	}
 	virtual TextMetric rotatedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment, grDegree rotation) = 0;
 	virtual TextMetric getUnformattedTextExtent(const sci::string& str) = 0;
@@ -672,13 +677,13 @@ public:
 		TextMetric getExtent(Renderer& renderer, grMillimetre minSize) const
 		{
 			TextMetric basicExtent = renderer.getUnformattedTextExtent(sU("M"));
-			return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, false, Point(), grMillimetre(0.0), grMillimetre(0.0));
+			return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, false, Point(), grMillimetre(0.0), grMillimetre(0.0), grDegree(0));
 		}
-		TextMetric render(Renderer& renderer, grMillimetre minSize, Point point) const
+		TextMetric render(Renderer& renderer, grMillimetre minSize, Point point, grDegree rotation) const
 		{
 			TextMetric basicExtent = renderer.getUnformattedTextExtent(sU("M"));
-			point += Distance(grMillimetre(0), basicExtent.ascent);
-			return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, true, point, grMillimetre(0.0), grMillimetre(0.0));
+			point += Distance(grMillimetre(basicExtent.ascent * sci::sin(rotation)), grMillimetre(basicExtent.ascent * sci::cos(rotation)));
+			return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, true, point, grMillimetre(0.0), grMillimetre(0.0), rotation);
 		}
 		sci::string m_text;
 		std::vector<std::unique_ptr<textChunk>> m_chunks;
@@ -827,7 +832,7 @@ public:
 			}
 		}
 
-		TextMetric getExtent(Renderer &renderer, grMillimetre currentSize, grMillimetre minSize, grMillimetre currentAscendor, bool render, Point baselineStartPoint, grMillimetre baselineX, grMillimetre baselineY) const
+		TextMetric getExtent(Renderer &renderer, grMillimetre currentSize, grMillimetre minSize, grMillimetre currentAscendor, bool render, Point baselineStartPoint, grMillimetre baselineX, grMillimetre baselineY, grDegree rotation) const
 		{
 			baselineY += currentAscendor * m_baselineOffset;
 			TextMetric extent;
@@ -846,7 +851,11 @@ public:
 					//get the extent so we know how much to lift from the baseline
 					extent = renderer.getUnformattedTextExtent(m_text);
 					if (render)
-						extent = renderer.text(m_text, baselineStartPoint + Distance(baselineX, -(baselineY + extent.ascent)), grUnitless(0.0), grUnitless(0.0));
+					{
+						Distance alignmentOffset(grMillimetre(baselineX * sci::cos(rotation) + (-(baselineY + extent.ascent)) * sci::sin(rotation)),
+							grMillimetre(-baselineX * sci::sin(rotation) + (-(baselineY + extent.ascent)) * sci::cos(rotation)));
+						extent = renderer.rotatedText(m_text, baselineStartPoint + alignmentOffset, grUnitless(0.0), grUnitless(0.0), rotation);
+					}
 					baselineX += extent.width;
 
 				}
@@ -856,7 +865,7 @@ public:
 					grMillimetre standardAscent = extent.ascent;
 					for (auto& c : m_chunks)
 					{
-						TextMetric thisExtent = c->getExtent(renderer, currentSize * textScale, minSize, standardAscent, render, baselineStartPoint, baselineX, baselineY);
+						TextMetric thisExtent = c->getExtent(renderer, currentSize * textScale, minSize, standardAscent, render, baselineStartPoint, baselineX, baselineY, rotation);
 						extent.width += thisExtent.width;
 						extent.topAscent = std::max(thisExtent.ascent, extent.topAscent);
 						extent.bottomDescent = std::max(thisExtent.descent, extent.bottomDescent);
