@@ -3,7 +3,6 @@
 #define GRAPHICS_TEST_FRAME_H
 
 #include "app.h"
-#include<svector/splot.h>
 
 class GraphicsPanel : public wxPanel
 {

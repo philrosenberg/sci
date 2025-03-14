@@ -759,65 +759,57 @@ std::vector<double> splotlevelscale::getLevels() const
 	return result;
 }
 
-splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour &titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, bool log, Direction direction, Point start, Point end, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour &titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = 0;
 	m_nsubticks = 0;
 	m_automajorinterval=true;
 	m_autonsubticks=true;
-	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
+	setup(start, end, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
 		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
-splotaxis::splotaxis(double min, double max, bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour &titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(double min, double max, bool log, Direction direction, Point start, Point end, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour &titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour &labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(min, max, log, direction)
 {
 	m_majorinterval = majorinterval;
 	m_nsubticks = nsubticks;
 	m_automajorinterval = false;
 	m_autonsubticks = false;
-	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
+	setup(start, end, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
 		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(bool log, Direction direction, Point start, Point end, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(log, direction, 0.05)
 {
 	m_majorinterval = 0;
 	m_nsubticks = 0;
 	m_automajorinterval = true;
 	m_autonsubticks = true;
-	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
+	setup(start, end, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
 		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-splotaxis::splotaxis(bool log, Direction direction, double positionStart, double positionEnd, double perpendicularPosition, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+splotaxis::splotaxis(bool log, Direction direction, Point start, Point end, double majorinterval, double nsubticks, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 	:PlotScale(log, direction, 0.05)
 {
 	m_majorinterval = majorinterval;
 	m_nsubticks = nsubticks;
 	m_automajorinterval = false;
 	m_autonsubticks = false;
-	setup(positionStart, positionEnd, perpendicularPosition, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
+	setup(start, end, title, titlefont, titlestyle, titlesize, titledistance, titlecolour, intersectpoint, colour,
 		linethickness, majorticklength, minorticklength, tickspositive, ticksnegative, showlabels, labelpositionpositive, labelfont,
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-void splotaxis::setup(double positionStart, double positionEnd, double perpendicularPosition, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, int linethickness, double majorticklength, double minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+void splotaxis::setup(Point start, Point end, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
-	m_positionStart = positionStart;
-	m_positionEnd = positionEnd;
-	if (m_positionStart > m_positionEnd)
-	{
-		std::swap(m_positionStart, m_positionEnd);
-		m_reversed = true;
-	}
-	else
-		m_reversed = false;
-	m_perpendicularPosition = perpendicularPosition;
+	m_start = start;
+	m_end = end;
 	m_intersect = intersectpoint;
 	m_timeformat = sU("");
 	m_customlabelcreator = NULL;
@@ -825,8 +817,8 @@ void splotaxis::setup(double positionStart, double positionEnd, double perpendic
 	m_linethickness = linethickness;
 	m_tickspos = tickspositive;
 	m_ticksneg = ticksnegative;
-	m_majorticklength = std::abs(majorticklength);
-	m_minorticklength = std::abs(minorticklength);
+	m_majorticklength = majorticklength;
+	m_minorticklength = minorticklength;
 	m_showlabels = showlabels;
 	m_labelfont = labelfont;
 	m_labelfci = labelstyle;
@@ -860,9 +852,9 @@ std::string splotaxis::createploptstring() const
 		else opt = opt + wxT("n");
 	}
 	if (isLog())opt = opt + "l";
-	if (m_majorticklength > 0.0)opt = opt + "t";
+	if (m_majorticklength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))opt = opt + "t";
 	else opt = opt + "x";
-	if (m_minorticklength > 0.0)opt = opt + "s";
+	if (m_minorticklength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))opt = opt + "s";
 	if (m_rotatelabels)opt = opt + "v";
 
 	return opt;
@@ -896,12 +888,11 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	//unsigned int ynsub = m_yaxis.m_autonsubticks ? 0.0 : m_yaxis.m_nsubticks + 1;
 	double min = getMin();
 	double max = getMax();
-	if (m_reversed)
-		std::swap(min, max);
 
 	if (m_direction == Direction::horizontal)
 	{
-		pl->vpor(m_positionStart, m_positionEnd, m_perpendicularPosition, m_perpendicularPosition + 1.0);
+		pl->vpor(m_start.getX(1.0, 1.0, grPerMillimetre(0)), m_end.getX(1.0, 1.0, grPerMillimetre(0)),
+			m_start.getY(1.0, 1.0, grPerMillimetre(0)), m_start.getY(1.0, 1.0, grPerMillimetre(0)) + 1.0);
 		if(isLog())
 			pl->wind(std::log10(min), std::log10(max), 0.0, 1.0);
 		else
@@ -909,7 +900,8 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	}
 	else if (m_direction == Direction::vertical)
 	{
-		pl->vpor(m_perpendicularPosition, m_perpendicularPosition + 1.0, m_positionStart, m_positionEnd);
+		pl->vpor(m_start.getX(1.0, 1.0, grPerMillimetre(0)), m_start.getX(1.0, 1.0, grPerMillimetre(0)) + 1.0,
+			m_start.getY(1.0, 1.0, grPerMillimetre(0)), m_end.getY(1.0, 1.0, grPerMillimetre(0)));
 		if (isLog())
 			pl->wind(0.0, 1.0, std::log10(min), std::log10(max));
 		else
@@ -921,14 +913,14 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	//set the axis colour
 	pl->scol0a(1, m_colour.r() * 255.99999, m_colour.g()*255.99999, m_colour.b()*255.99999, m_colour.a());
 	pl->col0(1);
-	pl->width(m_linethickness * scale);
+	pl->width(m_linethickness.getLength(grMillimetre(0), grMillimetre(0)).value<grMillimetre>() * scale);
 	//set the font for the labels
 	pl->sfci(m_labelfci);
 	//pl->sfontf(m_xaxis.m_labelfont.mb_str());
 	pl->schr(1.0, m_labelsize * scale / 72.0 * 25.4);
 	//set the tick lengths
-	pl->smin(1.0, m_minorticklength * scale);
-	pl->smaj(1.0, m_majorticklength * scale);
+	pl->smin(1.0, m_minorticklength.getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale);
+	pl->smaj(1.0, m_majorticklength.getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale);
 	//set the label dp and length
 	pl->sxax(m_maxndigits, 0);
 	if (m_autodecimalplaces)
@@ -980,7 +972,7 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 void splotaxis::draw(Renderer& renderer, grPerMillimetre scale)
 {
 	StatePusher statePusher(&renderer);
-	renderer.setPen(m_colour, Length(grMillimetre(m_linethickness)));
+	renderer.setPen(m_colour, m_linethickness);
 	if (isLog())
 		drawLog(renderer, scale);
 	else
@@ -992,8 +984,6 @@ void splotaxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 	//calculate the min, max and span
 	double min = getMin();
 	double max = getMax();
-	if (m_reversed)
-		std::swap(min, max);
 	double span = max - min;
 
 	//calculate major interval if needed
@@ -1056,24 +1046,11 @@ void splotaxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 	}
 
 	//draw the axis
-	Point p1;
-	Point p2;
-
-	if (getDirection() == Direction::horizontal)
-	{
-		p1.set(grUnitless(m_positionStart), grUnitless(m_perpendicularPosition));
-		p2.set(grUnitless(m_positionEnd), grUnitless(m_perpendicularPosition));
-	}
-	else
-	{
-		p1.set(grUnitless(m_perpendicularPosition), grUnitless(m_positionStart));
-		p2.set(grUnitless(m_perpendicularPosition), grUnitless(m_positionEnd));
-	}
-	renderer.line(p1, p2);
+	renderer.line(m_start, m_end);
 
 	//draw the title
 	renderer.setFont(m_titlefont, Length(grInch(m_titlesize / 72.0)), m_titlecolour);
-	drawTitle(renderer, scale, grMillimetre(m_majorticklength * 1.4) + maxLabelSize);
+	drawTitle(renderer, scale, m_majorticklength * grUnitless(1.4) + maxLabelSize);
 }
 
 void splotaxis::drawLog(Renderer& renderer, grPerMillimetre scale)
@@ -1081,8 +1058,6 @@ void splotaxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 	//calculate the min, max and span
 	double logMin = getLogMin();
 	double logMax = getLogMax();
-	if (m_reversed)
-		std::swap(logMin, logMax);
 	double logSpan = logMax - logMin;
 
 	//calculate major interval if needed
@@ -1139,37 +1114,24 @@ void splotaxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 	}
 
 	//draw the axis
-	Point p1;
-	Point p2;
-
-	if (getDirection() == Direction::horizontal)
-	{
-		p1.set(grUnitless(m_positionStart), grUnitless(m_perpendicularPosition));
-		p2.set(grUnitless(m_positionEnd), grUnitless(m_perpendicularPosition));
-	}
-	else
-	{
-		p1.set(grUnitless(m_perpendicularPosition), grUnitless(m_positionStart));
-		p2.set(grUnitless(m_perpendicularPosition), grUnitless(m_positionEnd));
-	}
-	renderer.line(p1, p2);
+	renderer.line(m_start, m_end);
 
 	//draw the title
 	renderer.setFont(m_titlefont, Length(grInch(m_titlesize / 72.0)), m_titlecolour);
-	drawTitle(renderer, scale, grMillimetre(m_majorticklength * 1.4) + maxLabelSize);
+	drawTitle(renderer, scale, m_majorticklength * grUnitless(1.4) + maxLabelSize);
 }
 
 void splotaxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
 {
-	double pagePosition = plotToPage(plotPosition);
-	grMillimetre length = grMillimetre(minor ? m_minorticklength : m_majorticklength);
+	Point pagePosition = m_start + alongAxisDistance(plotPosition);
+	Length length = minor ? m_minorticklength : m_majorticklength;
 	Point p1 = Point(grMillimetre(0.0), grMillimetre(0.0));
 	Point p2 = p1;
 	if (getDirection() == Direction::horizontal)
 	{
 		//set the position of both ends of the tick on the axis initially
-		p1 = Point(grUnitless(pagePosition), grUnitless(m_perpendicularPosition));
-		p2 = Point(grUnitless(pagePosition), grUnitless(m_perpendicularPosition));
+		p1 = pagePosition;
+		p2 = pagePosition;
 		//extend the tick out in either direction as needed
 		if (m_tickspos)
 			p1+=Distance(grMillimetre(0.0), -length);
@@ -1179,8 +1141,8 @@ void splotaxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotP
 	else if (getDirection() == Direction::vertical)
 	{
 		//set the position of both ends of the tick on the axis initially
-		p1 = Point(grUnitless(m_perpendicularPosition), grUnitless(pagePosition));
-		p2 = Point(grUnitless(m_perpendicularPosition), grUnitless(pagePosition));
+		p1 = pagePosition;
+		p2 = pagePosition;
 		//extend the tick out in either direction as needed
 		if (m_tickspos)
 			p1+=Distance(-length, grMillimetre(0.0));
@@ -1195,98 +1157,88 @@ grMillimetre splotaxis::drawLabel(Renderer& renderer, grPerMillimetre scale, dou
 {
 	StatePusher statePusher(&renderer);
 	renderer.setBrush(m_labelcolour);
-	double pagePosition = plotToPage(plotPosition);
-	grMillimetre distanceFromAxis = grMillimetre(m_majorticklength * 1.2);
+	Point pagePosition = m_start + alongAxisDistance(plotPosition);
+	Length distanceFromAxis = m_majorticklength * grUnitless(1.2);
 
 	sci::stringstream strm;
 	strm << plotPosition;
 
-	Point position = Point(grMillimetre(0.0), grMillimetre(0.0));
 	grUnitless alignment(0.5);
 	grMillimetre labelSize(0);
 	if (getDirection() == Direction::horizontal)
 	{
-		//set the position on the axis initially
-		position = Point(grUnitless(pagePosition), grUnitless(m_perpendicularPosition));
 		//set the horizontal position and the alignment
 		if (m_labelpositionpositive)
 		{
-			position += Distance(grMillimetre(0.0), -distanceFromAxis);
+			pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
 			alignment = grUnitless(1.0);
 		}
 		else
 		{
-			position += Distance(grMillimetre(0.0), distanceFromAxis);
+			pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
 			alignment = grUnitless(0.0);
 		}
 
-		labelSize = (renderer.text(strm.str(), position, grUnitless(0.5), grUnitless(alignment))).ascent;
+		labelSize = (renderer.formattedText(strm.str(), pagePosition, grUnitless(0.5), grUnitless(alignment))).ascent;
 	}
 	else if (getDirection() == Direction::vertical)
 	{
-		//set the position on the axis initially
-		position = Point(grUnitless(m_perpendicularPosition), grUnitless(pagePosition));
 		//set the horizontal position and the alignment
 		if (m_labelpositionpositive)
 		{
-			position += Distance(-distanceFromAxis, grMillimetre(0.0));
+			pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(1.0);
 		}
 		else
 		{
-			position += Distance(distanceFromAxis, grMillimetre(0.0));
+			pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(0.0);
 		}
 
-		labelSize= (renderer.text(strm.str(), position, grUnitless(alignment), grUnitless(0.5))).width;
+		labelSize= (renderer.formattedText(strm.str(), pagePosition, grUnitless(alignment), grUnitless(0.5))).width;
 	}
 
 	return labelSize;
 }
 
-void splotaxis::drawTitle(Renderer& renderer, grPerMillimetre scale, grMillimetre distanceFromAxis)
+void splotaxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
 {
 	StatePusher statePusher(&renderer);
 	renderer.setBrush(m_titlecolour);
-	double pagePosition = (m_positionStart+m_positionEnd)/2;
+	Point pagePosition = m_start + (m_end-m_start) *grUnitless(0.5);
 
-	Point position = Point(grMillimetre(0.0), grMillimetre(0.0));
 	grUnitless alignment(0.5);
 	if (getDirection() == Direction::horizontal)
 	{
-		//set the position on the axis initially
-		position = Point(grUnitless(pagePosition), grUnitless(m_perpendicularPosition));
 		//set the horizontal position and the alignment
 		if (m_labelpositionpositive)
 		{
-			position += Distance(grMillimetre(0.0), -distanceFromAxis);
+			pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
 			alignment = grUnitless(1.0);
 		}
 		else
 		{
-			position += Distance(grMillimetre(0.0), distanceFromAxis);
+			pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
 			alignment = grUnitless(0.0);
 		}
 
-		renderer.text(m_title, position, grUnitless(0.5), grUnitless(alignment));
+		renderer.formattedText(m_title, pagePosition, grUnitless(0.5), grUnitless(alignment));
 	}
 	else if (getDirection() == Direction::vertical)
 	{
-		//set the position on the axis initially
-		position = Point(grUnitless(m_perpendicularPosition), grUnitless(pagePosition));
 		//set the horizontal position and the alignment
 		if (m_labelpositionpositive)
 		{
-			position += Distance(-distanceFromAxis, grMillimetre(0.0));
+			pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(1.0);
 		}
 		else
 		{
-			position += Distance(distanceFromAxis, grMillimetre(0.0));
+			pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(0.0);
 		}
 
-		renderer.rotatedText(m_title, position, grUnitless(0.5), grUnitless(alignment), grDegree(90));
+		renderer.formattedText(m_title, pagePosition, grUnitless(0.5), grUnitless(alignment), grDegree(90));
 	}
 }
 
@@ -1311,13 +1263,13 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 		std::vector<double> cbX{ cb[0][0], cb[1][0] };
 		std::vector<double> cbY{ 0.0, 1.0 };
 
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal, m_horizontalStart,
-			m_horizontalEnd, m_verticalStart, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal,m_bottomLeft,
+			m_bottomRight, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
 			m_minorticklength, m_tickspos, m_ticksneg, m_showlabels, m_labelpositionpositive, m_labelfont, m_labelfci, m_rotatelabels, m_labelsize, m_labelcolour,
 			m_autodecimalplaces, m_ndecimalplaces, m_maxndigits == 0, m_maxndigits));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_verticalStart, m_verticalEnd, m_horizontalStart, sU(""), sU(""), 0, 0.0, 0.0, rgbcolour(0, 0, 0), 0.0, rgbcolour(0, 0, 0), 0, false, 0.0, 0.0));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_bottomLeft, m_topLeft, sU(""), sU(""), 0, 0.0, 0.0, rgbcolour(0, 0, 0), 0.0, rgbcolour(0, 0, 0), grMillimetre(0.0), grMillimetre(0.0), grMillimetre(0.0)));
 
-		ContourData data(cbX, cbY, cb, xAxis, yAxis, m_colourscale, LineStyle(0));
+		ContourData data(cbX, cbY, cb, xAxis, yAxis, m_colourscale, noLine);
 
 		data.draw(pl, scale, pageWidth, pageHeight);
 		xAxis->draw(pl, scale, pageWidth, pageHeight);
@@ -1359,11 +1311,11 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 		
 		std::vector<double> cbY{ 0.0, 1.0 };
 
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal, m_horizontalStart,
-			m_horizontalEnd, m_verticalStart, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), PlotScale::Direction::horizontal, m_bottomLeft,
+			m_bottomRight, m_title, m_titlefont, m_titlefci, m_titlesize, m_titledistance, m_titlecolour, 0.0, m_colour, m_linethickness, m_majorticklength,
 			m_minorticklength, m_tickspos, m_ticksneg, m_showlabels, m_labelpositionpositive, m_labelfont, m_labelfci, m_rotatelabels, m_labelsize, m_labelcolour,
 			m_autodecimalplaces, m_ndecimalplaces, m_maxndigits == 0, m_maxndigits));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_verticalStart, m_verticalEnd, m_horizontalStart, sU(""), sU(""), 0, 0.0, 0.0, rgbcolour(0, 0, 0), 0.0, rgbcolour(0, 0, 0), 0, false, 0.0, 0.0));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, m_bottomLeft, m_topLeft, sU(""), sU(""), 0, 0.0, 0.0, rgbcolour(0, 0, 0), 0.0, rgbcolour(0, 0, 0), grMillimetre(0.0), grMillimetre(0.0), grMillimetre(0.0)));
 
 		GridData data(cbX, cbY, cb, xAxis, yAxis, m_colourscale);
 
@@ -1395,7 +1347,8 @@ void splot2d::setallparams(sci::string title, double titlesize, double titledist
 }
 
 splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
-	:m_xaxis(logx, PlotScale::Direction::horizontal, 0.0, 1.0, 0.0), m_yaxis(logy, PlotScale::Direction::vertical, 0.0, 1.0, 0.0)
+	:m_xaxis(logx, PlotScale::Direction::horizontal, Point(grUnitless(0.0), grUnitless(1.0)), Point(grUnitless(1.0), grUnitless(1.0))),
+		m_yaxis(logy, PlotScale::Direction::vertical, Point(grUnitless(0.0), grUnitless(1.0)), Point(grUnitless(0.0), grUnitless(0.0)))
 {
 	//this is the default constructor so just set the all the params to default values
 	setallparams(title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -1404,7 +1357,8 @@ splot2d::splot2d(bool logx, bool logy, sci::string title, double titlesize, doub
 }
 
 splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
-	:m_xaxis(minx, maxx, logx, PlotScale::Direction::horizontal, 0.0, 1.0, 0.0), m_yaxis(miny, maxy, logy, PlotScale::Direction::vertical, 0.0, 1.0, 0.0)
+	:m_xaxis(minx, maxx, logx, PlotScale::Direction::horizontal, Point(grUnitless(0.0), grUnitless(1.0)), Point(grUnitless(1.0), grUnitless(1.0))),
+	m_yaxis(miny, maxy, logy, PlotScale::Direction::vertical, Point(grUnitless(0.0), grUnitless(1.0)), Point(grUnitless(0.0), grUnitless(0.0)))
 {
 	//set the params to default values
 	setallparams(title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);
@@ -1415,7 +1369,9 @@ splot2d::splot2d(double minx, double maxx, double miny, double maxy, bool logx, 
 	calculateautolimits();
 }
 splot2d::splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx, bool logy, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&))
-	:m_xaxis(minx, maxx, logx, PlotScale::Direction::horizontal, 0.0, 1.0, 0.0), m_yaxis(miny, maxy, logy, PlotScale::Direction::vertical, 0.0, 1.0, 0.0)
+	:m_xaxis(minx, maxx, logx, PlotScale::Direction::horizontal, Point(grUnitless(0.0),
+		grUnitless(1.0)), Point(grUnitless(1.0), grUnitless(1.0))),
+	m_yaxis(miny, maxy, logy, PlotScale::Direction::vertical, Point(grUnitless(0.0), grUnitless(1.0)), Point(grUnitless(0.0), grUnitless(0.0)))
 {
 	//set the params to default values
 	setallparams(title, titlesize, titledistance, titlefont, titlestyle, titlecolour,transformfunc1dxy,transformfunc2dxy);

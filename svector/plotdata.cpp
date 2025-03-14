@@ -4,22 +4,22 @@
 #include "../include/svector/svector.h"
 
 
-LineStyle::LineStyle( double width, const rgbcolour &colour, const std::vector<PLINT> &marks, const std::vector<PLINT> &spaces )
+LineStyle::LineStyle( Length width, const rgbcolour &colour, const std::vector<Length> &marks, const std::vector<Length> &spaces )
 	: m_width( width ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
 {
 	sci::assertThrow(m_marks.size() == m_spaces.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle constructor called with a different number of spaces to marks.") );
 }
-LineStyle::LineStyle( double width, const rgbcolour &colour, sci::string pattern )
+LineStyle::LineStyle( Length width, const rgbcolour &colour, sci::string pattern )
 	: m_width( width ), m_colour( colour )
 {
-	parseLineStyle( pattern, m_marks, m_spaces);
+	parseLineStyle( pattern, width, m_marks, m_spaces);
 }
 
-double LineStyle::getWidth() const
+Length LineStyle::getWidth() const
 {
 	return m_width;
 }
-void LineStyle::getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces ) const
+void LineStyle::getPattern( std::vector<Length> &marks, std::vector<Length> &spaces ) const
 {
 	marks = m_marks;
 	spaces = m_spaces;
@@ -32,7 +32,7 @@ void LineStyle::setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) 
 {
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
-	pl->width( m_width * scale );
+	pl->width( m_width.getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
 	if(m_marks.size()==0)
 		pl->styl(0,NULL, NULL);
 	else
@@ -41,8 +41,8 @@ void LineStyle::setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) 
 		std::vector<PLINT> scaledSpaces( m_spaces.size() );
 		for(size_t i=0; i<scaledMarks.size(); ++i)
 		{
-			scaledMarks[i] = (PLINT)( m_marks[i] * scale ); 
-			scaledSpaces[i] = (PLINT)( m_spaces[i] * scale );
+			scaledMarks[i] = (PLINT)( m_marks[i].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
+			scaledSpaces[i] = (PLINT)( m_spaces[i].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
 		}
 		pl->styl(m_marks.size(),&scaledMarks[0],&scaledSpaces[0]);
 	}
@@ -56,7 +56,7 @@ void LineStyle::resetLineStyle( plstream *pl, PLINT colourIndex ) const
 //Converts a series of characters into dots/dashes and spaces for use with Plplot. Plplot works with micrometres.
 // here a space represents a gap of 200 um, a tab 800 um and for dashes a . is 200 um, a - or a _ are 800 um.
 //Adjacent space or dash characters are summed, so a 1000 um gap followed by a 1000 um dash would be " \t._"
-void LineStyle::parseLineStyle(const sci::string &pattern, std::vector<PLINT> &marks, std::vector<PLINT> &spaces)
+void LineStyle::parseLineStyle(const sci::string &pattern, Length lineWidth, std::vector<Length> &marks, std::vector<Length> &spaces)
 {
 	//set outputs to zero size
 	marks.resize(0);
@@ -73,8 +73,8 @@ void LineStyle::parseLineStyle(const sci::string &pattern, std::vector<PLINT> &m
 		onmark=false;
 
 	//initialise our current lengths to zero
-	int marklength=0;
-	int spacelength=0;
+	Length marklength = grMillimetre(0.0);
+	Length spacelength = grMillimetre(0.0);
 
 	//work through each character of style
 	for(size_t i=0; i<pattern.length(); ++i)
@@ -83,26 +83,26 @@ void LineStyle::parseLineStyle(const sci::string &pattern, std::vector<PLINT> &m
 		if(onmark==true && (pattern[i]==' ' || pattern[i]=='\t'))
 		{
 			marks.push_back(marklength);
-			marklength=0;
+			marklength=grMillimetre(0.0);
 			onmark=false;
 		}
 		else if(onmark==false && ( pattern[i]=='_' || pattern[i]=='.' || pattern[i]=='-' ) )
 		{
 			spaces.push_back(spacelength);
-			spacelength=0;
+			spacelength=grMillimetre(0.0);
 			onmark=true;
 		}
 		//add the current character to the current length
 		if(pattern[i]==' ')
-			spacelength+=200;
+			spacelength+= lineWidth * grUnitless(0.5);
 		else if(pattern[i]=='\t')
-			spacelength+=800;
+			spacelength+= lineWidth * grUnitless(2.0);
 		else if(pattern[i]=='.')
-			marklength+=200;
+			marklength+= lineWidth * grUnitless(0.5);
 		else if(pattern[i]=='_')
-			marklength+=800;
+			marklength+= lineWidth * grUnitless(2.0);
 		else if(pattern[i]=='-')
-			marklength+=800;
+			marklength+= lineWidth * grUnitless(2.0);
 		else
 			sci::assertThrow( false, sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle::parseLineStyle called with characters that cannot be converted to line marks. use only space, tab, ., -, _.") );
 	}
@@ -211,7 +211,7 @@ void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHe
 		m_fillStyle.resetFillStyle(pl, 1);
 	}
 
-	if (m_lineStyle.getWidth() > 0.0)
+	if (m_lineStyle.getWidth().getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))
 	{
 		m_lineStyle.setupLineStyle(pl, 1, scale);
 		pl->line(5, x, y);
@@ -362,13 +362,14 @@ void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pag
 {
 
 	//set the position of the plot area on the page
-	double xPositionStart;
-	double xPositionEnd;
-	double yPositionStart;
-	double yPositionEnd;
+	Point xPositionStart;
+	Point xPositionEnd;
+	Point yPositionStart;
+	Point yPositionEnd;
 	m_xAxis->getPosition(xPositionStart, xPositionEnd);
 	m_yAxis->getPosition(yPositionStart, yPositionEnd);
-	pl->vpor(xPositionStart, xPositionEnd, yPositionStart, yPositionEnd);
+	pl->vpor(xPositionStart.getX(pageWidth, pageHeight, grPerMillimetre(0.0)), xPositionEnd.getX(pageWidth, pageHeight, grPerMillimetre(0.0)),
+		yPositionStart.getY(pageWidth, pageHeight, grPerMillimetre(0.0)), yPositionEnd.getY(pageWidth, pageHeight, grPerMillimetre(0.0)));
 
 	//set the limits of the plot area in plot coordinates
 	//set the limits of the plot area in terms of plot units
@@ -397,6 +398,15 @@ void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pag
 
 	//reset the transform
 	pl->stransform(NULL, NULL);
+}
+
+void PlotableItem::draw(Renderer& renderer, grPerMillimetre scale)
+{
+	Point endCorner(m_xAxis->getEnd().getX(), m_yAxis->getEnd().getY());
+	renderer.setClippingRegion(m_intersection, endCorner);
+
+	//plot the data
+	plotData(renderer, scale);
 }
 
 UnstructuredData::UnstructuredData(const std::vector<const std::vector<double>*>& data, std::vector<std::shared_ptr<PlotScale>> axes, std::shared_ptr<splotTransformer> transformer)
@@ -510,6 +520,28 @@ void LineData::plotData( plstream *pl, double scale) const
 	
 	pl->line( getNPoints(), x, y);
 	m_lineStyle.resetLineStyle( pl, 1 );
+}
+
+void LineData::plotData(Renderer& renderer, grPerMillimetre scale) const
+{
+	if (!hasData())
+		return;
+	std::vector<Length> marks;
+	std::vector<Length> spaces;
+	m_lineStyle.getPattern(marks, spaces);
+	std::vector<Length> merge(std::min(marks.size(), spaces.size())*2);
+	for (size_t i = 0; i < std::min(marks.size(), spaces.size()); ++i)
+	{
+		merge.push_back(marks[i]);
+		merge.push_back(spaces[i]);
+	}
+	renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), merge);
+	std::vector<Point> points(getNPoints());
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		points[i] = getPoint(getPointer(0)[i], getPointer(1)[i]);
+	}
+	renderer.polyLine(points);
 }
 
 PointData::PointData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
@@ -1150,6 +1182,7 @@ void ContourData::plotData(plstream* pl, double scale) const
 
 	//set the line style for the contours
 	m_lineStyle.setupLineStyle(pl, 1, scale);
+	double lineWidth = m_lineStyle.getWidth().getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>();
 
 	if (m_x1d && m_y1d)
 	{
@@ -1163,7 +1196,7 @@ void ContourData::plotData(plstream* pl, double scale) const
 		if(m_colourscale)
 			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
 				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+				&shadeLevels[0], shadeLevels.size(), 1, 1, lineWidth * scale, plfill, true, GT::callback, (void*)(&transform));
 		if (m_levelScale)
 			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
 	}
@@ -1179,7 +1212,7 @@ void ContourData::plotData(plstream* pl, double scale) const
 		if (m_colourscale)
 			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
 				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+				&shadeLevels[0], shadeLevels.size(), 1, 1, lineWidth * scale, plfill, true, GT::callback, (void*)(&transform));
 		if (m_levelScale)
 			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
 	}
@@ -1195,7 +1228,7 @@ void ContourData::plotData(plstream* pl, double scale) const
 		if (m_colourscale)
 			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
 				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+				&shadeLevels[0], shadeLevels.size(), 1, 1, lineWidth * scale, plfill, true, GT::callback, (void*)(&transform));
 		if (m_levelScale)
 			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
 	}
@@ -1211,7 +1244,7 @@ void ContourData::plotData(plstream* pl, double scale) const
 		if (m_colourscale)
 			pl->shades(&zs[0], m_xSize, m_ySize, NULL, std::numeric_limits<double>::quiet_NaN(),
 				std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-				&shadeLevels[0], shadeLevels.size(), 1, 1, m_lineStyle.getWidth() * scale, plfill, true, GT::callback, (void*)(&transform));
+				&shadeLevels[0], shadeLevels.size(), 1, 1, lineWidth * scale, plfill, true, GT::callback, (void*)(&transform));
 		if (m_levelScale)
 			pl->cont(&zs[0], m_xSize, m_ySize, 1, m_xSize, 1, m_ySize, &contourLevels[0], contourLevels.size(), GT::callback, (void*)(&transform));
 	}

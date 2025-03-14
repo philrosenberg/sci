@@ -13,22 +13,22 @@ const int plotDataErrorCode = 1;
 class LineStyle
 {
 public:
-	LineStyle( double width = 1.0, const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<PLINT> &marks = std::vector<PLINT> ( 0 ), const std::vector<PLINT> &spaces = std::vector<PLINT> ( 0 ) );
-	LineStyle( double width, const rgbcolour &colour, sci::string pattern );
-	double getWidth() const;
-	void getPattern( std::vector<PLINT> &marks, std::vector<PLINT> &spaces ) const;
+	LineStyle( Length width = grMillimetre(0.5), const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<Length> &marks = std::vector<Length> ( 0 ), const std::vector<Length> &spaces = std::vector<Length> ( 0 ) );
+	LineStyle( Length width, const rgbcolour &colour, sci::string pattern );
+	Length getWidth() const;
+	void getPattern( std::vector<Length> &marks, std::vector<Length> &spaces ) const;
 	rgbcolour getColour() const;
 	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;
-	static void parseLineStyle( const sci::string &pattern, std::vector<PLINT> &marks, std::vector<PLINT> &spaces );
+	static void parseLineStyle( const sci::string &pattern, Length lineWidth, std::vector<Length> &marks, std::vector<Length> &spaces );
 private:
-	double m_width;
+	Length m_width;
 	rgbcolour m_colour;
-	std::vector<PLINT> m_marks;
-	std::vector<PLINT> m_spaces;
+	std::vector<Length> m_marks;
+	std::vector<Length> m_spaces;
 };
 
-const LineStyle noLine(0.0);
+const LineStyle noLine(grMillimetre(0.0));
 
 class SymbolBase
 {
@@ -155,8 +155,17 @@ class PlotableItem : public DrawableItem
 {
 public:
 	PlotableItem(std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotTransformer> transformer)
-		:m_xAxis(xAxis), m_yAxis(yAxis), m_transformer(transformer), m_scaledAxes(false)
-	{}
+		:m_xAxis(xAxis), m_yAxis(yAxis), m_transformer(transformer), m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
+	{
+		//a note about intersection
+		//In theory, two axes do not need to be horizontal and vertical and their start points do not need to be the same.
+		//In this case, you might follow a line from the start of each axis, parallel to the other and the intersection point
+		//is the start corner of the plot area.
+		//However, in general this intersection cannot be represented by a Point as it is a nonlinear combination of the
+		//absolute position and the positions scaled by the height and width. Hence we don't do this.
+		//Instead, we find the intersection as the point up from the start of the x axis and across from the start of the y
+		//axis. This point can be represented by a Point and hence will scale properly.
+	}
 	virtual ~PlotableItem() {}
 	void preDraw() override
 	{
@@ -168,13 +177,20 @@ public:
 		return m_scaledAxes;
 	}
 	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	void draw(Renderer& renderer, grPerMillimetre scale) override;
+	Point getPoint(double x, double y) const
+	{
+		return m_intersection + m_xAxis->alongAxisDistance(x) + m_yAxis->alongAxisDistance(y);
+	}
 private:
 	virtual void autoscaleAxes() = 0;
 	virtual void plotData(plstream* pl, double scale) const = 0;
+	virtual void plotData(Renderer& renderer, grPerMillimetre scale) const {};
 	std::shared_ptr<splotaxis> m_xAxis;
 	std::shared_ptr<splotaxis> m_yAxis;
 	std::shared_ptr<splotTransformer> m_transformer;
 	bool m_scaledAxes;
+	Point m_intersection;
 };
 
 //this class holds data of n dimensions where there is just a 1d
@@ -255,7 +271,8 @@ public:
 	LineData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	LineStyle m_lineStyle;
-	void plotData( plstream *pl, double scale) const override;
+	void plotData(plstream* pl, double scale) const override;
+	void plotData(Renderer& renderer, grPerMillimetre scale) const override;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>

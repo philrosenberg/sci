@@ -9,7 +9,6 @@
 #pragma warning(push, 0)
 #include<vector>
 #include<wx/colour.h>
-#include<plplot/plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>
@@ -116,9 +115,10 @@ public:
 		m_lengthOverWidth = grUnitless(0);
 		m_lengthOverHeight = grUnitless(0);
 	}
-	constexpr grUnitless getLength(grUnitless width, grUnitless height, grPerMillimetre scale) const
+	//returns the length in device coordinates
+	constexpr double getLength(double width, double height, grPerMillimetre scale) const
 	{
-		return m_absolute * scale + m_lengthOverWidth * width + m_lengthOverHeight * height;
+		return (m_absolute * scale + m_lengthOverWidth * grUnitless(width) + m_lengthOverHeight * grUnitless(height)).value<grUnitless>();
 	}
 	constexpr grMillimetre getLength(grMillimetre width, grMillimetre height) const
 	{
@@ -261,11 +261,11 @@ public:
 		m_x = x;
 		m_y = y;
 	}
-	constexpr grUnitless getX(grUnitless width, grUnitless height, grPerMillimetre scale) const
+	constexpr double getX(double width, double height, grPerMillimetre scale) const
 	{
 		return m_x.getLength(width, height, scale);
 	}
-	constexpr grUnitless getY(grUnitless width, grUnitless height, grPerMillimetre scale) const
+	constexpr double getY(double width, double height, grPerMillimetre scale) const
 	{
 		return m_y.getLength(width, height, scale);
 	}
@@ -276,6 +276,14 @@ public:
 	constexpr grMillimetre getY(grMillimetre width, grMillimetre height) const
 	{
 		return m_y.getLength(width, height);
+	}
+	constexpr const Length &getX() const
+	{
+		return m_x;
+	}
+	constexpr const Length &getY() const
+	{
+		return m_y;
 	}
 	constexpr bool operator==(const GraphicsVector& other) const
 	{
@@ -472,6 +480,10 @@ public:
 		:GraphicsVector(x, y)
 	{
 	}
+	constexpr Point(Length x, Length y)
+		: GraphicsVector(x, y)
+	{
+	}
 	constexpr Point() = default;
 	constexpr Point(const Point&) = default;
 	constexpr Point& operator=(const Point&) = default;
@@ -496,6 +508,10 @@ public:
 		Point newPoint = *this;
 		newPoint -= distance;
 		return newPoint;
+	}
+	constexpr Distance operator-(const Point& other) const
+	{
+		return Distance(getX() - other.getX(), getY() - other.getY());
 	}
 };
 
@@ -652,7 +668,7 @@ public:
 
 		TextMetric extent = text.getExtent(*this, minTextSize);
 		Distance alignmentOffset(grMillimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (extent.ascent * verticalAlignment) * sci::sin(rotation)),
-			grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (extent.ascent * verticalAlignment) * sci::cos(rotation));
+			-grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (extent.ascent * verticalAlignment) * sci::cos(rotation));
 
 		return text.render(*this, minTextSize, position-alignmentOffset, rotation);
 	}
@@ -662,6 +678,8 @@ public:
 	virtual void setFont(std::vector<sci::string> facenames, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
 	virtual void scaleFontSize(grUnitless scale) = 0;
 	virtual grMillimetre getFontSize() const = 0;
+	virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
+	virtual void polyLine(const std::vector<Point>& points) = 0;
 	//this project might be worth a look at some time https://github.com/bkaradzic/bgfx?tab=readme-ov-file
 
 	class textChunk
@@ -970,13 +988,13 @@ public:
 	{
 		m_dc->SetPen(wxNullPen); //this deselects the prvious pen, so if we've used
 		//dashes, the dash array can now be invalidated.
-		wxPen pen(getWxColour(colour), thickness.getLength(m_width, m_height, m_scale).value<grUnitless>());
+		wxPen pen(getWxColour(colour), thickness.getLength(m_width, m_height, m_scale));
 		if (dashes.size() > 0)
 		{
 			m_penDashes.resize(0);
 			m_penDashes.reserve(dashes.size());
 			for (const auto& d : dashes)
-				m_penDashes.push_back(d.getLength(m_width, m_height, m_scale).value<grUnitless>());
+				m_penDashes.push_back(d.getLength(m_width, m_height, m_scale));
 			pen.SetDashes(m_penDashes.size(), &m_penDashes[0]);
 		}
 
@@ -1002,7 +1020,7 @@ public:
 			font = wxFont(); //clear the font - not sure if this is needed
 			font.SetFamily(getWxFontFamily(backupFamily));
 		}
-		m_fontSize = size.getLength(m_width / m_scale, m_height / m_scale);
+		m_fontSize = size.getLength(grUnitless(m_width) / m_scale, grUnitless(m_height) / m_scale);
 		font.SetFractionalPointSize(m_fontSize.value<grTextPoint>());
 		font.SetWeight(bold ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL);
 		font.SetStyle(italic ? wxFONTSTYLE_ITALIC : wxFONTSTYLE_NORMAL);
@@ -1077,6 +1095,19 @@ public:
 		font.SetFractionalPointSize(m_fontSize.value<grTextPoint>());
 		m_dc->SetFont(font);
 	}
+	virtual void setClippingRegion(const Point& corner1, const Point& corner2)
+	{
+	}
+	virtual void polyLine(const std::vector<Point>& points)
+	{
+		if (points.size() == 0)
+			return;
+		std::vector<wxPoint> wxPoints;
+		wxPoints.reserve(points.size());
+		for (auto &p : points)
+			wxPoints.push_back(getWxPoint(p));
+		m_dc->DrawLines(points.size(), &wxPoints[0]);
+	}
 private:
 	struct State
 	{
@@ -1090,19 +1121,19 @@ private:
 	};
 	wxPoint getWxPoint(const Point& point)
 	{
-		return wxPoint(point.getX(m_width, m_height, m_scale).value<grUnitless>(), point.getY(m_width, m_height, m_scale).value<grUnitless>());
+		return wxPoint(point.getX(m_width, m_height, m_scale), point.getY(m_width, m_height, m_scale));
 	}
 	wxPoint getWxPoint(const Point& point, const Distance &distance)
 	{
-		grUnitless xStart = point.getX(m_width, m_height, m_scale);
-		grUnitless yStart = point.getY(m_width, m_height, m_scale);
+		double xStart = point.getX(m_width, m_height, m_scale);
+		double yStart = point.getY(m_width, m_height, m_scale);
 		
-		return wxPoint((xStart + distance.getX(m_width, m_height, m_scale)).value<grUnitless>(),
-			(yStart + distance.getY(m_width, m_height, m_scale)).value<grUnitless>());
+		return wxPoint((xStart + distance.getX(m_width, m_height, m_scale)),
+			(yStart + distance.getY(m_width, m_height, m_scale)));
 	}
 	wxSize getWxSize(const Distance& distance)
 	{
-		return wxSize(distance.getX(m_width, m_height, m_scale).value<grUnitless>(), distance.getY(m_width, m_height, m_scale).value<grUnitless>());
+		return wxSize(distance.getX(m_width, m_height, m_scale), distance.getY(m_width, m_height, m_scale));
 	}
 	wxColour getWxColour(const rgbcolour& colour)
 	{
@@ -1157,8 +1188,8 @@ private:
 	}
 
 	wxDC* m_dc;
-	grUnitless m_height;
-	grUnitless m_width;
+	double m_height;
+	double m_width;
 	grPerMillimetre m_scale;
 	std::vector<wxDash> m_penDashes;
 	std::vector<State> m_stateStack;

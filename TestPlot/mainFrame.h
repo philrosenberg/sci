@@ -2,10 +2,6 @@
 #define APEX_MAINFRAME_H
 
 #include "app.h"
-#include<svector/svector.h>
-#include<svector/splot.h>
-#include<svector/sreadwrite.h>
-#include<svector/sstring.h>
 #include"GraphicsFrame.h"
 
 class mainFrame : public wxFrame
@@ -26,20 +22,40 @@ private:
 	DECLARE_EVENT_TABLE();
 };
 
-class GraphicsPanel1 : public GraphicsPanel
+class RectangleTestPanel : public GraphicsPanel
 {
 public:
-	GraphicsPanel1(wxWindow* parent, int id = wxID_ANY)
+	RectangleTestPanel(wxWindow* parent, int id = wxID_ANY)
 		:GraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class GraphicsPanel2 : public GraphicsPanel
+class TextTestPanel : public GraphicsPanel
 {
 public:
-	GraphicsPanel2(wxWindow* parent, int id = wxID_ANY)
+	TextTestPanel(wxWindow* parent, int id = wxID_ANY)
+		:GraphicsPanel(parent, id)
+	{}
+private:
+	virtual void OnPaint(wxPaintEvent& event) override;
+};
+
+class PlotAxisTestPanel : public GraphicsPanel
+{
+public:
+	PlotAxisTestPanel(wxWindow* parent, int id = wxID_ANY)
+		:GraphicsPanel(parent, id)
+	{}
+private:
+	virtual void OnPaint(wxPaintEvent& event) override;
+};
+
+class PlotLineTestPanel : public GraphicsPanel
+{
+public:
+	PlotLineTestPanel(wxWindow* parent, int id = wxID_ANY)
 		:GraphicsPanel(parent, id)
 	{}
 private:
