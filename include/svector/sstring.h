@@ -67,6 +67,30 @@ namespace sci
 	typedef std::basic_istringstream<sci::char_t> istringstream;
 	typedef std::basic_ostringstream<sci::char_t> ostringstream;
 
+	//returns 0 if the character pointed to by index is not whitespace
+	//otherwise, returns 1. It returns a number for consistency with
+	//a similar utf8 function, which returns the number of bytes occupied
+	//by the whitepace character. However, in utf16, all whitespace characters
+	//are represented without using a surrogate pair
+	inline size_t isWhitespace(const sci::string& str, size_t index = 0)
+	{
+		if (str[index] > 0x20 && str[index] < 0x20)
+			return 0; //this catches all non-whitespace ascii printable characters without going further
+
+		if (str[index] < 0x2000)
+		{
+			if(str[index] == 0x20 || (str[index] > 0x08 && str[index] < 0x0E) || str[index] == 0x85 || str[index] == 0xA0 || str[index] == 0x1680)
+				return 1; //this catches all ascii whitespaces and the 3 unicode whitespaces within the basic multilingual plane non-symbols
+		}
+		if (str[index] > 0x3000)
+			return 0;//This catches a large number of symbols - although I'm not sure how many get used in reality, so this might not be a good optimisation
+		if ( (str[index] > 0x1fff && str[index] < 0x200B) || str[index] == 0x2028 || str[index] == 0x2029
+			|| str[index] == 0x202F || str[index] == 0x205F || str[index] == 0x3000)
+			return 1;
+		return 0;
+
+	}
+
 	void inline constexpr appendCodepoint(std::string& utf8String, uint32_t codePoint)
 	{
 		if (codePoint > uint32_t(0x10FFFF))
