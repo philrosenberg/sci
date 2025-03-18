@@ -629,7 +629,7 @@ private:
 };
 
 using trie_t = std::pair<sci::string, sci::string>;
-const TrieNode<sci::string> mathKeywords
+const TrieNode<sci::string> g_mathCommands
 {
 	trie_t{sU("hat"), sU("^")},
 	trie_t{sU("_"), sU("_")},
@@ -752,6 +752,43 @@ public:
 			return std::string::npos;
 		}
 
+		static bool isCatcode11(const sci::string::basic_string::value_type& character)
+		{
+			return (character >= sU('a') && character <= sU('z')) || (character >= sU('A') && character <= sU('Z'));
+		}
+		static size_t getCommandNameEnd(const sci::string& string, size_t start)
+		{
+			//assume start points to the \ character
+
+			//check we have at least one character in the string
+			if (start+1 == string.length())
+				return start+1;
+
+			//We copy the latex command structure. A command is either multiple characters
+			//with what's called catcode 11 or a single character with any catcode other than 11.
+			//The characters with catcode 11 are a,...,z and A,...,Z. This can in theory be changed
+			//using the \catcode command, but I think life is too short and I'm not writing an
+			//entire latex parser here.
+
+			//check the single character non catcode 11 case
+			if (!isCatcode11(string[start + 1]))
+				return start + 2;
+
+			//find the first character that is not catcode 11
+			size_t end = start + 2;
+			for (; end < string.length(); ++end)
+			{
+				if (!isCatcode11(string[end]))
+					break;
+			}
+			//gobble any spaces for multi character commands
+			for (; end < string.length(); ++end)
+				if (!sci::isWhitespace)
+					break;
+			
+			return end;
+		}
+
 		size_t getChunkEnd(const sci::string& string, size_t start)
 		{
 
@@ -783,7 +820,8 @@ public:
 			//if we have a \, check if this is a command, if so return appropriately
 			if (string[start] == sU('\\'))
 			{
-				std::optional<size_t> end = mathKeywords.startsWithContainedWord(string, start + 1);
+				size_t commandEnd = getCommandNameEnd(string, start);
+				std::optional<size_t> end = g_mathCommands.startsWithContainedWord(string, start + 1);
 				return end.value_or(sci::string::npos);
 			}
 			
@@ -825,8 +863,17 @@ public:
 			//note we don't yet support commands with parameters
 			if (m_text[0] == sU('\\'))
 			{
-				std::optional<sci::string> replacement = mathKeywords.isContainedWord(m_text, 1);
-				m_text = replacement.value_or(m_text);
+				//check for a simple escape
+				if (m_text.length() == 2 && isCatcode11(m_text[1]))
+					m_text = m_text.substr(1);
+				else
+				{
+					//trim blanks from the end of a command
+					while (sci::isWhitespace(m_text, m_text.length() - 1))
+						m_text.pop_back();
+					std::optional<sci::string> replacement = g_mathCommands.isContainedWord(m_text, 1);
+					m_text = replacement.value_or(m_text);
+				}
 			}
 
 			//split into sub chunks
