@@ -806,7 +806,11 @@ splotaxis::splotaxis(bool log, Direction direction, Point start, Point end, doub
 		labelstyle, labelsrotated, labelsize, labelcolour, autodecimalplaces, ndecimalplaces, automaxndigits, maxndigits);
 }
 
-void splotaxis::setup(Point start, Point end, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
+void splotaxis::setup(Point start, Point end, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize,
+	double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness,
+	Length majorticklength, Length minorticklength, bool ticksLeftOrDown, bool ticksRightOrUp, bool showlabels,
+	bool labelsLeftOrDown, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize,
+	const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits)
 {
 	m_start = start;
 	m_end = end;
@@ -815,8 +819,8 @@ void splotaxis::setup(Point start, Point end, sci::string title, sci::string tit
 	m_customlabelcreator = NULL;
 	m_colour = colour;
 	m_linethickness = linethickness;
-	m_tickspos = tickspositive;
-	m_ticksneg = ticksnegative;
+	m_ticksLeftOrDown = ticksLeftOrDown;
+	m_ticksRightOrUp = ticksRightOrUp;
 	m_majorticklength = majorticklength;
 	m_minorticklength = minorticklength;
 	m_showlabels = showlabels;
@@ -825,7 +829,7 @@ void splotaxis::setup(Point start, Point end, sci::string title, sci::string tit
 	m_rotatelabels = labelsrotated;
 	m_labelsize = labelsize;
 	m_labelcolour = labelcolour;
-	m_labelpositionpositive = labelpositionpositive;
+	m_labelsLeftOrDown = labelsLeftOrDown;
 	m_title = title;
 	m_titlefont = titlefont;
 	m_titlefci = titlestyle;
@@ -848,7 +852,7 @@ std::string splotaxis::createploptstring() const
 	if (m_customlabelcreator != NULL)opt = opt + "o";
 	if (m_showlabels)
 	{
-		if (m_labelpositionpositive)opt = opt + "m";
+		if (!m_labelsLeftOrDown)opt = opt + "m";
 		else opt = opt + wxT("n");
 	}
 	if (isLog())opt = opt + "l";
@@ -1133,9 +1137,9 @@ void splotaxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotP
 		p1 = pagePosition;
 		p2 = pagePosition;
 		//extend the tick out in either direction as needed
-		if (m_tickspos)
+		if (m_ticksRightOrUp)
 			p1+=Distance(grMillimetre(0.0), -length);
-		if (m_ticksneg)
+		if (m_ticksLeftOrDown)
 			p2+=Distance(grMillimetre(0.0), length);
 	}
 	else if (getDirection() == Direction::vertical)
@@ -1144,9 +1148,9 @@ void splotaxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotP
 		p1 = pagePosition;
 		p2 = pagePosition;
 		//extend the tick out in either direction as needed
-		if (m_tickspos)
+		if (m_ticksLeftOrDown)
 			p1+=Distance(-length, grMillimetre(0.0));
-		if (m_ticksneg)
+		if (m_ticksRightOrUp)
 			p2+=Distance(length, grMillimetre(0.0));
 	}
 	if(p1 != p2)
@@ -1168,7 +1172,7 @@ grMillimetre splotaxis::drawLabel(Renderer& renderer, grPerMillimetre scale, dou
 	if (getDirection() == Direction::horizontal)
 	{
 		//set the horizontal position and the alignment
-		if (m_labelpositionpositive)
+		if (!m_labelsLeftOrDown)
 		{
 			pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
 			alignment = grUnitless(1.0);
@@ -1184,7 +1188,7 @@ grMillimetre splotaxis::drawLabel(Renderer& renderer, grPerMillimetre scale, dou
 	else if (getDirection() == Direction::vertical)
 	{
 		//set the horizontal position and the alignment
-		if (m_labelpositionpositive)
+		if (m_labelsLeftOrDown)
 		{
 			pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(1.0);
@@ -1211,7 +1215,7 @@ void splotaxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length dist
 	if (getDirection() == Direction::horizontal)
 	{
 		//set the horizontal position and the alignment
-		if (m_labelpositionpositive)
+		if (!m_labelsLeftOrDown)
 		{
 			pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
 			alignment = grUnitless(1.0);
@@ -1227,7 +1231,7 @@ void splotaxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length dist
 	else if (getDirection() == Direction::vertical)
 	{
 		//set the horizontal position and the alignment
-		if (m_labelpositionpositive)
+		if (m_labelsLeftOrDown)
 		{
 			pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
 			alignment = grUnitless(1.0);

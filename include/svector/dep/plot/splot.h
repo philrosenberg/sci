@@ -428,10 +428,30 @@ class splotaxis: public PlotScale, public DrawableItem
 	friend class splot;
 	friend class splot2d;
 public:
-	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool tickspositive = false, bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""),
+		PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0),
+		double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0),
+		Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true,
+		sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0),
+		bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0,
+		double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0),
+		Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true,
+		bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
+		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true,
+		unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"),
+		sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0),
+		double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0),
+		Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true,
+		sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0),
+		bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
+	splotaxis(bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""),
+		PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0,
+		rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0),
+		bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
+		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0,
+		bool automaxndigits = true, int maxndigits = 0);
 	~splotaxis(){};
 	inline void setcolour(rgbcolour colour){m_colour=colour; m_haschanged=true;};
 	inline void setlinethickness(Length thickness){m_linethickness=thickness; m_haschanged=true;};
@@ -448,8 +468,8 @@ public:
 	inline void settitlefont(sci::string fontface){m_titlefont=fontface; m_haschanged=true;};
 	inline void setmajorticklength(Length length){m_majorticklength=length; m_haschanged=true;};
 	inline void setminorticklength(Length length){m_minorticklength=length; m_haschanged=true;};
-	inline void setticksdirection(bool positive, bool negative){m_tickspos=positive;m_ticksneg=negative; m_haschanged=true;};
-	inline void setlabelposition(bool positive){m_labelpositionpositive=positive; m_haschanged=true;};
+	inline void setticksdirection(bool leftOrDown, bool rightOrUp){m_ticksLeftOrDown=leftOrDown;m_ticksRightOrUp=rightOrUp; m_haschanged=true;};
+	inline void setlabelposition(bool leftOrDown){m_labelsLeftOrDown=leftOrDown; m_haschanged=true;};
 	inline void setshowlabels(bool show){m_showlabels=show; m_haschanged=true;};
 	inline void setlabelfont(sci::string fontface){m_labelfont=fontface.c_str(); m_haschanged=true;};
 	inline void setlabelstyle(PLUNICODE style){m_labelfci=style; m_haschanged=true;};
@@ -523,12 +543,12 @@ private:
 	//then the positive value is recorded but ticksinward is set true
 	Length m_majorticklength;
 	Length m_minorticklength;
-	bool m_tickspos;
-	bool m_ticksneg;
+	bool m_ticksLeftOrDown;
+	bool m_ticksRightOrUp;
 	bool m_showlabels;
 
 	//label details
-	bool m_labelpositionpositive;
+	bool m_labelsLeftOrDown;
 	bool m_rotatelabels;
 	double m_labelsize;
 	sci::string m_labelfont;
