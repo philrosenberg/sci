@@ -192,7 +192,7 @@ public:
 		newLength.m_absolute = -newLength.m_absolute;
 		newLength.m_lengthOverWidth = -newLength.m_lengthOverWidth;
 		newLength.m_lengthOverHeight = -newLength.m_lengthOverHeight;
-		return*this;
+		return newLength;
 	}
 
 private:
