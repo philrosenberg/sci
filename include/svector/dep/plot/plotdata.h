@@ -33,18 +33,22 @@ const LineStyle noLine(grMillimetre(0.0));
 class SymbolBase
 {
 public:
-	SymbolBase( sci::string symbol, PLUNICODE fci );
+	SymbolBase(sci::string symbol, PLUNICODE fci);
+	SymbolBase(const std::vector<Distance> &symbol);
 	sci::string getSymbol() const;
 	PLUNICODE getFci() const;
+	void draw(const Point& point, Renderer& renderer) const;
 private:
-	sci::string m_symbol;
+	sci::string m_symbolText;
 	PLUNICODE m_fci;
+	std::vector<Distance> m_symbol;
 };
 
 class Symbol : public SymbolBase
 {
 public:
-	Symbol ( sci::string symbol = sym::filledCircle, double size = 4.0, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	Symbol(sci::string symbol = symText::filledCircle, double size = 4.0, rgbcolour colour = rgbcolour(0, 0, 0, 1.0));
+	Symbol(const std::vector<Distance> &symbol, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
 	double getSize() const;
 	rgbcolour getColour() const;
 	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
@@ -65,7 +69,7 @@ private:
 class ColourVaryingSymbol : public VaryingSymbol
 {
 public:
-	ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, sci::string symbol = sym::filledCircle, double size = 4.0 );
+	ColourVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, sci::string symbol = symText::filledCircle, double size = 4.0 );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const override;
 	bool isLogScaled() const override;
 	std::shared_ptr<splotcolourscale> getColourscale() const { return m_colourScale; }
@@ -77,7 +81,7 @@ private:
 class SizeVaryingSymbol : public VaryingSymbol
 {
 public:
-	SizeVaryingSymbol ( std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ) );
+	SizeVaryingSymbol ( std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = symText::filledCircle, rgbcolour colour = rgbcolour( 0.0, 0.0, 0.0 ) );
 	void setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const override;
 	bool isLogScaled() const override;
 	//parameterPreLogged is only utilised for log scales
@@ -91,7 +95,7 @@ private:
 class ColourAndSizeVaryingSymbol : public SymbolBase
 {
 public:
-	ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = sym::filledCircle);
+	ColourAndSizeVaryingSymbol ( std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol = symText::filledCircle);
 	void setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, bool colourParameterPreLogged, double sizeParameter, bool sizeParameterPreLogged, double scale ) const;
 	bool isColourLogScaled() const;
 	bool isSizeLogScaled() const;
@@ -293,6 +297,7 @@ public:
 private:
 	Symbol m_symbol;
 	void plotData(plstream *pl, double scale) const override;
+	void plotData(Renderer& renderer, grPerMillimetre scale) const override;
 };
 
 template <class IN_X_UNIT, class IN_Y_UNIT, class TR_X_UNIT = IN_X_UNIT, class TR_Y_UNIT = IN_Y_UNIT>

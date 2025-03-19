@@ -385,7 +385,7 @@ private:
 	std::vector< std::vector<double> > *m_z;
 };
 
-namespace sym
+namespace symText
 {
 	//const sci::string filledCircle = sU("#[0x25cf]");
 	const sci::string filledCircle=sU("#[0x2b24]");

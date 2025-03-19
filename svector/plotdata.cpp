@@ -230,13 +230,20 @@ void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHe
 
 SymbolBase::SymbolBase( sci::string symbol, PLUNICODE fci )
 {
-	m_symbol = symbol;
+	m_symbolText = symbol;
 	m_fci = fci;
+}
+
+SymbolBase::SymbolBase(const std::vector<Distance>& symbol)
+{
+	m_symbolText = sU(" ");
+	m_fci = 0;
+	m_symbol = symbol;
 }
 
 sci::string SymbolBase::getSymbol() const
 {
-	return m_symbol;
+	return m_symbolText;
 }
 
 PLUNICODE SymbolBase::getFci() const
@@ -244,11 +251,25 @@ PLUNICODE SymbolBase::getFci() const
 	return m_fci;
 }
 
+void SymbolBase::draw(const Point& point, Renderer& renderer) const
+{
+	std::vector<Point> points(m_symbol.size());
+	for (size_t i = 0; i < m_symbol.size(); ++i)
+		points[i] = point + m_symbol[i];
+	renderer.polygon(points);
+}
 
-Symbol::Symbol( sci::string symbol, double size, rgbcolour colour )
-	: SymbolBase( symbol, 0 )
+Symbol::Symbol(sci::string symbol, double size, rgbcolour colour)
+	: SymbolBase(symbol, 0)
 {
 	m_size = size;
+	m_colour = colour;
+}
+
+Symbol::Symbol(const std::vector<Distance> &symbol, rgbcolour colour)
+	: SymbolBase( symbol)
+{
+	m_size = 1.0;
 	m_colour = colour;
 }
 
@@ -559,6 +580,20 @@ void PointData::plotData( plstream *pl, double scale) const
 	if( symbol.length() > 0)
 		//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 		pl->string(getNPoints(), x, y, sci::toUtf8(symbol).c_str());
+}
+
+void PointData::plotData(Renderer& renderer, grPerMillimetre scale) const
+{
+	if (!hasData())
+		return;
+
+	renderer.setBrush(m_symbol.getColour());
+	renderer.setPen(m_symbol.getColour(), grMillimetre(0.5));
+
+	for (size_t i = 0; i < getNPoints(); ++i)
+	{
+		m_symbol.draw(getPoint(getPointer(0)[i], getPointer(1)[i]), renderer);
+	}
 }
 
 PointDataColourVarying::PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )

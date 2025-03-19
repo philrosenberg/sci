@@ -669,7 +669,11 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 
 	std::vector<double> x{ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
 	std::vector<double> y{ 0.05, 0.23, 0.64, 0.73, 0.82, 0.68, 0.52, 0.18, 0.07 };
+	std::vector<Distance> squareSymbol{ Distance(grMillimetre(-1.0), grMillimetre(-1.0)), Distance(grMillimetre(1.0), grMillimetre(-1.0)),
+	Distance(grMillimetre(1.0), grMillimetre(1.0)), Distance(grMillimetre(-1.0), grMillimetre(1.0)), Distance(grMillimetre(-1.0), grMillimetre(-1.0)) };
 
 	std::shared_ptr<LineData> lineData(new LineData(x, y, xAxis, yAxis, LineStyle()));
+	std::shared_ptr<PointData> pointData(new PointData(x, y, xAxis, yAxis, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
 	lineData->draw(renderer, grPerInch(96));
+	pointData->draw(renderer, grPerInch(96));
 }
