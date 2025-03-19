@@ -680,6 +680,7 @@ public:
 	virtual grMillimetre getFontSize() const = 0;
 	virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
 	virtual void polyLine(const std::vector<Point>& points) = 0;
+	virtual void polygon(const std::vector<Point>& points) = 0;
 	//this project might be worth a look at some time https://github.com/bkaradzic/bgfx?tab=readme-ov-file
 
 	class textChunk
@@ -1154,6 +1155,17 @@ public:
 		for (auto &p : points)
 			wxPoints.push_back(getWxPoint(p));
 		m_dc->DrawLines(points.size(), &wxPoints[0]);
+	}
+
+	virtual void polygon(const std::vector<Point>& points)
+	{
+		if (points.size() == 0)
+			return;
+		std::vector<wxPoint> wxPoints;
+		wxPoints.reserve(points.size());
+		for (auto& p : points)
+			wxPoints.push_back(getWxPoint(p));
+		m_dc->DrawPolygon(points.size(), &wxPoints[0]);
 	}
 private:
 	struct State
