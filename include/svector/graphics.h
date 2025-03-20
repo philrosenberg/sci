@@ -679,6 +679,8 @@ public:
 	virtual void scaleFontSize(grUnitless scale) = 0;
 	virtual grMillimetre getFontSize() const = 0;
 	virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
+	virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5)) = 0;
+	virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) = 0;
 	virtual void polyLine(const std::vector<Point>& points) = 0;
 	virtual void polygon(const std::vector<Point>& points) = 0;
 	//this project might be worth a look at some time https://github.com/bkaradzic/bgfx?tab=readme-ov-file
@@ -1123,14 +1125,14 @@ public:
 		m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<grDegree>());
 		return TextMetric(grMillimetre(grUnitless(width) / m_scale), grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale), grMillimetre(grUnitless(descent) / m_scale));
 	}
-	virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5))
+	virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5)) override
 	{
 		Distance diameter = radius * grUnitless(2.0);
 		wxPoint wxPosition = getWxPoint(position - diameter * std::array<grUnitless, 2>{xAlignemnt, yAlignment});
 		wxSize size = getWxSize(diameter);
 		m_dc->DrawEllipse(wxPosition, size);
 	}
-	virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0))
+	virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) override
 	{
 		wxPoint wxPosition = getWxPoint(position - size * std::array<grUnitless,2>{xAlignemnt, yAlignment});
 		wxSize wxsize = getWxSize(size);
