@@ -896,7 +896,7 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	if (m_direction == Direction::horizontal)
 	{
 		pl->vpor(m_start.getX(1.0, 1.0, grPerMillimetre(0)), m_end.getX(1.0, 1.0, grPerMillimetre(0)),
-			m_start.getY(1.0, 1.0, grPerMillimetre(0)), m_start.getY(1.0, 1.0, grPerMillimetre(0)) + 1.0);
+			1.0 - m_start.getY(1.0, 1.0, grPerMillimetre(0)), 1.0 - m_start.getY(1.0, 1.0, grPerMillimetre(0)) + 1.0); //reversed y direction in plplot vs Renderer
 		if(isLog())
 			pl->wind(std::log10(min), std::log10(max), 0.0, 1.0);
 		else
@@ -905,7 +905,7 @@ void splotaxis::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	else if (m_direction == Direction::vertical)
 	{
 		pl->vpor(m_start.getX(1.0, 1.0, grPerMillimetre(0)), m_start.getX(1.0, 1.0, grPerMillimetre(0)) + 1.0,
-			m_start.getY(1.0, 1.0, grPerMillimetre(0)), m_end.getY(1.0, 1.0, grPerMillimetre(0)));
+			1.0 - m_start.getY(1.0, 1.0, grPerMillimetre(0)), 1.0 - m_end.getY(1.0, 1.0, grPerMillimetre(0))); //reversed y direction in plplot vs Renderer
 		if (isLog())
 			pl->wind(0.0, 1.0, std::log10(min), std::log10(max));
 		else
@@ -988,6 +988,8 @@ void splotaxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 	//calculate the min, max and span
 	double min = getMin();
 	double max = getMax();
+	if (min > max)
+		std::swap(min, max);
 	double span = max - min;
 
 	//calculate major interval if needed
@@ -1062,6 +1064,8 @@ void splotaxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 	//calculate the min, max and span
 	double logMin = getLogMin();
 	double logMax = getLogMax();
+	if (logMin > logMax)
+		std::swap(logMin, logMax);
 	double logSpan = logMax - logMin;
 
 	//calculate major interval if needed

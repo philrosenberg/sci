@@ -13,19 +13,22 @@ const int plotDataErrorCode = 1;
 class LineStyle
 {
 public:
-	LineStyle( Length width = grMillimetre(0.5), const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<Length> &marks = std::vector<Length> ( 0 ), const std::vector<Length> &spaces = std::vector<Length> ( 0 ) );
+	LineStyle( Length width = grMillimetre(0.5), const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<Length> &dashes = std::vector<Length> ( 0 ));
 	LineStyle( Length width, const rgbcolour &colour, sci::string pattern );
 	Length getWidth() const;
-	void getPattern( std::vector<Length> &marks, std::vector<Length> &spaces ) const;
+	void getPattern( std::vector<Length> &dashes ) const;
 	rgbcolour getColour() const;
 	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;
-	static void parseLineStyle( const sci::string &pattern, Length lineWidth, std::vector<Length> &marks, std::vector<Length> &spaces );
+	static void parseLineStyle( const sci::string &pattern, Length lineWidth, std::vector<Length> &dashes );
+	void setPen(Renderer& renderer) const
+	{
+		renderer.setPen(m_colour, m_width, m_dashes);
+	}
 private:
 	Length m_width;
 	rgbcolour m_colour;
-	std::vector<Length> m_marks;
-	std::vector<Length> m_spaces;
+	std::vector<Length> m_dashes;
 };
 
 const LineStyle noLine(grMillimetre(0.0));
@@ -117,6 +120,10 @@ public:
 	void setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetFillStyle(plstream *pl, PLINT colourIndex) const;
 	rgbcolour getColour() const;
+	void setBrush(Renderer& renderer)
+	{
+		renderer.setBrush(m_colour);
+	}
 
 private:
 	rgbcolour m_colour;
@@ -128,28 +135,29 @@ private:
 class PlotFrame : public DrawableItem
 {
 public:
-	PlotFrame(double bottomLeftX, double bottomLeftY, double width, double height, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine, sci::string title = sU(""), double titlesize = 12, double titledistance = 2.0, sci::string titlefont = sU(""), int32_t titlestyle = 0, wxColour titlecolour = wxColour(0, 0, 0));
+	PlotFrame(const Point topLeft, const Point bottomRight, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine,
+		sci::string title = sU(""), Length titlesize = Length(grTextPoint(12.0)), Length titledistance = Length(grTextPoint(12.0)),
+		sci::string titlefont = sU(""), int32_t titlestyle = 0, rgbcolour titlecolour = rgbcolour(0, 0, 0));
 	void preDraw() override
 	{
 	}
 	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	void draw(Renderer& renderer, grPerMillimetre scale) override;
 	bool readyToDraw() const override
 	{
 		return true;
 	}
 private:
-	double m_bottomLeftX;
-	double m_bottomLeftY;
-	double m_width;
-	double m_height;
+	Point m_topLeft;
+	Point m_bottomRight;
 	FillStyle m_fillStyle;
 	LineStyle m_lineStyle;
 	sci::string m_title;
-	double m_titlesize;
-	double m_titledistance;
+	Length m_titlesize;
+	Length m_titledistance;
 	sci::string m_titlefont;
 	int32_t m_titlestyle;
-	wxColour m_titlecolour;
+	rgbcolour m_titlecolour;
 };
 
 class splotTransformer;

@@ -4,25 +4,23 @@
 #include "../include/svector/svector.h"
 
 
-LineStyle::LineStyle( Length width, const rgbcolour &colour, const std::vector<Length> &marks, const std::vector<Length> &spaces )
-	: m_width( width ), m_colour( colour ), m_marks( marks ), m_spaces( spaces )
+LineStyle::LineStyle( Length width, const rgbcolour &colour, const std::vector<Length> &dashes)
+	: m_width( width ), m_colour( colour ), m_dashes( dashes )
 {
-	sci::assertThrow(m_marks.size() == m_spaces.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle constructor called with a different number of spaces to marks.") );
 }
 LineStyle::LineStyle( Length width, const rgbcolour &colour, sci::string pattern )
 	: m_width( width ), m_colour( colour )
 {
-	parseLineStyle( pattern, width, m_marks, m_spaces);
+	parseLineStyle( pattern, width, m_dashes);
 }
 
 Length LineStyle::getWidth() const
 {
 	return m_width;
 }
-void LineStyle::getPattern( std::vector<Length> &marks, std::vector<Length> &spaces ) const
+void LineStyle::getPattern( std::vector<Length> &dashes ) const
 {
-	marks = m_marks;
-	spaces = m_spaces;
+	dashes = m_dashes;
 }
 rgbcolour LineStyle::getColour() const
 {
@@ -33,18 +31,18 @@ void LineStyle::setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) 
 	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
 	pl->col0( colourIndex );
 	pl->width( m_width.getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
-	if(m_marks.size()==0)
+	if(m_dashes.size()==0)
 		pl->styl(0,NULL, NULL);
 	else
 	{
-		std::vector<PLINT> scaledMarks( m_marks.size() );
-		std::vector<PLINT> scaledSpaces( m_spaces.size() );
+		std::vector<PLINT> scaledMarks( m_dashes.size() / 2 );
+		std::vector<PLINT> scaledSpaces(m_dashes.size() / 2 );
 		for(size_t i=0; i<scaledMarks.size(); ++i)
 		{
-			scaledMarks[i] = (PLINT)( m_marks[i].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
-			scaledSpaces[i] = (PLINT)( m_spaces[i].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale );
+			scaledMarks[i] = (PLINT)( m_dashes[i * 2].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * 1000.0 * scale );
+			scaledSpaces[i] = (PLINT)( m_dashes[i * 2 + 1].getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * 1000.0 * scale );
 		}
-		pl->styl(m_marks.size(),&scaledMarks[0],&scaledSpaces[0]);
+		pl->styl(scaledMarks.size(),&scaledMarks[0],&scaledSpaces[0]);
 	}
 }
 void LineStyle::resetLineStyle( plstream *pl, PLINT colourIndex ) const
@@ -56,21 +54,20 @@ void LineStyle::resetLineStyle( plstream *pl, PLINT colourIndex ) const
 //Converts a series of characters into dots/dashes and spaces for use with Plplot. Plplot works with micrometres.
 // here a space represents a gap of 200 um, a tab 800 um and for dashes a . is 200 um, a - or a _ are 800 um.
 //Adjacent space or dash characters are summed, so a 1000 um gap followed by a 1000 um dash would be " \t._"
-void LineStyle::parseLineStyle(const sci::string &pattern, Length lineWidth, std::vector<Length> &marks, std::vector<Length> &spaces)
+void LineStyle::parseLineStyle(const sci::string &pattern, Length lineWidth, std::vector<Length> &dashes)
 {
 	//set outputs to zero size
-	marks.resize(0);
-	spaces.resize(0);
+	dashes.resize(0);
 
 	//return empty vectors if style is empty
 	if(pattern.length()==0)
 		return;
 
 
-	//set up whether we are on a mark or space
+	//set up to start on a mark
 	bool onmark=true;
-	if(pattern[0]==' ' || pattern[0]=='\t' )
-		onmark=false;
+	if (pattern[0] == ' ' || pattern[0] == '\t')
+		dashes.push_back(grMillimetre(0.0));
 
 	//initialise our current lengths to zero
 	Length marklength = grMillimetre(0.0);
@@ -82,13 +79,13 @@ void LineStyle::parseLineStyle(const sci::string &pattern, Length lineWidth, std
 		//if we have changed between a space and mark record the length
 		if(onmark==true && (pattern[i]==' ' || pattern[i]=='\t'))
 		{
-			marks.push_back(marklength);
+			dashes.push_back(marklength);
 			marklength=grMillimetre(0.0);
 			onmark=false;
 		}
 		else if(onmark==false && ( pattern[i]=='_' || pattern[i]=='.' || pattern[i]=='-' ) )
 		{
-			spaces.push_back(spacelength);
+			dashes.push_back(spacelength);
 			spacelength=grMillimetre(0.0);
 			onmark=true;
 		}
@@ -103,25 +100,21 @@ void LineStyle::parseLineStyle(const sci::string &pattern, Length lineWidth, std
 			marklength+= lineWidth * grUnitless(2.0);
 		else if(pattern[i]=='-')
 			marklength+= lineWidth * grUnitless(2.0);
-		else
-			sci::assertThrow( false, sci::err(sci::SERR_PLOT, plotDataErrorCode, "LineStyle::parseLineStyle called with characters that cannot be converted to line marks. use only space, tab, ., -, _.") );
 	}
 	//add the last mark or space
 	if(onmark==true)
-		marks.push_back(marklength);
+		dashes.push_back(marklength);
 	else
-		spaces.push_back(spacelength);
+		dashes.push_back(spacelength);
 
-	//equalise the lengths of the vectors if needed
-	if(marks.size()<spaces.size())
+	if (dashes.size() == 0)
+		return;
+
+	//if we ended on a mark merge it with the first mark and remove it
+	if(onmark)
 	{
-		spaces[0] += spaces.back();
-		spaces.resize( spaces.size() - 1 );
-	}
-	else if (spaces.size()<marks.size())
-	{
-		marks[0] += marks.back();
-		marks.resize( marks.size() - 1 );
+		dashes[0] += dashes.back();
+		dashes.pop_back();
 	}
 }
 
@@ -181,12 +174,11 @@ rgbcolour FillStyle::getColour() const
 	return m_colour;
 }
 
-PlotFrame::PlotFrame(double bottomLeftX, double bottomLeftY, double width, double height, const FillStyle& fillStyle, const LineStyle& lineStyle, sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, wxColour titlecolour)
+PlotFrame::PlotFrame(const Point topLeft, const Point bottomRight, const FillStyle& fillStyle, const LineStyle& lineStyle, sci::string title,
+	Length titlesize, Length titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour)
 {
-	m_bottomLeftX = bottomLeftX;
-	m_bottomLeftY = bottomLeftY;
-	m_width = width;
-	m_height = height;
+	m_topLeft = topLeft;
+	m_bottomRight = bottomRight;
 	m_fillStyle = fillStyle;
 	m_lineStyle = lineStyle;
 	m_title = title;
@@ -201,8 +193,12 @@ void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHe
 {
 	pl->vpor(- 1e-5, 1.00005, -1e-5, 1.00005);
 	pl->wind(-1e-5, 1.00005, -1e-5, 1.00005);
-	double x[]{ m_bottomLeftX, m_bottomLeftX + m_width, m_bottomLeftX + m_width, m_bottomLeftX, m_bottomLeftX };
-	double y[]{ m_bottomLeftY, m_bottomLeftY, m_bottomLeftY + m_height, m_bottomLeftY + m_height, m_bottomLeftY };
+	double left = m_topLeft.getX(1.0, 1.0, grPerMillimetre(0.0));
+	double top = 1.0 - m_topLeft.getY(1.0, 1.0, grPerMillimetre(0.0)); //plplot has positive y up, Renderer has positive y down
+	double bottom = 1.0 - m_bottomRight.getY(1.0, 1.0, grPerMillimetre(0.0)); //plplot has positive y up, Renderer has positive y down
+	double right = m_bottomRight.getX(1.0, 1.0, grPerMillimetre(0.0));
+	double x[]{ left, right, right, left, left };
+	double y[]{ bottom, bottom, top, top, bottom };
 
 	if (m_fillStyle.getColour().a() > 0.0)
 	{
@@ -219,13 +215,27 @@ void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHe
 	}
 
 
-	pl->vpor(m_bottomLeftX, m_bottomLeftX + m_width, m_bottomLeftY, m_bottomLeftY + m_height);
+	pl->vpor(left, right, bottom, top);
 	pl->sfci(m_titlestyle);
 	//pl->sfontf(m_titlefont.mb_str());
-	pl->schr(1.0, m_titlesize * scale / 72.0 * 25.4);
-	pl->scol0(0, m_titlecolour.Red(), m_titlecolour.Green(), m_titlecolour.Blue());
+	pl->schr(1.0, m_titlesize.getLength(grMillimetre(0.0), grMillimetre(0.0)).value<grMillimetre>() * scale); //set text height in mm
+	pl->scol0(0, m_titlecolour.r()*255, m_titlecolour.g()*255, m_titlecolour.b()*255);
 	pl->col0(0);
-	pl->mtex("t", m_titledistance, 0.5, 0.5, sci::utf16ToUtf8(m_title).c_str());
+	double distance = m_titledistance.getLength(grMillimetre(0), grMillimetre(0)).value<grMillimetre>() / m_titlesize.getLength(grMillimetre(0), grMillimetre(0)).value<grMillimetre>();
+	pl->mtex("t", distance, 0.5, 0.5, sci::utf16ToUtf8(m_title).c_str());
+}
+
+void PlotFrame::draw(Renderer& renderer, grPerMillimetre scale)
+{
+	StatePusher state(&renderer);
+	m_fillStyle.setBrush(renderer);
+	m_lineStyle.setPen(renderer);
+	renderer.rectangle(m_topLeft, m_bottomRight - m_topLeft);
+
+	Point titlePosition(m_topLeft.getX() + (m_bottomRight.getX() - m_topLeft.getX()) / grUnitless(2), m_topLeft.getY() - m_titledistance);
+
+	renderer.setFont(m_titlefont, m_titlesize, m_titlecolour);
+	renderer.text(m_title, titlePosition, grUnitless(0.5), grUnitless(0.0));
 }
 
 SymbolBase::SymbolBase( sci::string symbol, PLUNICODE fci )
@@ -389,8 +399,8 @@ void PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pag
 	Point yPositionEnd;
 	m_xAxis->getPosition(xPositionStart, xPositionEnd);
 	m_yAxis->getPosition(yPositionStart, yPositionEnd);
-	pl->vpor(xPositionStart.getX(pageWidth, pageHeight, grPerMillimetre(0.0)), xPositionEnd.getX(pageWidth, pageHeight, grPerMillimetre(0.0)),
-		yPositionStart.getY(pageWidth, pageHeight, grPerMillimetre(0.0)), yPositionEnd.getY(pageWidth, pageHeight, grPerMillimetre(0.0)));
+	pl->vpor(xPositionStart.getX(1.0, 1.0, grPerMillimetre(0.0)), xPositionEnd.getX(1.0, 1.0, grPerMillimetre(0.0)),
+		1.0 - yPositionStart.getY(1.0, 1.0, grPerMillimetre(0.0)), 1.0 - yPositionEnd.getY(1.0, 1.0, grPerMillimetre(0.0))); //reversed y coordinate for plplot and Point
 
 	//set the limits of the plot area in plot coordinates
 	//set the limits of the plot area in terms of plot units
@@ -495,8 +505,9 @@ StructuredData::StructuredData(const std::vector<const std::vector<std::vector<d
 		m_dataLogged[i].resize(m_data[i].size());
 		for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
 		{
+			m_dataLogged[i][j].resize(m_data[i][j].size());
 			for (size_t k = 0; k < m_dataLogged[i][j].size(); ++k)
-			m_dataLogged[i][j][k] = sci::log10(m_data[i][j][k]);
+				m_dataLogged[i][j][k] = sci::log10(m_data[i][j][k]);
 		}
 	}
 	//m_dataLogged = std::vector<std::vector<std::vector<double>>>(m_data.size());
@@ -547,16 +558,7 @@ void LineData::plotData(Renderer& renderer, grPerMillimetre scale) const
 {
 	if (!hasData())
 		return;
-	std::vector<Length> marks;
-	std::vector<Length> spaces;
-	m_lineStyle.getPattern(marks, spaces);
-	std::vector<Length> merge(std::min(marks.size(), spaces.size())*2);
-	for (size_t i = 0; i < std::min(marks.size(), spaces.size()); ++i)
-	{
-		merge.push_back(marks[i]);
-		merge.push_back(spaces[i]);
-	}
-	renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), merge);
+	m_lineStyle.setPen(renderer);
 	std::vector<Point> points(getNPoints());
 	for (size_t i = 0; i < points.size(); ++i)
 	{

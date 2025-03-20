@@ -48,16 +48,16 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 	frame->SetClientSize(800, 800);
 	auto canvas = frame->getCanvas();
 
-	std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), title));
+	std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), title, Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
 	std::vector<grUnitless> limits{ grUnitless(0.1), grUnitless(0.1 + 0.8 / 4.0), grUnitless(0.1 + 2.0 * 0.8 / 4.0), grUnitless(0.1 + 3.0 * 0.8 / 4.0), grUnitless(0.1 + 0.8) };
-	std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[0],grUnitless(0.1)), Point(limits[1], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> xAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[1], grUnitless(0.1)), Point(limits[2], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[2], grUnitless(0.1)), Point(limits[3], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> xAxis4(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[3], grUnitless(0.1)), Point(limits[4], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[0], grUnitless(0.1)), Point(limits[1], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[1], grUnitless(0.1)), Point(limits[2], grUnitless(0.1)), sU("")));
-	std::shared_ptr<splotaxis> yAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[2], grUnitless(0.1)), Point(limits[3], grUnitless(0.1)), sU("")));
-
+	std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[0],grUnitless(0.9)), Point(limits[1], grUnitless(0.9)), sU("x-1d y-1d")));
+	std::shared_ptr<splotaxis> xAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[1], grUnitless(0.9)), Point(limits[2], grUnitless(0.9)), sU("x-2d y-1d")));
+	std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[2], grUnitless(0.9)), Point(limits[3], grUnitless(0.9)), sU("x-1d y-2d")));
+	std::shared_ptr<splotaxis> xAxis4(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(limits[3], grUnitless(0.9)), Point(limits[4], grUnitless(0.9)), sU("x-2d y-2d")));
+	std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[0], grUnitless(0.9)), Point(limits[0], grUnitless(0.7)), sU("Contour")));
+	std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[0], grUnitless(0.7)), Point(limits[0], grUnitless(0.5)), sU("Shade")));
+	std::shared_ptr<splotaxis> yAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(limits[0], grUnitless(0.5)), Point(limits[0], grUnitless(0.3)), sU("Grid")));
+	
 	size_t nx = 21;
 	size_t ny = 21;
 
@@ -135,30 +135,30 @@ void do2dplot(wxWindow *parent, sci::string title, double scaleBegin, double sca
 		for (auto& v : values)
 			v = std::pow(10.0, v);
 
-	std::shared_ptr<splotcolourscale> colourScaleCont(new splotcolourscale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<splotcolourscale> colourScaleDiscrete(new splotcolourscale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	LineStyle lineStyle = noLine;
 
 	std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, log, autoscale));
 
-	std::shared_ptr<splotcolourscale> colourScaleGrid(new splotcolourscale({ values.front(), values.back()}, {colours.front(), colours.back()}, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<splotcolourscale> colourScaleContinuous(new splotcolourscale({ values.front(), values.back()}, {colours.front(), colours.back()}, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	
-	std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleGrid));
-	std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleGrid));
-	std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleGrid));
-	std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleGrid));
+	std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
+	std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
+	std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
+	std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
 
-	std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleCont, lineStyle));
-	std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleCont, lineStyle));
-	std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleCont, lineStyle));
-	std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleCont, lineStyle));
+	std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, lineStyle));
+	std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, lineStyle));
+	std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, lineStyle));
+	std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, lineStyle));
 
 	std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, lineStyle));
 	std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, lineStyle));
 	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, lineStyle));
 	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, lineStyle));
 
-	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], limits[3] + grUnitless(0.06)), Point(limits[4], limits[3] + grUnitless(0.06)), Point(limits[0], limits[3] + grUnitless(0.09)), colourScaleCont, sU("Contour Colourbar")));
-	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], limits[3] + grUnitless(0.15)), Point(limits[4], limits[3] + grUnitless(0.15)), Point(limits[0], limits[3] + grUnitless(0.18)), colourScaleGrid, sU("Contour Colourbar")));
+	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22)), Point(limits[4], grUnitless(0.22 - 0.03)), Point(limits[0], grUnitless(0.22 - 0.03)), colourScaleDiscrete, sU("Discrete Colourbar used by Shade"), sU(""), 0, 12, 1.0));
+	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22 - 0.09)), Point(limits[4], grUnitless(0.22 - 0.12)), Point(limits[0], grUnitless(0.22 - 0.12)), colourScaleContinuous, sU("Continuous Colourbar used by Grid"), sU(""), 0, 12, 1.0));
 	
 	canvas->addItem(box);
 	canvas->addItem(grid1);
@@ -195,9 +195,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 1: This plot should have an x and y axis running from 0.0-1.0 inside\na 0.8 level grey box with a 2 pixel wide outline and no data.")));
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("x")));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("y")));
+		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 1: This plot should have an x and y axis running from 0.0-1.0 inside\na 0.8 level grey box with a 1 mm wide outline and no data."), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), sU("x")));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), sU("y")));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -206,7 +206,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->Show(true);
 	}
 
-
+	
 	{
 		//create a frame with axes running from 0-1 and 3 circular points
 		//this tests that points works
@@ -214,9 +214,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have circular data points at [0.1,0.2],[0.5,0.4],[0.8,0.6]")));
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("x")));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("y")));
+		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have circular data points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), sU("x")));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), sU("y")));
 		std::shared_ptr<PointData> points(new PointData({ 0.1, 0.5, 0.8 }, { 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
 
 		canvas->addItem(box);
@@ -234,9 +234,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.02, 0.02, 0.9, 0.9, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.65-0.835 and 0.18-0.62")));
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("x")));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.1)), Point(grUnitless(0.1), grUnitless(0.9)), sU("y")));
+		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), sU("x")));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), sU("y")));
 		std::shared_ptr<PointData> points(new PointData({ 0.1, 0.5, 0.8 }, { 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
 
 		canvas->addItem(box);
@@ -254,9 +254,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(1200, 400);
 		auto canvas = frame->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(0.03, 0.05, 0.95, 0.85, FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 4: This plot should show an exponentially decreasing sin and cos wave and their average on a window with a size of 1200 x 400.\n The cos wave should have dot dash markings and the sum should have identical dot dash markings and be a wine red colour")));
-		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 2500, false, PlotScale::Direction::horizontal, Point(grUnitless(0.06), grUnitless(0.15)), Point(grUnitless(0.98), grUnitless(0.15)), sU("x")));
-		std::shared_ptr<splotaxis> yAxis(new splotaxis(-1.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.06), grUnitless(0.15)), Point(grUnitless(0.06), grUnitless(0.85)), sU("y")));
+		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.03), grUnitless(0.15)), Point(grUnitless(0.98), grUnitless(0.9)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 4: This plot should show an exponentially decreasing sin and cos wave and their average on a window with a size of 1200 x 400.\n The cos wave should have dot dash markings and the sum should have identical dot dash markings and be a wine red colour"), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
+		std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 2500, false, PlotScale::Direction::horizontal, Point(grUnitless(0.06), grUnitless(0.85)), Point(grUnitless(0.98), grUnitless(0.85)), sU("x")));
+		std::shared_ptr<splotaxis> yAxis(new splotaxis(-1.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.06), grUnitless(0.85)), Point(grUnitless(0.06), grUnitless(0.15)), sU("y")));
 		std::vector<double> x(501);
 		std::vector<double> y1(501);
 		std::vector<double> y2(501);
@@ -271,8 +271,8 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 			y3[i] = (y1[i]+y2[i])/2.0;
 
 		std::shared_ptr<LineData> line1(new LineData(x, y1, xAxis, yAxis, LineStyle(grMillimetre(1.0))));
-		std::shared_ptr<LineData> line2(new LineData(x, y2, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0, 0, 0), sU(".          -_..\t      "))));
-		std::shared_ptr<LineData> line3(new LineData(x, y3, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0.8, 0, 0.2), { grMillimetre(0.2),grMillimetre(1.8) }, { grMillimetre(2.0), grMillimetre(2.0) })));
+		std::shared_ptr<LineData> line2(new LineData(x, y2, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0, 0, 0), sU(".       -_\t   "))));
+		std::shared_ptr<LineData> line3(new LineData(x, y3, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0.8, 0, 0.2), { grMillimetre(0.2), grMillimetre(0.2), grMillimetre(1.8), grMillimetre(0.2) })));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -340,7 +340,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}
-	{
+	/* {
 		sci::string title = sU("Plot 10: This plot shows the same plot as plot 9, but with autoscale on for the colourscale. It\nshould look identical as plot 9 used exactly the full scale.");
 		double scaleBegin = 2.0;
 		double scaleEnd = 3.0;
@@ -349,7 +349,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		bool fillOffscaleTop = false;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}
+	}*/
 	/* {
 		sci::string title = sU("Plot 11: This plot shows the same data as Plot 9, but with a scale from 2-5, rather than 1-10.");
 		double scaleBegin = 2.0;
@@ -658,22 +658,71 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	wxPaintDC dc(this);
 	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 
-	std::shared_ptr<splotaxis> xAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.9)),
-		Point(grUnitless(0.9), grUnitless(0.9))));
-	std::shared_ptr<splotaxis> yAxis(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.9)),
-		Point(grUnitless(0.1), grUnitless(0.1))));
+	//bottom left plot regular axis directions
+	std::shared_ptr<splotaxis> xAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.1), grUnitless(0.9)),
+		Point(grUnitless(0.45), grUnitless(0.9)), sU("Normal x axis")));
+	std::shared_ptr<splotaxis> yAxis1(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.9)),
+		Point(grUnitless(0.1), grUnitless(0.55)), sU("Normal y axis")));
+	
+	//top left plot
+	//reversed both x values and end points to give regular direction
+	//reversed y end points to give reversed axis
+	std::shared_ptr<splotaxis> xAxis2(new splotaxis(1.0, 0.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.45), grUnitless(0.1)),
+		Point(grUnitless(0.1), grUnitless(0.1)), sU("Double reversed x axis")));
+	std::shared_ptr<splotaxis> yAxis2(new splotaxis(0.0, 1.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.1), grUnitless(0.1)),
+		Point(grUnitless(0.1), grUnitless(0.45)), sU("Reversed position y axis")));
+
+	//bottom right plot
+	//reversed x end points to give reversed direction
+	//reversed both y values and end points to give regular direction
+	std::shared_ptr<splotaxis> xAxis3(new splotaxis(0.0, 1.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.9), grUnitless(0.9)),
+		Point(grUnitless(0.55), grUnitless(0.9)), sU("Reversed position x axis")));
+	std::shared_ptr<splotaxis> yAxis3(new splotaxis(1.0, 0.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.9), grUnitless(0.55)),
+		Point(grUnitless(0.9), grUnitless(0.9)), sU("Double reversed y axis")));
+
+	//top right plot
+	//reversed x values to give reversed direction
+	//reversed y values to give reversed direction
+	std::shared_ptr<splotaxis> xAxis4(new splotaxis(1.0, 0.0, false, PlotScale::Direction::horizontal, Point(grUnitless(0.55), grUnitless(0.1)),
+		Point(grUnitless(0.9), grUnitless(0.1)), sU("Reversed values x axis")));
+	std::shared_ptr<splotaxis> yAxis4(new splotaxis(1.0, 0.0, false, PlotScale::Direction::vertical, Point(grUnitless(0.9), grUnitless(0.45)),
+		Point(grUnitless(0.9), grUnitless(0.1)), sU("Reversed values y axis")));
 	//yAxis->setticksdirection(true, false);
 
-	xAxis->draw(renderer, grPerInch(96));
-	yAxis->draw(renderer, grPerInch(96));
+	xAxis1->draw(renderer, grPerInch(96));
+	yAxis1->draw(renderer, grPerInch(96));
+
+	xAxis2->draw(renderer, grPerInch(96));
+	yAxis2->draw(renderer, grPerInch(96));
+
+	xAxis3->draw(renderer, grPerInch(96));
+	yAxis3->draw(renderer, grPerInch(96));
+
+	xAxis4->draw(renderer, grPerInch(96));
+	yAxis4->draw(renderer, grPerInch(96));
 
 	std::vector<double> x{ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
 	std::vector<double> y{ 0.05, 0.23, 0.64, 0.73, 0.82, 0.68, 0.52, 0.18, 0.07 };
 	std::vector<Distance> squareSymbol{ Distance(grMillimetre(-1.0), grMillimetre(-1.0)), Distance(grMillimetre(1.0), grMillimetre(-1.0)),
 	Distance(grMillimetre(1.0), grMillimetre(1.0)), Distance(grMillimetre(-1.0), grMillimetre(1.0)), Distance(grMillimetre(-1.0), grMillimetre(-1.0)) };
 
-	std::shared_ptr<LineData> lineData(new LineData(x, y, xAxis, yAxis, LineStyle()));
-	std::shared_ptr<PointData> pointData(new PointData(x, y, xAxis, yAxis, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
-	lineData->draw(renderer, grPerInch(96));
-	pointData->draw(renderer, grPerInch(96));
+	std::shared_ptr<LineData> lineData1(new LineData(x, y, xAxis1, yAxis1, LineStyle()));
+	std::shared_ptr<PointData> pointData1(new PointData(x, y, xAxis1, yAxis1, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
+	lineData1->draw(renderer, grPerInch(96));
+	pointData1->draw(renderer, grPerInch(96));
+
+	std::shared_ptr<LineData> lineData2(new LineData(x, y, xAxis2, yAxis2, LineStyle()));
+	std::shared_ptr<PointData> pointData2(new PointData(x, y, xAxis2, yAxis2, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
+	lineData2->draw(renderer, grPerInch(96));
+	pointData2->draw(renderer, grPerInch(96));
+
+	std::shared_ptr<LineData> lineData3(new LineData(x, y, xAxis3, yAxis3, LineStyle()));
+	std::shared_ptr<PointData> pointData3(new PointData(x, y, xAxis3, yAxis3, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
+	lineData3->draw(renderer, grPerInch(96));
+	pointData3->draw(renderer, grPerInch(96));
+
+	std::shared_ptr<LineData> lineData4(new LineData(x, y, xAxis4, yAxis4, LineStyle()));
+	std::shared_ptr<PointData> pointData4(new PointData(x, y, xAxis4, yAxis4, Symbol(squareSymbol, rgbcolour(0.5, 0.0, 0.8))));
+	lineData4->draw(renderer, grPerInch(96));
+	pointData4->draw(renderer, grPerInch(96));
 }
