@@ -786,7 +786,7 @@ public:
 			}
 			//gobble any spaces for multi character commands
 			for (; end < string.length(); ++end)
-				if (!sci::isWhitespace)
+				if (!sci::isWhitespace(string, end))
 					break;
 			
 			return end;
