@@ -91,6 +91,10 @@ public:
 	{
 		set(length);
 	}
+	constexpr Length(grTextPoint length)
+	{
+		set(grMillimetre(length));
+	}
 	constexpr Length()
 	{
 		m_absolute = grMillimetre(0);
@@ -193,6 +197,10 @@ public:
 		newLength.m_lengthOverWidth = -newLength.m_lengthOverWidth;
 		newLength.m_lengthOverHeight = -newLength.m_lengthOverHeight;
 		return newLength;
+	}
+	constexpr bool isAlwaysZero() const
+	{
+		return m_absolute == grMillimetre(0.0) && m_lengthOverWidth == grUnitless(0.0) && m_lengthOverHeight == grUnitless(0.0);
 	}
 
 private:
@@ -652,6 +660,26 @@ public:
 		cursive, //script
 		fantasy //decorative
 	};
+	class Font
+	{
+	public:
+		Font(std::vector<sci::string> facenames = std::vector<sci::string>(), Length size = grTextPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+			:m_facenames(facenames), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
+		{}
+		
+		Font(sci::string facename, Length size = grTextPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+			:m_facenames(std::vector<sci::string>(1,facename)), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
+		{}
+		
+		std::vector<sci::string> m_facenames;
+		Length m_size;
+		rgbcolour m_colour;
+		FontFamily m_backupFamily;
+		bool m_bold;
+		bool m_italic;
+		bool m_underline;
+		rgbcolour m_backgroundColour;
+	};
 
 	virtual void pushState() = 0;
 	virtual void popState() = 0;
@@ -664,16 +692,48 @@ public:
 	virtual TextMetric text(const sci::string &str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment) = 0;
 	TextMetric formattedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment = grUnitless(0.0), grUnitless verticalAlignment = grUnitless(0.0), grDegree rotation = grDegree(0.0), grTextPoint minTextSize = grTextPoint(5))
 	{
-		textChunk text(str);
+		TextMetric result;
+		grUnitless spacing(1.25);
 
-		TextMetric extent = text.getExtent(*this, minTextSize);
-		Distance alignmentOffset(grMillimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (extent.ascent * verticalAlignment) * sci::sin(rotation)),
-			-grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (extent.ascent * verticalAlignment) * sci::cos(rotation));
+		//break the text into lines
+		size_t newLine = -1;
+		grMillimetre verticalOffset(0.0);
+		bool firstLine = true;
+		do
+		{
+			size_t lineStart = newLine + 1;
+			newLine = str.find(sU('\n'), lineStart);
+			textChunk text(str.substr(lineStart, newLine - lineStart));
 
-		return text.render(*this, minTextSize, position-alignmentOffset, rotation);
+			TextMetric extent = text.getExtent(*this, minTextSize);
+			if (firstLine)
+			{
+				verticalOffset += extent.ascent * verticalAlignment;
+				result = extent;
+				firstLine = false;
+			}
+			else
+			{
+				result.width = std::max(result.width, extent.width);
+				result.bottomDescent += (extent.ascent + extent.descent) * spacing;
+			}
+
+			Distance alignmentOffset(grMillimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (verticalOffset)*sci::sin(rotation)),
+				-grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (verticalOffset)*sci::cos(rotation));
+			text.render(*this, minTextSize, position - alignmentOffset, rotation);
+			verticalOffset -= (extent.ascent + extent.descent) * spacing;
+
+
+		} while (newLine != sci::string::npos);
+
+		return result;
 	}
 	virtual TextMetric rotatedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment, grDegree rotation) = 0;
 	virtual TextMetric getUnformattedTextExtent(const sci::string& str) = 0;
+	virtual void setFont(const Font &font)
+	{
+		setFont(font.m_facenames, font.m_size, font.m_colour, font.m_backupFamily, font.m_bold, font.m_italic, font.m_underline, font.m_backgroundColour);
+	}
 	virtual void setFont(sci::string facename, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
 	virtual void setFont(std::vector<sci::string> facenames, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
 	virtual void scaleFontSize(grUnitless scale) = 0;
@@ -683,6 +743,7 @@ public:
 	virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) = 0;
 	virtual void polyLine(const std::vector<Point>& points) = 0;
 	virtual void polygon(const std::vector<Point>& points) = 0;
+	virtual grDegree getAngle(const Distance& distance) const = 0;
 	//this project might be worth a look at some time https://github.com/bkaradzic/bgfx?tab=readme-ov-file
 
 	class textChunk
@@ -1168,6 +1229,13 @@ public:
 		for (auto& p : points)
 			wxPoints.push_back(getWxPoint(p));
 		m_dc->DrawPolygon(points.size(), &wxPoints[0]);
+	}
+
+	virtual grDegree getAngle(const Distance& distance) const
+	{
+		double x = distance.getX(m_width, m_height, m_scale);
+		double y = distance.getY(m_width, m_height, m_scale);
+		return sci::atan2(grUnitless(-y), grUnitless(x));
 	}
 private:
 	struct State

@@ -93,7 +93,7 @@ class PlotScale
 	//then we can control the m_direction variable and
 	//ensure splotaxis is horizontal and vertical and
 	//splotcolourscale and splotsizescale are none.
-	friend class splotaxis;
+	friend class PlotAxis;
 	friend class splotcolourscale;
 	friend class splotsizescale;
 	friend class splotlevelscale;
@@ -191,7 +191,7 @@ public:
 		if (m_autoscale)
 			contract();
 	}
-	Direction getDirection()
+	Direction getDirection() const
 	{
 		return m_direction;
 	}
@@ -248,8 +248,8 @@ private:
 	PlotScale(double min, double max, bool log, Direction direction)
 	{
 		m_direction = direction;
-		setFixedScale(min, max);
 		m_log = log;
+		setFixedScale(min, max);
 	}
 	PlotScale(bool log, Direction direction, double autoscaleEndSpace)
 	{
@@ -411,6 +411,29 @@ namespace symText
 
 }
 
+class LineStyle
+{
+public:
+	LineStyle(Length width = grMillimetre(0.5), const rgbcolour& colour = rgbcolour(0.0, 0.0, 0.0, 1.0), const std::vector<Length>& dashes = std::vector<Length>(0));
+	LineStyle(Length width, const rgbcolour& colour, sci::string pattern);
+	Length getWidth() const;
+	void getPattern(std::vector<Length>& dashes) const;
+	rgbcolour getColour() const;
+	void setupLineStyle(plstream* pl, PLINT colourIndex, double scale) const;
+	void resetLineStyle(plstream* pl, PLINT colourIndex) const;
+	static void parseLineStyle(const sci::string& pattern, Length lineWidth, std::vector<Length>& dashes);
+	void setPen(Renderer& renderer) const
+	{
+		renderer.setPen(m_colour, m_width, m_dashes);
+	}
+private:
+	Length m_width;
+	rgbcolour m_colour;
+	std::vector<Length> m_dashes;
+};
+
+const LineStyle noLine(grMillimetre(0.0));
+
 class DrawableItem
 {
 public:
@@ -423,73 +446,121 @@ public:
 	virtual bool readyToDraw() const = 0;
 };
 
-class splotaxis: public PlotScale, public DrawableItem
+class PlotAxis: public PlotScale, public DrawableItem
 {
 	friend class splot;
 	friend class splot2d;
 public:
-	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""),
-		PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0),
-		double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0),
-		Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true,
-		sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0),
-		bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, Point Start, Point End, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""), PLUNICODE titlestyle = 0,
-		double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0),
-		Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true,
-		bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
-		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true,
-		unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(double min, double max, bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"),
-		sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0),
-		double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0),
-		Length minorticklength = grMillimetre(2.0), bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true,
-		sci::string labelfont = sU(""), PLUNICODE labelstyle = 0, bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0),
-		bool autodecimalplaces = true, unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0);
-	splotaxis(bool log, Direction direction, Point Start, Point End, double majorinterval, double nsubticks, sci::string title = sU("Axis Title"), sci::string titlefont = sU(""),
-		PLUNICODE titlestyle = 0, double titlesize = 12.0, double titledistance = 3.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0,
-		rgbcolour colour = rgbcolour(0, 0, 0), Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0),
-		bool ticksLeftOrDown = true, bool ticksRightOrUp = false, bool showlabels = true, bool labelsLeftOrDown = true, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
-		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true, unsigned int ndecimalplaces = 0,
-		bool automaxndigits = true, int maxndigits = 0);
-	~splotaxis(){};
-	inline void setcolour(rgbcolour colour){m_colour=colour; m_haschanged=true;};
-	inline void setlinethickness(Length thickness){m_linethickness=thickness; m_haschanged=true;};
-	inline void automajorintervalon(){m_automajorinterval=true; m_haschanged=true;};
-	inline void autominorintervalon(){m_autonsubticks=true; m_haschanged=true;};
-	inline void autointervalson();
-	void setmajorinterval(double interval);
-	void setnsubticks(unsigned int nsubticks);
-	inline void settitle(sci::string title){m_title=title; m_haschanged=true;};
-	inline void setrotatetitle(bool rotated){m_rotatetitle=rotated; m_haschanged=true;};
-	inline void settitlesize(double size){m_titlesize=size; m_haschanged=true;};
-	inline void settitlecolour(rgbcolour colour){m_titlecolour=colour; m_haschanged=true;};
-	inline void settitledistance(double distance){m_titledistance=distance; m_haschanged=true;};
-	inline void settitlefont(sci::string fontface){m_titlefont=fontface; m_haschanged=true;};
-	inline void setmajorticklength(Length length){m_majorticklength=length; m_haschanged=true;};
-	inline void setminorticklength(Length length){m_minorticklength=length; m_haschanged=true;};
-	inline void setticksdirection(bool leftOrDown, bool rightOrUp){m_ticksLeftOrDown=leftOrDown;m_ticksRightOrUp=rightOrUp; m_haschanged=true;};
-	inline void setlabelposition(bool leftOrDown){m_labelsLeftOrDown=leftOrDown; m_haschanged=true;};
-	inline void setshowlabels(bool show){m_showlabels=show; m_haschanged=true;};
-	inline void setlabelfont(sci::string fontface){m_labelfont=fontface.c_str(); m_haschanged=true;};
-	inline void setlabelstyle(PLUNICODE style){m_labelfci=style; m_haschanged=true;};
-	inline void setrotatedlabels(bool rotated){m_rotatelabels=rotated; m_haschanged=true;};
-	inline void setlabelsize(double size){m_labelsize=size; m_haschanged=true;};
-	inline void setlabelcolour(rgbcolour colour){m_labelcolour=colour; m_haschanged=true;};
-	inline void setndecimalplaces(unsigned int ndecimalplaces){m_autodecimalplaces=false; m_ndecimalplaces=ndecimalplaces;};
-	inline void setautodecimalplaces(){m_autodecimalplaces=true;};
-	inline void setmaxndigits(int maxndigits){m_maxndigits=maxndigits;};
-	inline void setautomaxndigits(){m_maxndigits=0;};
-	inline void settimeformat(sci::string format){m_timeformat=format; m_customlabelcreator=NULL;}; //set to "" to use number format else set as per the strftime function
-	inline void setcustomlabel(sci::string (*customlabelcreator)(double axisvalue)){m_customlabelcreator=customlabelcreator; m_timeformat=sU("");}; //set to NULL to use normal formatting or a pointer to a function to interpret the axis value otherwise
-	inline void setPosition(Point start, Point end) { m_start = start; m_end = end; }
-	inline void getPosition(Point& start, Point& end) const { start = m_start; end = m_end; }
-	inline Point getStart() const { return m_start; }
-	inline Point getEnd() const { return m_end; }
-	inline const sci::string& getTitle() const { return m_title; }
-																																					//note no public function to set limits, or intersect or set the axis as logarithmic as the 
-	//splot class needs to keep track of these parameters for autolimits and log plotting
-	//purposes
+	class Options
+	{
+	public:
+		Options(sci::string title = sU(""))
+			:m_title(title), m_titleDistance(grTextPoint(42)), m_majorTickLength(grMillimetre(4.0)), m_minorTickLength(grMillimetre(2.0)),
+			m_ticksLeftOrDown(true), m_ticksRightOrUp(false), m_labelsLeftOrDown(true), m_labelDirection(grMillimetre(1.0), grMillimetre(0.0)), m_majorInterval(0.0),
+			m_nSubticks(0), m_autoMajorInterval(true), m_autoNSubticks(true), m_customlabelcreator(nullptr), m_maxDigits(4)
+		{}
+		static Options getDefaultAxis()
+		{
+			return Options();
+		}
+		static Options getBlankAxis()
+		{
+			Options result;
+			result.m_lineStyle = noLine;
+			result.m_labelFont.m_size = grMillimetre(0.0);
+			return result;
+		}
+		Options& setTitle(const sci::string& title)
+		{
+			m_title = title;
+			return *this;
+		}
+		//to do create functions like above for all properties
+		//so we can chain setting parameters
+		sci::string m_title;
+		Renderer::Font m_titleFont;
+		Length m_titleDistance;
+		LineStyle m_lineStyle;
+		Length m_majorTickLength;
+		Length m_minorTickLength;
+		bool m_ticksLeftOrDown;
+		bool m_ticksRightOrUp;
+		Renderer::Font m_labelFont;
+		bool m_labelsLeftOrDown;
+		Distance m_labelDirection;
+		double m_majorInterval;
+		size_t m_nSubticks;
+		bool m_autoMajorInterval;
+		bool m_autoNSubticks;
+		sci::string m_timeformat;
+		sci::string(*m_customlabelcreator)(double axisvalue);
+		size_t m_maxDigits;
+	};
+	PlotAxis(double min, double max, bool log, Point start, Point end, Options options =  Options(), Direction direction = Direction::none)
+		:PlotScale(min, max, log, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+	{}
+	PlotAxis(bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
+		:PlotScale(log, direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+	{
+
+	}
+	PlotAxis(Point start, Point end, Options options = Options(), Direction direction = Direction::none)
+		:PlotScale(direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+	{
+
+	}
+	
+	~PlotAxis(){};
+	const Options& getOptions() const
+	{
+		return m_options;
+	}
+	void setOptions(const Options& options)
+	{
+		m_hasChanged = true;
+		m_options = options;
+	}
+	Direction getBestDirection(Renderer &renderer) const
+	{
+		Direction direction = PlotScale::getDirection();
+		if (Direction::none == direction)
+		{
+			grDegree angle = renderer.getAngle(m_end - m_start);
+			if (angle < grDegree(0.0))
+				angle += grDegree(360.0);
+			if (angle < grDegree(45.0))
+				direction = Direction::horizontal;
+			else if (angle < grDegree(135.0))
+				direction = Direction::vertical;
+			else if (angle < grDegree(225.0))
+				direction = Direction::horizontal;
+			else if (angle < grDegree(315.0))
+				direction = Direction::vertical;
+			else
+				direction = Direction::horizontal;
+		}
+		return direction;
+	}
+	
+	void setPosition(Point start, Point end)
+	{
+		m_hasChanged = true;
+		m_start = start;
+		m_end = end;
+	}
+	void getPosition(Point& start, Point& end) const
+	{
+		start = m_start;
+		end = m_end;
+	}
+	inline Point getStart() const
+	{
+		return m_start;
+	}
+	inline Point getEnd() const
+	{
+		return m_end;
+	}
 
 	void preDraw() override
 	{
@@ -511,9 +582,6 @@ public:
 	}
 	
 private:
-	
-	void setup(Point Start, Point End, sci::string title, sci::string titlefont, PLUNICODE titlestyle, double titlesize, double titledistance, const rgbcolour& titlecolour, double intersectpoint, rgbcolour colour, Length linethickness, Length majorticklength, Length minorticklength, bool tickspositive, bool ticksnegative, bool showlabels, bool labelpositionpositive, sci::string labelfont, PLUNICODE labelstyle, bool labelsrotated, double labelsize, const rgbcolour& labelcolour, bool autodecimalplaces, unsigned int ndecimalplaces, bool automaxndigits, int maxndigits);
-
 	void drawLinear(Renderer& renderer, grPerMillimetre scale);
 	void drawLog(Renderer& renderer, grPerMillimetre scale);
 	void drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor);
@@ -521,59 +589,9 @@ private:
 	void drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis);
 
 	std::string createploptstring() const;
-	//keep track of if the axis has changed
-	bool m_haschanged;
 
-	//location in terms of the coordinates in the other axis
-	double m_intersect;
-
-	//colour
-	rgbcolour m_colour;
-
-	//line thickness
-	Length m_linethickness;
-
-	//intervals
-	bool m_automajorinterval;
-	bool m_autonsubticks;
-	double m_majorinterval;
-	unsigned int m_nsubticks;
-
-	//tickmark length //scale to be defined, 0.0 is off, if either has a negative number passes
-	//then the positive value is recorded but ticksinward is set true
-	Length m_majorticklength;
-	Length m_minorticklength;
-	bool m_ticksLeftOrDown;
-	bool m_ticksRightOrUp;
-	bool m_showlabels;
-
-	//label details
-	bool m_labelsLeftOrDown;
-	bool m_rotatelabels;
-	double m_labelsize;
-	sci::string m_labelfont;
-	PLUNICODE m_labelfci;
-	rgbcolour m_labelcolour;
-
-	//axis title
-	sci::string m_title;
-	bool m_rotatetitle;
-	double m_titlesize; //scale to be defined
-	sci::string m_titlefont;
-	PLUNICODE m_titlefci;
-	rgbcolour m_titlecolour;
-	double m_titledistance; //distance from the axis in multiples of character height
-	
-
-	//time/custom format options
-	sci::string m_timeformat;
-	sci::string (*m_customlabelcreator)(double axisvalue);
-
-	bool m_autodecimalplaces;
-	unsigned int m_ndecimalplaces;
-
-	unsigned int m_maxndigits; //maximum number of digits before going to exponents, set to zero for auto
-
+	bool m_hasChanged;
+	Options m_options;
 	Point m_start;
 	Point m_end;
 };
@@ -693,48 +711,11 @@ private:
 class splothorizontalcolourbar : public DrawableItem
 {
 public:
-	splothorizontalcolourbar(Point bottomLeft, Point topRight, Point topLeft,
-		std::shared_ptr<splotcolourscale> colourscale, sci::string title, sci::string titlefont = sU(""), PLUNICODE titlestyle = 0, double titlesize = 12.0,
-		double titledistance = 2.5, const rgbcolour& titlecolour = rgbcolour(0, 0, 0), double intersectpoint = 0.0, rgbcolour colour = rgbcolour(0, 0, 0),
-		Length linethickness = grMillimetre(0.5), Length majorticklength = grMillimetre(4.0), Length minorticklength = grMillimetre(2.0), bool tickspositive = false,
-		bool ticksnegative = true, bool showlabels = true, bool labelpositionpositive = false, sci::string labelfont = sU(""), PLUNICODE labelstyle = 0,
-		bool labelsrotated = false, double labelsize = 9.6, const rgbcolour& labelcolour = rgbcolour(0, 0, 0), bool autodecimalplaces = true,
-		unsigned int ndecimalplaces = 0, bool automaxndigits = true, int maxndigits = 0)
+	splothorizontalcolourbar(Point bottomLeft, Length height, Length width, std::shared_ptr<splotcolourscale> colourscale, PlotAxis::Options axisOptions = PlotAxis::Options())
+		:m_colourscale(colourscale),
+		m_xAxis(new PlotAxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), bottomLeft, Point(bottomLeft.getX(), bottomLeft.getY() + width), axisOptions, PlotScale::Direction::horizontal)),
+		m_yAxis(new PlotAxis(m_colourscale->getMin(), m_colourscale->getMax(), false, bottomLeft, Point(bottomLeft.getX() + height, bottomLeft.getY()), PlotAxis::Options::getBlankAxis(), PlotScale::Direction::horizontal))
 	{
-		m_bottomLeft = bottomLeft;
-		m_bottomRight = topRight;
-		m_topLeft = topLeft;
-		m_title = title;
-		m_colourscale = colourscale;
-
-		m_timeformat = sU("");
-		m_customlabelcreator = NULL;
-		m_colour = colour;
-		m_linethickness = linethickness;
-		m_tickspos = tickspositive;
-		m_ticksneg = ticksnegative;
-		m_majorticklength = majorticklength;
-		m_minorticklength = minorticklength;
-		m_showlabels = showlabels;
-		m_labelfont = labelfont;
-		m_labelfci = labelstyle;
-		m_rotatelabels = labelsrotated;
-		m_labelsize = labelsize;
-		m_labelcolour = labelcolour;
-		m_labelpositionpositive = labelpositionpositive;
-		m_title = title;
-		m_titlefont = titlefont;
-		m_titlefci = titlestyle;
-		m_rotatetitle = false;
-		m_titlesize = titlesize;
-		m_titledistance = titledistance;
-		m_titlecolour = titlecolour;
-		m_autodecimalplaces = autodecimalplaces;
-		m_ndecimalplaces = ndecimalplaces;
-		if (automaxndigits == true)
-			m_maxndigits = 0;
-		else
-			m_maxndigits = maxndigits;
 	}
 	void preDraw() override
 	{
@@ -744,61 +725,10 @@ public:
 	{
 		return true;
 	}
-	void setTitle(sci::string title)
-	{
-		m_title = title;
-	}
 private:
 	std::shared_ptr<splotcolourscale> m_colourscale;
-	Point m_bottomLeft;
-	Point m_bottomRight;
-	Point m_topLeft;
-
-	rgbcolour m_colour;
-
-	//line thickness
-	Length m_linethickness;
-
-	//intervals
-	bool m_automajorinterval;
-	bool m_autonsubticks;
-	double m_majorinterval;
-	unsigned int m_nsubticks;
-
-	//tickmark length //scale to be defined, 0.0 is off, if either has a negative number passes
-	//then the positive value is recorded but ticksinward is set true
-	Length m_majorticklength;
-	Length m_minorticklength;
-	bool m_tickspos;
-	bool m_ticksneg;
-	bool m_showlabels;
-
-	//label details
-	bool m_labelpositionpositive;
-	bool m_rotatelabels;
-	double m_labelsize;
-	sci::string m_labelfont;
-	PLUNICODE m_labelfci;
-	rgbcolour m_labelcolour;
-
-	//axis title
-	sci::string m_title;
-	bool m_rotatetitle;
-	double m_titlesize; //scale to be defined
-	sci::string m_titlefont;
-	PLUNICODE m_titlefci;
-	rgbcolour m_titlecolour;
-	double m_titledistance; //distance from the axis in multiples of character height
-
-
-	//time/custom format options
-	sci::string m_timeformat;
-	sci::string(*m_customlabelcreator)(double axisvalue);
-
-	bool m_autodecimalplaces;
-	unsigned int m_ndecimalplaces;
-
-	unsigned int m_maxndigits; //maximum number of digits before going to exponents, set to zero for auto
+	std::shared_ptr<PlotAxis> m_xAxis;
+	std::shared_ptr<PlotAxis> m_yAxis;
 
 };
 
@@ -832,247 +762,7 @@ private:
 //have to #include this down here as classes in here need some of the declarations from
 //above, but they don't get included because of the #ifdef protection
 #include"plotdata.h"
-class splotTransformer;
 
-class splot
-{
-	friend class splotwindow;
-	friend class splot2d;
-	friend class splotlegend;
-public:
-	splot()
-	{
-		m_haschanged = true;
-	}
-	virtual ~splot(){}
-	//inline void settransform(void (*transformfunc)(double xin, double yin, double &xout, double &yout)){m_coordtransformer.m_transformfunc=transformfunc; m_haschanged=true;};
-	inline void settitle(sci::string title){m_title=title; m_haschanged=true;};
-	inline void settitlesize(double size){m_titlesize=size; m_haschanged=true;};
-	inline void settitledistance(double distance){m_titledistance=distance; m_haschanged=true;};
-	inline void settitlefont(sci::string fontface){m_titlefont=fontface; m_haschanged=true;};
-	inline void settitlestyle(uint32_t style){m_titlefci=style; m_haschanged=true;};
-	inline void settitlecolour(rgbcolour colour){m_titlecolour=colour; m_haschanged=true;};
-	bool inline gethaschanged(){return m_haschanged;};
-
-	virtual void removeAllData();
-
-private:
-	//keep track of if the plot has changed
-	bool m_haschanged;
-	
-	//data
-	std::vector< std::vector< double > > m_xs;
-	std::vector< std::vector< double > > m_ys;
-	std::vector< std::vector< double > > m_xsl;//if we are plotting on a log axis then these datasets will be filled with logged values
-	std::vector< std::vector< double > > m_ysl;
-	std::vector< std::vector< std::vector< double > > > m_xs2d;
-	std::vector< std::vector< std::vector< double > > > m_ys2d;
-	std::vector< std::vector< std::vector< double > > > m_xs2dl;//if we are plotting on a log axis then these datasets will be filled with logged values
-	std::vector< std::vector< std::vector< double > > > m_ys2dl;
-	std::vector< std::vector< std::vector< double > > > m_structzs; //structured z data (regular, rectilinear, curvilinear) is 2d and can be shaded/contoured, but should have size 0,0 for an x,y dataset or an unstructured dataset
-	std::vector< std::vector< std::vector< double > > > m_structzsl;
-	std::vector< std::vector< double > > m_colunstructzs; //unstructured z data is 1d, it currectly cannot be countoured/shaded (may change) but symbol colour may vary with this parameter. It should have size 0 for an x,y dataset or a structured dataset
-	std::vector< std::vector< double > > m_colunstructzsl;
-	std::vector< std::vector< double > > m_sizeunstructzs; //unstructured z data is 1d, it currectly cannot be countoured/shaded (may change) but symbol size may vary with this parameter. It should have size 0 for an x,y dataset or a structured dataset
-	std::vector< std::vector< std::vector <double> > > m_us; //v and v data is for plotting vector arrows
-	std::vector< std::vector< std::vector <double> > > m_vs; 
-	std::vector<double> m_minstructz;//need these to fill in the colourscale past the ends if required
-	std::vector<double> m_maxstructz;
-	std::vector<double> m_mincolunstructz;
-	std::vector<double> m_maxcolunstructz;
-	std::vector<double> m_minstructzl;//same as the four previous, but for logarithmic colour scales
-	std::vector<double> m_maxstructzl;
-	std::vector<double> m_mincolunstructzl;
-	std::vector<double> m_maxcolunstructzl;
-	std::vector< std::vector< double > > m_lowerxlimits; //for bar charts
-	std::vector< std::vector< double > > m_upperxlimits; //for bar charts
-	std::vector< std::vector< double > > m_lowerxlimitsl; //for bar charts log versions
-	std::vector< std::vector< double > > m_upperxlimitsl; //for bar charts log versions
-	std::vector<bool> m_beginAtZeros; //for bar charts
-	std::vector<bool> m_isGrid; //to distinguish between grid and contour style data
-
-	//dataset properties
-	std::vector<sci::string> m_pointchar; //this is the character used for plotting
-	std::vector<PLUNICODE> m_pointfci; //this is the style of the char (bold, italic, font family)
-	std::vector<sci::string> m_pointfont; //this is the fontface name of the font we want for the plot points. If not accessible we default to the fci family
-	std::vector<double> m_linethickness; //0.0 for no line/contour
-	std::vector<double> m_pointsize; //0.0 for no point, ignored for contour/shade datasets
-	std::vector<rgbcolour> m_pointcolour;
-	std::vector<rgbcolour> m_linecolour;
-	std::vector<sci::string> m_linestyle;
-	std::vector<std::shared_ptr<splotcolourscale>> m_colourscale; //if null shading won't be used for stuctured z data. Will be used for point colour for unstructured z data
-	std::vector<std::shared_ptr<splotsizescale>> m_sizescale; //will be used to adjust point size for unstructured z
-	std::vector< std::vector< double > > m_colourlevels; //colour levels used for colourscale plots
-	std::vector<bool> m_filloffscaletop; //flag to state whether to colour offscale regions with the max colour or leave blank
-	std::vector<bool> m_filloffscalebottom; //flag to state whether to colour offscale regions with the max colour or leave blank
-	std::vector< std::vector< double > > m_contourlevels; //colour levels used for colourscale plots
-	std::vector<double> m_contourlabelssize;
-	std::vector<sci::string> m_map;
-	std::vector<std::shared_ptr<splotTransformer>> m_transformers;
-	std::vector<bool> m_linkcontoursandcolours;
-	std::vector<std::vector<double> > m_arrowstyle;
-
-
-	//title
-	sci::string m_title;
-	double m_titlesize;
-	double m_titledistance;//in multiples of title character height
-	sci::string m_titlefont;
-	PLUNICODE m_titlefci;
-	rgbcolour m_titlecolour;
-
-	//function pointer transformation xindex, yindex to x value, y value
-	void (*m_transfunc1dxy)(double xindex, double yindex, const std::vector<double> &x, const std::vector<double> &y, double &xout, double &yout);
-	void (*m_transfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&);
-	virtual void calculateautolimits()=0;
-	static void calculateautolimits(splotaxis &axis, const std::vector<std::vector<double>> &data1d, const std::vector<std::vector<double>> &data1dpluserrs, const std::vector<std::vector<double>> &data1dminuserrs, const std::vector<std::vector<std::vector<double>>> &data2d, bool addpadding, std::vector<double> intersectpoints, double existingMin, double existingMax);
-
-	void adddatasetproperties(rgbcolour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, rgbcolour linecolour, int linewidth, sci::string linestyle, const splotcolourscale &colourscale, const splotsizescale &sizescale, unsigned int ncolourboundaries, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double mincontour, double maxcontour, double contourlabelssize, sci::string map, const std::vector<double> &arrowstyle);
-	void incrementdatasize();
-	void setupcolourscale(int ncolours, const splotcolourscale& colourscale, bool filloffscaletop, bool filloffscalebottom, int ncontourlevels, double maxcontour, double mincontour, int contourlabelssize)
-	{
-
-	}
-	//parser for generating line styles
-	void parselinestyle(sci::string style, std::vector<PLINT> &marks, std::vector<PLINT> &spaces);
-};
-
-
-//a class which holds all the required info to generate a plot
-class splot2d : public splot
-{
-	friend class splotwindow;
-public:
-	virtual ~splot2d(){}
-
-	//functions to add data to the plots
-
-	//x y scatter with constant colours and sizes
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), rgbcolour pointcolour=rgbcolour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
-	//x y scatter with varying point colour
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
-	//x y scatter with varying point size
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotsizescale> sizescale, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), rgbcolour pointcolour=rgbcolour(0,0,0), sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
-	//x y scatter with varying point colour and size
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &colour_zs, const std::vector<double> &size_zs, std::shared_ptr<splotsizescale> sizescale, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, const std::vector<double> &xposerrs=std::vector<double>(0), const std::vector<double> &xnegerrs=std::vector<double>(0), const std::vector<double> &yposerrs=std::vector<double>(0), const std::vector<double> &ynegerrs=std::vector<double>(0), sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), double xerrwidth=1.0, double yerrwidth=1.0, std::shared_ptr<splotTransformer> transformer = NULL);
-	//colourscale and/or contour plot
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, rgbcolour contourcolour=rgbcolour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
-	//colourscale and/or contour plot with 2d x and y
-	void adddata(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, rgbcolour contourcolour=rgbcolour(0,0,0), double contourwidth=1.0, sci::string contourstyle=sU(""), unsigned int ncontourlevels=-1, double mincontour=std::numeric_limits<double>::quiet_NaN(), double maxcontour=std::numeric_limits<double>::quiet_NaN(), double contourlabelssize=0.2, std::shared_ptr<splotTransformer> transformer = NULL);
-	//bar chart
-	void adddata(const std::vector<double> &minedges, const std::vector<double> &maxedges, const std::vector<double> heights, rgbcolour fillcolour=rgbcolour(0,0,0),rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=0.0, sci::string linestyle=sU(""), bool beginatzero=false);
-	//vector/arrow plot
-	void adddata(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
-	//vector/arrow plot
-	void adddata(const std::vector<std::vector<double>> &xs, const std::vector<std::vector<double>> &ys, const std::vector< std::vector<double> > &us, const std::vector< std::vector<double> > &vs, rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, const std::vector<double> &arrowstyle=std::vector<double>(0), sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
-	//grid plot
-	void addShadedGrid(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, std::shared_ptr<splotTransformer> transformer = NULL);
-	//grid plot with 2d x and y
-	void addShadedGrid(const std::vector< std::vector <double> > &xs, const std::vector< std::vector <double> > &ys, const std::vector< std::vector <double> > &zs, const splotcolourscale &colourscale, unsigned int ncolourlevels=256, bool filloffscaletop=true, bool filloffscalebottom=true, std::shared_ptr<splotTransformer> transformer = NULL);
-	
-	//add a DrawableItem
-	void addData( std::shared_ptr<DrawableItem> drawableItem );
-
-	void addmap(sci::string map=sU("globe"), rgbcolour linecolour=rgbcolour(0,0,0), double linewidth=1.0, sci::string linestyle=sU(""), std::shared_ptr<splotTransformer> transformer = NULL);
-	void addImage(sci::string picture, double xBottomLeft, double yBottomLeft, double width, double height, int cropX0=0, int cropY0=0, int cropWidth=-1, int cropHeight=-1, double brightnessCorrection=0.0, double contrastCorrection=0.0);
-	void addText(sci::string text, double x, double y, double x2, double y2, double alignment=0.0, double size=0.8, const sci::string &font=sU(""), uint32_t style=0, rgbcolour colour=rgbcolour(0,0,0));
-	void setdatasetproperties(size_t setindex, rgbcolour pointcolour=rgbcolour(0,0,0), double pointsize=0.5, sci::string pointsymbol=sU("A"), rgbcolour linecolour=rgbcolour(0,0,0), int linewidth=1.0, rgbcolour xerrcolour=rgbcolour(0,0,0), rgbcolour yerrcolour=rgbcolour(0,0,0), int xerrwidth=1, int yerrwidth=1);
-
-	void removeAllData();
-	void removeData(std::shared_ptr<DrawableItem> drawableItem);
-
-	inline void setxautointersect(bool autointersect) { m_xautointersect = autointersect; calculateautolimits(); m_haschanged = true; };
-	inline void setyautointersect(bool autointersect) { m_yautointersect = autointersect; calculateautolimits(); m_haschanged = true; };
-	inline void setxaxisintersect(double intersect) { m_xautointersect = false; m_xaxis.m_intersect = intersect; calculateautolimits(); m_haschanged = true; };
-	inline void setyaxisintersect(double intersect) { m_yautointersect = false; m_yaxis.m_intersect = intersect; calculateautolimits(); m_haschanged = true; };
-	inline splotaxis* getxaxis() { m_haschanged = true; return &m_xaxis; };
-	inline splotaxis* getyaxis() { m_haschanged = true; return &m_yaxis; };
-	void calculateautolimits() {}
-
-private:
-	//private constructor so only friends can create a plot
-	splot2d(bool logx=false, bool logy=false,sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
-	splot2d(double minx, double maxx, double miny, double maxy, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
-	splot2d(double minx, double maxx, double miny, double maxy, double xintersect, double yintersect, bool logx=false, bool logy=false, sci::string title=sU(""), double titlesize=1.2, double titledistance=2.0, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0),void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&)=splot_REGULAR1DXY,void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&)=splot_REGULAR2DXY);
-	//private plot function so only friends can update a plot
-	void plot(plstream *pl, wxDC *dc, int width, int height, bool antialiasing, double linewidthmultiplier=1.0);
-
-
-	//axes
-	splotaxis m_xaxis;
-	splotaxis m_yaxis;
-	//do we want to autoset limits and intersect point of axes
-	bool m_xautointersect;
-	bool m_yautointersect;
-
-	//uncertainties
-	std::vector< std::vector< double > > m_xpluserrs;
-	std::vector< std::vector< double > > m_xminuserrs;
-	std::vector< std::vector< double > > m_ypluserrs;
-	std::vector< std::vector< double > > m_yminuserrs;
-	std::vector< std::vector< double > > m_xpluserrsl;
-	std::vector< std::vector< double > > m_xminuserrsl;
-	std::vector< std::vector< double > > m_ypluserrsl;
-	std::vector< std::vector< double > > m_yminuserrsl;
-	std::vector<rgbcolour> m_xerrcolour;
-	std::vector<rgbcolour> m_yerrcolour;
-	std::vector<double>m_xerrthickness;
-	std::vector<double>m_yerrthickness;
-	//image properties
-	std::vector<wxImage>m_images;
-	std::vector<double> m_imageXBottomLefts;
-	std::vector<double> m_imageYBottomLefts;
-	std::vector<double> m_imageHeights;
-	std::vector<double> m_imageWidths;
-	std::vector<double> m_imageRotations;
-	std::vector<double> m_imageContrasts;
-	std::vector<double> m_imageBrightnesses;
-	//text properties
-	std::vector<sci::string> m_text;
-	std::vector<sci::string> m_textFont;
-	std::vector<PLUNICODE> m_textFci;
-	std::vector<double> m_textSize;
-	//DrawableItems
-	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
-
-
-	void incrementdatasize();
-	void setallparams(sci::string title, double titlesize, double titledistance, sci::string titlefont, int32_t titlestyle, rgbcolour titlecolour,void (*transformfunc1dxy)(double, double, const std::vector<double>&, const std::vector<double>&, double&, double&),void (*transformfunc2dxy)(double, double, const std::vector< std::vector< double > >&, const std::vector< std::vector< double > >&, double&, double&));
-};
-
-class splotlegend : public splot
-{
-	friend class splotwindow;
-public:
-	void addentry(sci::string text, double textoffset = 0.2, double textsize = 9.6, const sci::string &textfont = sU(""), uint32_t textstyle = 0, double textspacing = 0.2, rgbcolour textcolour = rgbcolour(0, 0, 0), rgbcolour pointcolour = rgbcolour(0, 0, 0), double pointsize = 0.5, sci::string pointsymbol = sU("A"), rgbcolour linecolour = rgbcolour(0, 0, 0), int linewidth = 1, sci::string linestyle = sU(""));
-	void addentry(sci::string text, double textoffset = 0.2, double textsize = 9.6, const sci::string &textfont = sU(""), uint32_t textstyle = 0, double textspacing = 0.2, hlscolour textcolour = hlscolour(0, 0, 0), hlscolour pointcolour = hlscolour(0, 0, 0), double pointsize = 0.5, sci::string pointsymbol = sU("A"), hlscolour linecolour = hlscolour(0, 0, 0), int linewidth = 1, sci::string linestyle = sU(""));
-	void addentry(sci::string text, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, rgbcolour textcolour=rgbcolour(0,0,0), unsigned int ncolourlevels=256, bool contours=false, size_t height=5, bool horizontal=false);
-	void addentry(sci::string text, std::shared_ptr<splotsizescale> sizescale, double headingoffset=0.05, double textoffset=0.2, double textsize=9.6, const sci::string &textfont=sU(""), uint32_t textstyle=0, double textspacing=0.2, rgbcolour textcolour=rgbcolour(0,0,0), rgbcolour pointcolour=rgbcolour(0,0,0), sci::string pointsymbol=sU("A"), size_t nlines=5);
-	virtual ~splotlegend(){}
-private:
-	//private constructor so only friends can create a legend
-	splotlegend(sci::string title=sU(""), double titlesize=12.0, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, rgbcolour titlecolour=rgbcolour(0,0,0), rgbcolour outlinecolour=rgbcolour(0,0,0), int outlinewidth=1);
-	rgbcolour m_outlinecolour;
-	int m_outlinethickness;
-	double m_titlespacing;
-	std::vector<double> m_headingoffset;
-	std::vector<double> m_textoffset;
-	std::vector<sci::string> m_text;
-	std::vector<sci::string> m_textfont;
-	std::vector<PLUNICODE> m_textfci;
-	std::vector<double> m_textsize;
-	std::vector<double> m_textspacing;
-	std::vector<rgbcolour> m_textcolour;
-	std::vector<bool> m_contours;
-	std::vector<bool> m_horizontal;
-	std::vector<bool> m_filloffscaletop;
-	std::vector<bool> m_filloffscalebottom;
-
-	std::vector<size_t> m_nlines;
-	void adddatasetproperties(sci::string text, double textoffset, double textsize, const sci::string &textfont, uint32_t textstyle, double textspacing, rgbcolour textcolour, rgbcolour pointcolour, double pointsize, sci::string pointsymbol, uint32_t pointstyle, sci::string pointfont, rgbcolour linecolour, int linewidth, sci::string linestyle, std::shared_ptr<splotcolourscale> colourscale, bool filloffscaletop, bool filloffscalebottom, std::shared_ptr<splotsizescale> sizescale, unsigned int ncolourlevels, bool contours, size_t nlines, double headingoffset, bool horizontal);
-	void plot(plstream *pl, double linewidthmultiplier=1.0);
-	void calculateautolimits(){}; //do nothing - function only created as it is pure virtual
-};
 
 class PlotCanvas
 {
@@ -1093,95 +783,18 @@ public:
 		}
 	}
 	void render(wxDC *dc, int width, int height, double linewidthmultiplier);
-	void render(Renderer& renderer, grPerMillimetre scale);
+	void render(Renderer& renderer, grPerMillimetre scale)
+	{
+		//draw the Drawable Items
+		for (auto& d : m_drawableItems)
+			d->draw(renderer, scale);
+	}
 	bool writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier = 1.0, bool preferInkscape = false);
 private:
 	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
 
 };
 
-class splotwindow : public wxScrolledWindow 
-{
-	friend class splotPrintout;
-public:
-	splotwindow(wxWindow *parent, bool antialiasing, bool fixedsize=false, wxWindowID winid=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize, long style=wxHSCROLL | wxVSCROLL, const wxString& name = wxT("sci++ plot"));
-	virtual ~splotwindow();
-	void setfixedsize(int width, int height);
-	void setautofitplots();
-	//plotlegend* addlegend(double xpos, double ypos, double width, double height, sci::string title=sU(""), double titlesize=12, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1);
-	bool writetofile(sci::string filename, double sizemultiplier, bool preferInkscape);
-	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier, bool preferInkscape);
-	bool print( bool showDialog );
-	void forceRerender()
-	{
-		m_needRerender = true;
-		Refresh();
-	}
-	std::shared_ptr<PlotCanvas> getCanvas()
-	{
-		return m_plotCanvas;
-	}
-private:
-	std::shared_ptr<PlotCanvas> m_plotCanvas;
-	bool print( bool showDialog, sci::string printerName );
-	//vector of plots
-	std::vector<splotlegend*> m_legends;
-	static void collectErrors(void* log, char* message)
-	{
-		(*((wxString*)(log))) << message;
-	}
-	
-
-	//bitmap we draw on
-	wxBitmap* m_bitmap;
-	bool m_fixedsize; //if this is true then the bitmap/plots do not scale with the window;
-	int m_bitmapwidth;
-	int m_bitmapheight;
-
-
-	//location and size of each plot  within window normalised to the bitmap size 0.0-1.0
-	std::vector<double> m_plotxloc; 
-	std::vector<double> m_plotyloc;
-	std::vector<double> m_plotwidth;
-	std::vector<double> m_plotheight;
-	
-	//location and size of each plot  within window normalised to the bitmap size 0.0-1.0
-	std::vector<double> m_legendxloc; 
-	std::vector<double> m_legendyloc;
-	std::vector<double> m_legendwidth;
-	std::vector<double> m_legendheight;
-
-	wxString m_log;
-	bool m_antialiasing;
-	bool m_needRerender;
-
-	void OnPaint(wxPaintEvent &event);
-	
-	
-	//note the backends are 0 = DC, 1 = AGG, 2 = GC
-	void OnEraseBackGround(wxEraseEvent& event) {};//this is overloaded to stop flicker when resizing
-
-	DECLARE_EVENT_TABLE();
-};
-
-
-class splotframe : public wxFrame
-{
-public:
-	splotframe(wxWindow* parent, bool antialiasing, wxWindowID id=wxID_ANY, const wxString& title=wxT("Apex++ plot"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_FRAME_STYLE, const wxString& name = wxT("Sci++ Plot"));
-	virtual ~splotframe(){};
-	//inline splotlegend* addlegend(double xpos, double ypos, double width, double height, sci::string title, double titlesize=12, double titledistance=2.0, double titlespacing=0.2, sci::string titlefont=sU(""), int32_t titlestyle=0, wxColour titlecolour=wxColour(0,0,0), wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, title, titlesize, titledistance,titlespacing, titlefont, titlestyle, titlecolour, outlinecolour, outlinewidth);};
-	//splotlegend* addlegend(double xpos, double ypos, double width, double height, wxColour outlinecolour=wxColour(0,0,0), int outlinewidth=1){return m_plotwind->addlegend(xpos, ypos, width, height, sU(""), 0.2, 2.0, 0.2, sU(""), 0, wxColour(0,0,0), outlinecolour, outlinewidth);};
-	bool writetofile(sci::string filename, int sizemultiplier=1, bool preferInkscape=false){return m_plotwind->writetofile(filename,sizemultiplier, preferInkscape);};
-	bool writetofile(sci::string filename, int width, int height, double linewidthmultiplier=1.0, bool preferInkscape=false){return m_plotwind->writetofile(filename,width,height,linewidthmultiplier, preferInkscape);};
-	bool print(bool showDialog){return m_plotwind->print( showDialog );}
-	std::shared_ptr<PlotCanvas> getCanvas()
-	{
-		return m_plotwind->getCanvas();
-	}
-private:
-	splotwindow *m_plotwind;
-};
 
 
 class wxDCScaler
@@ -1201,21 +814,6 @@ private:
 	wxDC *m_dc;
 	double m_xScale;
 	double m_yScale;
-};
-
-class splotPrintout : public wxPrintout
-{
-public:
-	splotPrintout(splotwindow *window, wxString printerName);
-	void GetPageInfo(int *minPage, int *maxPage, int *pageFrom, int *pageTo);
-	bool HasPage( int pageNum );
-	bool OnPrintPage(int pageNum);
-	bool setup(bool showDialog, wxString printerName);
-	wxPrintDialogData getPrintDialogData();
-private:
-	wxPageSetupDialogData m_pageSetupDialogData;
-	splotwindow *m_window;
-
 };
 
 #endif

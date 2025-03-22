@@ -10,28 +10,6 @@
 
 const int plotDataErrorCode = 1;
 
-class LineStyle
-{
-public:
-	LineStyle( Length width = grMillimetre(0.5), const rgbcolour &colour = rgbcolour( 0.0, 0.0, 0.0, 1.0 ), const std::vector<Length> &dashes = std::vector<Length> ( 0 ));
-	LineStyle( Length width, const rgbcolour &colour, sci::string pattern );
-	Length getWidth() const;
-	void getPattern( std::vector<Length> &dashes ) const;
-	rgbcolour getColour() const;
-	void setupLineStyle( plstream *pl, PLINT colourIndex, double scale ) const;
-	void resetLineStyle( plstream *pl, PLINT colourIndex ) const;
-	static void parseLineStyle( const sci::string &pattern, Length lineWidth, std::vector<Length> &dashes );
-	void setPen(Renderer& renderer) const
-	{
-		renderer.setPen(m_colour, m_width, m_dashes);
-	}
-private:
-	Length m_width;
-	rgbcolour m_colour;
-	std::vector<Length> m_dashes;
-};
-
-const LineStyle noLine(grMillimetre(0.0));
 
 class SymbolBase
 {
@@ -166,7 +144,7 @@ class splotTransformer;
 class PlotableItem : public DrawableItem
 {
 public:
-	PlotableItem(std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotTransformer> transformer)
+	PlotableItem(std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotTransformer> transformer)
 		:m_xAxis(xAxis), m_yAxis(yAxis), m_transformer(transformer), m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
 	{
 		//a note about intersection
@@ -198,8 +176,8 @@ private:
 	virtual void autoscaleAxes() = 0;
 	virtual void plotData(plstream* pl, double scale) const = 0;
 	virtual void plotData(Renderer& renderer, grPerMillimetre scale) const {};
-	std::shared_ptr<splotaxis> m_xAxis;
-	std::shared_ptr<splotaxis> m_yAxis;
+	std::shared_ptr<PlotAxis> m_xAxis;
+	std::shared_ptr<PlotAxis> m_yAxis;
 	std::shared_ptr<splotTransformer> m_transformer;
 	bool m_scaledAxes;
 	Point m_intersection;
@@ -280,7 +258,7 @@ public:
 class LineData : public UnstructuredData
 {
 public:
-	LineData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
+	LineData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	LineStyle m_lineStyle;
 	void plotData(plstream* pl, double scale) const override;
@@ -301,7 +279,7 @@ public:
 class PointData : public UnstructuredData
 {
 public:
-	PointData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
+	PointData( const std::vector<double> &x, const std::vector<double> &y, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr );
 private:
 	Symbol m_symbol;
 	void plotData(plstream *pl, double scale) const override;
@@ -313,7 +291,7 @@ class PhysicalPointData : public PhysicalPlotData<TR_X_UNIT, TR_Y_UNIT>, public 
 {
 public:
 	template<class X, class Y>
-	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+	PhysicalPointData(const std::vector<sci::Physical<X, double>> &xs, const std::vector<sci::Physical<Y, double>> &ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
 		: PointData(sci::physicalsToValues<sci::Physical<IN_X_UNIT, double>>(xs), sci::physicalsToValues<sci::Physical<IN_Y_UNIT, double>>(ys), symbol, transformer)
 	{
 	}
@@ -322,7 +300,7 @@ public:
 class PointDataColourVarying : public UnstructuredData
 {
 public:
-	PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	PointDataColourVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	ColourVaryingSymbol m_symbol;
@@ -332,7 +310,7 @@ private:
 class PointDataSizeVarying : public UnstructuredData
 {
 public:
-	PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	PointDataSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	SizeVaryingSymbol m_symbol;
@@ -342,7 +320,7 @@ private:
 class PointDataColourAndSizeVarying : public UnstructuredData
 {
 public:
-	PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
+	PointDataColourAndSizeVarying( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &zsColour, const std::vector<double> &zsSize, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	ColourAndSizeVaryingSymbol m_symbol;
@@ -353,7 +331,7 @@ private:
 class HorizontalErrorBars : public UnstructuredData
 {
 public:
-	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
+	HorizontalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;
@@ -362,7 +340,7 @@ private:
 class VerticalErrorBars : public UnstructuredData
 {
 public:
-	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
+	VerticalErrorBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &plusErrors, const std::vector<double> minusErrors, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData( plstream *pl, double scale) const override;
 private:
 	LineStyle m_style;
@@ -371,7 +349,7 @@ private:
 class VerticalBars : public UnstructuredData
 {
 public:
-	VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr );
+	VerticalBars( const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<double> &widths, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr );
 	void plotData( plstream *pl, double scale) const override;
 private:
 	FillStyle m_fillStyle;
@@ -384,7 +362,7 @@ private:
 class FillData : public UnstructuredData
 {
 public:
-	FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr);
+	FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData(plstream* pl, double scale) const override;
 private:
 	FillStyle m_fillStyle;
@@ -394,10 +372,10 @@ private:
 class Data2d : public UnstructuredData, public StructuredData
 {
 public:
-	Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	Data2d(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<PlotScale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr);
 	virtual void autoscaleAxes() override;//because this class inherits this function from both UnstructuredData and StructuredData, it must override in this class
 protected:
 	bool m_x1d;
@@ -409,10 +387,10 @@ protected:
 class GridData : public Data2d
 {
 public:
-	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
-	GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector<double> &xs, const std::vector<double> &ys, const std::vector<std::vector<double>> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
+	GridData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData(plstream *pl, double scale) const override;
 private:
 	std::shared_ptr<splotcolourscale> m_colourscale;
@@ -437,15 +415,15 @@ public:
 class ContourData : public Data2d
 {
 public:
-	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotcolourscale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 
-	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<splotaxis> xAxis, std::shared_ptr<splotaxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector<double>& xs, const std::vector < std::vector<double>>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+	ContourData(const std::vector < std::vector<double>>& xs, const std::vector<double>& ys, const std::vector<std::vector<double>>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData(plstream* pl, double scale) const override;
 private:
 	

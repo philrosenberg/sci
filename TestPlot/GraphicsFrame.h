@@ -34,6 +34,10 @@ public:
 	}
 	~GraphicsFrame()
 	{}
+	PANEL* getPanel()
+	{
+		return m_panel;
+	}
 private:
 	PANEL* m_panel;
 
