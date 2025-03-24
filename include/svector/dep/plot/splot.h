@@ -785,6 +785,20 @@ public:
 	void render(wxDC *dc, int width, int height, double linewidthmultiplier);
 	void render(Renderer& renderer, grPerMillimetre scale)
 	{
+		//cycle through all the Drawable Items ensuring they are ready to draw
+		//note this may need calling multiple times are predraw on one item may
+		//invalidate the predraw on another item
+		bool ready = false;
+		do
+		{
+			for (auto& d : m_drawableItems)
+				if (!d->readyToDraw())
+					d->preDraw();
+			ready = true;
+			for (auto& d : m_drawableItems)
+				ready = ready && d->readyToDraw();
+		} while (!ready);
+
 		//draw the Drawable Items
 		for (auto& d : m_drawableItems)
 			d->draw(renderer, scale);
