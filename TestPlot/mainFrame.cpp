@@ -213,7 +213,6 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->Show(true);
 	}
 
-	/*
 	{
 		//create a frame with axes running from 0-1 and 3 circular points
 		//this tests that points works
@@ -221,7 +220,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have circular data points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
+		std::shared_ptr<PlotFrame> box(new PlotFrame(Point(grUnitless(0.02), grUnitless(0.08)), Point(grUnitless(0.92), grUnitless(0.98)), FillStyle(rgbcolour(0.8, 0.8, 0.8)), LineStyle(grMillimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have square data points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), Length(grTextPoint(12.0)), Length(grTextPoint(30.0))));
 		PlotAxis::Options options;
 		std::shared_ptr<PlotAxis> xAxis(new PlotAxis(0.0, 1.0, false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<PlotAxis> yAxis(new PlotAxis(0.0, 1.0, false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), options.setTitle(sU("y"))));
@@ -293,7 +292,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		frame->Show(true);
 	}
-	*/
+	
 	/* {
 		//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 		// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure

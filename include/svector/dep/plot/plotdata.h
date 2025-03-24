@@ -28,8 +28,14 @@ private:
 class Symbol : public SymbolBase
 {
 public:
-	Symbol(sci::string symbol = symText::filledCircle, double size = 4.0, rgbcolour colour = rgbcolour(0, 0, 0, 1.0));
-	Symbol(const std::vector<Distance> &symbol, rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
+	Symbol(sci::string symbol, double size = 4.0, rgbcolour colour = rgbcolour(0, 0, 0, 1.0));
+	Symbol(const std::vector<Distance> &symbol = std::vector<Distance>{
+		Distance(grMillimetre(-1.0), grMillimetre(-1.0)),
+		Distance(grMillimetre(1.0), grMillimetre(-1.0)),
+		Distance(grMillimetre(1.0), grMillimetre(1.0)),
+		Distance(grMillimetre(-1.0), grMillimetre(1.0)),
+		Distance(grMillimetre(-1.0), grMillimetre(-1.0)) },
+		rgbcolour colour=rgbcolour( 0, 0, 0, 1.0 ) );
 	double getSize() const;
 	rgbcolour getColour() const;
 	void setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const;
