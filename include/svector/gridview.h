@@ -42,6 +42,13 @@ namespace sci
 	concept IsGridVt = IsGrid<T> &&
 		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;*/
 
+	template <class T>
+	concept has_data =
+		requires (T & t)
+	{
+		{ t.data() };
+	};
+
 	template<size_t NDIMS>
 	class GridPremultipliedStridesPointer
 	{
@@ -467,14 +474,17 @@ namespace sci
 		constexpr grid_view operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
 		template<IsGridDims<NDIMS> GRID>
 		constexpr grid_view operator=(const GRID &rhs)
+			requires std::convertible_to<GRID::value_type, value_type>
 		{
 			return assign(rhs.getView());
 		}
+		//set every element to a value
 		template<class T>
 		constexpr grid_view operator=(const T& rhs)
+			requires std::convertible_to<T, value_type>
 		{
 			for (auto& element : (*this))
-				element = rhs;
+				element = value_type(rhs);
 			return *this;
 		}
 		void retarget(grid_view<RANGE, NDIMS> const& other)
@@ -647,15 +657,24 @@ namespace sci
 			return *this;
 		}
 		template<IsGridDims<NDIMS> GRID>
-		grid_view<RANGE, NDIMS> assign(const GRID &other)
+		grid_view<RANGE, NDIMS> assign(const GRID other)
+			requires std::convertible_to<typename GRID::value_type, value_type>
 		{
 			if (other.shape() != shape())
 				throw(std::out_of_range("Attempted to assign to a grid_view with a grid of differing shape."));
 			auto iter = begin();
 			auto otherIter = other.begin();
 			for (; iter != end(); ++iter, ++otherIter)
-				*iter = *otherIter;
+				*iter = static_cast<value_type>(*otherIter);
 			return *this;
+		}
+		auto data() const requires sci::has_data<RANGE>
+		{
+			return m_dataMembers->m_range.data();
+		}
+		auto data()
+		{
+			return m_dataMembers->m_range.data();
 		}
 
 	private:
@@ -667,8 +686,10 @@ namespace sci
 		GridPremultipliedStridesReference<NDIMS> m_strides;
 	};
 
+	//overloads sci::assign in statistics.h
 	template<class RANGE1, class RANGE2, size_t NDIMS>
 	grid_view<RANGE1, NDIMS> assign(grid_view<RANGE1, NDIMS> destination, const grid_view<RANGE2, NDIMS>& source)
+		requires std::convertible_to<typename grid_view<RANGE2, NDIMS>::value_type, typename grid_view<RANGE1, NDIMS>::value_type>
 	{
 		return destination.assign(source);
 	}

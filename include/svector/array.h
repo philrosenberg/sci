@@ -315,18 +315,20 @@ namespace sci
 		using members = GridDataMembers<T, NDIMS>;
 
 		using value_type = T;
+		using data_type = typename GridDataVectorType<value_type>::type; //same as value_type except data_type = uint8_t when value_type = bool.
+		using vector_type = std::vector<data_type>;
 		using allocator_type = Allocator;
 		using pointer = typename std::allocator_traits<Allocator>::pointer;
 		using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using size_type = typename std::vector<T>::size_type;
-		using difference_type = typename std::vector<T>::difference_type;
+		using reference = data_type&;
+		using const_reference = const data_type&;
+		using size_type = typename vector_type::size_type;
+		using difference_type = typename vector_type::difference_type;
 		using iterator = members::view_type::iterator;
 		using const_iterator = members::view_type::const_iterator;
 		using reverse_iterator = typename std::reverse_iterator<iterator>;
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
-		using data_type = typename GridDataVectorType<T>::type;
+		using view_type = typename GridDataMembers<value_type, NDIMS>::view_type;
 
 		static const size_t ndims = NDIMS;
 
@@ -395,14 +397,14 @@ namespace sci
 		
 		constexpr GridData(std::initializer_list<T> list) requires(NDIMS==1)
 		{
-			members::m_data = std::vector<T>(list);
+			members::m_data = vector_type(list);
 			setShape({ members::m_data.size() });
 		}
 
 		template<std::input_iterator ITER>
 		constexpr GridData(ITER first, ITER last) requires(NDIMS == 1)
 		{
-			members::m_data = std::vector<T>(first, last);
+			members::m_data = vector_type(first, last);
 			setShape({ members::m_data.size() });
 		}
 
@@ -420,7 +422,7 @@ namespace sci
 				size *= shape[i];
 			if (size != end - begin)
 				throw(std::out_of_range("Attempted to construct a GridData object with first and last iterators which did not match the shape."));
-			members::m_data = std::vector<T>(begin, end);
+			members::m_data = vector_type(begin, end);
 			setShape(shape);
 		}
 		
@@ -748,41 +750,57 @@ namespace sci
 			else
 				return GridData<T, NDIMS, Allocator>(members::m_data.begin() + firstIndexBegin, members::m_data.begin() + (firstIndexBegin + nSlices), subgridShape);
 		}
-		T& operator[](const std::array<size_t, NDIMS>& index)
+		reference operator[](const std::array<size_t, NDIMS>& index)
 		{
 			if constexpr (NDIMS == 0)
 				return members::m_data;
 			else
 				return members::m_view[index];
 		}
-		const T& operator[](const std::array<size_t, NDIMS>& index) const
+		const_reference operator[](const std::array<size_t, NDIMS>& index) const
 		{
 			if constexpr (NDIMS == 0)
 				return members::m_data;
 			else
 				return members::m_view[index];
 		}
-		decltype(auto) operator[](size_t index) requires (NDIMS >= 1)
+		reference operator[](size_t index) requires (NDIMS == 1)
 		{
 			return (members::m_view[index]);
 		}
-		decltype(auto) operator[](size_t index) const  requires (NDIMS >= 1)
+		const_reference operator[](size_t index) const requires (NDIMS == 1)
 		{
 			return (members::m_view[index]);
 		}
-		T& at(const std::array<size_t, NDIMS>& index)
+		auto operator[](size_t index) requires (NDIMS > 1)
+		{
+			return (members::m_view[index]);
+		}
+		auto operator[](size_t index) const requires (NDIMS > 1)
+		{
+			return (members::m_view[index]);
+		}
+		reference at(const std::array<size_t, NDIMS>& index)
 		{
 			return members::m_view[index];
 		}
-		const T& at(const std::array<size_t, NDIMS>& index) const
+		const_reference at(const std::array<size_t, NDIMS>& index) const
 		{
 			return members::m_view.at(index);
 		}
-		decltype(auto) at(size_t index)
+		reference at(size_t index) requires (NDIMS == 1)
 		{
 			return (members::m_view.at(index));
 		}
-		decltype(auto) at(size_t index) const
+		const_reference at(size_t index) const requires (NDIMS == 1)
+		{
+			return (members::m_view.at(index));
+		}
+		auto at(size_t index) requires (NDIMS > 1)
+		{
+			return (members::m_view.at(index));
+		}
+		auto at(size_t index) const requires (NDIMS > 1)
 		{
 			return (members::m_view.at(index));
 		}
@@ -848,21 +866,24 @@ namespace sci
 			members::refreshView();
 		}
 		template<IsGridDims<NDIMS> GRID>
-		GridData<T, NDIMS, Allocator>& operator=(const GRID& rhs)
+		GridData<value_type, NDIMS, Allocator>& operator=(const GRID& rhs)
+			requires std::convertible_to<GRID::data_type, data_type>
 		{
 			reshape(rhs.shape());
 			auto iter = begin();
 			auto rhsIter = rhs.begin();
 			for (; iter != end(); ++iter, ++rhsIter)
-				*iter = *rhsIter;
+				*iter = data_type(*rhsIter);
 			return *this;
 		}
+		//fill the grid with a specific value
 		template<class U>
-		GridData<T, NDIMS, Allocator>& operator=(const U& rhs)
+		GridData<value_type, NDIMS, Allocator>& operator=(const U& rhs)
+			requires std::convertible_to<U, data_type>
 		{
 			auto iter = begin();
 			for (; iter != end(); ++iter)
-				*iter = rhs;
+				*iter = data_type(rhs);
 			return *this;
 		}
 		GridData<T, NDIMS, Allocator>& operator=(const GridData<T, NDIMS, Allocator>& rhs) = default;

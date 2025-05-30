@@ -1183,6 +1183,12 @@ namespace sci
 		return make_gridtransform_view(a, sci::sqrt<typename T::value_type> );
 	}
 
+	template<IsGrid T>
+	auto abs(const T& a)
+	{
+		return make_gridtransform_view(a, sci::abs<typename T::value_type>);
+	}
+
 	template<int POW, IsGrid T>
 	auto pow(const T& a)
 	{
