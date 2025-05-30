@@ -26,6 +26,7 @@
 #include<random>
 #include"../serr.h"
 #include"../Traits.h"
+#include"../Statistics.h"
 #include<array>
 #include<ranges>
 
@@ -75,12 +76,7 @@ namespace sci
 	size_t randInt(size_t maxVal);
 	double round(double n);
 
-	template<class T, class U>
-	auto linearinterpolate(T x, T x1, T x2, U y1, U y2) -> decltype((y1 - y2) / (x1 - x2) * (x - x1) + y1)
-	{
-		auto m = (y1 - y2) / (x1 - x2);
-		return m * (x - x1) + y1;
-	}
+	
 	
 	//enumeration of base types
 	//enum class basetype
