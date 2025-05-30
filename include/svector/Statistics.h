@@ -406,6 +406,13 @@ namespace sci
 		return found ? result : std::numeric_limits<retType>::quiet_NaN();
 	}
 
+	template<class T, class U>
+	auto linearinterpolate(T x, T x1, T x2, U y1, U y2)
+	{
+		auto m = (y1 - y2) / (x1 - x2);
+		return m * (x - x1) + y1;
+	}
+
 	/*
 	template<class T, class U>
 	auto variance(const std::vector<T>& v, const std::vector<U>& weights)
