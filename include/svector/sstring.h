@@ -14,29 +14,12 @@
 #include<wx/string.h>
 #endif
 
-template <class T>
-std::string& operator << (std::string &lhs, const T &rhs)
-{
-	std::ostringstream stream;
-	stream << rhs;
-	lhs=lhs+stream.str();
-	return lhs;
-}
-
-template <class T>
-std::string operator >> (std::string &lhs, T &rhs)
-{
-	std::istringstream stream(lhs);
-	stream >> rhs;
-	return lhs.substr((std::string::size_type)stream.gcount());
-}
-
 //A way to set unicode strings, but change it globally if I want to swap the types
 #define sU(x) u##x
 
 namespace sci
 {
-
+	/*
 	void replaceAll(std::string &destination, std::string textToFind, std::string replacementText);
 	std::string afterLast(std::string source, std::string textToFind);
 	std::string beforeLast(std::string source, std::string textToFind);
@@ -60,7 +43,7 @@ namespace sci
 	void toUpper(std::wstring &str);
 	std::wstring trimmed(const std::wstring &str);
 	void trim(std::wstring &str);
-
+	*/
 	typedef char16_t char_t;
 	typedef std::basic_string<sci::char_t> string;
 	typedef std::basic_stringstream<sci::char_t> stringstream;

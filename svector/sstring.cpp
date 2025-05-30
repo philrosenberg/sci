@@ -1,15 +1,115 @@
 #include "../include/svector/sstring.h"
 #include "../include/svector/serr.h"
-#include <algorithm>
+#include<vector>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include <vector>
-#include <locale>
-#ifdef __WXWINDOWS__
-#include <wx/string.h>
+
+
+#ifdef _WIN32
+//needed for the definition of the numpunct<char16_t>::id variable, sadly it s a specialization so must go in a cpp file not a h file
+__PURE_APPDOMAIN_GLOBAL inline std::locale::id std::numpunct<char16_t>::id;
 #endif
 
+sci::string sci::fromCodepage(const std::string& string)
+{
+#ifdef _WIN32
+	if (string.length() == 0)
+		return sci::string();
+	size_t nCharsNeeded = MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, nullptr, 0);
+
+	sci::assertThrow(nCharsNeeded > 0, sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
+
+	std::vector<WCHAR> buffer(nCharsNeeded);
+	sci::assertThrow(MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, &buffer[0], nCharsNeeded) != 0,
+		sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
+	std::wstring wideString(&buffer[0]);
+	return fromNativeUnicode(wideString);
+
+#else
+	return utf8ToUtf16(string);
+#endif
+}
+
+std::string sci::nativeCodepage(const std::wstring& str)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::u16string& str)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::u32string& str)
+{
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, NULL, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
+	return std::string(&buffer[0]);
+}
+
+std::string sci::nativeCodepage(const std::wstring& str, char replacementCharacter)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u16string& str, char replacementCharacter)
+{
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u32string& str, char replacementCharacter)
+{
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::wstring& str, char replacementCharacter, bool& usedReplacement)
+{
+	BOOL replaced;
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u16string& str, char replacementCharacter, bool& usedReplacement)
+{
+	BOOL replaced;
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+std::string sci::nativeCodepage(const std::u32string& str, char replacementCharacter, bool& usedReplacement)
+{
+	BOOL replaced;
+	std::wstring wideString = sci::nativeUnicode(str);
+	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
+	std::vector<char>buffer(nBytesNeeded);
+	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
+	usedReplacement = replaced > 0;
+	return std::string(&buffer[0]);
+}
+
+
+
+/*
 void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
 {
 	size_t findLength=textToFind.length();
@@ -93,9 +193,10 @@ void sci::trim( std::string &str )
 		str=str.substr( start, end - start + 1 );
 	}
 }
+*/
 
 //*************wstring versions************************
-
+/*
 void sci::replaceAll(std::wstring &destination, std::wstring textToFind, std::wstring replacementText)
 {
 	size_t findLength = textToFind.length();
@@ -204,81 +305,7 @@ struct sci_code_cvt : CODE_CVT
 //}
 
 
-std::string sci::nativeCodepage(const std::wstring &str)
-{
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-	return std::string(&buffer[0]);
-}
 
-std::string sci::nativeCodepage(const std::u16string &str)
-{
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, NULL, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-	return std::string(&buffer[0]);
-}
-
-std::string sci::nativeCodepage(const std::u32string &str)
-{
-	std::wstring wideString = sci::nativeUnicode(str);
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, NULL, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-	return std::string(&buffer[0]);
-}
-
-std::string sci::nativeCodepage(const std::wstring &str, char replacementCharacter)
-{
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-	return std::string(&buffer[0]);
-}
-std::string sci::nativeCodepage(const std::u16string &str, char replacementCharacter)
-{
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, &replacementCharacter, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-	return std::string(&buffer[0]);
-}
-std::string sci::nativeCodepage(const std::u32string &str, char replacementCharacter)
-{
-	std::wstring wideString = sci::nativeUnicode(str);
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-	return std::string(&buffer[0]);
-}
-std::string sci::nativeCodepage(const std::wstring &str, char replacementCharacter, bool &usedReplacement)
-{
-	BOOL replaced;
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-	usedReplacement = replaced > 0;
-	return std::string(&buffer[0]);
-}
-std::string sci::nativeCodepage(const std::u16string &str, char replacementCharacter, bool &usedReplacement)
-{
-	BOOL replaced;
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, NULL, 0, &replacementCharacter, &replaced);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<const wchar_t *>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-	usedReplacement = replaced > 0;
-	return std::string(&buffer[0]);
-}
-std::string sci::nativeCodepage(const std::u32string &str, char replacementCharacter, bool &usedReplacement)
-{
-	BOOL replaced;
-	std::wstring wideString = sci::nativeUnicode(str);
-	int nBytesNeeded = WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
-	std::vector<char>buffer(nBytesNeeded);
-	WideCharToMultiByte(CP_ACP, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-	usedReplacement = replaced > 0;
-	return std::string(&buffer[0]);
-}
 #else
 //On Linux the native unicode version is UTF-8 represented by std:::string
 
@@ -313,27 +340,4 @@ std::string sci::nativeUnicode(const std::u32string &str)
 }
 #endif
 
-sci::string sci::fromCodepage(const std::string& string)
-{
-#ifdef _WIN32
-	if (string.length() == 0)
-		return sci::string();
-	size_t nCharsNeeded = MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, nullptr, 0);
-
-	sci::assertThrow(nCharsNeeded > 0, sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
-
-	std::vector<WCHAR> buffer(nCharsNeeded);
-	sci::assertThrow(MultiByteToWideChar(CP_ACP, 0, string.c_str(), -1, &buffer[0], nCharsNeeded) != 0,
-		sci::err(sci::SERR_STRING, sci::WindowsError(GetLastError())));
-	std::wstring wideString(&buffer[0]);
-	return fromNativeUnicode(wideString);
-
-#else
-	return utf8ToUtf16(string);
-#endif
-}
-
-#ifdef _WIN32
-//needed for the definition of the numpunct<char16_t>::id variable
-__PURE_APPDOMAIN_GLOBAL std::locale::id std::numpunct<char16_t>::id;
-#endif
+*/
