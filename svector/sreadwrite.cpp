@@ -201,12 +201,14 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 	size_t ncols=splitstring.size();
 	if(ncols==0)return sci::csv_no_columns;
 	ncols=std::min(ncols,type.size());
+	std::istringstream stream;
 	for(size_t i=0; i<ncols; ++i)
 	{
 		if(type[i]==rt_double)
 		{
+			stream.str(splitstring[i]);
 			double temp;
-			splitstring[i] >> temp;
+			stream >> temp;
 			data[datadest[i]].push_back(temp);
 		}
 		if(type[i]==rt_string)
@@ -231,8 +233,9 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 		{
 			if(type[i]==rt_double)
 			{
+				stream.str(splitstring[i]);
 				double temp;
-				splitstring[i] >> temp;
+				stream >> temp;
 				data[datadest[i]].push_back(temp);
 			}
 			if(type[i]==rt_string)
@@ -256,8 +259,9 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 		{
 			if(type[i]==rt_double)
 			{
+				stream.str(splitstring[i]);
 				double temp;
-				splitstring[i] >> temp;
+				stream >> temp;
 				data[datadest[i]].push_back(temp);
 			}
 			if(type[i]==rt_string)
