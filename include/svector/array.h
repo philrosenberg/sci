@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_GRIDDATA_H
+#define SCI_GRIDDATA_H
 
 
 
@@ -1410,3 +1411,5 @@ namespace sci
 		return operateAssign<std::divides<>>(GridView<T::value_type, T::nDimensions()>(a), b);
 	}*/
 }
+
+#endif

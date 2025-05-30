@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_GRIDVIEW_H
+#define SCI_GRIDVIEW_H
 
 #include<ranges>
 #include<array>
@@ -752,3 +753,5 @@ namespace sci
 	}
 }*/
 #include"gridtupleview.h"
+
+#endif

@@ -1,8 +1,10 @@
-#pragma once
+#ifndef SCI_GRIDTUPLEVIEW_H
+#define SCI_GRIDTUPLEVIEW_H
+
 #include"gridview.h"
 #include<tuple>
 #include<assert.h>
-#include"array.h"
+//#include"array.h"
 #include"math.h"
 
 namespace sci
@@ -1205,3 +1207,5 @@ namespace sci
 		return make_gridpairtransform_view(a, s, sci::pow<typename T::value_type, typename U::value_type>);
 	}
 }
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_TIME_H
+#define SCI_TIME_H
 
 #include <ctime>
 #include<chrono>
@@ -648,3 +649,4 @@ namespace std
 }
 
 #undef AVOIDWINDOWSMINMAX
+#endif

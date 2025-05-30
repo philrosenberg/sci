@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_LINEARALGEBRA_H
+#define SCI_LINEARALGEBRA_H
 #include<vector>
 #include<array>
 #include<svector/serr.h>
@@ -19,3 +20,4 @@ namespace sci
 		return solution;
 	}
 }
+#endif

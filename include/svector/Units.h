@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_UNITS_H
+#define SCI_UNITS_H
 //Copyright 2021 Philip Rosenberg https://science.cplusplus.engineering
 //This source code is provided under the Science.cplusplus.engineering Code License v1.
 //If you wish to get hold of additional copies of this code then you should do so 
@@ -2299,3 +2300,4 @@ namespace std
 		return isnormal(physical.template value<T>());
 	}
 }
+#endif

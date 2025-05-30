@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_RANGES_H
+#define SCI_RANGES_H
 
 #include<ranges>
 #include<vector>
@@ -39,3 +40,5 @@ namespace sci
 			};
 	}
 }
+
+#endif

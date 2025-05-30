@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCI_MINIMISER2_H
+#define SCI_MINIMISER2_H
 
 #include<assert.h>
 #include"array.h"
@@ -954,3 +955,5 @@ namespace sci
 		minimiseGradientDescentWithLineSearch(function, stopper, guess, absoluteTollerance, tollerance, maxIterations, maxBrentIterations);
 	}
 }
+
+#endif
