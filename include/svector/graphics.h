@@ -190,7 +190,7 @@ public:
 		newLength /= other;
 		return newLength;
 	}
-	constexpr Length& operator-()
+	constexpr Length operator-()
 	{
 		Length newLength = *this;
 		newLength.m_absolute = -newLength.m_absolute;
@@ -741,6 +741,10 @@ public:
 	virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
 	virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5)) = 0;
 	virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) = 0;
+	virtual void rectangle(const Point& corner1, const Point& corner2)
+	{
+		rectangle(corner1, corner2 - corner1, grUnitless(0.0), grUnitless(0.0));
+	}
 	virtual void polyLine(const std::vector<Point>& points) = 0;
 	virtual void polygon(const std::vector<Point>& points) = 0;
 	virtual grDegree getAngle(const Distance& distance) const = 0;
@@ -1099,14 +1103,24 @@ public:
 	{
 		m_dc->SetPen(wxNullPen); //this deselects the prvious pen, so if we've used
 		//dashes, the dash array can now be invalidated.
-		wxPen pen(getWxColour(colour), thickness.getLength(m_width, m_height, m_scale));
+
+		//If thickness is 0, turn off the pen
+		if (thickness.getLength(m_width, m_height, m_scale) == 0.0)
+		{
+			m_dc->SetPen(*wxTRANSPARENT_PEN);
+			return;
+		}
+
+		wxPen pen(getWxColour(colour), thickness.getLength(m_width, m_height, m_scale), dashes.size()==0 ? wxPENSTYLE_SOLID : wxPENSTYLE_USER_DASH);
 		if (dashes.size() > 0)
 		{
-			m_penDashes.resize(0);
-			m_penDashes.reserve(dashes.size());
-			for (const auto& d : dashes)
-				m_penDashes.push_back(d.getLength(m_width, m_height, m_scale));
-			pen.SetDashes(m_penDashes.size(), &m_penDashes[0]);
+			wxDash* dashesCopy = new wxDash[dashes.size()];
+			//m_penDashes.resize(0);
+			//m_penDashes.reserve(dashes.size());
+			for (size_t i=0; i<dashes.size(); ++i)
+				dashesCopy[i] = std::max(1.0, dashes[i].getLength(m_width, m_height, m_scale) / thickness.getLength(m_width, m_height, m_scale));
+				//dashesCopy[i] = dashes[i].getLength(m_width, m_height, m_scale);
+			pen.SetDashes(dashes.size(), dashesCopy);
 		}
 
 		m_dc->SetPen(pen);
@@ -1198,6 +1212,21 @@ public:
 		wxPoint wxPosition = getWxPoint(position - size * std::array<grUnitless,2>{xAlignemnt, yAlignment});
 		wxSize wxsize = getWxSize(size);
 		m_dc->DrawRectangle(wxPosition, wxsize);
+	}
+	virtual void rectangle(const Point& corner1, const Point& corner2) override
+	{
+		//override this for consistency with polygon and integrer resolution
+		wxPoint wxCorner1 = getWxPoint(corner1);
+		wxPoint wxCorner2 = getWxPoint(corner2);
+		//this offsetting is based on the plot grid test and makes the rectangles
+		//the same as a polygon with the corners the same as the rectangls, it may
+		//need some further checking as I'm not sure why it does what it does.
+		wxCorner1.y += 1;
+		wxCorner2.y += 1;
+		wxSize wxsize(wxCorner2.x- wxCorner1.x, wxCorner2.y - wxCorner1.y);
+		wxsize.x += wxsize.x < 0 ? -1 : 1;
+		wxsize.y += wxsize.y < 0 ? -2 : 2;
+		m_dc->DrawRectangle(wxCorner1, wxsize);
 	}
 	void scaleFontSize(grUnitless scale) override
 	{

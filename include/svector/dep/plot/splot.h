@@ -18,8 +18,10 @@
 #pragma warning(pop)
 #include"../../sstring.h"
 #include"../../serr.h"
-#include"../../svector.h"
+//#include"../../svector.h"
 #include"../../graphics.h"
+#include<svector/array.h>
+#include<algorithm>
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #undef _CRT_SECURE_NO_WARNINGS
@@ -108,10 +110,30 @@ public:
 	};
 	//void setMin(double min) { m_min = min; }
 	//void setMax(double max) { m_max = max; }
-	double getMin() const { return m_log ? std::pow(10, m_logMin) : m_min; }
-	double getMax() const { return m_log ? std::pow(10, m_logMax) : m_max; }
-	double getLogMin() const { return m_logMin; }
-	double getLogMax() const { return m_logMax; }
+	double getLinearOrLogMin() const
+	{
+		return m_log ? m_logMin : m_min;
+	}
+	double getLinearOrLogMax() const
+	{
+		return m_log ? m_logMax : m_max;
+	}
+	double getLinearMin() const
+	{
+		return m_min;
+	}
+	double getLinearMax() const
+	{
+		return m_max;
+	}
+	double getLogMin() const
+	{
+		return m_logMin;
+	}
+	double getLogMax() const 
+	{
+		return m_logMax;
+	}
 	bool isAutoscale() const { return m_autoscale; }
 	bool isLog() const { return m_log; }
 	void expand(const std::vector<double>& data);
@@ -195,8 +217,14 @@ public:
 	{
 		return m_direction;
 	}
+
+	//this function is provided to help inheriting classes with different output types
+	//It puts value in ascending order, calculates the log equivalents and removes nans and infinities
+	//from the linear values.
+	//It then normalises the scales from 0-1 and puts the limits in the in/max variable
+	//the logMin will be the smallest non -infinity value
 	template<class T>
-	void setupInterpolatingScale(std::vector<double>& value, std::vector<double>& logValue, std::vector<T>& output, bool autostretch)
+	static void setupInterpolatingScale(sci::GridData<double, 1> &value, sci::GridData<double, 1> &logValue, sci::GridData<T, 1> &output, double &linearMin, double &linearMax, double &logMin, double &logMax)
 	{
 		sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "PlotScale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
 		//check values are ascending or descending, catch Nans at the same time
@@ -213,36 +241,44 @@ public:
 		//assign values
 		if (descending)
 		{
-			value = sci::reverse(value);
-			output = sci::reverse(output);
+			std::reverse(value.begin(), value.end());
+			std::reverse(output.begin(), output.end());
 		}
 
-		//remove any nans and infinities - in particular they can be created by the logging
-		std::vector<SBOOL> filter = sci::isEq(value, value) && sci::notEq(value, std::numeric_limits<double>::infinity()) && sci::notEq(value, -std::numeric_limits<double>::infinity());
-		value = sci::subvector(value, filter);
-		output = sci::subvector(output, filter);
-		sci::assertThrow(value.size() > 1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with a values array containing only NaNs and +/- infnity."));
-
-
-		if (!autostretch)
+		//remove any nans and infinities
+		size_t insertPos = 0;
+		for (size_t i = 0; i < value.size(); ++i)
 		{
-			setFixedScale(value.front(), value.back());
+			if (value[i] == value[i] && value[i] != std::numeric_limits<double>::infinity() && value[i] != -std::numeric_limits<double>::infinity())
+			{
+				value[insertPos] = value[i];
+				output[insertPos] = output[i];
+				insertPos++;
+			}
 		}
+		value.resize(insertPos);
+		output.resize(insertPos);
+		sci::assertThrow(value.size() > 1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setup called with a values array containing only NaNs and +/- infnity."));
 
 		logValue.resize(value.size());
 		for (size_t i = 0; i < value.size(); ++i)
 			logValue[i] = std::log10(value[i]);
 
 		//scale to 0.0-1.0 range
-		double offset = value.front();
-		double range = value.back() - value.front();
-		value -= offset;
-		value /= range;
+		linearMin = value.front();
+		linearMax = value.back();
+		value = (value - linearMin) / (linearMax - linearMin);
 
-		double logOffset = logValue.front();
-		double logRange = logValue.back() - logValue.front();
-		logValue -= logOffset;
-		logValue /= logRange;
+		//we have to search for the first non -infinity value for logMin
+		logMin = -std::numeric_limits<double>::infinity();
+		for (double& lv : logValue)
+		{
+			logMin = lv;
+			if (logMin != -std::numeric_limits<double>::infinity())
+				break;
+		}
+		logMax = logValue.back();
+		logValue = (logValue - logMin) / (logMax - logMin);
 	}
 private:
 	PlotScale(double min, double max, bool log, Direction direction)
@@ -289,9 +325,9 @@ class splotcolourscale : public PlotScale
 public:
 	splotcolourscale();
 	//create a colourscale from rgb colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-	splotcolourscale(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
+	splotcolourscale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-	splotcolourscale(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
+	splotcolourscale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic=false, bool autostretch=false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	//note that valuePrelogged is only utilised if this is a log scale
 	rgbcolour getRgbOriginalScale( double value, bool valuePrelogged) const;
 	//note that valuePrelogged is only utilised if this is a log scale
@@ -311,14 +347,14 @@ public:
 	bool setFilOffscaleTop(bool fill) {m_fillOffscaleTop = fill; }
 private:
 	void setupdefault();
-	void setup(const std::vector<double> &value, const std::vector< rgbcolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
-	void setup(const std::vector<double> &value, const std::vector< hlscolour > &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
-	std::vector<double> m_value;
-	std::vector<double> m_logValue;
-	std::vector< double > m_colour1;
-	std::vector< double > m_colour2;
-	std::vector< double > m_colour3;
-	std::vector< double > m_alpha;
+	void setup(std::span<const double> value, std::span<const rgbcolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
+	void setup(std::span<const double>, std::span<const hlscolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop);
+	sci::GridData<double, 1> m_value;
+	sci::GridData<double, 1> m_logValue;
+	sci::GridData<double, 1> m_colour1;
+	sci::GridData<double, 1> m_colour2;
+	sci::GridData<double, 1> m_colour3;
+	sci::GridData<double, 1> m_alpha;
 	bool m_hls; //true for hls, false for rgb colour representation
 	bool m_discrete;
 	bool m_fillOffscaleBottom;
@@ -334,7 +370,7 @@ class splotsizescale : public PlotScale
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	splotsizescale(const std::vector<double> &value=std::vector<double>(0), const std::vector<double> &size=std::vector<double>(0), bool logarithmic=false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
+	splotsizescale(std::span<const double> value = sci::GridData<double, 1>(0), std::span<const double> size = sci::GridData<double, 1>(0), bool logarithmic=false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false);
 	~splotsizescale(){};
 	//note that valuePrelogged is only utilised if this is a log scale
 	double getsize(double value, bool valuePreLogged) const;
@@ -343,9 +379,9 @@ public:
 	bool setFilOffscaleBottom(bool fill) { m_fillOffscaleBottom = fill; }
 	bool setFilOffscaleTop(bool fill) { m_fillOffscaleTop = fill; }
 private:
-	std::vector<double> m_value;
-	std::vector<double> m_logValue;
-	std::vector<double> m_size;
+	sci::GridData<double, 1> m_value;
+	sci::GridData<double, 1> m_logValue;
+	sci::GridData<double, 1> m_size;
 	bool m_fillOffscaleBottom;
 	bool m_fillOffscaleTop;
 };
@@ -357,12 +393,12 @@ class splotlevelscale : public PlotScale
 	friend class splot2d;
 	friend class splotlegend;
 public:
-	splotlevelscale(const std::vector<double>& value = std::vector<double>(0), bool logarithmic = false, bool autostretch = false);
+	splotlevelscale(std::span<const double> value = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false);
 	~splotlevelscale() {};
-	std::vector<double> getLevels() const;
+	sci::GridData<double, 1> getLevels() const;
 private:
-	std::vector<double> m_value;
-	std::vector<double> m_logValue;
+	sci::GridData<double, 1> m_value;
+	sci::GridData<double, 1> m_logValue;
 };
 
 
@@ -373,7 +409,7 @@ public:
 	PLFLT operator()(PLINT i, PLINT j ) const {return (*m_z)[i][j];};
 	splot2dmatrix(std::vector< std::vector<double> > *z):Contourable_Data((int)z->size(),(int)z->at(0).size())
 	{
-		sci::assertThrow(sci::rectangular(*z), sci::err(sci::SERR_PLOT, 0, sU("splot2dmatrix data is not rectangular.")));
+		//sci::assertThrow(sci::rectangular(*z), sci::err(sci::SERR_PLOT, 0, sU("splot2dmatrix data is not rectangular.")));
 		sci::assertThrow(z->size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
 		if( z->size() > 0)
 			sci::assertThrow(z->at(0).size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
@@ -577,7 +613,7 @@ public:
 		if (isLog())
 			fraction = (std::log10(value) - getLogMin()) / (getLogMax() - getLogMin());
 		else
-			fraction = (value - getMin()) / (getMax() - getMin());
+			fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
 		return (m_end - m_start) * grUnitless(fraction);
 	}
 	
@@ -599,7 +635,7 @@ private:
 class CubehelixColourscale : public splotcolourscale
 {
 public:
-	CubehelixColourscale(const std::vector<double>& values, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+	CubehelixColourscale(std::span<const double> values, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
 		: splotcolourscale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
 			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 	{
@@ -612,7 +648,7 @@ public:
 	{
 
 	}
-	CubehelixColourscale(const std::vector<double>& values, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+	CubehelixColourscale(std::span<const double> values, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
 		: splotcolourscale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, 180, 540, 0.8, 0.2, 1.0, 1.0, discrete),
 			logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 	{
@@ -632,7 +668,7 @@ public:
 			minValue = std::log10(minValue);
 			maxValue = std::log10(maxValue);
 		}
-		std::vector<double> values(nPoints);
+		sci::GridData<double, 1> values(nPoints);
 		for (size_t i = 0; i < nPoints; ++i)
 		{
 			double f = (double)i / double(nPoints - 1);
@@ -641,14 +677,21 @@ public:
 		//call the other get colours funtion with the derived values. Note we always set logaritmic to false in this call as we have already logged the values.
 		return getCubehelixColours(values, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete);
 	}
-	static std::vector<rgbcolour> getCubehelixColours(std::vector<double> values, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
+	static std::vector<rgbcolour> getCubehelixColours(std::span<const double> values, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
 	{
+		//if the scale is logarithmic, call this fuction again, but with logged values
 		if (logarithmic)
-			for (double& v : values)
-				v = std::log10(v);
+		{
+			std::vector<double> logValues(values.size());
+			for (size_t i = 0; i < values.size(); ++i)
+				logValues[i] = std::log10(values[i]);
+			return getCubehelixColours(logValues, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete);
+		}
+
+
 		if (discrete)
 		{
-			std::vector<double> newValues(values.size() - 1);
+			sci::GridData<double, 1> newValues(values.size() - 1);
 
 			for (size_t i = 0; i < newValues.size(); ++i)
 				newValues[i] = (values[i] + values[i + 1]) / 2.0;
@@ -668,7 +711,7 @@ public:
 		for (size_t i = 0; i < colours.size(); ++i)
 		{
 			double brightness = startBrightness + (values[i] - values[0]) / valuesRange * brightnessRange;
-			double angle = M_2PI * (startHue / 3.0 + 1.0 + hueRotation / 360.0 * brightness);
+			double angle = (2.0 * M_PI) * (startHue / 3.0 + 1.0 + hueRotation / 360.0 * brightness);
 			double gammaBrightness = std::pow(brightness, gamma);
 			double amplitude = saturation * gammaBrightness * (1 - gammaBrightness) / 2.0;
 			double red = gammaBrightness + amplitude * (-0.14861 * std::cos(angle) + 1.78277 * std::sin(angle));
@@ -684,13 +727,13 @@ public:
 		return colours;
 	}
 private:
-	static std::vector<double> getEvenlyDistributedValues(double minValue, double maxValue, size_t nPoints, bool logarithmic)
+	static sci::GridData<double, 1> getEvenlyDistributedValues(double minValue, double maxValue, size_t nPoints, bool logarithmic)
 	{
 		if (logarithmic)
 		{
 			minValue = std::log10(minValue);
 			maxValue = std::log10(maxValue);
-			std::vector<double> values(nPoints);
+			sci::GridData<double, 1> values(nPoints);
 			for (size_t i = 0; i < nPoints; ++i)
 			{
 				double f = (double)i / double(nPoints - 1);
@@ -698,7 +741,7 @@ private:
 			}
 			return values;
 		}
-		std::vector<double> values(nPoints);
+		sci::GridData<double, 1> values(nPoints);
 		for (size_t i = 0; i < nPoints; ++i)
 		{
 			double f = (double)i / double(nPoints - 1);
@@ -713,8 +756,8 @@ class splothorizontalcolourbar : public DrawableItem
 public:
 	splothorizontalcolourbar(Point bottomLeft, Length height, Length width, std::shared_ptr<splotcolourscale> colourscale, PlotAxis::Options axisOptions = PlotAxis::Options())
 		:m_colourscale(colourscale),
-		m_xAxis(new PlotAxis(m_colourscale->getMin(), m_colourscale->getMax(), m_colourscale->isLog(), bottomLeft, Point(bottomLeft.getX(), bottomLeft.getY() + width), axisOptions, PlotScale::Direction::horizontal)),
-		m_yAxis(new PlotAxis(m_colourscale->getMin(), m_colourscale->getMax(), false, bottomLeft, Point(bottomLeft.getX() + height, bottomLeft.getY()), PlotAxis::Options::getBlankAxis(), PlotScale::Direction::horizontal))
+		m_xAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(bottomLeft.getX(), bottomLeft.getY() + width), axisOptions, PlotScale::Direction::horizontal)),
+		m_yAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), false, bottomLeft, Point(bottomLeft.getX() + height, bottomLeft.getY()), PlotAxis::Options::getBlankAxis(), PlotScale::Direction::horizontal))
 	{
 	}
 	void preDraw() override

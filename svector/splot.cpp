@@ -10,7 +10,7 @@
 #include"../include/svector/dep/plot/splot.h"
 #include"../include/svector/dep/plot/transforms.h"
 #include"../include/svector/serr.h"
-#include"../include/svector/svector.h"
+//#include"../include/svector/svector.h"
 #include"../include/svector/sstring.h"
 #include"../include/svector/sreadwrite.h"
 #include<cmath>
@@ -266,7 +266,7 @@ splotcolourscale::splotcolourscale()
 	setupdefault();
 }
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+splotcolourscale::splotcolourscale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
 {
 	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
@@ -280,7 +280,7 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	{
 		//setup discrete colour scale
 		m_discrete = true;
-		std::vector<double> newValues(colour.size() * 2);
+		sci::GridData<double, 1> newValues(colour.size() * 2);
 		std::vector<rgbcolour> newColours(colour.size() * 2);
 		for (size_t i = 0; i < colour.size(); ++i)
 		{
@@ -293,11 +293,24 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	}
 }
 
-void splotcolourscale::setup(const std::vector<double> &value, const std::vector<rgbcolour> &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+void splotcolourscale::setup(std::span<const double> value, std::span<const rgbcolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
-	m_value = value;
-	std::vector<rgbcolour> colourCopy = colour;
-	setupInterpolatingScale(m_value, m_logValue, colourCopy, autostretch);
+	m_value = sci::GridData<double, 1>(value.begin(), value.end());
+	sci::GridData<rgbcolour, 1> colourCopy(colour.begin(), colour.end());
+	double linearMin;
+	double linearMax;
+	double logMin;
+	double logMax;
+	setupInterpolatingScale(m_value, m_logValue, colourCopy, linearMin, linearMax, logMin, logMax);
+
+	//if this is a fixed scale set the limits
+	if (!autostretch)
+	{
+		if (isLog())
+			setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+		else
+			setFixedScale(linearMin, linearMax);
+	}
 
 	//assign colours
 	m_colour1.resize(colour.size());
@@ -316,7 +329,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 	m_fillOffscaleTop = fillOffscaleTop;
 }
 
-splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+splotcolourscale::splotcolourscale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
 	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
@@ -330,7 +343,7 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	{
 		//setup discrete colour scale
 		m_discrete = true;
-		std::vector<double> newValues(colour.size() * 2);
+		sci::GridData<double, 1> newValues(colour.size() * 2);
 		std::vector<hlscolour> newColours(colour.size() * 2);
 		for (size_t i = 0; i < colour.size(); ++i)
 		{
@@ -343,11 +356,24 @@ splotcolourscale::splotcolourscale(const std::vector<double> &value, const std::
 	}
 }
 
-void splotcolourscale::setup(const std::vector<double> &value, const std::vector<hlscolour> &colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+void splotcolourscale::setup(std::span<const double> value, std::span<const hlscolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
-	m_value = value;
-	std::vector<hlscolour> colourCopy = colour;
-	setupInterpolatingScale(m_value, m_logValue, colourCopy, autostretch);
+	m_value = sci::GridData<double, 1>(value.begin(), value.end());
+	sci::GridData<hlscolour, 1> colourCopy(colour.begin(), colour.end());
+	double linearMin;
+	double linearMax;
+	double logMin;
+	double logMax;
+	setupInterpolatingScale(m_value, m_logValue, colourCopy, linearMin, linearMax, logMin, logMax);
+
+	//if this is a fixed scale set the limits
+	if (!autostretch)
+	{
+		if (isLog())
+			setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+		else
+			setFixedScale(linearMin, linearMax);
+	}
 
 	m_colour1.resize(colour.size());
 	m_colour2.resize(colour.size());
@@ -373,7 +399,10 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		if(m_colour1[i]==m_colour1[i]) allnans=false;
 		else anynans=true;
 	}
-	if(allnans) m_colour1=std::vector<double>(m_colour1.size(),0.0);
+	if (allnans)
+	{
+		m_colour1 = 0.0; //set every value to zero
+	}
 	else if(anynans && m_colour1.size()==2)
 	{
 		if(m_colour1[0]!=m_colour1[0]) m_colour1[0]=m_colour1[1];
@@ -384,18 +413,18 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 		while(anynans)
 		{
 			anynans=false;
-			//loop through getting any singles
+			//loop through interpolating any single nans
 			for(size_t i=1; i<m_colour1.size()-1; ++i)
 			{
 				if(m_colour1[i]!=m_colour1[i])
 				{
 					if(m_colour1[i-1]==m_colour1[i-1] && m_colour1[i+1]==m_colour1[i+1])
 					{
-						m_colour1[i]=sci::linearinterpolate(m_value[i],m_value[i-1],m_value[i+1],m_colour1[i-1],m_colour1[i+1]);
+						m_colour1[i] = m_colour1[i - 1] + (m_value[i] - m_value[i - 1]) / (m_value[i + 1] - m_value[i - 1]) * (m_colour1[i + 1] - m_colour1[i - 1]);
 					}
 				}
 			}
-			//then catch any with just a previous neighboor
+			//then set any nans preceded by a non-nan to that non nan
 			for(size_t i=1; i<m_colour1.size(); ++i)
 			{
 				if(m_colour1[i]!=m_colour1[i])
@@ -407,7 +436,7 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 					}
 				}
 			}
-			//finally a neighbour after
+			//then set any nans succeded by a non-nan to that non-nan
 			for(size_t i=m_colour1.size()-2; i!=0; --i)//note this works due to unsigned size_t 
 			{
 				if(m_colour1[i]!=m_colour1[i])
@@ -420,12 +449,13 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 					}
 				}
 			}
+			//check index 0 separately to other suceeded values
 			if(m_colour1[0]!=m_colour1[0])
 			{
 				if(m_colour1[1]==m_colour1[1]) m_colour1[0]=m_colour1[1];
 			}
 
-			//check if any nans remain
+			//check if any nans remain and loop again if so
 			for(size_t i=0; i<m_colour1.size();++i)
 			{
 				if(m_colour1[i]!=m_colour1[i]) anynans=true;
@@ -435,14 +465,14 @@ void splotcolourscale::setup(const std::vector<double> &value, const std::vector
 }
 
 //interpolate the given value to a colour
-void splotcolourscale::interpolate( double value, double &c1, double &c2, double &c3, double &a, bool valuePreLogged) const
+void splotcolourscale::interpolate(double value, double &c1, double &c2, double &c3, double &a, bool valuePreLogged) const
 {
 	if (isLog() && !valuePreLogged)
 		value = std::log10(value);
 
-	bool offscaleBottom = (isLog() && value < getLogMin()) || (!isLog() && value < getMin());
-	bool offscaleTop = (isLog() && value > getLogMax()) || (!isLog() && value > getMax());
-	bool onMin = (isLog() && value == getLogMin()) || (!isLog() && value == getMin());
+	bool offscaleBottom = value < getLinearOrLogMin();
+	bool offscaleTop = value > getLinearOrLogMax();
+	bool onMin = value == getLinearOrLogMin();
 
 	
 	if (offscaleBottom)
@@ -506,7 +536,7 @@ void splotcolourscale::interpolate( double value, double &c1, double &c2, double
 	}
 	else
 	{
-		value = (value - getMin()) / (getMax() - getMin());
+		value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
 		
 		while (value > m_value[maxIndex])
 			maxIndex++;
@@ -646,10 +676,8 @@ std::vector<double> splotcolourscale::getDiscreteValues() const
 			result[i] = m_logValue[i * 2];
 		result.back() = m_logValue.back();
 
-		double logMin = std::log10(getMin());
-		double logMax = std::log10(getMax());
 		for (auto& r : result)
-			r = std::pow(10.0, logMin + r * (logMax - logMin));
+			r = std::pow(10.0, getLogMin() + r * (getLogMax() - getLogMin()));
 	}
 	else
 	{
@@ -658,19 +686,32 @@ std::vector<double> splotcolourscale::getDiscreteValues() const
 		result.back() = m_value.back();
 
 		for (auto& r : result)
-			r = getMin() + r * (getMax() - getMin());
+			r = getLinearMin() + r * (getLinearMax() - getLinearMin());
 	}
 	return result;
 }
 
-splotsizescale::splotsizescale(const std::vector<double> &value, const std::vector<double> &size, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+splotsizescale::splotsizescale(std::span<const double> value, std::span<const double> size, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
-	m_value = value;
-	m_size = size;
-	setupInterpolatingScale(m_value, m_logValue, m_size, autostretch);
+	m_value = sci::GridData<double, 1>(value.begin(), value.end());
+	m_size = sci::GridData<double, 1>(size.begin(), size.end());
 	m_fillOffscaleBottom = fillOffscaleBottom;
 	m_fillOffscaleTop = fillOffscaleTop;
+	double linearMin;
+	double linearMax;
+	double logMin;
+	double logMax;
+	setupInterpolatingScale(m_value, m_logValue, m_size, linearMin, linearMax, logMin, logMax);
+
+	//if this is a fixed scale set the limits
+	if (!autostretch)
+	{
+		if (isLog())
+			setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+		else
+			setFixedScale(linearMin, linearMax);
+	}
 }
 
 double splotsizescale::getsize(double value, bool valuePreLogged) const
@@ -678,9 +719,9 @@ double splotsizescale::getsize(double value, bool valuePreLogged) const
 	if (isLog() && !valuePreLogged)
 		value = std::log10(value);
 
-	bool offscaleBottom = (isLog() && value < getLogMin()) || (!isLog() && value < getMin());
-	bool offscaleTop = (isLog() && value > getLogMax()) || (!isLog() && value > getMax());
-	bool onMin = (isLog() && value == getLogMin()) || (!isLog() && value == getMin());
+	bool offscaleBottom = value < getLinearOrLogMin();
+	bool offscaleTop = value > getLinearOrLogMax();
+	bool onMin = value == getLinearOrLogMin();
 
 	if (offscaleBottom)
 	{
@@ -714,7 +755,7 @@ double splotsizescale::getsize(double value, bool valuePreLogged) const
 	}
 	else
 	{
-		value = (value - getMin()) / (getMin() - getMax());
+		value = (value - getLinearMin()) / (getLinearMin() - getLinearMax());
 
 		while (value > m_value[maxIndex])
 			maxIndex++;
@@ -725,33 +766,34 @@ double splotsizescale::getsize(double value, bool valuePreLogged) const
 	return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 }
 
-splotlevelscale::splotlevelscale(const std::vector<double>& value, bool logarithmic, bool autostretch)
+splotlevelscale::splotlevelscale(std::span<const double> value, bool logarithmic, bool autostretch)
 	:PlotScale(logarithmic, Direction::none, 0.0)
 {
-	m_value = value;
-	std::vector<double> dummy = m_value;
-	setupInterpolatingScale(m_value, m_logValue, dummy, autostretch);
+	m_value = sci::GridData<double, 1>(value.begin(), value.end());
+	sci::GridData<double, 1> dummy = m_value;
+	double linearMin;
+	double linearMax;
+	double logMin;
+	double logMax;
+	setupInterpolatingScale(m_value, m_logValue, dummy, linearMin, linearMax, logMin, logMax);
+
+	//if this is a fixed scale set the limits
+	if (!autostretch)
+	{
+		if (isLog())
+			setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+		else
+			setFixedScale(linearMin, linearMax);
+	}
 }
 
-std::vector<double> splotlevelscale::getLevels() const
+sci::GridData<double, 1> splotlevelscale::getLevels() const
 {
-	std::vector<double> result;;
+	sci::GridData<double, 1> result;
 	if (isLog())
-	{
-		result = m_logValue;
-
-		double logMin = std::log10(getMin());
-		double logMax = std::log10(getMax());
-		for (auto& r : result)
-			r = std::pow(10.0, logMin + r * (logMax - logMin));
-	}
+		result = sci::pow(10.0, getLogMin() + m_logValue * (getLogMax() - getLogMin()));
 	else
-	{
-		result = m_value;
-
-		for (auto& r : result)
-			r = getMin() + r * (getMax() - getMin());
-	}
+		result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
 	return result;
 }
 
@@ -778,8 +820,8 @@ void PlotAxis::draw(plstream* pl, double scale, double pageWidth, double pageHei
 	//get the tick interval and subintervals
 	//double ymajint = m_yaxis.m_automajorinterval ? 0.0 : m_yaxis.m_majorinterval;
 	//unsigned int ynsub = m_yaxis.m_autonsubticks ? 0.0 : m_yaxis.m_nsubticks + 1;
-	double min = getMin();
-	double max = getMax();
+	double min = getLinearOrLogMin();
+	double max = getLinearOrLogMax();
 
 	if (m_direction == Direction::horizontal)
 	{
@@ -859,8 +901,8 @@ void PlotAxis::draw(Renderer& renderer, grPerMillimetre scale)
 void PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 {
 	//calculate the min, max and span
-	double min = getMin();
-	double max = getMax();
+	double min = getLinearMin();
+	double max = getLinearMax();
 	if (min > max)
 		std::swap(min, max);
 	double span = max - min;
@@ -977,7 +1019,7 @@ void PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = std::pow(10.0, currentMajorLogPosition + double(i+1) * minorLogInterval);
-				if(currentMinorPosition<=getMax())
+				if(currentMinorPosition<=getLogMax())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 
@@ -987,7 +1029,7 @@ void PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = currentMajorPosition * double((i+1)*minorInterval  + 1.0);
-				if(currentMinorPosition <=getMax())
+				if(currentMinorPosition <=getLogMax())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 		}
@@ -1163,9 +1205,11 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 {
 	if (m_colourscale->isDiscrete())
 	{
-		std::vector<std::vector<double>> cb(2);
-		cb[0] = std::vector<double>(2, m_colourscale->getMin());
-		cb[1] = std::vector<double>(2, m_colourscale->getMax());
+		sci::GridData<double, 2> cb({ 2, 2 });
+		cb[0][0] = m_colourscale->getLinearOrLogMin();
+		cb[0][1] = cb[0][0];
+		cb[1][0] = m_colourscale->getLinearOrLogMax();
+		cb[1][1] = cb[1][0];
 		std::vector<double> cbX{ cb[0][0], cb[1][0] };
 		std::vector<double> cbY{ 0.0, 1.0 };
 
@@ -1176,12 +1220,12 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 	}
 	else
 	{
-		std::vector<std::vector<double>> cb(256);
+		sci::GridData<double, 2> cb({ 256, 1 });
 		std::vector<double> cbX(cb.size()+1);
 
 
-		double min = m_colourscale->getMin();
-		double max = m_colourscale->getMax();
+		double min = m_colourscale->getLinearOrLogMin();
+		double max = m_colourscale->getLinearOrLogMax();
 
 		if (m_colourscale->isLog())
 		{
@@ -1195,7 +1239,7 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 				cbX[i] = std::pow(10, min + i * step);
 
 			for (size_t i = 0; i < cb.size(); ++i)
-				cb[i]= std::vector<double>(1, std::pow(10.0, (min + (i+0.5) * step)));
+				cb[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
 		}
 		else
 		{
@@ -1206,7 +1250,7 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 				cbX[i] = min + i * step;
 
 			for (size_t i = 0; i < cb.size(); ++i)
-				cb[i] = std::vector<double>(1, (cbX[i] + cbX[i + 1]) / 2.0);
+				cb[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
 		}
 		
 		std::vector<double> cbY{ 0.0, 1.0 };

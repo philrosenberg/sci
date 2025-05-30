@@ -74,27 +74,24 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	for (size_t i = 0; i < ny; ++i)
 		y1d[i] = i * 1.0 / (double)(ny - 1);
 
-	std::vector<std::vector<double>> x2d(nx);
-	std::vector<std::vector<double>> y2d(nx);
+	sci::GridData<double, 2> x2d({ nx, ny });
+	sci::GridData<double, 2> y2d({ nx, ny });
 	for (size_t i = 0; i < nx; ++i)
 	{
-		x2d[i].resize(ny);
 		for (size_t j = 0; j < ny; ++j)
 			x2d[i][j] = i * 1.0 / (double)(nx - 1);
 	}
 	for (size_t i = 0; i < nx; ++i)
 	{
-		y2d[i].resize(ny);
 		for (size_t j = 0; j < ny; ++j)
 			y2d[i][j] = j * 1.0 / (double)(ny - 1);
 	}
 
 
 
-	std::vector<std::vector<double>> zGrid(nx - 1);
+	sci::GridData<double, 2> zGrid({ nx - 1, ny - 1 });
 	for (size_t i = 0; i < nx - 1; ++i)
 	{
-		zGrid[i].resize(ny - 1);
 		for (size_t j = 0; j < ny - 1; ++j)
 		{
 			double x = (x1d[i] + x1d[i + 1]) / 2.0;
@@ -106,10 +103,9 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 		}
 	}
 
-	std::vector<std::vector<double>> zCont(nx);
+	sci::GridData<double, 2> zCont({ nx, ny });
 	for (size_t i = 0; i < nx; ++i)
 	{
-		zCont[i].resize(ny);
 		for (size_t j = 0; j < ny; ++j)
 		{
 			if (log)
@@ -142,26 +138,26 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 			v = std::pow(10.0, v);
 
 	std::shared_ptr<splotcolourscale> colourScaleDiscrete(new splotcolourscale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
-	LineStyle lineStyle = noLine;
+	LineStyle contourStyle(grMillimetre(0.5));
 
 	std::shared_ptr<splotlevelscale> levelScale(new splotlevelscale(values, log, autoscale));
 
-	std::shared_ptr<splotcolourscale> colourScaleContinuous(new splotcolourscale({ values.front(), values.back()}, {colours.front(), colours.back()}, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<splotcolourscale> colourScaleContinuous(new splotcolourscale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	
 	std::shared_ptr<GridData> grid1(new GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
 	std::shared_ptr<GridData> grid2(new GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
 	std::shared_ptr<GridData> grid3(new GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
 	std::shared_ptr<GridData> grid4(new GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
 
-	std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, lineStyle));
-	std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, lineStyle));
-	std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, lineStyle));
-	std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, lineStyle));
+	std::shared_ptr<ContourData> shade1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, noLine));
+	std::shared_ptr<ContourData> shade2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, noLine));
+	std::shared_ptr<ContourData> shade3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, noLine));
+	std::shared_ptr<ContourData> shade4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, noLine));
 
-	std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, lineStyle));
-	std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, lineStyle));
-	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, lineStyle));
-	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, lineStyle));
+	std::shared_ptr<ContourData> contour1(new ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<ContourData> contour2(new ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
 	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22)), Length(grUnitless(0.03), Length::Scale::yDirection), Length(limits[4]-limits[0], Length::Scale::xDirection), colourScaleDiscrete, PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
 	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22 - 0.09)), Length(grUnitless(0.03), Length::Scale::yDirection), Length(limits[4] - limits[0], Length::Scale::xDirection), colourScaleContinuous, PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
@@ -224,7 +220,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		PlotAxis::Options options;
 		std::shared_ptr<PlotAxis> xAxis(new PlotAxis(0.0, 1.0, false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<PlotAxis> yAxis(new PlotAxis(0.0, 1.0, false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<PointData> points(new PointData({ 0.1, 0.5, 0.8 }, { 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
+		std::shared_ptr<PointData> points(new PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -245,7 +241,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		PlotAxis::Options options;
 		std::shared_ptr<PlotAxis> xAxis(new PlotAxis(false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.9), grUnitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<PlotAxis> yAxis(new PlotAxis(false, Point(grUnitless(0.1), grUnitless(0.9)), Point(grUnitless(0.1), grUnitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<PointData> points(new PointData({ 0.1, 0.5, 0.8 }, { 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
+		std::shared_ptr<PointData> points(new PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, Symbol()));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -281,7 +277,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		std::shared_ptr<LineData> line1(new LineData(x, y1, xAxis, yAxis, LineStyle(grMillimetre(1.0))));
 		std::shared_ptr<LineData> line2(new LineData(x, y2, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0, 0, 0), sU(".       -_\t   "))));
-		std::shared_ptr<LineData> line3(new LineData(x, y3, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0.8, 0, 0.2), { grMillimetre(0.2), grMillimetre(0.2), grMillimetre(1.8), grMillimetre(0.2) })));
+		std::shared_ptr<LineData> line3(new LineData(x, y3, xAxis, yAxis, LineStyle(grMillimetre(1.0), rgbcolour(0.8, 0, 0.2), { grMillimetre(0.5), grMillimetre(3.5), grMillimetre(3.0), grMillimetre(3.0) })));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -339,7 +335,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		do2dplot(this, title, scaleBegin, scaleEnd, false, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	}*/
-/*2
+
 	{
 		sci::string title = sU("Plot 9: This plot shows a set of grid and contour plots for the function z=10#uy#d, with\na log colourscale. It should show even horizontal stripes.");
 		double scaleBegin = 1.0;
@@ -349,7 +345,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		bool fillOffscaleTop = false;
 
 		do2dplot(this, title, scaleBegin, scaleEnd, true, autoscale, fillOffscaleBottom, fillOffscaleTop);
-	}*/
+	}
 	/* {
 		sci::string title = sU("Plot 10: This plot shows the same plot as plot 9, but with autoscale on for the colourscale. It\nshould look identical as plot 9 used exactly the full scale.");
 		double scaleBegin = 2.0;
