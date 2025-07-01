@@ -1262,6 +1262,67 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 	}
 }
 
+void splothorizontalcolourbar::draw(Renderer& renderer, grPerMillimetre scale)
+{
+	if (m_colourscale->isDiscrete())
+	{
+		sci::GridData<double, 2> cb({ 2, 2 });
+		cb[0][0] = m_colourscale->getLinearOrLogMin();
+		cb[0][1] = cb[0][0];
+		cb[1][0] = m_colourscale->getLinearOrLogMax();
+		cb[1][1] = cb[1][0];
+		std::vector<double> cbX{ cb[0][0], cb[1][0] };
+		std::vector<double> cbY{ 0.0, 1.0 };
+
+		ContourData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
+
+		data.draw(renderer, scale);
+		m_xAxis->draw(renderer, scale);
+	}
+	else
+	{
+		sci::GridData<double, 2> cb({ 256, 1 });
+		std::vector<double> cbX(cb.shape()[0] + 1);
+
+
+		double min = m_colourscale->getLinearOrLogMin();
+		double max = m_colourscale->getLinearOrLogMax();
+
+		if (m_colourscale->isLog())
+		{
+			min = std::log10(min);
+			max = std::log10(max);
+
+			double range = max - min;
+			double step = range / (cb.size());
+
+			for (size_t i = 0; i < cbX.size(); ++i)
+				cbX[i] = std::pow(10, min + i * step);
+
+			for (size_t i = 0; i < cb.size(); ++i)
+				cb[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
+		}
+		else
+		{
+			double range = max - min;
+			double step = range / (cb.size());
+
+			for (size_t i = 0; i < cbX.size(); ++i)
+				cbX[i] = min + i * step;
+
+			for (size_t i = 0; i < cb.size(); ++i)
+				cb[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
+		}
+
+		std::vector<double> cbY{ 0.0, 1.0 };
+
+		GridData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale);
+
+		data.draw(renderer, scale);
+		m_xAxis->draw(renderer, scale);
+	}
+}
+
 void PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultiplier)
 {
 

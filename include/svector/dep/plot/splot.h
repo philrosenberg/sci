@@ -754,16 +754,17 @@ private:
 class splothorizontalcolourbar : public DrawableItem
 {
 public:
-	splothorizontalcolourbar(Point bottomLeft, Length height, Length width, std::shared_ptr<splotcolourscale> colourscale, PlotAxis::Options axisOptions = PlotAxis::Options())
+	splothorizontalcolourbar(Point bottomLeft, Point topRight, std::shared_ptr<splotcolourscale> colourscale, PlotAxis::Options axisOptions = PlotAxis::Options())
 		:m_colourscale(colourscale),
-		m_xAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(bottomLeft.getX(), bottomLeft.getY() + width), axisOptions, PlotScale::Direction::horizontal)),
-		m_yAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), false, bottomLeft, Point(bottomLeft.getX() + height, bottomLeft.getY()), PlotAxis::Options::getBlankAxis(), PlotScale::Direction::horizontal))
+		m_xAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, PlotScale::Direction::horizontal)),
+		m_yAxis(new PlotAxis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), PlotAxis::Options::getBlankAxis(), PlotScale::Direction::horizontal))
 	{
 	}
 	void preDraw() override
 	{
 	}
 	void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+	void draw(Renderer& renderer, grPerMillimetre scale) override;
 	bool readyToDraw() const override
 	{
 		return true;
