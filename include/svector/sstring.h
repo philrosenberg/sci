@@ -235,7 +235,7 @@ namespace sci
 	STRING utf8To(const std::string& string)
 	{
 		STRING result;
-		result.push_back(char16_t(0xFEFF));//BOM
+		//result.push_back(char16_t(0xFEFF));//BOM
 
 		result.reserve(string.length() / 2);
 		uint32_t codePoint;
