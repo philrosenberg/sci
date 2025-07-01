@@ -1356,4 +1356,49 @@ private:
 };
 
 
+class GraphicsPanel : public wxPanel
+{
+public:
+	GraphicsPanel(wxWindow* parent, int id = wxID_ANY)
+		:wxPanel(parent, id)
+	{
+		Connect(wxEVT_PAINT, wxPaintEventHandler(GraphicsPanel::OnPaint));
+		Connect(wxEVT_SIZE, wxSizeEventHandler(GraphicsPanel::OnResize));
+	}
+private:
+	virtual void OnPaint(wxPaintEvent& event)
+	{
+		//override this function, but this is the kind of thing to do
+		wxPaintDC dc(this);
+		wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	}
+	void OnResize(wxSizeEvent& event)
+	{
+		//refresh the whole panel so it is all redrawn, not just the invalidated area
+		Refresh();
+	}
+	//DECLARE_EVENT_TABLE();
+};
+
+template<class PANEL = GraphicsPanel>
+class GraphicsFrame : public wxFrame
+{
+public:
+	GraphicsFrame(wxFrame* parent)
+		: wxFrame(parent, wxID_ANY, "Graphics frame", wxDefaultPosition, FromDIP(wxSize(800, 600)))
+	{
+		m_panel = new PANEL(this);
+	}
+	~GraphicsFrame()
+	{
+	}
+	PANEL* getPanel()
+	{
+		return m_panel;
+	}
+private:
+	PANEL* m_panel;
+
+};
+
 #endif

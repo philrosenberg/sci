@@ -721,13 +721,3 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	lineData4->draw(renderer, grPerInch(96));
 	pointData4->draw(renderer, grPerInch(96));
 }
-
-void PlotCanvasPanel::OnPaint(wxPaintEvent& event)
-{
-	wxPaintDC dc(this);
-	//wxSize size = GetClientSize();
-	//m_plotCanvas.render(&dc, size.GetWidth(), size.GetHeight(), 1);
-	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
-	m_plotCanvas.render(renderer, grPerInch(FromDIP(96)));
-	
-}

@@ -63,18 +63,4 @@ private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class PlotCanvasPanel : public GraphicsPanel
-{
-public:
-	PlotCanvasPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
-	{}
-	PlotCanvas *getCanvas()
-	{
-		return &m_plotCanvas;
-	}
-private:
-	virtual void OnPaint(wxPaintEvent& event) override;
-	PlotCanvas m_plotCanvas;
-};
 #endif // APEX_MAINFRAME_H

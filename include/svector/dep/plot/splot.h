@@ -873,4 +873,26 @@ private:
 	double m_yScale;
 };
 
+#include<svector/graphics.h>
+class PlotCanvasPanel : public GraphicsPanel
+{
+public:
+	PlotCanvasPanel(wxWindow* parent, int id = wxID_ANY)
+		:GraphicsPanel(parent, id)
+	{
+	}
+	PlotCanvas* getCanvas()
+	{
+		return &m_plotCanvas;
+	}
+private:
+	virtual void OnPaint(wxPaintEvent& event) override
+	{
+		wxPaintDC dc(this);
+		wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+		m_plotCanvas.render(renderer, grPerInch(FromDIP(96)));
+	}
+	PlotCanvas m_plotCanvas;
+};
+
 #endif
