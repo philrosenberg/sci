@@ -1048,7 +1048,7 @@ class wxRenderer : public Renderer
 {
 public:
 	wxRenderer(wxDC* dc, wxSize size, grPerMillimetre scale, sci::string escapeSequence = sU("#"))
-		:m_dc(dc), m_height(size.GetHeight()), m_width(size.GetWidth()), m_scale(scale), m_fontSize(dc->GetFont().GetPointSize())
+		:m_dc(dc), m_height(size.GetHeight()), m_width(size.GetWidth()), m_scale(scale), m_fontSize(dc->GetFont().IsOk() ? dc->GetFont().GetPointSize() : 0.0)
 	{
 		pushState();
 	}
