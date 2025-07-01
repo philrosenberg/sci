@@ -847,7 +847,7 @@ public:
 		for (auto& d : m_drawableItems)
 			d->draw(renderer, scale);
 	}
-	bool writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier = 1.0, bool preferInkscape = false);
+	bool writetofile(sci::string filename, int width, int height, grPerMillimetre scale);
 private:
 	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
 

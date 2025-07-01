@@ -1395,7 +1395,7 @@ void PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultipl
 //strings then png is used, although the given extension will still be used 
 //in the filename. the antialiasing parameter is ignored for vector graphics.
 
-bool PlotCanvas::writetofile(sci::string filename, int width, int height, bool antialiasing, double linewidthmultiplier, bool preferInkscape)
+bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerMillimetre scale)
 {
 	//get the extension
 	wxFileName fullfile = wxString(sci::nativeUnicode(filename));
@@ -1403,190 +1403,93 @@ bool PlotCanvas::writetofile(sci::string filename, int width, int height, bool a
 
 	bool result = true;
 
-	//write the image to file - if we are using inkscape then we write it to an svg first then use inkscape
-	//to convert to the apropriate format - of course if we want an svg then no conversion is needed
-	if (extension == "svg")
+
+	if (extension == "ps")
 	{
-		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
-		render(&dc, width, height, linewidthmultiplier);
+		//here we redraw the plot like OnPaint but using a postscript DC.
+		wxPrintData setupdata;
+		setupdata.SetColour(true);
+		setupdata.SetFilename(sci::nativeUnicode(filename));
+		//setupdata.SetPaperId(wxPAPER_A4);
+		setupdata.SetPaperId(wxPAPER_NONE);
+		//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
+		//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
+		//than the screen. Here we've multiplied by 10 to get 30 times better.
+		int sizemultiplier = 10;
+		setupdata.SetPaperSize(wxSize(width * sizemultiplier, height * sizemultiplier));
+		setupdata.SetPrintMode(wxPRINT_MODE_FILE);
+		//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
+		wxPostScriptDC psdc(setupdata);
+		result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
+		if (result == false)
+			return result;
+		wxRenderer renderer(&psdc, wxSize(width, height), scale);
+		render(renderer, scale);
+		psdc.EndDoc();
 	}
-	else if (preferInkscape)
+#ifdef _WIN32
+	else if (extension == "emf")
 	{
-		TempFile tempFile;
-		if (tempFile.getFilename() == "")
-			return false;
-		{
-			//put the dc in its own context so that it closes the file
-			//before we try to convert it
-			wxSVGFileDC dc(tempFile.getFilename(), width, height, 72);
-			if (!dc.IsOk())
-				return false;
-			render(&dc, width, height, linewidthmultiplier);
-			if (!dc.IsOk())
-				return false;
-		}
-		//wxString inkscapePath="C:\\Program Files (x86)\\Inkscape\\Inkscape.exe";
-		wxString inkscapePath = "D:\\usr\\local\\bin\\InkscapePortable\\InkscapePortable.exe";
-		if (!wxFileExists(inkscapePath))
-			return false;
-		if (extension == "ps")
-			wxExecute("\"" + inkscapePath + "\" --export-ps \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
-		else if (extension == "pdf")
-			wxExecute("\"" + inkscapePath + "\" --export-pdf \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
-		else if (extension == "eps")
-			wxExecute("\"" + inkscapePath + "\" --export-eps \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
-		else if (extension == "png")
-			wxExecute("\"" + inkscapePath + "\" --export-dpi 72 --export-png \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
-		else if (extension == "emf")
-			wxExecute("\"" + inkscapePath + "\" --export-emf \"" + sci::toUtf8(filename) + "\" -f \"" + tempFile.getFilename() + "\"", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE);
-		else
-			result = writetofile(filename, width, height, antialiasing, linewidthmultiplier, false);
+		//here we redraw the plot like OnPaint but using a wxMetafile DC.
+		wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
+		wxRenderer renderer(&metadc, wxSize(width, height), scale);
+		render(renderer, scale);;//0 gives vector output
+		//close the file - note this gives us a copy of the file in memory which we must delete
+		wxMetafile* metafile = metadc.Close();
+		result = metafile != NULL;
+		delete metafile;
+		//we must call this function to make the file importable into other software
+		int minx = metadc.MinX();
+		int maxx = metadc.MaxX();
+		int miny = metadc.MinY();
+		int maxy = metadc.MaxY();
+		//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
+	}
+#endif
+	else if (extension == "svg")
+	{
+		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, scale.value<grPerInch>());
+		wxRenderer renderer(&dc, wxSize(width, height), scale);
+		render(renderer, scale);
+		result = true;
 	}
 	else
 	{
-		//some file types we can only deal with using inkscape test these first
-		if (extension == "eps" || extension == "pdf")
-			result = writetofile(filename, width, height, antialiasing, linewidthmultiplier, true);
-
-		//old code from using pdfcreator
-		/*if(extension =="eps" || extension =="pdf")
-		{
-			//check we have access to the output
-			std::fstream fout;
-			fout.open(filename.mb_str(), std::ios::out);
-			if(fout.is_open())
-			{
-				fout.close();
-				wxString printer="Apex++ "+extension.Upper();
-				wxString intermediateFile="C:\\ProgramData\\Apex++\\print."+extension;
-				if(wxFile::Exists(intermediateFile))
-					wxRemoveFile(intermediateFile);
-				result=print(false, printer);
-				if(result)
-				{
-					//wait for the file to appear
-					while(!wxFileExists(intermediateFile))
-					{
-					}
-					//repeatedly try to rename the file until it succeeds
-					while(!MoveFile(intermediateFile, filename))
-					{
-						DWORD err=GetLastError();
-						if(err != 32 //sharing violation - i.e. the file is still in use/being written
-							&& err != 80 ) //destination file already exists
-							result=false;
-						if(err == 80 )
-						{
-							wxRemoveFile(filename);
-							//check if the delete was successful
-							if(wxFile::Exists(filename))
-								result=false;
-						}
-						if( !result )
-							break;
-					}
-				}
-			}
-			else
-				result=false;
-		}*/
-
-		else if (extension == "ps")
-		{
-			//here we redraw the plot like OnPaint but using a postscript DC.
-			wxPrintData setupdata;
-			setupdata.SetColour(true);
-			setupdata.SetFilename(sci::nativeUnicode(filename));
-			//setupdata.SetPaperId(wxPAPER_A4);
-			setupdata.SetPaperId(wxPAPER_NONE);
-			//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
-			//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
-			//than the screen. Here we've multiplied by 10 to get 30 times better.
-			int sizemultiplier = 10;
-			setupdata.SetPaperSize(wxSize(width * sizemultiplier, height * sizemultiplier));
-			setupdata.SetPrintMode(wxPRINT_MODE_FILE);
-			//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
-			wxPostScriptDC psdc(setupdata);
-			result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
-			if (result == false) return result;
-			render(&psdc, width * sizemultiplier, height * sizemultiplier, linewidthmultiplier * sizemultiplier);//0 gives vector output, I think 2 should too but it creates empty postscripts, there is no need to use freetype
-			psdc.EndDoc();
-		}
-#ifdef _WIN32
-		else if (extension == "emf")
-		{
-			//here we redraw the plot like OnPaint but using a wxMetafile DC.
-			wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
-			render(&metadc, width, height, linewidthmultiplier);//0 gives vector output
-			//close the file - note this gives us a copy of the file in memory which we must delete
-			wxMetafile* metafile = metadc.Close();
-			result = metafile != NULL;
-			delete metafile;
-			//we must call this function to make the file importable into other software
-			int minx = metadc.MinX();
-			int maxx = metadc.MaxX();
-			int miny = metadc.MinY();
-			int maxy = metadc.MaxY();
-			//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
-		}
-#endif
-		else if (extension == "svg")
-		{
-			wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, 72);
-			render(&dc, width, height, linewidthmultiplier);
-			result = true;
-		}
-		else
-		{
-			//load the image handlers
-			wxInitAllImageHandlers();
-			//create a wxBitmapType to define the type saved as
-			//use PNG as default
-			wxBitmapType type = wxBITMAP_TYPE_PNG;
-			if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
-			else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
-			else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
-			else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
-			else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
-			else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
-			else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
+		//load the image handlers
+		wxInitAllImageHandlers();
+		//create a wxBitmapType to define the type saved as
+		//use PNG as default
+		wxBitmapType type = wxBITMAP_TYPE_PNG;
+		if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
+		else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
+		else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
+		else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
+		else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
+		else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
+		else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
 
 			
-			//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
-			//except if using AGG then we create an image instead which we'll need to copy to the bitmap
-			wxMemoryDC memdc;
-			wxBitmap bitmap(width, height, 32);
-			if (!bitmap.IsOk())
-				return false;
-			memdc.SelectObject(bitmap);
-			//fill the bitmap with white giving a white background for plplot
-			//or to show blank if there are no plots
-			memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
+		//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
+		//except if using AGG then we create an image instead which we'll need to copy to the bitmap
+		wxMemoryDC memdc;
+		wxBitmap bitmap(width, height, 32);
+		if (!bitmap.IsOk())
+			return false;
+		memdc.SelectObject(bitmap);
+		//fill the bitmap with white giving a white background for plplot
+		//or to show blank if there are no plots
+		memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
 
-			//the plots themselve update their own status in the plot function
-			//DrawPlots(&memdc,0,false); //testing dc
-			//DrawPlots(&memdc,1,false); //testing agg no freetype
-			//DrawPlots(&memdc,1,true); //testing agg with freetype
-			//DrawPlots(&memdc,0,false);
+		wxRenderer renderer(&memdc, wxSize(width, height), scale);
+		render(renderer, scale);
 
-			//select the backend
-			//2 is the GC which gives antialiased output, 0 is any wxDC and 1 uses AGG and with or without freetype
-			if (antialiasing)
-			{
-				wxGCDC gcdc(memdc);
-				render(&gcdc, width, height, linewidthmultiplier);
-				//DrawPlots(&memdc,width,height,linewidthmultiplier);
-			}
-			else
-				render(&memdc, width, height, linewidthmultiplier);
 
-			//reselect null bitmap for the memdc
-			memdc.SelectObject(wxNullBitmap);
+		//reselect null bitmap for the memdc
+		memdc.SelectObject(wxNullBitmap);
 
-			//write the bitmap to file
-			result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
+		//write the bitmap to file
+		result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
 			
-		}
 	}
 
 	return result;
