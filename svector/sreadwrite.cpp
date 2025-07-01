@@ -233,6 +233,7 @@ sci::csv_err sci::readtextcolumns(std::ifstream &fin, std::string delimiters, bo
 		{
 			if(type[i]==rt_double)
 			{
+				stream.clear();
 				stream.str(splitstring[i]);
 				double temp;
 				stream >> temp;
