@@ -1555,6 +1555,41 @@ std::vector<Segment> followContourBothDirections(std::set<Segment>& segments, si
 		return line1;
 }
 
+//creates a set of contour segments for each countour level. The sets are in order from the first to last level.
+//Because we use a set, the segments are in ascending order using the < operator defined in the set class
+std::vector<std::set<Segment>> marchingSquaresSegments(const sci::GridData<double, 2>& grid, std::span<const double> contourLevels)
+{
+	std::array<size_t, 2> shape = grid.shape();
+
+	//get all the intesections of grids with contours using the marching squares algorithm
+	std::vector<std::set<Segment>> segments(contourLevels.size());
+	for (size_t i = 0; i < shape[0] - 1; ++i)
+	{
+		for (size_t j = 0; j < shape[1] - 1; ++j)
+		{
+			for (size_t k = 0; k < contourLevels.size(); ++k)
+			{
+				uint8_t intersectionType = disambiguateContours(getIntersectionType(i, j, grid, contourLevels[k]));
+				if (intersectionType != 0 && intersectionType != 15 && intersectionType != 5 && intersectionType != 10)
+					segments[k].insert(Segment{ i, j, intersectionType, contourLevels[k] });
+				else if (5 == intersectionType || 16 == intersectionType)
+				{
+					segments[k].insert(Segment{ i, j, 2, contourLevels[k] });
+					segments[k].insert(Segment{ i, j, 7, contourLevels[k] });
+				}
+				else if (10 == intersectionType || 17 == intersectionType)
+				{
+					segments[k].insert(Segment{ i, j, 1, contourLevels[k] });
+					segments[k].insert(Segment{ i, j, 4, contourLevels[k] });
+				}
+			}
+		}
+	}
+	return segments;
+}
+
+//creates a set of contour segments for each countour level. The sets are in order from the first to last level.
+//Because we use a set, the segments are in ascending order using the < operator defined in the set class
 std::vector<std::vector<Segment>> marchingSquaresContour(const sci::GridData<double, 2>  &grid, std::span<const double> contourLevels)
 {
 	std::array<size_t, 2> shape = grid.shape();
@@ -1771,7 +1806,93 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 	//get the segments of each contour line using the marching squares algorithm.
 	//note that this just gives the edges of the grid boxes that each segment touches
 	const sci::GridData<double, 2>& zs = getZ();
-	std::vector<std::vector<Segment>> segments = marchingSquaresContour(zs, contourLevels);
+	std::array<size_t, 2> shape = zs.shape();
+	std::vector<std::set<Segment>> segmentsPerLevel = marchingSquaresSegments(zs, contourLevels);
+
+	//render the fill
+
+	std::vector<std::set<Segment>::iterator> segmentIters(segmentsPerLevel.size());
+	for (size_t i = 0; i < segmentsPerLevel.size(); ++i)
+		segmentIters[i] = segmentsPerLevel[i].begin();
+
+	std::vector<std::set<Segment>::iterator> intersections;
+	for (size_t i = 0; i < shape[0]-1; ++i)
+	{
+		for (size_t j = 0; j < shape[1]-1; ++j)
+		{
+			double x0;
+			double x1;
+			double y0;
+			double y1;
+			if (m_x1d)
+			{
+				x0 = getVector(0)[i];
+				x1 = getVector(0)[i + 1];
+			}
+			else
+			{
+				x0 = getGrid(0)[i][j];
+				x1 = getGrid(0)[i + 1][j + 1];
+			}
+			if (m_y1d)
+			{
+				y0 = getVector(1)[j];
+				y1 = getVector(1)[j + 1];
+			}
+			else
+			{
+				y0 = getGrid(1)[i][j];
+				y1 = getGrid(1)[i + 1][j + 1];
+			}
+			std::pair<size_t, size_t> ijPair(i, j);
+			for (size_t k = 0; k < segmentIters.size(); ++k)
+			{
+				if (segmentIters[k] != segmentsPerLevel[k].end() && i== segmentIters[k]->index1 && j== segmentIters[k]->index2)
+				{
+					intersections.push_back(segmentIters[k]);
+				}
+			}
+			if (intersections.size() == 0)
+			{
+				//full rectangle with no intersection - just fill
+				renderer.rectangle(getPoint(x0, y0), getPoint(x1, y1));
+			}
+			else if (intersections.size() == 1)
+			{
+				//we can just use the intersectionType from the single intersection to sort this
+				
+			}
+			else
+			{
+				//we're getting more complicated here
+				//we can work through each band and if the countour level either side only has one 
+				//intersection, then we can work out the nodes (corners, plus points where segments
+				//touch the edge) and these will make a convex polygon, so we need to arrange them
+				//clockwise or anticlockwise
+
+				//if there is a contour level with 2 segments (this is the maximum possible0 then we
+				//have a sadle point and multiple polygons the same shade 
+			}
+
+
+			intersections.resize(0);
+		}
+	}
+	
+
+	//render the contours
+	// 
+	//this is destructive - it moves segments from the segmentsPerLevel variable to the segments variable
+	std::vector<std::vector<Segment>> segments;
+	for (size_t i = 0; i < segmentsPerLevel.size(); ++i)
+	{
+		while (segmentsPerLevel[i].size() > 0)
+		{
+			segments.push_back(followContourBothDirections(segmentsPerLevel[i], shape[0], shape[1]));
+		}
+	}
+
+
 
 	//now work out where the contours cross each grid box edge
 	std::vector<double> xs;
