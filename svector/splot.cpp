@@ -1192,13 +1192,20 @@ void PlotAxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length dista
 
 void splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
-	pl->vpor(0.0, 1.0, 0.0, 1.0);
-	pl->wind(0.0, 1.0, 0.0, 1.0);
-	pl->sfci(m_style);
-	pl->schr(1.0, m_size * scale / 72.0 * 25.4);
-	pl->scol0a(1, m_colour.r() * 255.99999, m_colour.g() * 255.99999, m_colour.b() * 255.99999, m_colour.a());
-	pl->col0(1);
-	pl->ptex(m_xPosition, m_yPosition, 1, 0, m_alignment, sci::toUtf8(m_text).c_str());
+	//pl->vpor(0.0, 1.0, 0.0, 1.0);
+	//pl->wind(0.0, 1.0, 0.0, 1.0);
+	//pl->sfci(m_style);
+	//pl->schr(1.0, m_size * scale / 72.0 * 25.4);
+	//pl->scol0a(1, m_colour.r() * 255.99999, m_colour.g() * 255.99999, m_colour.b() * 255.99999, m_colour.a());
+	//pl->col0(1);
+	//pl->ptex(m_xPosition, m_yPosition, 1, 0, m_alignment, sci::toUtf8(m_text).c_str());
+}
+
+void splotLabel::draw(Renderer& renderer, grPerMillimetre scale)
+{
+	StatePusher statePusher(&renderer);
+	renderer.setFont(m_font);
+	renderer.formattedText(m_text, m_position, m_horizontalAlignment, m_verticalAlignment, m_rotation);
 }
 
 void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth, double pageHeight)

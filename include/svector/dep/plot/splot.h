@@ -779,27 +779,31 @@ private:
 class splotLabel : public DrawableItem
 {
 public:
-	splotLabel(sci::string text, double xPosition, double yPosition, double size = 12.0, double alignment = 0.0, sci::string font = sU(""), PLUNICODE style = 0, rgbcolour colour = rgbcolour(0.0, 0.0, 0.0))
-		:m_text(text), m_xPosition(xPosition), m_yPosition(yPosition), m_size(size), m_alignment(alignment), m_font(font), m_style(style), m_colour(colour)
+	splotLabel(sci::string text, Point position, grUnitless horizontalAlignment = grUnitless(0.0),
+		grUnitless verticalAlignment = grUnitless(0.0), Renderer::Font font = Renderer::Font(),
+		grDegree rotation = grDegree(0.0), Length minTextSize = grTextPoint(5.0))
+		:m_text(text), m_position(position), m_horizontalAlignment(horizontalAlignment),
+		m_verticalAlignment(verticalAlignment), m_font(font), m_rotation(rotation),
+		m_minTextSize(minTextSize)
 	{
 
 	}
 	virtual void preDraw() override
 	{};
 	virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight);
+	void draw(Renderer& renderer, grPerMillimetre scale) override;
 	virtual bool readyToDraw() const override
 	{
 		return true;
 	}
 private:
 	sci::string m_text;
-	double m_xPosition;
-	double m_yPosition;
-	double m_size;
-	double m_alignment;
-	sci::string m_font;
-	PLUNICODE m_style;
-	rgbcolour m_colour;
+	Point m_position;
+	Renderer::Font m_font;
+	grUnitless m_horizontalAlignment;
+	grUnitless m_verticalAlignment;
+	grDegree m_rotation;
+	Length m_minTextSize;
 };
 
 
