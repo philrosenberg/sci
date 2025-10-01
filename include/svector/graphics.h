@@ -1118,7 +1118,7 @@ public:
 			//m_penDashes.resize(0);
 			//m_penDashes.reserve(dashes.size());
 			for (size_t i=0; i<dashes.size(); ++i)
-				dashesCopy[i] = std::max(1.0, dashes[i].getLength(m_width, m_height, m_scale) / thickness.getLength(m_width, m_height, m_scale));
+				dashesCopy[i] = wxDash(std::max(1.0, dashes[i].getLength(m_width, m_height, m_scale) / thickness.getLength(m_width, m_height, m_scale)));
 				//dashesCopy[i] = dashes[i].getLength(m_width, m_height, m_scale);
 			pen.SetDashes(dashes.size(), dashesCopy);
 		}
@@ -1175,8 +1175,8 @@ public:
 		//these values are based on some tests on windows. I don't really know how good they are
 		//leading = descent * 0.32 + 1;
 		//descent = descent * 1.61 + 1;
-		wxPosition.x -= width * horizontalAlignment.value<grUnitless>();
-		wxPosition.y -= ascent * verticalAlignment.value<grUnitless>();
+		wxPosition.x -= int(width * horizontalAlignment.value<grUnitless>());
+		wxPosition.y -= int(ascent * verticalAlignment.value<grUnitless>());
 		m_dc->DrawText(wxStr, wxPosition);
 		return TextMetric(grMillimetre(grUnitless(width) / m_scale),
 			grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale),
@@ -1194,8 +1194,8 @@ public:
 		m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 		wxCoord ascent = ascentPlusDescent - descent;
 
-		wxPosition.x -= (width * horizontalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>();
-		wxPosition.y -= -(width * horizontalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>();
+		wxPosition.x -= int((width * horizontalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>());
+		wxPosition.y -= -int((width * horizontalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>());
 
 		m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<grDegree>());
 		return TextMetric(grMillimetre(grUnitless(width) / m_scale), grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale), grMillimetre(grUnitless(descent) / m_scale));
@@ -1279,15 +1279,15 @@ private:
 	};
 	wxPoint getWxPoint(const Point& point)
 	{
-		return wxPoint(point.getX(m_width, m_height, m_scale), point.getY(m_width, m_height, m_scale));
+		return wxPoint(int(point.getX(m_width, m_height, m_scale)), int(point.getY(m_width, m_height, m_scale)));
 	}
 	wxPoint getWxPoint(const Point& point, const Distance &distance)
 	{
 		double xStart = point.getX(m_width, m_height, m_scale);
 		double yStart = point.getY(m_width, m_height, m_scale);
 		
-		return wxPoint((xStart + distance.getX(m_width, m_height, m_scale)),
-			(yStart + distance.getY(m_width, m_height, m_scale)));
+		return wxPoint(int(xStart + distance.getX(m_width, m_height, m_scale)),
+			int(yStart + distance.getY(m_width, m_height, m_scale)));
 	}
 	wxSize getWxSize(const Distance& distance)
 	{
