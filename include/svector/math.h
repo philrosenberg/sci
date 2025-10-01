@@ -39,7 +39,7 @@ namespace sci
 	}
 
 	template<class T>
-	auto abs(const T &value)
+	T abs(const T &value)
 	{
 		return std::abs(value);
 	}
