@@ -589,12 +589,16 @@ struct ExponentTraits<VALUE>\
 			return value * root(pow10<num / gcd, VALUE_TYPE>(), den / gcd);
 		}
 
-		//This is the basic class that represents a unit. It takes two templated parameters
-		//The first is the powers. This is an encoded 64 bit number where the first byte is
-		//the power in the first dimension, the second byte is the power in the second
-		//dimension, etc.
-		//The second is the exponent the unit would have ONCE THE POWER HAS BEEN MULTIPLIED OUT.
-		//For example for a millimetre it would be -3, for a millimetre squared it would be -6, etc
+		//This is the basic class that represents a unit. It takes four templated parameters
+		//The first two are the integer numerator and denominator of the power the unit is
+		//raised to. Thse numbers are encoded so that each 8 bits represents one dimension.
+		//So for a millimetre the length dimension bytes would be 1 and 1, for a millimetre squared they
+		//would be 2 and 1. For a millimetre cubed then square rooted they would be 3 and 2.
+		//is the powers.
+		//The second two are the integre of the numerator and denominator of the exponent the
+		//unit has would have ONCE THE DIMENSIONS AND POWERS ARE MULTIPLIED OUT.
+		//For example for a millimetre it would be -3 and 1, for a millimetre squared it would
+		//be -6 and 1, for a millimetre square rooted they would be -3 and 2.
 		template<uint64_t BASE_POWERS_NUMERATORS, uint64_t BASE_POWERS_DENOMINATORS, int64_t EXPONENT_NUMERATOR, int64_t EXPONENT_DENOMINATOR, bool NEEDS_SCALING>
 		struct EncodedUnit
 		{
@@ -604,7 +608,7 @@ struct ExponentTraits<VALUE>\
 			static constexpr int64_t exponentNumerator = EXPONENT_NUMERATOR;
 			static constexpr int64_t exponentDenominator = EXPONENT_DENOMINATOR;
 			typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling> unit;
-			typedef unit baseClass;
+			typedef unit baseUnit;
 
 			template<class VALUE_TYPE>
 			struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
@@ -667,7 +671,7 @@ struct ExponentTraits<VALUE>\
 		t.basePowersDenominators;
 		t.exponentNumerator;
 		t.exponentDenominator;
-		typename T::baseClass;
+		typename T::baseUnit;
 		typename T::unit;
 		typename T::template Converter<double>;
 		t.isUnitless();
@@ -701,8 +705,14 @@ struct ExponentTraits<VALUE>\
 	struct PoweredUnit : public unitsPrivate::EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling>
 	{
 		static constexpr bool needsScaling = ENCODEDUNIT::needsScaling;
+		typedef unitsPrivate::EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator* POW_NUMERATOR, ENCODEDUNIT::exponentDenominator* POW_DENOMINATOR, ENCODEDUNIT::needsScaling> encodedUnitClass;
+		static constexpr uint64_t basePowersNumerators = encodedUnitClass::basePowersNumerators;
+		static constexpr uint64_t basePowersDenominators = encodedUnitClass::basePowersDenominators;
+		static constexpr int64_t exponentNumerator = encodedUnitClass::exponentNumerator;
+		static constexpr int64_t exponentDenominator = encodedUnitClass::exponentDenominator;
 		typedef PoweredUnit< ENCODEDUNIT, POW_NUMERATOR, POW_DENOMINATOR> unit;
-		typedef unitsPrivate::EncodedUnit<unitsPrivate::powPowers<ENCODEDUNIT::basePowersNumerators, POW_NUMERATOR>(), unitsPrivate::powPowers<ENCODEDUNIT::basePowersDenominators, POW_DENOMINATOR>(), ENCODEDUNIT::exponentNumerator * POW_NUMERATOR, ENCODEDUNIT::exponentDenominator * POW_DENOMINATOR, ENCODEDUNIT::needsScaling> encodedUnitClass;
+		typedef unit baseUnit;
+
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
 		{
@@ -741,7 +751,7 @@ struct ExponentTraits<VALUE>\
 				//convert the value to the base type, we cascade the conversion down to the unit we are raising to the power,
 				//then apply the power
 				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE multiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseClass>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator),POW_DENOMINATOR / maxCommonDenominator);
+				constexpr VALUE_TYPE multiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT::baseUnit>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator),POW_DENOMINATOR / maxCommonDenominator);
 				VALUE_TYPE baseValue = value * multiplier;
 				//now convert from the base unit to the destination unit, with the different exponents.
 				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponentNumerator, encodedUnitClass::exponentDenominator>(baseValue);
@@ -751,10 +761,20 @@ struct ExponentTraits<VALUE>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)
 			{
 				//cascade the conversion down to the unit we are raising to the power, then apply the power
+				//we need to find the scale that is not the exponent and raise it to the correct power, then apply the different exponent separately
+				//so use the encoded unit's own exponent to get a scale multiplier
 				constexpr int8_t maxCommonDenominator = unitsPrivate::greatestCommonDenominator8<POW_NUMERATOR, POW_DENOMINATOR>();
-				constexpr VALUE_TYPE scaleMultiplier = unitsPrivate::root(unitsPrivate::pow(ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>(VALUE_TYPE(1.0)), POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
-
-				return value * scaleMultiplier;
+				constexpr int64_t subExponentNumerator = ENCODEDUNIT::exponentNumerator;
+				constexpr int64_t subExponentDenominator = ENCODEDUNIT::exponentDenominator;
+				constexpr VALUE_TYPE scaleMultiplierNoPowerApplied = ENCODEDUNIT::template Converter<VALUE_TYPE>::template convertFromBase<subExponentNumerator, exponentDenominator>(VALUE_TYPE(1.0));
+				constexpr VALUE_TYPE scaleMultiplierWithPowerApplied = unitsPrivate::root(unitsPrivate::pow(scaleMultiplierNoPowerApplied, POW_NUMERATOR / maxCommonDenominator), POW_DENOMINATOR / maxCommonDenominator);
+				
+				//now apply the scale multiplier and the exponent
+				constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * exponentDenominator - exponentNumerator * BASE_EXPONENT_DENOMINATOR;
+				constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * exponentDenominator;
+				if constexpr (NUM % DEN == 0)
+					return value * scaleMultiplierWithPowerApplied * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>();
+				return value * scaleMultiplierWithPowerApplied * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
 			}
 		};
 	};
@@ -772,9 +792,14 @@ struct ExponentTraits<VALUE>\
 	struct MultipliedUnit : public unitsPrivate::EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator*ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator*ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling>
 	{
 		static constexpr bool needsScaling = ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling;
-		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
 		typedef unitsPrivate::EncodedUnit<unitsPrivate::multiplyPowersNumerator<ENCODEDUNIT1::basePowersNumerators, ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersNumerators, ENCODEDUNIT2::basePowersDenominators>(), unitsPrivate::multiplyPowersDenominator<ENCODEDUNIT1::basePowersDenominators, ENCODEDUNIT2::basePowersDenominators>(), ENCODEDUNIT1::exponentNumerator* ENCODEDUNIT2::exponentDenominator + ENCODEDUNIT2::exponentNumerator * ENCODEDUNIT1::exponentDenominator, ENCODEDUNIT1::exponentDenominator* ENCODEDUNIT2::exponentDenominator, ENCODEDUNIT1::needsScaling || ENCODEDUNIT2::needsScaling> encodedUnitClass;
-		typedef MultipliedUnit<typename ENCODEDUNIT1::baseClass, typename ENCODEDUNIT2::baseClass> baseClass;
+		static constexpr uint64_t basePowersNumerators = encodedUnitClass::basePowersNumerators;
+		static constexpr uint64_t basePowersDenominators = encodedUnitClass::basePowersDenominators;
+		static constexpr int64_t exponentNumerator = encodedUnitClass::exponentNumerator;
+		static constexpr int64_t exponentDenominator = encodedUnitClass::exponentDenominator;
+		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
+		typedef MultipliedUnit<typename ENCODEDUNIT1::baseUnit, typename ENCODEDUNIT2::baseUnit> baseUnit;
+
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
@@ -815,8 +840,8 @@ struct ExponentTraits<VALUE>\
 				//
 				//convert the value to the base type, we cascade the conversion down to the units we are
 				//multiplying, then apply this to the value
-				constexpr VALUE_TYPE multiplier1 = ENCODEDUNIT1:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT1::baseClass>(VALUE_TYPE(1.0));
-				constexpr VALUE_TYPE multiplier2 = ENCODEDUNIT2:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT2::baseClass>(VALUE_TYPE(1.0));
+				constexpr VALUE_TYPE multiplier1 = ENCODEDUNIT1:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT1::baseUnit>(VALUE_TYPE(1.0));
+				constexpr VALUE_TYPE multiplier2 = ENCODEDUNIT2:: template Converter<VALUE_TYPE>::template convertTo<typename ENCODEDUNIT2::baseUnit>(VALUE_TYPE(1.0));
 				VALUE_TYPE baseValue = value * multiplier1 * multiplier2;
 				//now convert from the base unit to the destination unit, with the different exponents.
 				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<encodedUnitClass::exponentNumerator, encodedUnitClass::exponentDenominator>(baseValue);
@@ -1335,13 +1360,13 @@ struct ExponentTraits<VALUE>\
 	class CLASS_NAME\
 	{\
 	public:\
-		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseClass;\
+		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseUnit;\
 		typedef CLASS_NAME< POWER, EXPONENT > unit;\
 		static constexpr bool needsScaling = true;\
-		static constexpr uint64_t basePowersNumerators = baseClass::basePowersNumerators;\
-		static constexpr uint64_t basePowersDenominators = baseClass::basePowersDenominators;\
-		static constexpr int64_t baseExponentNumerator = baseClass::exponentNumerator;\
-		static constexpr int64_t baseExponentDenominator = baseClass::exponentDenominator;\
+		static constexpr uint64_t basePowersNumerators = baseUnit::basePowersNumerators;\
+		static constexpr uint64_t basePowersDenominators = baseUnit::basePowersDenominators;\
+		static constexpr int64_t baseExponentNumerator = baseUnit::exponentNumerator;\
+		static constexpr int64_t baseExponentDenominator = baseUnit::exponentDenominator;\
 		static constexpr int64_t exponentNumerator = EXPONENT;\
 		static constexpr int64_t exponentDenominator = 1;\
 		static constexpr int8_t power = POWER;\
@@ -1354,9 +1379,9 @@ struct ExponentTraits<VALUE>\
 				static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");\
 				if (std::is_same<DESTINATION_UNIT, unit>::value)\
 					return value;\
-				if (std::is_same<DESTINATION_UNIT, baseClass>::value)\
+				if (std::is_same<DESTINATION_UNIT, baseUnit>::value)\
 					return value * VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
-				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<baseExponentNumerator, baseExponentDenominator>(convertTo<baseClass>(value));\
+				return DESTINATION_UNIT::template Converter<VALUE_TYPE>::template convertFromBase<baseExponentNumerator, baseExponentDenominator>(convertTo<baseUnit>(value));\
 			}\
 			template <int64_t BASE_EXPONENT_NUMERATOR, int64_t BASE_EXPONENT_DENOMINATOR>\
 			static constexpr VALUE_TYPE convertFromBase(VALUE_TYPE value)\

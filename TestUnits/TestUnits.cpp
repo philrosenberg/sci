@@ -6,6 +6,7 @@
 typedef sci::Physical<sci::Metre<>, double> dMetre;
 typedef sci::Physical<sci::Second<>, double> dSecond;
 typedef sci::Physical<sci::Metre<1, -2>, double> dCentimetre;
+typedef sci::Physical<sci::Metre<2, -2>, double> dCentimetreSquared;
 typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
 typedef sci::Physical<sci::Metre<1, 6>, double> dMegaMetre;
 typedef sci::Physical< sci::PoweredUnit<sci::Metre<>,2>, double> dMetreSquared;
@@ -23,6 +24,7 @@ typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double
 typedef sci::Physical < sci::Gram<>, double> dGram;
 typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
 typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
+typedef sci::Physical<sci::Inch<>, double> dInch;
 
 #include<array>
 template<int ...INTS>
@@ -61,28 +63,55 @@ int main()
 	static_assert(std::is_standard_layout_v<dMetre> && std::is_trivial_v<dMetre>, "sci::Physicals should be pod");
 
 
-	bool isPhysMetre = sci::is_physical_v<dMetre>;
-	bool isPhysDouble = sci::is_physical_v<double>;
-	bool isUnitdMetre = sci::is_unit<dMetre>::value;
-	bool isUnitMetre = sci::is_unit<sci::Metre<>>::value;
-	auto shouldBeUnitlessPhysical = dMetre(5) / dMetre(2);
-	bool isUnitlessWhenShouldBe = sci::is_unitless_physical_v<decltype(shouldBeUnitlessPhysical)>;
-	bool isUnitlessWhenShouldBe2 = sci::is_unitless_physical_v<decltype(dMetre(5) / dMetre(2))>;
+	static_assert(sci::is_physical_v<dMetre>); //dMetre is a physical
+	static_assert(!sci::is_physical_v<double>); //double is not a physical
+	static_assert(!sci::is_unit<dMetre>::value); //dMetre is not a unit
+	static_assert(sci::is_unit<sci::Metre<>>::value); //sci::Metre is a unit
+	constexpr auto shouldBeUnitlessPhysical = dMetre(4) / dMetre(2);
+	static_assert(shouldBeUnitlessPhysical == dUnitless(2)); // 4 metres / 2 metres = 2 
+	static_assert(sci::is_unitless_physical_v<decltype(shouldBeUnitlessPhysical)>); // metre/metre is a unitless
+	static_assert(sci::is_unitless_physical_v<decltype(dMetre(5) / dMetre(2))>); //metre/ metre is a unitless
 
-	sci::pow(shouldBeUnitlessPhysical, shouldBeUnitlessPhysical);
-
-	std::wcout << "sci::is_physical_v<dMetre> = " << isPhysMetre << "\n";
-	std::wcout << "sci::is_physical_v<double> = " << isPhysDouble << "\n";
-	std::wcout << "sci::is_unit_v<dMetre> = " << isUnitdMetre << "\n";
-	std::wcout << "sci::is_unit_v<sci::Metre<>> = " << isUnitMetre << "\n";
+	sci::pow(shouldBeUnitlessPhysical, shouldBeUnitlessPhysical);//a unitless to the power of unitless compiles
 
 
 
-	bool is2Valid = sci::ExponentTraits<2>::validSi;
-	bool is4Valid = sci::ExponentTraits<4>::validSi;
+
+	static_assert(sci::ExponentTraits<2>::validSi); //2 is a valid SI exponent "hecto"
+	static_assert(sci::ExponentTraits<-2>::validSi); //-2 is a valid SI exponent "centi"
+	static_assert(sci::ExponentTraits<3>::validSi); //3 is a valid SI exponent "Mega"
+	static_assert(sci::ExponentTraits<-3>::validSi); //-3 is a valid SI exponent "milli"
+	static_assert(sci::ExponentTraits<6>::validSi); //6 is a valid SI exponent
+	static_assert(sci::ExponentTraits<-6>::validSi); //-6 is a valid SI exponent
+	static_assert(sci::ExponentTraits<9>::validSi); //9 is a valid SI exponent
+	static_assert(sci::ExponentTraits<-9>::validSi); //-9 is a valid SI exponent
+	static_assert(sci::ExponentTraits<12>::validSi); //12 is a valid SI exponent
+	static_assert(sci::ExponentTraits<-12>::validSi); //-12 is a valid SI exponent
+	static_assert(sci::ExponentTraits<15>::validSi); //15 is a valid SI exponent
+	static_assert(sci::ExponentTraits<-15>::validSi); //-15 is a valid SI exponent
+	static_assert(!sci::ExponentTraits<4>::validSi); //4 is not a valid SI exponent
+
 	std::string milliString = sci::ExponentTraits<-3>::getName<std::string>();
 	//std::string invalidString = sci::ExponentTraits<4>::getName<std::string>(); //should generate error
 	//int invalidString2 = sci::ExponentTraits<-3>::getName<int>(); //should generate error
+
+
+	//Check conversion between units with powers and divides
+	using shouldBeMegaMetre = decltype(sci::pow<2>(dMegaMetre()) / dMegaMetre());
+	static_assert(dMegaMetre(1.0).value<shouldBeMegaMetre>() == 1.0);
+	static_assert((dMegaMetre(1.0)*dMegaMetre(1.0)).value<decltype(sci::pow<2>(dMegaMetre()))>() == 1.0);
+	static_assert(dMegaMetre::unit::exponentNumerator == 6);
+	static_assert(shouldBeMegaMetre::unit::exponentNumerator == 6);
+
+	//check conversion between scaled units
+	dInch inch(1);
+	dCentimetre anInchInCm = inch;
+	dCentimetreSquared aSquareInchInSquareCm = sci::pow<2>(inch);
+
+
+	using MMConverter = typename dMegaMetre::unit::template Converter<double>;
+	auto shouldBeOne = MMConverter::template convertTo<typename shouldBeMegaMetre::unit>(1.0);
+
 
 	dGram weight1(1);
 	dKilogram weight2 = weight1;
@@ -248,6 +277,9 @@ int main()
 	std::cout << length2.getShortUnitString<std::string>() << " " << length2.getLongUnitString<std::string>() << "\n";
 	std::wcout << length2.getShortUnitString<std::wstring>() << " " << length2.getLongUnitString<std::wstring>() << "\n";
 	std::cout << "Mm megametre\n\n";
+
+	std::cout << "power test - length2^2/length2-length2 =" << sci::pow<2>(length2) / length2 - length2 << "\n";
+	std::cout << "The above should be zero\n\n";
 
 	dMetre expectedSumLengthMetre(100001.0);
 	dMegaMetre expectedSumLengthMegaMetre(0.100001);
