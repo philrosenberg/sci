@@ -107,6 +107,8 @@ int main()
 	dInch inch(1);
 	dCentimetre anInchInCm = inch;
 	dCentimetreSquared aSquareInchInSquareCm = sci::pow<2>(inch);
+	auto shouldBeOneAgain = (inch / inch);
+	shouldBeOneAgain.value<dUnitless>();
 
 
 	using MMConverter = typename dMegaMetre::unit::template Converter<double>;

@@ -711,7 +711,7 @@ struct ExponentTraits<VALUE>\
 		static constexpr int64_t exponentNumerator = encodedUnitClass::exponentNumerator;
 		static constexpr int64_t exponentDenominator = encodedUnitClass::exponentDenominator;
 		typedef PoweredUnit< ENCODEDUNIT, POW_NUMERATOR, POW_DENOMINATOR> unit;
-		typedef unit baseUnit;
+		typedef PoweredUnit<typename ENCODEDUNIT::baseUnit, POW_NUMERATOR, POW_DENOMINATOR> baseUnit;
 
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
