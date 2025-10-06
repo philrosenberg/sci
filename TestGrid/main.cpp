@@ -1,6 +1,6 @@
 #include"../include/svector/gridview.h"
-#include"../include/svector/gridtupleview.h"
-#include"../include/svector/array.h"
+#include"../include/svector/gridtransformview.h"
+#include"../include/svector/grid.h"
 #include<iostream>
 
 #include<vector>

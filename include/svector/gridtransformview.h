@@ -1,5 +1,5 @@
-#ifndef SCI_GRIDTUPLEVIEW_H
-#define SCI_GRIDTUPLEVIEW_H
+#ifndef SCI_GRIDTRANSFORM_H
+#define SCI_GRIDTRANSFORM_H
 
 #include"gridview.h"
 #include<tuple>
@@ -414,14 +414,14 @@ namespace sci
 	auto make_gridtransform_view(const GRID1& grid1)
 	{
 		uint8_t grid2(0);
-		return make_gridpairtransform_view<decltype(discardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>), discardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
+		return make_gridpairtransform_view<discardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
 	}
 
 	template<auto TRANSFORM, IsGrid GRID1>
 	auto make_ncgridtransform_view(GRID1& grid1)
 	{
 		uint8_t grid2(0);
-		return make_ncgridpairtransform_view<decltype(ncDiscardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>), ncDiscardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
+		return make_ncgridpairtransform_view<ncDiscardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
 	}
 
 	template<size_t NDIMS>
@@ -768,7 +768,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return bit_or(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -779,14 +779,14 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return bit_and(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T>
 	auto operator~(const T& a) requires(bool(IsGrid<T>))
 	{
 		auto transform = [](const typename T::value_type& x) { return bit_not(x); };
-		return make_gridpairtransform_view<decltype(transform), transform>(a);
+		return make_gridpairtransform_view<transform>(a);
 	}
 	
 	template<class T, class U>
@@ -797,7 +797,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return bit_xor(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	namespace internalGridTransform
@@ -810,9 +810,33 @@ namespace sci
 		//referencing them, but this cause a heap space error in the compiler
 
 		template<class T>
+		auto log10(const T& t)
+		{
+			return sci::log10(t);
+		}
+
+		template<class T>
+		auto sqrt(const T& t)
+		{
+			return sci::sqrt(t);
+		}
+
+		template<class T>
 		auto abs(const T& t)
 		{
 			return sci::abs(t);
+		}
+
+		template<int POW, class T>
+		auto pow(const T& t)
+		{
+			return sci::pow<POW>(t);
+		}
+
+		template<int ROOT, class T>
+		auto root(const T& base)
+		{
+			return sci::root<ROOT>(base);
 		}
 
 		template<class T, class U>
@@ -820,37 +844,42 @@ namespace sci
 		{
 			return sci::pow(t, u);
 		}
+
+		template<class T>
+		auto erf(const T& value)
+		{
+			return sci::erf(value);
+		}
 	}
 	
 	template<IsGrid T>
 	auto log10(const T& a)
 	{
-		return make_gridtransform_view<decltype(sci::log10<typename T::value_type>), sci::log10<typename T::value_type>>(a);
+		return make_gridtransform_view<sci::internalGridTransform::log10<typename T::value_type>>(a);
 	}
 
 	template<IsGrid T>
 	auto sqrt(const T& a)
 	{
-		return make_gridtransform_view<decltype(sci::sqrt<typename T::value_type>), sci::sqrt<typename T::value_type>>(a);
+		return make_gridtransform_view<sci::internalGridTransform::sqrt<typename T::value_type>>(a);
 	}
-
 
 	template<IsGrid T>
 	auto abs(const T& a)
 	{
-		auto internalAbs = [](const typename T::value_type& v)
-		{
-			return sci::abs(v);
-		};
-		//return make_gridtransform_view<decltype(sci::upperAbs<typename T::value_type>), sci::upperAbs<typename T::value_type>>(a);
-		//return make_gridtransform_view<decltype(internalAbs), internalAbs>(a);
-		return make_gridtransform_view<decltype(internalGridTransform::abs<typename T::value_type>), internalGridTransform::abs<typename T::value_type>>(a);
+		return make_gridtransform_view<internalGridTransform::abs<typename T::value_type>>(a);
 	}
 
 	template<int POW, IsGrid T>
 	auto pow(const T& a)
 	{
-		return make_gridtransform_view<decltype(sci::pow<POW, typename T::value_type>), sci::pow<POW, typename T::value_type>>(a);
+		return make_gridtransform_view<sci::internalGridTransform::pow<POW, typename T::value_type>>(a);
+	}
+
+	template<int ROOT, IsGrid T>
+	auto root(const T& a)
+	{
+		return make_gridtransform_view<sci::internalGridTransform::root<ROOT, typename T::value_type>>(a);
 	}
 
 	template<IsGrid T, IsGrid U>
@@ -860,7 +889,13 @@ namespace sci
 		auto sv = getGridView(s);
 		using TV = decltype(av);
 		using UV = decltype(sv);
-		return make_gridpairtransform_view<decltype(internalGridTransform::pow<typename TV::value_type, typename UV::value_type>), internalGridTransform::pow<typename TV::value_type, typename UV::value_type>>(av, sv);
+		return make_gridpairtransform_view<internalGridTransform::pow<typename TV::value_type, typename UV::value_type>>(av, sv);
+	}
+
+	template<IsGrid T>
+	auto erf(const T& value)
+	{
+		return make_gridtransform_view<internalGridTransform::erf<typename T::value_type>>(value);
 	}
 }
 

@@ -20,7 +20,8 @@
 #include"../../serr.h"
 //#include"../../svector.h"
 #include"../../graphics.h"
-#include<svector/array.h>
+#include<svector/grid.h>
+#include<svector/gridtransformview.h>
 #include<algorithm>
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS

@@ -159,8 +159,8 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr<ContourData> contour3(new ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
 	std::shared_ptr<ContourData> contour4(new ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
-	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22)), Length(grUnitless(0.03), Length::Scale::yDirection), Length(limits[4]-limits[0], Length::Scale::xDirection), colourScaleDiscrete, PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
-	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22 - 0.09)), Length(grUnitless(0.03), Length::Scale::yDirection), Length(limits[4] - limits[0], Length::Scale::xDirection), colourScaleContinuous, PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
+	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22)), Point(limits[4], grUnitless(0.25)), colourScaleDiscrete, PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
+	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22 - 0.09)),Point(limits[4], grUnitless(0.25-0.09)), colourScaleContinuous, PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
 	
 	canvas->addItem(box);
 	canvas->addItem(grid1);
@@ -449,9 +449,9 @@ void RectangleTestPanel::OnPaint(wxPaintEvent& event)
 	renderer.line(p8, p5);
 
 	Point p9 = Point(grUnitless(0.7), grUnitless(0.1));
-	Point p10 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0), grUnitless(0.5), GraphicsVector::Scale::xDirection);
-	Point p11 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0.5), GraphicsVector::Scale::xDirection);
-	Point p12 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0), GraphicsVector::Scale::xDirection);
+	Point p10 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0), grUnitless(0.5), Point::ScaleDirection::xDirection);
+	Point p11 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0.5), Point::ScaleDirection::xDirection);
+	Point p12 = Point(grUnitless(0.7), grUnitless(0.1)) + Distance(grUnitless(0.2), grUnitless(0), Point::ScaleDirection::xDirection);
 
 	renderer.line(p9, p10);
 	renderer.line(p10, p11);

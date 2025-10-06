@@ -773,6 +773,5 @@ namespace sci
 		return to_address(static_cast<base_type>(iter));
 	}
 }*/
-#include"gridtupleview.h"
 
 #endif

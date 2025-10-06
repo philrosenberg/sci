@@ -221,7 +221,7 @@
     <ClInclude Include="eigeneng\eigeneng.h">
       <Filter>Header Files\eigeneng</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\array.h">
+    <ClInclude Include="..\include\svector\grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\controls.h">
@@ -233,7 +233,7 @@
     <ClInclude Include="..\include\svector\gridview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\gridtupleview.h">
+    <ClInclude Include="..\include\svector\gridtransformview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\Spectral.h">

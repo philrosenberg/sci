@@ -2,8 +2,8 @@
 #define SCI_MINIMISER2_H
 
 #include<assert.h>
-#include"array.h"
-#include"ArrayManipulation.h"
+#include"grid.h"
+#include"gridtransformview.h"
 //#include<svector/svector.h>
 /*
 //minimiser must be a functor that accepts fitParams and returns the value to minimise

@@ -352,7 +352,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\algorithm.h" />
     <ClInclude Include="..\include\svector\apexWorkspace.h" />
-    <ClInclude Include="..\include\svector\array.h" />
+    <ClInclude Include="..\include\svector\grid.h" />
     <ClInclude Include="..\include\svector\ArrayManipulation.h" />
     <ClInclude Include="..\include\svector\controls.h" />
     <ClInclude Include="..\include\svector\dep\nc.h" />
@@ -365,7 +365,7 @@
     <ClInclude Include="..\include\svector\dep\svector.h" />
     <ClInclude Include="..\include\svector\dep\windows.h" />
     <ClInclude Include="..\include\svector\graphics.h" />
-    <ClInclude Include="..\include\svector\gridtupleview.h" />
+    <ClInclude Include="..\include\svector\gridtransformview.h" />
     <ClInclude Include="..\include\svector\gridview.h" />
     <ClInclude Include="..\include\svector\kdTree.h" />
     <ClInclude Include="..\include\svector\LinearAlgebra.h" />
