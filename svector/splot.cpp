@@ -791,7 +791,13 @@ sci::GridData<double, 1> splotlevelscale::getLevels() const
 {
 	sci::GridData<double, 1> result;
 	if (isLog())
-		result = sci::pow(10.0, getLogMin() + m_logValue * (getLogMax() - getLogMin()));
+	{
+		//result = sci::pow(10.0, getLogMin() + m_logValue * (getLogMax() - getLogMin())); //this should work but doesn't so do it manually
+		result.reshape(m_logValue.shape());
+		auto logValueIter = m_logValue.begin();
+		for (auto resultIter = result.begin(); resultIter != result.end(); ++resultIter, ++logValueIter)
+			*resultIter = sci::pow(10.0, getLogMin() + *logValueIter * (getLogMax() - getLogMin()));
+	}
 	else
 		result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
 	return result;

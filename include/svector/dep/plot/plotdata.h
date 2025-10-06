@@ -105,7 +105,7 @@ public:
 	void setupFillStyle( plstream *pl, PLINT colourIndex, double scale ) const;
 	void resetFillStyle(plstream *pl, PLINT colourIndex) const;
 	rgbcolour getColour() const;
-	void setBrush(Renderer& renderer)
+	void setBrush(Renderer& renderer) const
 	{
 		renderer.setBrush(m_colour);
 	}
@@ -371,6 +371,7 @@ class FillData : public UnstructuredData
 public:
 	FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr);
 	void plotData(plstream* pl, double scale) const override;
+	void plotData(Renderer& renderer, grPerMillimetre scale) const override;
 private:
 	FillStyle m_fillStyle;
 	LineStyle m_lineStyle;

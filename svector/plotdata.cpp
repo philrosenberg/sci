@@ -247,10 +247,10 @@ SymbolBase::SymbolBase( sci::string symbol, PLUNICODE fci )
 }
 
 SymbolBase::SymbolBase(const std::vector<Distance>& symbol)
+	:m_symbol(symbol)
 {
 	m_symbolText = sU(" ");
 	m_fci = 0;
-	m_symbol = symbol;
 }
 
 sci::string SymbolBase::getSymbol() const
@@ -271,6 +271,19 @@ void SymbolBase::draw(const Point& point, Renderer& renderer) const
 	renderer.polygon(points);
 }
 
+Symbol::Symbol()
+	:SymbolBase(std::vector<Distance>{
+		Distance(grMillimetre(-1.0), grMillimetre(-1.0)),
+		Distance(grMillimetre(1.0), grMillimetre(-1.0)),
+		Distance(grMillimetre(1.0), grMillimetre(1.0)),
+		Distance(grMillimetre(-1.0), grMillimetre(1.0)),
+		Distance(grMillimetre(-1.0), grMillimetre(-1.0)) })
+{
+	m_size = 1.0;
+	m_colour = rgbcolour(0, 0, 0, 1.0);
+}
+
+
 Symbol::Symbol(sci::string symbol, double size, rgbcolour colour)
 	: SymbolBase(symbol, 0)
 {
@@ -278,8 +291,8 @@ Symbol::Symbol(sci::string symbol, double size, rgbcolour colour)
 	m_colour = colour;
 }
 
-Symbol::Symbol(const std::vector<Distance> &symbol, rgbcolour colour)
-	: SymbolBase( symbol)
+Symbol::Symbol(const std::span<Distance> &symbol, rgbcolour colour)
+	: SymbolBase( std::vector<Distance>(std::begin(symbol), std::end(symbol)))
 {
 	m_size = 1.0;
 	m_colour = colour;
@@ -746,7 +759,7 @@ void VerticalBars::plotData( plstream *pl, double scale) const
 }
 
 FillData::FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const FillStyle& fillStyle, const LineStyle& outlineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ &xs, &ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 {
 
 }
@@ -767,6 +780,22 @@ void FillData::plotData(plstream* pl, double scale) const
 	pl->fill(getNPoints(), x, y);
 
 	m_fillStyle.resetFillStyle(pl, 1); //just so we don't have residually selected hatching patterns
+}
+
+void FillData::plotData(Renderer& renderer, grPerMillimetre scale) const
+{
+	if (!hasData())
+		return;
+	m_lineStyle.setPen(renderer);
+	m_fillStyle.setBrush(renderer);
+
+	std::vector<Point> points(getNPoints());
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		points[i] = getPoint(getPointer(0)[i], getPointer(1)[i]);
+	}
+
+	renderer.polygon(points);
 }
 
 

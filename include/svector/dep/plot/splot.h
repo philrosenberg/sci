@@ -820,6 +820,23 @@ public:
 	{
 		m_drawableItems.push_back(item);
 	}
+	void addItem(std::shared_ptr<DrawableItem> item, size_t index)
+	{
+		if (m_drawableItems.size() > index)
+			m_drawableItems.insert(m_drawableItems.begin() + index, item);
+		m_drawableItems.push_back(item);
+	}
+	size_t getItemIndex(std::shared_ptr<DrawableItem> item)
+	{
+		for (auto i = m_drawableItems.begin(); i != m_drawableItems.end(); ++i)
+		{
+			if (*i == item)
+			{
+				return i - m_drawableItems.begin();
+			}
+		}
+		return size_t(-1);
+	}
 	void removeItem(std::shared_ptr<DrawableItem> item)
 	{
 		for (auto i = m_drawableItems.begin(); i != m_drawableItems.end(); ++i)
@@ -831,30 +848,69 @@ public:
 			}
 		}
 	}
+	bool swapItem(std::shared_ptr<DrawableItem> oldItem, std::shared_ptr<DrawableItem> newItem)
+	{
+		for (auto i = m_drawableItems.begin(); i != m_drawableItems.end(); ++i)
+		{
+			if (*i == oldItem)
+			{
+				*i = newItem;
+				return true;
+			}
+		}
+		return false;
+	}
 	void render(wxDC *dc, int width, int height, double linewidthmultiplier);
 	void render(Renderer& renderer, grPerMillimetre scale)
 	{
+		//remove any items we wish to skip
+		std::vector<std::shared_ptr<DrawableItem>> itemsToRender;
+		for (auto& d : m_drawableItems)
+		{
+			bool render = true;
+			for (auto& p : m_itemsToSkipNextRendering)
+				if (p == d)
+					render = false;
+			if (render)
+				itemsToRender.push_back(d);
+		}
+
 		//cycle through all the Drawable Items ensuring they are ready to draw
-		//note this may need calling multiple times are predraw on one item may
+		//note this may need calling multiple times as predraw on one item may
 		//invalidate the predraw on another item
 		bool ready = false;
 		do
 		{
-			for (auto& d : m_drawableItems)
+			for (auto& d : itemsToRender)
+			{
 				if (!d->readyToDraw())
 					d->preDraw();
+			}
 			ready = true;
-			for (auto& d : m_drawableItems)
+			for (auto& d : itemsToRender)
+			{
 				ready = ready && d->readyToDraw();
+			}
 		} while (!ready);
 
 		//draw the Drawable Items
-		for (auto& d : m_drawableItems)
+		for (auto& d : itemsToRender)
+		{
 			d->draw(renderer, scale);
+		}
+
+		//clear the items to skip
+		m_itemsToSkipNextRendering.resize(0);
 	}
 	bool writetofile(sci::string filename, int width, int height, grPerMillimetre scale);
+	void skipNextRenderingOf(std::shared_ptr<DrawableItem> item)
+	{
+		m_itemsToSkipNextRendering.push_back(item);
+	}
 private:
 	std::vector<std::shared_ptr<DrawableItem>> m_drawableItems;
+	std::vector<std::shared_ptr<DrawableItem>> m_itemsToSkipNextRendering;
+	wxSize m_previousSize;
 
 };
 

@@ -75,17 +75,22 @@ public:
 	double m_a;
 };
 
+//a length is a scalar, it's primary use is as the x and y components of GraphicsVector or where an item needs a size with no direction
+//It is a combination of an absolute distance represented internally as a sci::Physical with a length dimension
+//plus a value that is a fraction of the page width, plus a value that is a fraction of the page length.
+//In this way you can create a length that has a fixed size no matter how the page scales, or that scales
+//with the page width or the page height
 class Length
 {
 public:
-	enum Scale
+	enum ScaleDirection
 	{
 		xDirection,
 		yDirection
 	};
-	constexpr Length(grUnitless length, Scale scale)
+	constexpr Length(grUnitless length, ScaleDirection scaleDirection)
 	{
-		set(length, scale);
+		set(length, scaleDirection);
 	}
 	constexpr Length(grMillimetre length)
 	{
@@ -103,14 +108,15 @@ public:
 	}
 	constexpr Length(const Length&) = default;
 	constexpr Length& operator=(const Length&) = default;
-	constexpr void set(grUnitless x, Scale scale)
+	constexpr Length(Length&& other) = default;
+	constexpr void set(grUnitless x, ScaleDirection scaleDirection)
 	{
 		m_absolute = grMillimetre(0);
 		m_lengthOverWidth = grUnitless(0);
 		m_lengthOverHeight = grUnitless(0);
-		if (Scale::xDirection == scale)
+		if (ScaleDirection::xDirection == scaleDirection)
 			m_lengthOverWidth = x;
-		if (Scale::yDirection == scale)
+		if (ScaleDirection::yDirection == scaleDirection)
 			m_lengthOverHeight = x;
 	}
 	constexpr void set(grMillimetre length)
@@ -124,6 +130,7 @@ public:
 	{
 		return (m_absolute * scale + m_lengthOverWidth * grUnitless(width) + m_lengthOverHeight * grUnitless(height)).value<grUnitless>();
 	}
+	//returns the length in abslute coordinates
 	constexpr grMillimetre getLength(grMillimetre width, grMillimetre height) const
 	{
 		return m_absolute + m_lengthOverWidth * width + m_lengthOverHeight * height;
@@ -209,19 +216,27 @@ private:
 	grUnitless m_lengthOverHeight;
 };
 
+//a useful constant for zero length
 const Length zeroLength(grMillimetre(0));
 
-
+//This class is a 2D vector with a Length in the x and y direction
+//It provides functionality for doing vector maths, but is not used
+//directly. Instead use the Distance or Point classes which
+//inherit from this
 class GraphicsVector
 {
+	friend class Distance;
+	friend class Point;
+
 public:
-	enum Scale
+	enum ScaleDirection
 	{
 		parallelDirection,
 		xDirection,
 		yDirection
 	};
-	constexpr GraphicsVector(grUnitless x, grUnitless y, Scale scale = GraphicsVector::Scale::parallelDirection)
+private:
+	constexpr GraphicsVector(grUnitless x, grUnitless y, ScaleDirection scale = GraphicsVector::ScaleDirection::parallelDirection)
 	{
 		set(x, y, scale);
 	}
@@ -235,29 +250,33 @@ public:
 	}
 	constexpr GraphicsVector() = default;
 	constexpr GraphicsVector(const GraphicsVector&) = default;
+	constexpr GraphicsVector(GraphicsVector&&) = default;
+
+public:
 	constexpr GraphicsVector& operator=(const GraphicsVector&) = default;
-	constexpr void set(grUnitless x, grUnitless y, Scale scale = GraphicsVector::Scale::parallelDirection)
+	virtual ~GraphicsVector() = default;
+	constexpr void set(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
 	{
-		Length::Scale xScale;
-		Length::Scale yScale;
-		if (Scale::parallelDirection == scale)
+		Length::ScaleDirection xScaleDirection;
+		Length::ScaleDirection yScaleDirection;
+		if (ScaleDirection::parallelDirection == scaleDirection)
 		{
-			xScale = Length::Scale::xDirection;
-			yScale = Length::Scale::yDirection;
+			xScaleDirection = Length::ScaleDirection::xDirection;
+			yScaleDirection = Length::ScaleDirection::yDirection;
 		}
-		if (Scale::xDirection == scale)
+		if (ScaleDirection::xDirection == scaleDirection)
 		{
-			xScale = Length::Scale::xDirection;
-			yScale = Length::Scale::xDirection;
+			xScaleDirection = Length::ScaleDirection::xDirection;
+			yScaleDirection = Length::ScaleDirection::xDirection;
 		}
-		if (Scale::yDirection == scale)
+		if (ScaleDirection::yDirection == scaleDirection)
 		{
-			xScale = Length::Scale::yDirection;
-			yScale = Length::Scale::yDirection;
+			xScaleDirection = Length::ScaleDirection::yDirection;
+			yScaleDirection = Length::ScaleDirection::yDirection;
 		}
 		
-		m_x.set(x, xScale);
-		m_y.set(y, yScale);
+		m_x.set(x, xScaleDirection);
+		m_y.set(y, yScaleDirection);
 	}
 	constexpr void set(grMillimetre x, grMillimetre y)
 	{
@@ -386,11 +405,15 @@ private:
 	Length m_y;
 };
 
+//A distance is a 2D vector which represents the difference in position of two Points
+//It can be used to represent the size of something, but should not be used to
+//represent the position, unless it is specifically representing the difference in
+//two positions
 class Distance : public GraphicsVector
 {
 public:
-	constexpr Distance(grUnitless x, grUnitless y, Scale scale = GraphicsVector::Scale::parallelDirection)
-		:GraphicsVector(x, y, scale)
+	constexpr Distance(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
+		:GraphicsVector(x, y, scaleDirection)
 	{
 	}
 	constexpr Distance(grMillimetre x, grMillimetre y)
@@ -477,11 +500,14 @@ public:
 	}
 };
 
+
+//A Point is a 2D vector representing a position.
+//It should not be used to represent a size.
 class Point : public GraphicsVector
 {
 public:
-	constexpr Point(grUnitless x, grUnitless y, Scale scale = GraphicsVector::Scale::parallelDirection)
-		:GraphicsVector(x, y, scale)
+	constexpr Point(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
+		:GraphicsVector(x, y, scaleDirection)
 	{
 	}
 	constexpr Point(grMillimetre x, grMillimetre y)
@@ -1364,6 +1390,7 @@ public:
 	{
 		Connect(wxEVT_PAINT, wxPaintEventHandler(GraphicsPanel::OnPaint));
 		Connect(wxEVT_SIZE, wxSizeEventHandler(GraphicsPanel::OnResize));
+		Connect(wxEVT_ERASE_BACKGROUND, wxEraseEventHandler(GraphicsPanel::OnErase));
 	}
 private:
 	virtual void OnPaint(wxPaintEvent& event)
@@ -1371,6 +1398,10 @@ private:
 		//override this function, but this is the kind of thing to do
 		wxPaintDC dc(this);
 		wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	}
+	virtual void OnErase(wxEraseEvent& event)
+	{
+		//deliberately do nothing
 	}
 	void OnResize(wxSizeEvent& event)
 	{
