@@ -10,7 +10,7 @@
 
 namespace sci
 {
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class GRID1, class GRID2 >
+	template<auto TRANSFORM, class GRID1, class GRID2 >
 	class gridpairtransform_view
 	{
 	private:
@@ -21,7 +21,7 @@ namespace sci
 		static const size_t NDIMS = std::max(NDIMS1, NDIMS2);
 		static const size_t ndims = NDIMS;
 
-		template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM>
+		template<auto TRANSFORM>
 		class Iterator : public std::pair<typename GRID1::iterator, typename GRID2::iterator>
 		{
 		public:
@@ -190,7 +190,7 @@ namespace sci
 			}
 		};
 
-		using iterator = Iterator<TRANSFORM_TYPE, TRANSFORM>;
+		using iterator = Iterator<TRANSFORM>;
 		using const_iterator = iterator;
 		//using reference_type = iterator::reference;
 		//using const_reference_type = iterator::const_reference;
@@ -202,10 +202,10 @@ namespace sci
 		using value_type = typename iterator::value_type;
 
 		constexpr gridpairtransform_view() = default;
-		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2> const& rhs) = default;
-		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2>&& rhs) = default;
-		constexpr gridpairtransform_view& operator=(gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2> const& rhs) = default;
-		constexpr gridpairtransform_view& operator=(gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2>&& rhs) = default;
+		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM, GRID1, GRID2> const& rhs) = default;
+		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM, GRID1, GRID2>&& rhs) = default;
+		constexpr gridpairtransform_view& operator=(gridpairtransform_view<TRANSFORM, GRID1, GRID2> const& rhs) = default;
+		constexpr gridpairtransform_view& operator=(gridpairtransform_view<TRANSFORM, GRID1, GRID2>&& rhs) = default;
 		constexpr gridpairtransform_view(GRID1 grid1, GRID2 grid2) requires(NDIMS1==NDIMS2 || NDIMS1 == 0 || NDIMS2 == 0)
 			:m_grid1(grid1), m_grid2(grid2)
 		{
@@ -265,17 +265,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(sub1), decltype(sub2)>(sub1, sub2);
+				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)>(sub1, sub2);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(sub1), decltype(m_grid2)>(sub1, m_grid2);
+				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(sub1, m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, sub2);
+				return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, sub2);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -288,17 +288,17 @@ namespace sci
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(sub1), decltype(sub2)::range_type>(sub1, sub2);
+				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)::range_type>(sub1, sub2);
 			}
 			else if constexpr (NDIMS1 > 1)
 			{
 				auto sub1 = m_grid1[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
+				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
 			}
 			else if constexpr (NDIMS2 > 1)
 			{
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
+				return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
 			}
 			//else //operator[] for two scalars probably is nonsensical
 			//{
@@ -312,11 +312,11 @@ namespace sci
 			else
 				return m_grid2.shape();
 		}
-		gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2>& getView()
+		gridpairtransform_view<TRANSFORM, GRID1, GRID2>& getView()
 		{
 			return *this;
 		}
-		const gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, GRID2>& getView() const
+		const gridpairtransform_view<TRANSFORM, GRID1, GRID2>& getView() const
 		{
 			return *this;
 		}
@@ -386,42 +386,42 @@ namespace sci
 	}
 
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class GRID1, class GRID2>
+	template<auto TRANSFORM, class GRID1, class GRID2>
 	auto make_gridpairtransform_view(const GRID1 &grid1, const GRID2 &grid2)
 	{
-		return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(getGridView(grid1)), decltype(getGridView(grid2))>(getGridView(grid1), getGridView(grid2));
+		return gridpairtransform_view<TRANSFORM, decltype(getGridView(grid1)), decltype(getGridView(grid2))>(getGridView(grid1), getGridView(grid2));
 	}
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class GRID1, class GRID2>
+	template<auto TRANSFORM, class GRID1, class GRID2>
 	auto make_ncgridpairtransform_view(GRID1& grid1, const GRID2& grid2)
 	{
-		return gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, decltype(getGridView(grid1)), decltype(getGridView(grid2))>(getGridView(grid1), getGridView(grid2));
+		return gridpairtransform_view<TRANSFORM, decltype(getGridView(grid1)), decltype(getGridView(grid2))>(getGridView(grid1), getGridView(grid2));
 	}
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class T1, class T2 >
+	template<auto TRANSFORM, class T1, class T2 >
 	auto discardSecond(const T1& t, T2)
 	{
 		return TRANSFORM(t);
 	}
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class T1, class T2 >
+	template<auto TRANSFORM, class T1, class T2 >
 	auto ncDiscardSecond(T1& t, T2)
 	{
 		return TRANSFORM(t);
 	}
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, IsGrid GRID1>
+	template<auto TRANSFORM, IsGrid GRID1>
 	auto make_gridtransform_view(const GRID1& grid1)
 	{
 		uint8_t grid2(0);
-		return make_gridpairtransform_view<decltype(discardSecond<TRANSFORM_TYPE, TRANSFORM, typename GRID1::value_type, uint8_t>), discardSecond<TRANSFORM_TYPE, TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
+		return make_gridpairtransform_view<decltype(discardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>), discardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
 	}
 
-	template<class TRANSFORM_TYPE, TRANSFORM_TYPE TRANSFORM, class GRID1>
+	template<auto TRANSFORM, IsGrid GRID1>
 	auto make_ncgridtransform_view(GRID1& grid1)
 	{
 		uint8_t grid2(0);
-		return make_ncgridpairtransform_view<decltype(ncDiscardSecond<TRANSFORM_TYPE, TRANSFORM, typename GRID1::value_type, uint8_t>), ncDiscardSecond<TRANSFORM_TYPE, TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
+		return make_ncgridpairtransform_view<decltype(ncDiscardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>), ncDiscardSecond<TRANSFORM, typename GRID1::value_type, uint8_t>, GRID1, uint8_t>(grid1, grid2);
 	}
 
 	template<size_t NDIMS>
@@ -469,7 +469,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return plus(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -480,7 +480,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return minus(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -491,7 +491,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return multiplies(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -502,7 +502,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return divides(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -513,7 +513,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return modulus(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -524,7 +524,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return spaceship(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -535,7 +535,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return less(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -546,7 +546,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return less_equal(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -557,7 +557,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return greater(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -568,7 +568,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return greater_equal(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -579,7 +579,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return equal_to(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -590,7 +590,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return not_equal_to(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -601,7 +601,7 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return logical_or(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T, class U>
@@ -612,14 +612,14 @@ namespace sci
 		using TV = decltype(av);
 		using UV = decltype(bv);
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return logical_and(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, bv);
+		return make_gridpairtransform_view<transform>(av, bv);
 	}
 
 	template<class T>
 	auto operator!(const T& a) requires(bool(IsGrid<T>))
 	{
 		auto transform = [](const typename T::value_type& x) { return logical_not(x); };
-		return make_gridpairtransform_view<decltype(transform), transform>(a);
+		return make_gridpairtransform_view<transform>(a);
 	}
 
 	template<class T, class U>
@@ -628,7 +628,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return plus_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -640,7 +640,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return minus_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -652,7 +652,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return multiplies_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -664,7 +664,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return divides_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -676,7 +676,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return modulus_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -688,7 +688,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return and_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -700,7 +700,7 @@ namespace sci
 		auto bv = getGridView(b);
 		using UV = decltype(bv);
 		auto transform = [](typename T::value_type& x, const typename UV::value_type& y) { return or_assign(x, y); };
-		auto temp = make_ncgridpairtransform_view<decltype(transform), transform>(a, bv);
+		auto temp = make_ncgridpairtransform_view<transform>(a, bv);
 		for (auto elem : temp) //this dereferences each element of a causing the assignment to happen
 			;
 		return a;
@@ -710,14 +710,14 @@ namespace sci
 	auto operator+(const T& a) requires(bool(IsGrid<T>))
 	{
 		auto transform = [](const typename T::value_type& x) { return identity(x); };
-		return make_gridpairtransform_view<decltype(transform), transform>(a);
+		return make_gridpairtransform_view<transform>(a);
 	}
 
 	template<class T>
 	auto operator-(const T& a) requires(bool(IsGrid<T>))
 	{
 		auto transform = [](const typename T::value_type& x) { return negate(x); };
-		return make_gridpairtransform_view<decltype(transform), transform>(a);
+		return make_gridpairtransform_view<transform>(a);
 	}
 
 	template<class T>
@@ -814,6 +814,12 @@ namespace sci
 		{
 			return sci::abs(t);
 		}
+
+		template<class T, class U>
+		auto pow(const T& t, const U& u)
+		{
+			return sci::pow(t, u);
+		}
 	}
 	
 	template<IsGrid T>
@@ -847,15 +853,14 @@ namespace sci
 		return make_gridtransform_view<decltype(sci::pow<POW, typename T::value_type>), sci::pow<POW, typename T::value_type>>(a);
 	}
 
-	template<class T, class U>
-	auto pow(const T& a, const U &s)  requires(bool(IsGrid<T> || IsGrid<U>))
+	template<IsGrid T, IsGrid U>
+	auto pow(const T& a, const U &s)
 	{
 		auto av = getGridView(a);
 		auto sv = getGridView(s);
 		using TV = decltype(av);
 		using UV = decltype(sv);
-		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return sci::pow<typename T::value_type, U>(x, y); };
-		return make_gridpairtransform_view<decltype(transform), transform>(av, sv);
+		return make_gridpairtransform_view<decltype(internalGridTransform::pow<typename TV::value_type, typename UV::value_type>), internalGridTransform::pow<typename TV::value_type, typename UV::value_type>>(av, sv);
 	}
 }
 

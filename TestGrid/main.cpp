@@ -97,7 +97,7 @@ static_assert((bool)!std::ranges::contiguous_range< sci::grid_view<std::deque<do
 //static_assert((bool)std::ranges::contiguous_range<sci::grid_view<std::vector<double>, 1>>, "sci::grid_view<std::vector<>> failed the test for being a contiguous range");
 
 using gv = sci::grid_view<std::deque<double>, 1>;
-using gpv = sci::gridpair_view<gv, gv>;
+using gpv = sci::gridpairtransform_view<sci::plus<double, double>, gv, gv>;
 static_assert((bool)std::ranges::random_access_range<gpv>, "sci::gridpair_view failed the test for being a random access range");
 static_assert((bool)std::ranges::range<gpv>, "sci::gridpair_view failed the test for being a range");
 static_assert((bool)std::random_access_iterator<std::ranges::iterator_t<gpv>>, "sci::gridpair_view failed the test for having a random access iterator");
@@ -172,7 +172,8 @@ int main()
 		sci::GridData < double, 2> d2;
 		sci::GridData<double, 1> d1{ 1., 2., 3., 4., 5. };
 		sci::GridData<double, 1> d1_2{ 11., 12., 13., 14., 15. };
-		d2.push_back(d1+d1_2);
+		auto d1_3 = d1 + d1 + 2;
+		d2.push_back(d1_3);
 	}
 	//testing grid_view
 	{
@@ -258,26 +259,26 @@ int main()
 		std::array<size_t, 2> shape2d{ 4, 3 };
 		sci::GridData<double, 2>grid1(shape2d, 1.0);
 		sci::GridData<double, 2>grid2(shape2d, 3.0);
-		sci::gridpair_view<sci::GridData<double, 2>, sci::GridData<double, 2>> pair(grid1, grid2);
+		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 2>, sci::GridData<double, 2>> pair(grid1, grid2);
 		std::cout << "Testing gridtuple_view operator[](std::array) accessor\n";
 		auto val2 = pair[{0, 0}];
-		std::cout << val2.first << " " << val2.second << "\n\n";
+		std::cout << val2 << "\n\n";
 		std::cout << "testing gridtuple_view operator[](size_t) slice accessor\n";
 		auto val = pair[0];
 		for (size_t j = 0; j < shape2d[1]; ++j)
-			std::cout << val[j].first << " " << val[j].second << ",";
+			std::cout << val[j] << ",";
 		std::cout << "\n\n";
 
-		std::cout << "testing transforming a gridtuple_view, then turning it back to a grid\n";
+		//std::cout << "testing transforming a gridtuple_view, then turning it back to a grid\n";
 		//for(size_t i=0; i<shape2d[0]; ++i)
 		//	for(size_t j = 0; j<shape2d[1])
 		//		std::cout <<
 		//auto grid3 = grid1 + grid2;
-		using pair_type = sci::gridpair_view<sci::GridData<double, 2>, sci::GridData<double, 2>>;
+		//using pair_type = sci::gridpair_view<sci::GridData<double, 2>, sci::GridData<double, 2>>;
 		//auto pair2 = sci::make_gridpair_view(grid1, grid2);
-		auto operated = pair | std::ranges::views::transform([](pair_type::const_reference_type p) { return (p.first + p.second); });
+		//auto operated = pair | std::ranges::views::transform([](pair_type::const_reference_type p) { return (p.first + p.second); });
 		//return operated | views::grid<std::max(T::ndims, U::ndims)>(a.getStrides());
-		output2d(operated | sci::views::grid<2>(grid1.getStrides()));
+		//output2d(operated | sci::views::grid<2>(grid1.getStrides()));
 
 		const sci::GridData<double, 2>& gridref = grid1;
 		auto gridbad = sci::getGridView(gridref);
@@ -293,7 +294,7 @@ int main()
 		std::cout << "ndims = " << grid5.ndims << "\n\n";
 		sci::GridData<double, 2>grid7(grid5);
 		sci::GridData<double, 2> grid6 = grid5;
-		decltype(grid5)::value_type value=3.0;
+		typename decltype(grid5)::value_type value=3.0;
 		static_assert(sci::IsGridDims<decltype(grid5),2>, "transformed grid is not a grid");
 
 		std::cout << "testing operator ==\n";
