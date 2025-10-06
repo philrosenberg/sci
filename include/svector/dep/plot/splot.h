@@ -324,12 +324,12 @@ using Length = sci::graphics::Length;
 using Point = sci::graphics::Point;
 using Renderer = sci::graphics::Renderer;
 using Distance = sci::graphics::Distance;
-using grMillimetre = sci::graphics::grMillimetre;
-using grPerMillimetre = sci::graphics::grPerMillimetre;
-using grTextPoint = sci::graphics::grTextPoint;
-using grDegree = sci::graphics::grDegree;
-using grUnitless = sci::graphics::grUnitless;
-using grPerInch = sci::graphics::grPerInch;
+using grMillimetre = sci::graphics::millimetre;
+using grPerMillimetre = sci::graphics::perMillimetre;
+using grTextPoint = sci::graphics::textPoint;
+using grDegree = sci::graphics::degree;
+using grUnitless = sci::graphics::unitless;
+using grPerInch = sci::graphics::perInch;
 
 
 class splotcolourscale : public PlotScale

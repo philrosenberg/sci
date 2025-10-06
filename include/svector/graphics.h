@@ -28,13 +28,13 @@ namespace sci
 	namespace graphics
 	{
 
-		using grUnitless = sci::Physical<sci::Unitless, double>;
-		using grMillimetre = sci::Physical<sci::Metre<1, -3>, double>;
-		using grPerMillimetre = decltype(grUnitless() / grMillimetre());
-		using grInch = sci::Physical<sci::Inch<>, double>;
-		using grPerInch = decltype(grUnitless() / grInch());
-		using grDegree = sci::Physical<sci::Degree<>, double>;
-		using grTextPoint = sci::Physical<sci::TextPoint<>, double>;
+		using unitless = sci::Physical<sci::Unitless, double>;
+		using millimetre = sci::Physical<sci::Metre<1, -3>, double>;
+		using perMillimetre = decltype(unitless() / millimetre());
+		using inch = sci::Physical<sci::Inch<>, double>;
+		using perInch = decltype(unitless() / inch());
+		using degree = sci::Physical<sci::Degree<>, double>;
+		using textPoint = sci::Physical<sci::TextPoint<>, double>;
 
 
 		#ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
@@ -94,50 +94,50 @@ namespace sci
 				xDirection,
 				yDirection
 			};
-			constexpr Length(grUnitless length, ScaleDirection scaleDirection)
+			constexpr Length(unitless length, ScaleDirection scaleDirection)
 			{
 				set(length, scaleDirection);
 			}
-			constexpr Length(grMillimetre length)
+			constexpr Length(millimetre length)
 			{
 				set(length);
 			}
-			constexpr Length(grTextPoint length)
+			constexpr Length(textPoint length)
 			{
-				set(grMillimetre(length));
+				set(millimetre(length));
 			}
 			constexpr Length()
 			{
-				m_absolute = grMillimetre(0);
-				m_lengthOverWidth = grUnitless(0);
-				m_lengthOverHeight = grUnitless(0);
+				m_absolute = millimetre(0);
+				m_lengthOverWidth = unitless(0);
+				m_lengthOverHeight = unitless(0);
 			}
 			constexpr Length(const Length&) = default;
 			constexpr Length& operator=(const Length&) = default;
 			constexpr Length(Length&& other) = default;
-			constexpr void set(grUnitless x, ScaleDirection scaleDirection)
+			constexpr void set(unitless x, ScaleDirection scaleDirection)
 			{
-				m_absolute = grMillimetre(0);
-				m_lengthOverWidth = grUnitless(0);
-				m_lengthOverHeight = grUnitless(0);
+				m_absolute = millimetre(0);
+				m_lengthOverWidth = unitless(0);
+				m_lengthOverHeight = unitless(0);
 				if (ScaleDirection::xDirection == scaleDirection)
 					m_lengthOverWidth = x;
 				if (ScaleDirection::yDirection == scaleDirection)
 					m_lengthOverHeight = x;
 			}
-			constexpr void set(grMillimetre length)
+			constexpr void set(millimetre length)
 			{
 				m_absolute = length;
-				m_lengthOverWidth = grUnitless(0);
-				m_lengthOverHeight = grUnitless(0);
+				m_lengthOverWidth = unitless(0);
+				m_lengthOverHeight = unitless(0);
 			}
 			//returns the length in device coordinates
-			constexpr double getLength(double width, double height, grPerMillimetre scale) const
+			constexpr double getLength(double width, double height, perMillimetre scale) const
 			{
-				return (m_absolute * scale + m_lengthOverWidth * grUnitless(width) + m_lengthOverHeight * grUnitless(height)).value<grUnitless>();
+				return (m_absolute * scale + m_lengthOverWidth * unitless(width) + m_lengthOverHeight * unitless(height)).value<unitless>();
 			}
 			//returns the length in abslute coordinates
-			constexpr grMillimetre getLength(grMillimetre width, grMillimetre height) const
+			constexpr millimetre getLength(millimetre width, millimetre height) const
 			{
 				return m_absolute + m_lengthOverWidth * width + m_lengthOverHeight * height;
 			}
@@ -177,27 +177,27 @@ namespace sci
 				newLength -= other;
 				return newLength;
 			}
-			constexpr Length& operator*=(const grUnitless& other)
+			constexpr Length& operator*=(const unitless& other)
 			{
 				m_absolute *= other;
 				m_lengthOverWidth *= other;
 				m_lengthOverHeight *= other;
 				return*this;
 			}
-			constexpr Length operator*(const grUnitless& other) const
+			constexpr Length operator*(const unitless& other) const
 			{
 				Length newLength = *this;
 				newLength *= other;
 				return newLength;
 			}
-			constexpr Length& operator/=(const grUnitless& other)
+			constexpr Length& operator/=(const unitless& other)
 			{
 				m_absolute /= other;
 				m_lengthOverWidth /= other;
 				m_lengthOverHeight /= other;
 				return*this;
 			}
-			constexpr Length operator/(const grUnitless& other) const
+			constexpr Length operator/(const unitless& other) const
 			{
 				Length newLength = *this;
 				newLength /= other;
@@ -213,17 +213,17 @@ namespace sci
 			}
 			constexpr bool isAlwaysZero() const
 			{
-				return m_absolute == grMillimetre(0.0) && m_lengthOverWidth == grUnitless(0.0) && m_lengthOverHeight == grUnitless(0.0);
+				return m_absolute == millimetre(0.0) && m_lengthOverWidth == unitless(0.0) && m_lengthOverHeight == unitless(0.0);
 			}
 
 		private:
-			grMillimetre m_absolute;
-			grUnitless m_lengthOverWidth;
-			grUnitless m_lengthOverHeight;
+			millimetre m_absolute;
+			unitless m_lengthOverWidth;
+			unitless m_lengthOverHeight;
 		};
 
 		//a useful constant for zero length
-		const Length zeroLength(grMillimetre(0));
+		const Length zeroLength(millimetre(0));
 
 		//This class is a 2D vector with a Length in the x and y direction
 		//It provides functionality for doing vector maths, but is not used
@@ -242,11 +242,11 @@ namespace sci
 				yDirection
 			};
 		private:
-			constexpr GraphicsVector(grUnitless x, grUnitless y, ScaleDirection scale = GraphicsVector::ScaleDirection::parallelDirection)
+			constexpr GraphicsVector(unitless x, unitless y, ScaleDirection scale = GraphicsVector::ScaleDirection::parallelDirection)
 			{
 				set(x, y, scale);
 			}
-			constexpr GraphicsVector(grMillimetre x, grMillimetre y)
+			constexpr GraphicsVector(millimetre x, millimetre y)
 			{
 				set(x, y);
 			}
@@ -261,7 +261,7 @@ namespace sci
 		public:
 			constexpr GraphicsVector& operator=(const GraphicsVector&) = default;
 			virtual ~GraphicsVector() = default;
-			constexpr void set(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
+			constexpr void set(unitless x, unitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
 			{
 				Length::ScaleDirection xScaleDirection;
 				Length::ScaleDirection yScaleDirection;
@@ -284,7 +284,7 @@ namespace sci
 				m_x.set(x, xScaleDirection);
 				m_y.set(y, yScaleDirection);
 			}
-			constexpr void set(grMillimetre x, grMillimetre y)
+			constexpr void set(millimetre x, millimetre y)
 			{
 				m_x.set(x);
 				m_y.set(y);
@@ -294,19 +294,19 @@ namespace sci
 				m_x = x;
 				m_y = y;
 			}
-			constexpr double getX(double width, double height, grPerMillimetre scale) const
+			constexpr double getX(double width, double height, perMillimetre scale) const
 			{
 				return m_x.getLength(width, height, scale);
 			}
-			constexpr double getY(double width, double height, grPerMillimetre scale) const
+			constexpr double getY(double width, double height, perMillimetre scale) const
 			{
 				return m_y.getLength(width, height, scale);
 			}
-			constexpr grMillimetre getX(grMillimetre width, grMillimetre height) const
+			constexpr millimetre getX(millimetre width, millimetre height) const
 			{
 				return m_x.getLength(width, height);
 			}
-			constexpr grMillimetre getY(grMillimetre width, grMillimetre height) const
+			constexpr millimetre getY(millimetre width, millimetre height) const
 			{
 				return m_y.getLength(width, height);
 			}
@@ -350,49 +350,49 @@ namespace sci
 				newVector -= other;
 				return newVector;
 			}
-			constexpr GraphicsVector& operator*=(const grUnitless& other)
+			constexpr GraphicsVector& operator*=(const unitless& other)
 			{
 				m_x *= other;
 				m_y *= other;
 				return*this;
 			}
-			constexpr GraphicsVector operator*(const grUnitless& other) const
+			constexpr GraphicsVector operator*(const unitless& other) const
 			{
 				GraphicsVector newVector = *this;
 				newVector *= other;
 				return newVector;
 			}
-			constexpr GraphicsVector& operator/=(const grUnitless& other)
+			constexpr GraphicsVector& operator/=(const unitless& other)
 			{
 				m_x /= other;
 				m_y /= other;
 				return*this;
 			}
-			constexpr GraphicsVector operator/(const grUnitless& other) const
+			constexpr GraphicsVector operator/(const unitless& other) const
 			{
 				GraphicsVector newVector = *this;
 				newVector /= other;
 				return newVector;
 			}
-			constexpr GraphicsVector& operator*=(const std::array<grUnitless, 2>& other)
+			constexpr GraphicsVector& operator*=(const std::array<unitless, 2>& other)
 			{
 				m_x *= other[0];
 				m_y *= other[1];
 				return*this;
 			}
-			constexpr GraphicsVector operator*(const std::array<grUnitless, 2>& other) const
+			constexpr GraphicsVector operator*(const std::array<unitless, 2>& other) const
 			{
 				GraphicsVector newVector = *this;
 				newVector *= other;
 				return newVector;
 			}
-			constexpr GraphicsVector& operator/=(const std::array<grUnitless, 2>& other)
+			constexpr GraphicsVector& operator/=(const std::array<unitless, 2>& other)
 			{
 				m_x /= other[0];
 				m_y /= other[1];
 				return*this;
 			}
-			constexpr GraphicsVector operator/(const std::array<grUnitless, 2>& other) const
+			constexpr GraphicsVector operator/(const std::array<unitless, 2>& other) const
 			{
 				GraphicsVector newVector = *this;
 				newVector /= other;
@@ -418,11 +418,11 @@ namespace sci
 		class Distance : public GraphicsVector
 		{
 		public:
-			constexpr Distance(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
+			constexpr Distance(unitless x, unitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
 				:GraphicsVector(x, y, scaleDirection)
 			{
 			}
-			constexpr Distance(grMillimetre x, grMillimetre y)
+			constexpr Distance(millimetre x, millimetre y)
 				: GraphicsVector(x, y)
 			{
 			}
@@ -455,45 +455,45 @@ namespace sci
 				newDistance -= distance;
 				return newDistance;
 			}
-			constexpr Distance& operator*=(const grUnitless& scale)
+			constexpr Distance& operator*=(const unitless& scale)
 			{
 				GraphicsVector::operator*=(scale);
 				return *this;
 			}
-			constexpr Distance operator*(const grUnitless& scale) const
+			constexpr Distance operator*(const unitless& scale) const
 			{
 				Distance newDistance = *this;
 				newDistance *= scale;
 				return newDistance;
 			}
-			constexpr Distance& operator/=(const grUnitless& scale)
+			constexpr Distance& operator/=(const unitless& scale)
 			{
 				GraphicsVector::operator/=(scale);
 				return *this;
 			}
-			constexpr Distance operator/(const grUnitless& scale) const
+			constexpr Distance operator/(const unitless& scale) const
 			{
 				Distance newDistance = *this;
 				newDistance /= scale;
 				return newDistance;
 			}
-			constexpr GraphicsVector& operator*=(const std::array<grUnitless, 2>& scale)
+			constexpr GraphicsVector& operator*=(const std::array<unitless, 2>& scale)
 			{
 				GraphicsVector::operator*=(scale);
 				return *this;
 			}
-			constexpr Distance operator*(const std::array<grUnitless, 2>& scale) const
+			constexpr Distance operator*(const std::array<unitless, 2>& scale) const
 			{
 				Distance newDistance = *this;
 				newDistance *= scale;
 				return newDistance;
 			}
-			constexpr GraphicsVector& operator/=(const std::array<grUnitless, 2>& scale)
+			constexpr GraphicsVector& operator/=(const std::array<unitless, 2>& scale)
 			{
 				GraphicsVector::operator/=(scale);
 				return *this;
 			}
-			constexpr Distance operator/(const std::array<grUnitless, 2>& scale) const
+			constexpr Distance operator/(const std::array<unitless, 2>& scale) const
 			{
 				Distance newDistance = *this;
 				newDistance /= scale;
@@ -512,11 +512,11 @@ namespace sci
 		class Point : public GraphicsVector
 		{
 		public:
-			constexpr Point(grUnitless x, grUnitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
+			constexpr Point(unitless x, unitless y, ScaleDirection scaleDirection = GraphicsVector::ScaleDirection::parallelDirection)
 				:GraphicsVector(x, y, scaleDirection)
 			{
 			}
-			constexpr Point(grMillimetre x, grMillimetre y)
+			constexpr Point(millimetre x, millimetre y)
 				:GraphicsVector(x, y)
 			{
 			}
@@ -557,11 +557,11 @@ namespace sci
 
 		struct TextMetric
 		{
-			grMillimetre width;
-			grMillimetre ascent;
-			grMillimetre descent;
-			grMillimetre topAscent;
-			grMillimetre bottomDescent;
+			millimetre width;
+			millimetre ascent;
+			millimetre descent;
+			millimetre topAscent;
+			millimetre bottomDescent;
 		};
 
 		class Renderer;
@@ -695,11 +695,11 @@ namespace sci
 			class Font
 			{
 			public:
-				Font(std::vector<sci::string> facenames = std::vector<sci::string>(), Length size = grTextPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+				Font(std::vector<sci::string> facenames = std::vector<sci::string>(), Length size = textPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
 					:m_facenames(facenames), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
 				{}
 		
-				Font(sci::string facename, Length size = grTextPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+				Font(sci::string facename, Length size = textPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
 					:m_facenames(std::vector<sci::string>(1,facename)), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
 				{}
 		
@@ -721,15 +721,15 @@ namespace sci
 			virtual void setPen(const rgbcolour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) = 0;
 			virtual void line(const Point& p1, const Point& p2) = 0;
 			virtual void line(const Point& point, const Distance& distance) = 0;
-			virtual TextMetric text(const sci::string &str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment) = 0;
-			TextMetric formattedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment = grUnitless(0.0), grUnitless verticalAlignment = grUnitless(0.0), grDegree rotation = grDegree(0.0), grTextPoint minTextSize = grTextPoint(5))
+			virtual TextMetric text(const sci::string &str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment) = 0;
+			TextMetric formattedText(const sci::string& str, const Point& position, unitless horizontalAlignment = unitless(0.0), unitless verticalAlignment = unitless(0.0), degree rotation = degree(0.0), textPoint minTextSize = textPoint(5))
 			{
 				TextMetric result;
-				grUnitless spacing(1.25);
+				unitless spacing(1.25);
 
 				//break the text into lines
 				size_t newLine = -1;
-				grMillimetre verticalOffset(0.0);
+				millimetre verticalOffset(0.0);
 				bool firstLine = true;
 				do
 				{
@@ -750,8 +750,8 @@ namespace sci
 						result.bottomDescent += (extent.ascent + extent.descent) * spacing;
 					}
 
-					Distance alignmentOffset(grMillimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (verticalOffset)*sci::sin(rotation)),
-						-grMillimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (verticalOffset)*sci::cos(rotation));
+					Distance alignmentOffset(millimetre((extent.width * horizontalAlignment) * sci::cos(rotation) + (verticalOffset)*sci::sin(rotation)),
+						-millimetre(extent.width * horizontalAlignment) * sci::sin(rotation) + (verticalOffset)*sci::cos(rotation));
 					text.render(*this, minTextSize, position - alignmentOffset, rotation);
 					verticalOffset -= (extent.ascent + extent.descent) * spacing;
 
@@ -760,7 +760,7 @@ namespace sci
 
 				return result;
 			}
-			virtual TextMetric rotatedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment, grDegree rotation) = 0;
+			virtual TextMetric rotatedText(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment, degree rotation) = 0;
 			virtual TextMetric getUnformattedTextExtent(const sci::string& str) = 0;
 			virtual void setFont(const Font &font)
 			{
@@ -768,18 +768,18 @@ namespace sci
 			}
 			virtual void setFont(sci::string facename, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
 			virtual void setFont(std::vector<sci::string> facenames, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
-			virtual void scaleFontSize(grUnitless scale) = 0;
-			virtual grMillimetre getFontSize() const = 0;
+			virtual void scaleFontSize(unitless scale) = 0;
+			virtual millimetre getFontSize() const = 0;
 			virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
-			virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5)) = 0;
-			virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) = 0;
+			virtual void elipse(const Point& position, const Distance& radius, unitless xAlignemnt = unitless(0.5), unitless yAlignment = unitless(0.5)) = 0;
+			virtual void rectangle(const Point& position, const Distance& size, unitless xAlignemnt = unitless(0.0), unitless yAlignment = unitless(0.0)) = 0;
 			virtual void rectangle(const Point& corner1, const Point& corner2)
 			{
-				rectangle(corner1, corner2 - corner1, grUnitless(0.0), grUnitless(0.0));
+				rectangle(corner1, corner2 - corner1, unitless(0.0), unitless(0.0));
 			}
 			virtual void polyLine(const std::vector<Point>& points) = 0;
 			virtual void polygon(const std::vector<Point>& points) = 0;
-			virtual grDegree getAngle(const Distance& distance) const = 0;
+			virtual degree getAngle(const Distance& distance) const = 0;
 			//this project might be worth a look at some time https://github.com/bkaradzic/bgfx?tab=readme-ov-file
 
 			class textChunk
@@ -788,25 +788,25 @@ namespace sci
 				textChunk(const sci::string& str)
 				{
 					m_text = str;
-					m_baselineOffset = grUnitless(0.0);
-					m_size = grUnitless(1.0);
+					m_baselineOffset = unitless(0.0);
+					m_size = unitless(1.0);
 					parse();
 				}
-				TextMetric getExtent(Renderer& renderer, grMillimetre minSize) const
+				TextMetric getExtent(Renderer& renderer, millimetre minSize) const
 				{
 					TextMetric basicExtent = renderer.getUnformattedTextExtent(sU("M"));
-					return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, false, Point(), grMillimetre(0.0), grMillimetre(0.0), grDegree(0));
+					return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, false, Point(), millimetre(0.0), millimetre(0.0), degree(0));
 				}
-				TextMetric render(Renderer& renderer, grMillimetre minSize, Point point, grDegree rotation) const
+				TextMetric render(Renderer& renderer, millimetre minSize, Point point, degree rotation) const
 				{
 					TextMetric basicExtent = renderer.getUnformattedTextExtent(sU("M"));
-					point += Distance(grMillimetre(basicExtent.ascent * sci::sin(rotation)), grMillimetre(basicExtent.ascent * sci::cos(rotation)));
-					return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, true, point, grMillimetre(0.0), grMillimetre(0.0), rotation);
+					point += Distance(millimetre(basicExtent.ascent * sci::sin(rotation)), millimetre(basicExtent.ascent * sci::cos(rotation)));
+					return getExtent(renderer, renderer.getFontSize(), minSize, basicExtent.ascent, true, point, millimetre(0.0), millimetre(0.0), rotation);
 				}
 				sci::string m_text;
 				std::vector<std::unique_ptr<textChunk>> m_chunks;
-				grUnitless m_baselineOffset;
-				grUnitless m_size;
+				unitless m_baselineOffset;
+				unitless m_size;
 				/*std::optional<sci::string> m_facename;
 				std::optional<double> m_size;
 				std::optional <rgbcolour> m_colour;
@@ -941,11 +941,11 @@ namespace sci
 					if ((m_text[0] == sU('^') || m_text[0] == sU('_'))
 						&& (m_text.length() <=2 ||(m_text[1]==sU('{') && m_text.back() == sU('}'))))
 					{
-						m_size = grUnitless(0.66);
+						m_size = unitless(0.66);
 						if (m_text[0] == sU('^'))
-							m_baselineOffset = grUnitless(0.66);
+							m_baselineOffset = unitless(0.66);
 						else
-							m_baselineOffset = grUnitless(-0.22);
+							m_baselineOffset = unitless(-0.22);
 
 						//trim the command characters
 						if (m_text.length() < 2)
@@ -997,17 +997,17 @@ namespace sci
 					}
 				}
 
-				TextMetric getExtent(Renderer &renderer, grMillimetre currentSize, grMillimetre minSize, grMillimetre currentAscendor, bool render, Point baselineStartPoint, grMillimetre baselineX, grMillimetre baselineY, grDegree rotation) const
+				TextMetric getExtent(Renderer &renderer, millimetre currentSize, millimetre minSize, millimetre currentAscendor, bool render, Point baselineStartPoint, millimetre baselineX, millimetre baselineY, degree rotation) const
 				{
 					baselineY += currentAscendor * m_baselineOffset;
 					TextMetric extent;
-					extent.width = grMillimetre(0.0);
-					extent.ascent = grMillimetre(0.0);
-					extent.descent = grMillimetre(0.0);
-					extent.topAscent = grMillimetre(0.0);
-					extent.bottomDescent = grMillimetre(0.0);
-					grUnitless textScale = std::max(m_size, grUnitless(minSize / currentSize));
-					if (textScale != grUnitless(1.0))
+					extent.width = millimetre(0.0);
+					extent.ascent = millimetre(0.0);
+					extent.descent = millimetre(0.0);
+					extent.topAscent = millimetre(0.0);
+					extent.bottomDescent = millimetre(0.0);
+					unitless textScale = std::max(m_size, unitless(minSize / currentSize));
+					if (textScale != unitless(1.0))
 						renderer.scaleFontSize(textScale);
 					try
 					{
@@ -1017,9 +1017,9 @@ namespace sci
 							extent = renderer.getUnformattedTextExtent(m_text);
 							if (render)
 							{
-								Distance alignmentOffset(grMillimetre(baselineX * sci::cos(rotation) + (-(baselineY + extent.ascent)) * sci::sin(rotation)),
-									grMillimetre(-baselineX * sci::sin(rotation) + (-(baselineY + extent.ascent)) * sci::cos(rotation)));
-								extent = renderer.rotatedText(m_text, baselineStartPoint + alignmentOffset, grUnitless(0.0), grUnitless(0.0), rotation);
+								Distance alignmentOffset(millimetre(baselineX * sci::cos(rotation) + (-(baselineY + extent.ascent)) * sci::sin(rotation)),
+									millimetre(-baselineX * sci::sin(rotation) + (-(baselineY + extent.ascent)) * sci::cos(rotation)));
+								extent = renderer.rotatedText(m_text, baselineStartPoint + alignmentOffset, unitless(0.0), unitless(0.0), rotation);
 							}
 							baselineX += extent.width;
 
@@ -1027,7 +1027,7 @@ namespace sci
 						else
 						{
 							extent = renderer.getUnformattedTextExtent(sU("")); //this will set the ascent and descent
-							grMillimetre standardAscent = extent.ascent;
+							millimetre standardAscent = extent.ascent;
 							for (auto& c : m_chunks)
 							{
 								TextMetric thisExtent = c->getExtent(renderer, currentSize * textScale, minSize, standardAscent, render, baselineStartPoint, baselineX, baselineY, rotation);
@@ -1040,12 +1040,12 @@ namespace sci
 					}
 					catch (...)
 					{
-						if (textScale != grUnitless(1.0))
-							renderer.scaleFontSize(grUnitless(1.0) / textScale);
+						if (textScale != unitless(1.0))
+							renderer.scaleFontSize(unitless(1.0) / textScale);
 						throw;
 					}
-					if (textScale != grUnitless(1.0))
-						renderer.scaleFontSize(grUnitless(1.0) / textScale);
+					if (textScale != unitless(1.0))
+						renderer.scaleFontSize(unitless(1.0) / textScale);
 
 					//shift the ascent and descent based upon the baseline offset
 					extent.ascent += currentAscendor * m_baselineOffset;
@@ -1079,7 +1079,7 @@ namespace sci
 		class wxRenderer : public Renderer
 		{
 		public:
-			wxRenderer(wxDC* dc, wxSize size, grPerMillimetre scale, sci::string escapeSequence = sU("#"))
+			wxRenderer(wxDC* dc, wxSize size, perMillimetre scale, sci::string escapeSequence = sU("#"))
 				:m_dc(dc), m_height(size.GetHeight()), m_width(size.GetWidth()), m_scale(scale), m_fontSize(dc->GetFont().IsOk() ? dc->GetFont().GetPointSize() : 0.0)
 			{
 				pushState();
@@ -1177,8 +1177,8 @@ namespace sci
 					font = wxFont(); //clear the font - not sure if this is needed
 					font.SetFamily(getWxFontFamily(backupFamily));
 				}
-				m_fontSize = size.getLength(grUnitless(m_width) / m_scale, grUnitless(m_height) / m_scale);
-				font.SetFractionalPointSize(m_fontSize.value<grTextPoint>());
+				m_fontSize = size.getLength(unitless(m_width) / m_scale, unitless(m_height) / m_scale);
+				font.SetFractionalPointSize(m_fontSize.value<textPoint>());
 				font.SetWeight(bold ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL);
 				font.SetStyle(italic ? wxFONTSTYLE_ITALIC : wxFONTSTYLE_NORMAL);
 				font.SetUnderlined(underline);
@@ -1197,7 +1197,7 @@ namespace sci
 				m_dc->DrawLine(getWxPoint(point), getWxPoint(point, distance));
 			}
 
-			virtual TextMetric text(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment) override
+			virtual TextMetric text(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment) override
 			{
 				wxPoint wxPosition = getWxPoint(position);
 				wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
@@ -1207,17 +1207,17 @@ namespace sci
 				//these values are based on some tests on windows. I don't really know how good they are
 				//leading = descent * 0.32 + 1;
 				//descent = descent * 1.61 + 1;
-				wxPosition.x -= int(width * horizontalAlignment.value<grUnitless>());
-				wxPosition.y -= int(ascent * verticalAlignment.value<grUnitless>());
+				wxPosition.x -= int(width * horizontalAlignment.value<unitless>());
+				wxPosition.y -= int(ascent * verticalAlignment.value<unitless>());
 				m_dc->DrawText(wxStr, wxPosition);
-				return TextMetric(grMillimetre(grUnitless(width) / m_scale),
-					grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale),
-					grMillimetre(grUnitless(descent) / m_scale),
-					grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale),
-					grMillimetre(grUnitless(descent) / m_scale));
+				return TextMetric(millimetre(unitless(width) / m_scale),
+					millimetre(unitless(ascentPlusDescent - descent) / m_scale),
+					millimetre(unitless(descent) / m_scale),
+					millimetre(unitless(ascentPlusDescent - descent) / m_scale),
+					millimetre(unitless(descent) / m_scale));
 			}
 
-			virtual TextMetric rotatedText(const sci::string& str, const Point& position, grUnitless horizontalAlignment, grUnitless verticalAlignment, grDegree rotation) override
+			virtual TextMetric rotatedText(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment, degree rotation) override
 			{
 				wxPoint wxPosition = getWxPoint(position);
 				wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
@@ -1226,22 +1226,22 @@ namespace sci
 				m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 				wxCoord ascent = ascentPlusDescent - descent;
 
-				wxPosition.x -= int((width * horizontalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>());
-				wxPosition.y -= -int((width * horizontalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>() + (ascent * verticalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>());
+				wxPosition.x -= int((width * horizontalAlignment.value<unitless>()) * sci::cos(rotation).value<unitless>() + (ascent * verticalAlignment.value<unitless>()) * sci::sin(rotation).value<unitless>());
+				wxPosition.y -= -int((width * horizontalAlignment.value<unitless>()) * sci::sin(rotation).value<unitless>() + (ascent * verticalAlignment.value<unitless>()) * sci::cos(rotation).value<unitless>());
 
-				m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<grDegree>());
-				return TextMetric(grMillimetre(grUnitless(width) / m_scale), grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale), grMillimetre(grUnitless(descent) / m_scale));
+				m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<degree>());
+				return TextMetric(millimetre(unitless(width) / m_scale), millimetre(unitless(ascentPlusDescent - descent) / m_scale), millimetre(unitless(descent) / m_scale));
 			}
-			virtual void elipse(const Point& position, const Distance& radius, grUnitless xAlignemnt = grUnitless(0.5), grUnitless yAlignment = grUnitless(0.5)) override
+			virtual void elipse(const Point& position, const Distance& radius, unitless xAlignemnt = unitless(0.5), unitless yAlignment = unitless(0.5)) override
 			{
-				Distance diameter = radius * grUnitless(2.0);
-				wxPoint wxPosition = getWxPoint(position - diameter * std::array<grUnitless, 2>{xAlignemnt, yAlignment});
+				Distance diameter = radius * unitless(2.0);
+				wxPoint wxPosition = getWxPoint(position - diameter * std::array<unitless, 2>{xAlignemnt, yAlignment});
 				wxSize size = getWxSize(diameter);
 				m_dc->DrawEllipse(wxPosition, size);
 			}
-			virtual void rectangle(const Point& position, const Distance& size, grUnitless xAlignemnt = grUnitless(0.0), grUnitless yAlignment = grUnitless(0.0)) override
+			virtual void rectangle(const Point& position, const Distance& size, unitless xAlignemnt = unitless(0.0), unitless yAlignment = unitless(0.0)) override
 			{
-				wxPoint wxPosition = getWxPoint(position - size * std::array<grUnitless,2>{xAlignemnt, yAlignment});
+				wxPoint wxPosition = getWxPoint(position - size * std::array<unitless,2>{xAlignemnt, yAlignment});
 				wxSize wxsize = getWxSize(size);
 				m_dc->DrawRectangle(wxPosition, wxsize);
 			}
@@ -1260,11 +1260,11 @@ namespace sci
 				wxsize.y += wxsize.y < 0 ? -2 : 2;
 				m_dc->DrawRectangle(wxCorner1, wxsize);
 			}
-			void scaleFontSize(grUnitless scale) override
+			void scaleFontSize(unitless scale) override
 			{
 				m_fontSize *= scale;
 				auto font = m_dc->GetFont();
-				font.SetFractionalPointSize(m_fontSize.value<grTextPoint>());
+				font.SetFractionalPointSize(m_fontSize.value<textPoint>());
 				m_dc->SetFont(font);
 			}
 			virtual void setClippingRegion(const Point& corner1, const Point& corner2)
@@ -1292,11 +1292,11 @@ namespace sci
 				m_dc->DrawPolygon(points.size(), &wxPoints[0]);
 			}
 
-			virtual grDegree getAngle(const Distance& distance) const
+			virtual degree getAngle(const Distance& distance) const
 			{
 				double x = distance.getX(m_width, m_height, m_scale);
 				double y = distance.getY(m_width, m_height, m_scale);
-				return sci::atan2(grUnitless(-y), grUnitless(x));
+				return sci::atan2(unitless(-y), unitless(x));
 			}
 		private:
 			struct State
@@ -1307,7 +1307,7 @@ namespace sci
 				wxColour m_textForeground;
 				wxColour m_textBackground;
 				wxFont m_font;
-				grTextPoint m_fontSize; //stored here in double form as wxFont stores it as an int
+				textPoint m_fontSize; //stored here in double form as wxFont stores it as an int
 			};
 			wxPoint getWxPoint(const Point& point)
 			{
@@ -1352,38 +1352,38 @@ namespace sci
 				wxCoord ascent = ascentPlusDescent - descent;
 				if (str.length() == 0)
 					width = 0;//if the length was zero set the width to zero rather than the width of the dummy string from above
-				return TextMetric(grMillimetre(grUnitless(width) / m_scale),
-					grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale),
-					grMillimetre(grUnitless(descent) / m_scale),
-					grMillimetre(grUnitless(ascentPlusDescent - descent) / m_scale),
-					grMillimetre(grUnitless(descent) / m_scale));
+				return TextMetric(millimetre(unitless(width) / m_scale),
+					millimetre(unitless(ascentPlusDescent - descent) / m_scale),
+					millimetre(unitless(descent) / m_scale),
+					millimetre(unitless(ascentPlusDescent - descent) / m_scale),
+					millimetre(unitless(descent) / m_scale));
 			}
 
-			void unformattedRotatedText(const wxString& str, const std::array<double, 2> &position, grDegree rotation)
+			void unformattedRotatedText(const wxString& str, const std::array<double, 2> &position, degree rotation)
 			{
 				//wxSize extent = m_dc->GetTextExtent(wxStr);
 				/*wxCoord width, height, descent, leading;
 				unformattedTextExtent(str, width, height, descent, leading);
 
-				position.x -= (leading + width * horizontalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>() + (descent + height * verticalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>();
-				position.y -= -(leading + width * horizontalAlignment.value<grUnitless>()) * sci::sin(rotation).value<grUnitless>() + (descent + height * verticalAlignment.value<grUnitless>()) * sci::cos(rotation).value<grUnitless>();
+				position.x -= (leading + width * horizontalAlignment.value<unitless>()) * sci::cos(rotation).value<unitless>() + (descent + height * verticalAlignment.value<unitless>()) * sci::sin(rotation).value<unitless>();
+				position.y -= -(leading + width * horizontalAlignment.value<unitless>()) * sci::sin(rotation).value<unitless>() + (descent + height * verticalAlignment.value<unitless>()) * sci::cos(rotation).value<unitless>();
 
-				m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<grDegree>());
-				return Distance(grMillimetre(grUnitless(x) / m_scale), grMillimetre(grUnitless(y) / m_scale));*/
+				m_dc->DrawRotatedText(wxStr, wxPosition, rotation.value<degree>());
+				return Distance(millimetre(unitless(x) / m_scale), millimetre(unitless(y) / m_scale));*/
 			}
 
-			grMillimetre getFontSize() const override
+			millimetre getFontSize() const override
 			{
-				return grTextPoint(m_fontSize);
+				return textPoint(m_fontSize);
 			}
 
 			wxDC* m_dc;
 			double m_height;
 			double m_width;
-			grPerMillimetre m_scale;
+			perMillimetre m_scale;
 			std::vector<wxDash> m_penDashes;
 			std::vector<State> m_stateStack;
-			grTextPoint m_fontSize; //stored here in double form as wxFont stores it as an int
+			textPoint m_fontSize; //stored here in double form as wxFont stores it as an int
 
 		};
 
@@ -1403,7 +1403,7 @@ namespace sci
 			{
 				//override this function, but this is the kind of thing to do
 				wxPaintDC dc(this);
-				wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+				wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 			}
 			virtual void OnErase(wxEraseEvent& event)
 			{
