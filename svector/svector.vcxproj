@@ -319,21 +319,17 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="controls.cpp" />
     <ClCompile Include="eigeneng\eigeng.c" />
     <ClCompile Include="kiss_fft\kiss_fft.c" />
     <ClCompile Include="kiss_fft\kiss_fftr.c" />
     <ClCompile Include="LinearAlgebra.cpp" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="nc.cpp" />
-    <ClCompile Include="NumberFromTextValidator.cpp" />
-    <ClCompile Include="operators.cpp" />
     <ClCompile Include="plotdata.cpp" />
     <ClCompile Include="ppfile.cpp" />
     <ClCompile Include="sdialog.cpp" />
     <ClCompile Include="serr.cpp" />
     <ClCompile Include="sframe.cpp" />
-    <ClCompile Include="smath.cpp" />
     <ClCompile Include="sminimiser.cpp" />
     <ClCompile Include="spectral.cpp" />
     <ClCompile Include="splot.cpp" />
@@ -341,7 +337,6 @@
     <ClCompile Include="sstring.cpp" />
     <ClCompile Include="svector.cpp" />
     <ClCompile Include="svi.cpp" />
-    <ClCompile Include="time.cpp" />
     <ClCompile Include="transforms.cpp" />
     <ClCompile Include="undoable.cpp" />
     <ClCompile Include="wgdos.cpp" />

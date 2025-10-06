@@ -37,7 +37,7 @@ namespace sci
 	};
 
 	//differs from std::copy_if by having the if based on a potentially other container
-	//also has defined behaviour if input and dest overlap providing dest < input
+	//also has defined behaviour if input and dest overlap providing dest <= input
 	template<class InputIt, class FilterIt, class OutputIt, Unary_Predicate<decltype(*FilterIt())> UnaryPred = decltype(sci::default_pred<decltype(*FilterIt())>)>
 	OutputIt copy_if(InputIt first, InputIt last, FilterIt filter_first, OutputIt dest_first, UnaryPred pred = sci::default_pred<decltype(*filter_first)>)
 	{
@@ -53,6 +53,7 @@ namespace sci
 	}
 
 	//differs from std::copy_if by having the if based on a potentially other container
+	//also has defined behaviour if input and dest overlap providing input.begin() <= dest.begin()
 	template<std::ranges::forward_range T, std::ranges::forward_range U, std::ranges::forward_range V, Unary_Predicate<typename U::value_type> UnaryPred = decltype(sci::default_pred<typename U::value_type>)>
 	auto copy_if(const T &input, const U &filter, V &dest, UnaryPred pred = sci::default_pred<typename U::value_type>)
 	{

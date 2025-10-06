@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="operators.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ppfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,9 +66,6 @@
     <ClCompile Include="wgdos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="smath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sminimiser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -79,9 +73,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="plotdata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kiss_fft\kiss_fft.c">
@@ -95,12 +86,6 @@
     </ClCompile>
     <ClCompile Include="eigeneng\eigeng.c">
       <Filter>Source Files\eigeneng</Filter>
-    </ClCompile>
-    <ClCompile Include="controls.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NumberFromTextValidator.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="spectral.cpp">
       <Filter>Source Files</Filter>
