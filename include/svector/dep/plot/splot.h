@@ -318,6 +318,20 @@ private:
 	Direction m_direction;
 };
 
+using rgbcolour = sci::graphics::rgbcolour;
+using hlscolour = sci::graphics::hlscolour;
+using Length = sci::graphics::Length;
+using Point = sci::graphics::Point;
+using Renderer = sci::graphics::Renderer;
+using Distance = sci::graphics::Distance;
+using grMillimetre = sci::graphics::grMillimetre;
+using grPerMillimetre = sci::graphics::grPerMillimetre;
+using grTextPoint = sci::graphics::grTextPoint;
+using grDegree = sci::graphics::grDegree;
+using grUnitless = sci::graphics::grUnitless;
+using grPerInch = sci::graphics::grPerInch;
+
+
 class splotcolourscale : public PlotScale
 {
 	friend class splot;
@@ -936,11 +950,11 @@ private:
 };
 
 #include<svector/graphics.h>
-class PlotCanvasPanel : public GraphicsPanel
+class PlotCanvasPanel : public sci::graphics::GraphicsPanel
 {
 public:
 	PlotCanvasPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
+		:sci::graphics::GraphicsPanel(parent, id)
 	{
 	}
 	PlotCanvas* getCanvas()
@@ -951,7 +965,7 @@ private:
 	virtual void OnPaint(wxPaintEvent& event) override
 	{
 		wxPaintDC dc(this);
-		wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+		sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 		m_plotCanvas.render(renderer, grPerInch(FromDIP(96)));
 	}
 	PlotCanvas m_plotCanvas;

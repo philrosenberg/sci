@@ -74,7 +74,6 @@ namespace sci
 namespace sci
 {
 	size_t randInt(size_t maxVal);
-	double round(double n);
 
 	
 	

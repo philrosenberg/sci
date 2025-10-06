@@ -7,7 +7,7 @@
 
 
 #ifdef _WIN32
-//needed for the definition of the numpunct<char16_t>::id variable, sadly it s a specialization so must go in a cpp file not a h file
+//needed for the definition of the numpunct<char16_t>::id variable, sadly it's a specialization so must go in a cpp file not a h file
 __PURE_APPDOMAIN_GLOBAL inline std::locale::id std::numpunct<char16_t>::id;
 #endif
 

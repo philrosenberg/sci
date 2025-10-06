@@ -896,7 +896,7 @@ void PlotAxis::draw(plstream* pl, double scale, double pageWidth, double pageHei
 
 void PlotAxis::draw(Renderer& renderer, grPerMillimetre scale)
 {
-	StatePusher statePusher(&renderer);
+	sci::graphics::StatePusher statePusher(&renderer);
 	m_options.m_lineStyle.setPen(renderer);
 	if (isLog())
 		drawLog(renderer, scale);
@@ -1085,7 +1085,7 @@ void PlotAxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPo
 
 grMillimetre PlotAxis::drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition)
 {
-	StatePusher statePusher(&renderer);
+	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setBrush(m_options.m_labelFont.m_colour);
 	Point pagePosition = m_start + alongAxisDistance(plotPosition);
 	Length distanceFromAxis = m_options.m_majorTickLength * grUnitless(1.2);
@@ -1156,7 +1156,7 @@ grMillimetre PlotAxis::drawLabel(Renderer& renderer, grPerMillimetre scale, doub
 
 void PlotAxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
 {
-	StatePusher statePusher(&renderer);
+	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setBrush(m_options.m_titleFont.m_colour);
 	Point pagePosition = m_start + (m_end-m_start) *grUnitless(0.5);
 
@@ -1209,7 +1209,7 @@ void splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageH
 
 void splotLabel::draw(Renderer& renderer, grPerMillimetre scale)
 {
-	StatePusher statePusher(&renderer);
+	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setFont(m_font);
 	renderer.formattedText(m_text, m_position, m_horizontalAlignment, m_verticalAlignment, m_rotation);
 }
@@ -1436,7 +1436,7 @@ bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerM
 		result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
 		if (result == false)
 			return result;
-		wxRenderer renderer(&psdc, wxSize(width, height), scale);
+		sci::graphics::wxRenderer renderer(&psdc, wxSize(width, height), scale);
 		render(renderer, scale);
 		psdc.EndDoc();
 	}
@@ -1445,7 +1445,7 @@ bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerM
 	{
 		//here we redraw the plot like OnPaint but using a wxMetafile DC.
 		wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
-		wxRenderer renderer(&metadc, wxSize(width, height), scale);
+		sci::graphics::wxRenderer renderer(&metadc, wxSize(width, height), scale);
 		render(renderer, scale);;//0 gives vector output
 		//close the file - note this gives us a copy of the file in memory which we must delete
 		wxMetafile* metafile = metadc.Close();
@@ -1462,7 +1462,7 @@ bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerM
 	else if (extension == "svg")
 	{
 		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, scale.value<grPerInch>());
-		wxRenderer renderer(&dc, wxSize(width, height), scale);
+		sci::graphics::wxRenderer renderer(&dc, wxSize(width, height), scale);
 		render(renderer, scale);
 		result = true;
 	}
@@ -1493,7 +1493,7 @@ bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerM
 		//or to show blank if there are no plots
 		memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
 
-		wxRenderer renderer(&memdc, wxSize(width, height), scale);
+		sci::graphics::wxRenderer renderer(&memdc, wxSize(width, height), scale);
 		render(renderer, scale);
 
 

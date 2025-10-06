@@ -49,7 +49,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 	// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
 	// we do both axes correctly and tests the weird autoscaling of plshades
-	GraphicsFrame<PlotCanvasPanel> *frame = new GraphicsFrame<PlotCanvasPanel>(parent);
+	sci::graphics::GraphicsFrame<PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<PlotCanvasPanel>(parent);
 	frame->SetClientSize(800, 800);
 	auto canvas = frame->getPanel()->getCanvas();
 
@@ -193,7 +193,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with empty axes running from 0-1
 		//this just tests that drawing axes works
-		GraphicsFrame<PlotCanvasPanel> *frame = new GraphicsFrame<PlotCanvasPanel>(this);
+		sci::graphics::GraphicsFrame<PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<PlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -212,7 +212,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with axes running from 0-1 and 3 circular points
 		//this tests that points works
-		GraphicsFrame<PlotCanvasPanel> *frame = new GraphicsFrame<PlotCanvasPanel>(this);
+		sci::graphics::GraphicsFrame<PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<PlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -233,7 +233,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with auto scaled axes and 3 circular points
 		//this tests that auto scaling axes works
-		GraphicsFrame<PlotCanvasPanel> *frame = new GraphicsFrame<PlotCanvasPanel>(this);
+		sci::graphics::GraphicsFrame<PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<PlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -254,7 +254,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame showing an exponentially decreasing sin wave
 		//this tests that lines and different line styles work
-		GraphicsFrame<PlotCanvasPanel> *frame = new GraphicsFrame<PlotCanvasPanel>(this);
+		sci::graphics::GraphicsFrame<PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<PlotCanvasPanel>(this);
 		frame->SetClientSize(1200, 400);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -401,16 +401,16 @@ void mainFrame::OnRunGraphicsTests(wxCommandEvent& event)
 		assert(y == p1.getY(grMillimetre(10), grMillimetre(10)));
 	}
 
-	GraphicsFrame<PlotAxisTestPanel>* frame = new GraphicsFrame<PlotAxisTestPanel>(this);
+	sci::graphics::GraphicsFrame<PlotAxisTestPanel>* frame = new sci::graphics::GraphicsFrame<PlotAxisTestPanel>(this);
 	frame->Show();
 
-	GraphicsFrame<RectangleTestPanel>* frame1 = new GraphicsFrame<RectangleTestPanel>(this);
+	sci::graphics::GraphicsFrame<RectangleTestPanel>* frame1 = new sci::graphics::GraphicsFrame<RectangleTestPanel>(this);
 	frame1->Show();
 
-	GraphicsFrame<TextTestPanel>* frame2 = new GraphicsFrame<TextTestPanel>(this);
+	sci::graphics::GraphicsFrame<TextTestPanel>* frame2 = new sci::graphics::GraphicsFrame<TextTestPanel>(this);
 	frame2->Show();
 
-	GraphicsFrame<PlotLineTestPanel>* frame3 = new GraphicsFrame<PlotLineTestPanel>(this);
+	sci::graphics::GraphicsFrame<PlotLineTestPanel>* frame3 = new sci::graphics::GraphicsFrame<PlotLineTestPanel>(this);
 	frame3->Show();
 }
 
@@ -426,7 +426,7 @@ mainFrame::~mainFrame()
 void RectangleTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 	Point p1 = Point(grUnitless(0.1), grUnitless(0.1));
 	Point p2 = Point(grUnitless(0.1), grUnitless(0.7));
 	Point p3 = Point(grUnitless(0.3), grUnitless(0.7));
@@ -462,7 +462,7 @@ void RectangleTestPanel::OnPaint(wxPaintEvent& event)
 		Point(grUnitless(0.5), grUnitless(0.8)), grUnitless(0.5), grUnitless(0.0));
 }
 
-Distance boundingBox(const TextMetric& textMetric)
+Distance boundingBox(const sci::graphics::TextMetric& textMetric)
 {
 	return (Distance(textMetric.width, textMetric.ascent + textMetric.descent));
 }
@@ -470,28 +470,28 @@ Distance boundingBox(const TextMetric& textMetric)
 void TextTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 
 	Distance size(grMillimetre(2.0), grMillimetre(2.0));
 
 	Point p1(grUnitless(0.02), grUnitless(0.1));
 	renderer.rectangle(p1, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
 	renderer.elipse(p1, size);
-	TextMetric size1 = renderer.text(sU("text aligned 0.0,0.0 with the circle centre"), p1, grUnitless(0.0), grUnitless(0.0));
+	sci::graphics::TextMetric size1 = renderer.text(sU("text aligned 0.0,0.0 with the circle centre"), p1, grUnitless(0.0), grUnitless(0.0));
 	renderer.rectangle(p1, boundingBox(size1), grUnitless(0.0), grUnitless(0.0));
 	renderer.text(sU("text aligned 0.0,0.0 with the circle centre"), p1, grUnitless(0.0), grUnitless(0.0));
 
 	Point p2(grUnitless(0.5), grUnitless(0.1));
 	renderer.rectangle(p2, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
 	renderer.elipse(p2, size);
-	TextMetric size2 = renderer.text(sU("text aligned 0.5,0.0 with the circle centre"), p2, grUnitless(0.5), grUnitless(0.0));
+	sci::graphics::TextMetric size2 = renderer.text(sU("text aligned 0.5,0.0 with the circle centre"), p2, grUnitless(0.5), grUnitless(0.0));
 	renderer.rectangle(p2, boundingBox(size2), grUnitless(0.5), grUnitless(0.0));
 	renderer.text(sU("text aligned 0.5,0.0 with the circle centre"), p2, grUnitless(0.5), grUnitless(0.0));
 
 	Point p3(grUnitless(0.98), grUnitless(0.1));
 	renderer.rectangle(p3, size * grUnitless(2.), grUnitless(0.5), grUnitless(0.5));
 	renderer.elipse(p3, size);
-	TextMetric size3 = renderer.text(sU("text aligned 1.0,0.0 with the circle centre"), p3, grUnitless(1.0), grUnitless(0.0));
+	sci::graphics::TextMetric size3 = renderer.text(sU("text aligned 1.0,0.0 with the circle centre"), p3, grUnitless(1.0), grUnitless(0.0));
 	renderer.rectangle(p3, boundingBox(size3), grUnitless(1.0), grUnitless(0.0));
 	renderer.text(sU("text aligned 1.0,0.0 with the circle centre"), p3, grUnitless(1.0), grUnitless(0.0));
 
@@ -558,14 +558,14 @@ void TextTestPanel::OnPaint(wxPaintEvent& event)
 
 
 	renderer.setFont(sci::string(sU("Arial") ), Length(grTextPoint(40)), rgbcolour(0, 0, 0));
-	TextMetric AlphabetSize = renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
+	sci::graphics::TextMetric AlphabetSize = renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
 		Point(grUnitless(0.05), grUnitless(0.7)), grUnitless(0.0), grUnitless(0.0));
 	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.7)), boundingBox(AlphabetSize));
 	renderer.setFont(sci::string(sU("Arial")), Length(grTextPoint(40)), rgbcolour(0, 0, 0));
 	renderer.text(sU("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"),
 		Point(grUnitless(0.05), grUnitless(0.7)), grUnitless(0.0), grUnitless(0.0));
 
-	TextMetric xSize = renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
+	sci::graphics::TextMetric xSize = renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
 	renderer.rectangle(Point(grUnitless(0.05), grUnitless(0.8)), boundingBox(xSize));
 	renderer.formattedText(sU("M^2N^{3\\alpha}"), Point(grUnitless(0.05), grUnitless(0.8)));
 
@@ -577,7 +577,7 @@ void TextTestPanel::OnPaint(wxPaintEvent& event)
 void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 
 	sci::string axisTitle = sU("Area (m^2)");
 
@@ -651,7 +651,7 @@ void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
+	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
 
 	//bottom left plot regular axis directions
 	std::shared_ptr<PlotAxis> xAxis1(new PlotAxis(0.0, 1.0, false, Point(grUnitless(0.1), grUnitless(0.9)),

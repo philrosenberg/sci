@@ -22,41 +22,41 @@ private:
 	DECLARE_EVENT_TABLE();
 };
 
-class RectangleTestPanel : public GraphicsPanel
+class RectangleTestPanel : public sci::graphics::GraphicsPanel
 {
 public:
 	RectangleTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
+		:sci::graphics::GraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class TextTestPanel : public GraphicsPanel
+class TextTestPanel : public sci::graphics::GraphicsPanel
 {
 public:
 	TextTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
+		:sci::graphics::GraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class PlotAxisTestPanel : public GraphicsPanel
+class PlotAxisTestPanel : public sci::graphics::GraphicsPanel
 {
 public:
 	PlotAxisTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
+		:sci::graphics::GraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class PlotLineTestPanel : public GraphicsPanel
+class PlotLineTestPanel : public sci::graphics::GraphicsPanel
 {
 public:
 	PlotLineTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:GraphicsPanel(parent, id)
+		:sci::graphics::GraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;

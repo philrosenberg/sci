@@ -229,7 +229,7 @@ void PlotFrame::draw(plstream* pl, double scale, double pageWidth, double pageHe
 
 void PlotFrame::draw(Renderer& renderer, grPerMillimetre scale)
 {
-	StatePusher state(&renderer);
+	sci::graphics::StatePusher state(&renderer);
 	m_fillStyle.setBrush(renderer);
 	m_lineStyle.setPen(renderer);
 	renderer.rectangle(m_topLeft, m_bottomRight - m_topLeft);
