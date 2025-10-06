@@ -129,7 +129,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	double hueInterval = 240.0 / (nColours - 1);
 	double valueInterval = scaleRange / nColours;
 	for (size_t i = 0; i < nColours; ++i)
-		colours[i] = hlscolour(240 - i * hueInterval, 0.5, 1.0);
+		colours[i] = hlscolour(grDegree(240 - i * hueInterval), 0.5, 1.0);
 	for (size_t i = 0; i < nColours + 1; ++i)
 		values[i] = scaleBegin + i * valueInterval;
 
@@ -162,6 +162,83 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr< splothorizontalcolourbar> colourbarContour(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22)), Point(limits[4], grUnitless(0.25)), colourScaleDiscrete, PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
 	std::shared_ptr< splothorizontalcolourbar> colourbarGrid(new splothorizontalcolourbar(Point(limits[0], grUnitless(0.22 - 0.09)),Point(limits[4], grUnitless(0.25-0.09)), colourScaleContinuous, PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
 	
+	//do a test with a NullRenderer - this makes debugging much easier
+	sci::graphics::NullRenderer nullRenderer;
+	bool preDrawDone;
+	do
+	{
+		box->preDraw();
+		grid1->preDraw();
+		grid2->preDraw();
+		grid3->preDraw();
+		grid4->preDraw();
+		shade1->preDraw();
+		shade2->preDraw();
+		shade3->preDraw();
+		shade4->preDraw();
+		contour1->preDraw();
+		contour2->preDraw();
+		contour3->preDraw();
+		contour4->preDraw();
+		xAxis1->preDraw();
+		xAxis2->preDraw();
+		xAxis3->preDraw();
+		xAxis4->preDraw();
+		yAxis1->preDraw();
+		yAxis2->preDraw();
+		yAxis3->preDraw();
+		colourbarContour->preDraw();
+		colourbarGrid->preDraw();
+
+		preDrawDone = box->readyToDraw() &&
+		grid1->readyToDraw() &&
+		grid2->readyToDraw() &&
+		grid3->readyToDraw() &&
+		grid4->readyToDraw() &&
+		shade1->readyToDraw() &&
+		shade2->readyToDraw() &&
+		shade3->readyToDraw() &&
+		shade4->readyToDraw() &&
+		contour1->readyToDraw() &&
+		contour2->readyToDraw() &&
+		contour3->readyToDraw() &&
+		contour4->readyToDraw() &&
+		xAxis1->readyToDraw() &&
+		xAxis2->readyToDraw() &&
+		xAxis3->readyToDraw() &&
+		xAxis4->readyToDraw() &&
+		yAxis1->readyToDraw() &&
+		yAxis2->readyToDraw() &&
+		yAxis3->readyToDraw() &&
+		colourbarContour->readyToDraw() &&
+		colourbarGrid->readyToDraw();
+		
+	} while (!preDrawDone);
+
+
+	box->draw(nullRenderer, grPerMillimetre(1));
+	grid1->draw(nullRenderer, grPerMillimetre(1));
+	grid2->draw(nullRenderer, grPerMillimetre(1));
+	grid3->draw(nullRenderer, grPerMillimetre(1));
+	grid4->draw(nullRenderer, grPerMillimetre(1));
+	shade1->draw(nullRenderer, grPerMillimetre(1));
+	shade2->draw(nullRenderer, grPerMillimetre(1));
+	shade3->draw(nullRenderer, grPerMillimetre(1));
+	shade4->draw(nullRenderer, grPerMillimetre(1));
+	contour1->draw(nullRenderer, grPerMillimetre(1));
+	contour2->draw(nullRenderer, grPerMillimetre(1));
+	contour3->draw(nullRenderer, grPerMillimetre(1));
+	contour4->draw(nullRenderer, grPerMillimetre(1));
+	xAxis1->draw(nullRenderer, grPerMillimetre(1));
+	xAxis2->draw(nullRenderer, grPerMillimetre(1));
+	xAxis3->draw(nullRenderer, grPerMillimetre(1));
+	xAxis4->draw(nullRenderer, grPerMillimetre(1));
+	yAxis1->draw(nullRenderer, grPerMillimetre(1));
+	yAxis2->draw(nullRenderer, grPerMillimetre(1));
+	yAxis3->draw(nullRenderer, grPerMillimetre(1));
+	colourbarContour->draw(nullRenderer, grPerMillimetre(1));
+	colourbarGrid->draw(nullRenderer, grPerMillimetre(1));
+
 	canvas->addItem(box);
 	canvas->addItem(grid1);
 	canvas->addItem(grid2);

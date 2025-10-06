@@ -1853,6 +1853,10 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 			double x1;
 			double y0;
 			double y1;
+			//if both x and y are the same dimensionality then the will be stored in the same
+			//class with x as index 0 and y as index 1. Otherwise they will be stored in different
+			//classes, both as index 0;
+			size_t yIndex = (m_x1d == m_y1d) ? 1 : 0;
 			if (m_x1d)
 			{
 				x0 = getVector(0)[i];
@@ -1865,13 +1869,13 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 			}
 			if (m_y1d)
 			{
-				y0 = getVector(1)[j];
-				y1 = getVector(1)[j + 1];
+				y0 = getVector(yIndex)[j];
+				y1 = getVector(yIndex)[j + 1];
 			}
 			else
 			{
-				y0 = getGrid(1)[i][j];
-				y1 = getGrid(1)[i + 1][j + 1];
+				y0 = getGrid(yIndex)[i][j];
+				y1 = getGrid(yIndex)[i + 1][j + 1];
 			}
 			std::pair<size_t, size_t> ijPair(i, j);
 			for (size_t k = 0; k < segmentIters.size(); ++k)

@@ -318,8 +318,8 @@ private:
 	Direction m_direction;
 };
 
-using rgbcolour = sci::graphics::rgbcolour;
-using hlscolour = sci::graphics::hlscolour;
+using rgbcolour = sci::graphics::RgbColour;
+using hlscolour = sci::graphics::HlsColour;
 using Length = sci::graphics::Length;
 using Point = sci::graphics::Point;
 using Renderer = sci::graphics::Renderer;

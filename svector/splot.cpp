@@ -170,49 +170,6 @@ void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,P
 	strcpy(label,sci::toUtf8(stdlabel).c_str());
 }
 
-//note that hue can be set to any value and will simply loop back
-//the full range of hue is 0-360, the other parameters are 0-1
-hlscolour::hlscolour(double hue, double lightness, double saturation, double alpha)
-{
-	m_h=hue;
-	m_l=std::max(std::min(lightness,1.0),0.0);
-	m_s=std::max(std::min(saturation,1.0),0.0);
-	m_a=std::max(std::min(alpha,1.0),0.0);
-}
-hlscolour::hlscolour()
-{
-	m_h=0.0;
-	m_l=0.0;
-	m_s=0.0;
-	m_a=1.0;
-}
-rgbcolour hlscolour::convertToRgb() const
-{
-	double r, g, b;
-	plhlsrgb( m_h, m_l, m_s, &r, &g, &b );
-	return rgbcolour( r, g, b, m_a );
-}
-rgbcolour::rgbcolour(double red, double green, double blue, double alpha)
-{
-	m_r=std::max(std::min(red,1.0),0.0);;
-	m_g=std::max(std::min(green,1.0),0.0);
-	m_b=std::max(std::min(blue,1.0),0.0);
-	m_a=std::max(std::min(alpha,1.0),0.0);
-}
-rgbcolour::rgbcolour()
-{
-	m_r=0.0;
-	m_g=0.0;
-	m_b=0.0;
-	m_a=1.0;
-}
-hlscolour rgbcolour::convertToHls() const
-{
-	double h, l, s;
-	plrgbhls(m_r, m_g, m_b, &h, &l, &s );
-	return hlscolour( h, l, s, m_a );
-}
-
 void PlotScale::expand(const std::vector<double>& data)
 {
 	if (isAutoscale())
@@ -381,7 +338,7 @@ void splotcolourscale::setup(std::span<const double> value, std::span<const hlsc
 	m_alpha.resize(colour.size());
 	for (size_t i = 0; i < colour.size(); ++i)
 	{
-		m_colour1[i] = colour[i].h();
+		m_colour1[i] = colour[i].h().value<grDegree>();
 		m_colour2[i] = colour[i].l();
 		m_colour3[i] = colour[i].s();
 		m_alpha[i] = colour[i].a();
@@ -556,7 +513,7 @@ rgbcolour splotcolourscale::getRgbOriginalScale( double value, bool valuePrelogg
 	{
 		hlscolour hls = getHlsOriginalScale(value, valuePrelogged);
 		double r, g, b;
-		plhlsrgb(hls.h(), hls.l(), hls.s(), &r, &g, &b);
+		plhlsrgb(hls.h().value<grDegree>(), hls.l(), hls.s(), &r, &g, &b);
 		return (rgbcolour(r, g, b, hls.a()));
 	}
 
@@ -572,12 +529,12 @@ hlscolour splotcolourscale::getHlsOriginalScale( double value, bool valuePreLogg
 		rgbcolour rgb = getRgbOriginalScale(value, valuePreLogged);
 		double h, l, s;
 		plrgbhls(rgb.r(), rgb.g(), rgb.b(), &h, &l, &s);
-		return hlscolour(h, l, s, rgb.a());
+		return hlscolour(grDegree(h), l, s, rgb.a());
 	}
 
 	double h, l, s, a;
 	interpolate(value, h, l, s, a, valuePreLogged);
-	return hlscolour(h, l, s, a);
+	return hlscolour(grDegree(h), l, s, a);
 }
 
 void splotcolourscale::setupdefault()
@@ -607,28 +564,28 @@ rgbcolour splotcolourscale::getRgbOffscaleBottom() const
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
 	else
-		return hlscolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
+		return hlscolour (grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
 }
 rgbcolour splotcolourscale::getRgbOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
 	else
-		return hlscolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
+		return hlscolour (grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
 }
 hlscolour splotcolourscale::getHlsOffscaleBottom() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToHls();
 	else
-		return hlscolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
+		return hlscolour (grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]);
 }
 hlscolour splotcolourscale::getHlsOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToHls();
 	else
-		return hlscolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
+		return hlscolour (grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back());
 }
 
 void splotcolourscale::setupForImage(plstream *pl) const

@@ -45,19 +45,32 @@ namespace sci
 		// rgb colour. the hue colour wheel goes from 0-360, but numbers outside this range are permitted.
 		// lightness, saturation and alpha are in the 0-1 range and will be set to the apropriate limit if
 		//outside these values
-		class rgbcolour;
+		class RgbColour;
 
-		class hlscolour
+		class HlsColour
 		{
 		public:
-			hlscolour(double hue, double lightness, double saturation, double alpha = 1.0);
-			hlscolour();
-			rgbcolour convertToRgb() const;
-			inline double h() const { return m_h; }
+			
+			HlsColour(degree hue, double lightness, double saturation, double alpha = 1.0)
+			{
+				m_h = hue;
+				m_l = std::max(std::min(lightness, 1.0), 0.0);
+				m_s = std::max(std::min(saturation, 1.0), 0.0);
+				m_a = std::max(std::min(alpha, 1.0), 0.0);
+			}
+			HlsColour()
+			{
+				m_h = degree(0.0);
+				m_l = 0.0;
+				m_s = 0.0;
+				m_a = 1.0;
+			}
+			RgbColour convertToRgb() const;
+			inline degree h() const { return m_h; }
 			inline double l() const { return m_l; }
 			inline double s() const { return m_s; }
 			inline double a() const { return m_a; }
-			double m_h;
+			degree m_h;
 			double m_l;
 			double m_s;
 			double m_a;
@@ -65,12 +78,29 @@ namespace sci
 
 		// rgb colour, all three colours and alpha are in the 0-1 range and will be set to 
 		//the apropriate limit if outside these values
-		class rgbcolour
+		class RgbColour
 		{
 		public:
-			rgbcolour(double red, double green, double blue, double alpha = 1.0);
-			rgbcolour();
-			hlscolour convertToHls() const;
+			RgbColour(double red, double green, double blue, double alpha = 1.0)
+			{
+				m_r = std::max(std::min(red, 1.0), 0.0);;
+				m_g = std::max(std::min(green, 1.0), 0.0);
+				m_b = std::max(std::min(blue, 1.0), 0.0);
+				m_a = std::max(std::min(alpha, 1.0), 0.0);
+			}
+			RgbColour()
+			{
+				m_r = 0.0;
+				m_g = 0.0;
+				m_b = 0.0;
+				m_a = 1.0;
+			}
+			HlsColour convertToHls() const
+			{
+				double h, l, s;
+				plrgbhls(m_r, m_g, m_b, &h, &l, &s);
+				return HlsColour(degree(h), l, s, m_a);
+			}
 			inline double r() const { return m_r; }
 			inline double g() const { return m_g; }
 			inline double b() const { return m_b; }
@@ -80,6 +110,13 @@ namespace sci
 			double m_b;
 			double m_a;
 		};
+
+		inline RgbColour HlsColour::convertToRgb() const
+		{
+			double r, g, b;
+			plhlsrgb(m_h.value<degree>(), m_l, m_s, &r, &g, &b);
+			return RgbColour(r, g, b, m_a);
+		}
 
 		//a length is a scalar, it's primary use is as the x and y components of GraphicsVector or where an item needs a size with no direction
 		//It is a combination of an absolute distance represented internally as a sci::Physical with a length dimension
@@ -695,30 +732,30 @@ namespace sci
 			class Font
 			{
 			public:
-				Font(std::vector<sci::string> facenames = std::vector<sci::string>(), Length size = textPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+				Font(std::vector<sci::string> facenames = std::vector<sci::string>(), Length size = textPoint(12.0), RgbColour colour = RgbColour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1))
 					:m_facenames(facenames), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
 				{}
 		
-				Font(sci::string facename, Length size = textPoint(12.0), rgbcolour colour = rgbcolour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+				Font(sci::string facename, Length size = textPoint(12.0), RgbColour colour = RgbColour(), FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1))
 					:m_facenames(std::vector<sci::string>(1,facename)), m_size(size), m_colour(colour), m_backupFamily(backupFamily), m_bold(bold), m_italic(italic), m_underline(underline), m_backgroundColour(backgroundColour)
 				{}
 		
 				std::vector<sci::string> m_facenames;
 				Length m_size;
-				rgbcolour m_colour;
+				RgbColour m_colour;
 				FontFamily m_backupFamily;
 				bool m_bold;
 				bool m_italic;
 				bool m_underline;
-				rgbcolour m_backgroundColour;
+				RgbColour m_backgroundColour;
 			};
 
 			virtual void pushState() = 0;
 			virtual void popState() = 0;
-			virtual void setBrush(const hlscolour& colour) = 0;
-			virtual void setBrush(const rgbcolour& colour) = 0;
-			virtual void setPen(const hlscolour& colour, const Length &thickness, const std::vector<Length> &dashes = std::vector<Length>(0)) = 0;
-			virtual void setPen(const rgbcolour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) = 0;
+			virtual void setBrush(const HlsColour& colour) = 0;
+			virtual void setBrush(const RgbColour& colour) = 0;
+			virtual void setPen(const HlsColour& colour, const Length &thickness, const std::vector<Length> &dashes = std::vector<Length>(0)) = 0;
+			virtual void setPen(const RgbColour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) = 0;
 			virtual void line(const Point& p1, const Point& p2) = 0;
 			virtual void line(const Point& point, const Distance& distance) = 0;
 			virtual TextMetric text(const sci::string &str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment) = 0;
@@ -766,8 +803,8 @@ namespace sci
 			{
 				setFont(font.m_facenames, font.m_size, font.m_colour, font.m_backupFamily, font.m_bold, font.m_italic, font.m_underline, font.m_backgroundColour);
 			}
-			virtual void setFont(sci::string facename, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
-			virtual void setFont(std::vector<sci::string> facenames, Length size, rgbcolour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1)) = 0;
+			virtual void setFont(sci::string facename, Length size, RgbColour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) = 0;
+			virtual void setFont(std::vector<sci::string> facenames, Length size, RgbColour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) = 0;
 			virtual void scaleFontSize(unitless scale) = 0;
 			virtual millimetre getFontSize() const = 0;
 			virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
@@ -809,13 +846,13 @@ namespace sci
 				unitless m_size;
 				/*std::optional<sci::string> m_facename;
 				std::optional<double> m_size;
-				std::optional <rgbcolour> m_colour;
+				std::optional <RgbColour> m_colour;
 				std::optional <Renderer::FontFamily> m_backupFamily;
 				std::optional<bool> m_bold;
 				std::optional<bool> m_italic;
 				std::optional<bool> m_underline;
 				std::optional<bool> m_overline;
-				std::optional <rgbcolour> m_backgroundColour;
+				std::optional <RgbColour> m_backgroundColour;
 				TextMetric m_extent;*/
 
 				//returns the index of the closing bracket which matches with the bracket at openingBracketPosition
@@ -1119,19 +1156,19 @@ namespace sci
 				}
 				m_stateStack.pop_back();
 			}
-			virtual void setBrush(const hlscolour& colour) override
+			virtual void setBrush(const HlsColour& colour) override
 			{
 				setBrush(colour.convertToRgb());
 			}
-			virtual void setBrush(const rgbcolour& colour) override
+			virtual void setBrush(const RgbColour& colour) override
 			{
 				m_dc->SetBrush(wxBrush(getWxColour(colour)));
 			}
-			virtual void setPen(const hlscolour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
+			virtual void setPen(const HlsColour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
 			{
 				setPen(colour.convertToRgb(), thickness, dashes);
 			}
-			virtual void setPen(const rgbcolour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
+			virtual void setPen(const RgbColour& colour, const Length &thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
 			{
 				m_dc->SetPen(wxNullPen); //this deselects the prvious pen, so if we've used
 				//dashes, the dash array can now be invalidated.
@@ -1157,11 +1194,11 @@ namespace sci
 
 				m_dc->SetPen(pen);
 			}
-			void setFont(sci::string facename, Length size, rgbcolour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0,0,0,1))
+			virtual void setFont(sci::string facename, Length size, RgbColour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0,0,0,1)) override
 			{
 				setFont(std::vector<sci::string>{ facename }, size, colour, backupFamily, bold, italic, underline, backgroundColour);
 			}
-			void setFont(std::vector<sci::string> facenames, Length size, rgbcolour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, rgbcolour backgroundColour = rgbcolour(0, 0, 0, 1))
+			virtual void setFont(std::vector<sci::string> facenames, Length size, RgbColour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) override
 			{
 				pushState();
 				wxFont font;
@@ -1325,7 +1362,7 @@ namespace sci
 			{
 				return wxSize(distance.getX(m_width, m_height, m_scale), distance.getY(m_width, m_height, m_scale));
 			}
-			wxColour getWxColour(const rgbcolour& colour)
+			wxColour getWxColour(const RgbColour& colour)
 			{
 				return wxColour(colour.r() * 255.99999, colour.g() * 255.99999, colour.b() * 255.99999, colour.a() * 255.99999);
 			}
@@ -1344,7 +1381,7 @@ namespace sci
 				return wxFONTFAMILY_DEFAULT;
 			}
 
-			TextMetric getUnformattedTextExtent(const sci::string& str)
+			virtual TextMetric getUnformattedTextExtent(const sci::string& str) override
 			{
 				wxCoord width, ascentPlusDescent, descent, leading;
 				wxString wxStr = str.length() > 0 ? wxString::FromUTF8(sci::toUtf8(str)) : wxString("M"); // ensure the string isn't empty so it gets a non-zero height
@@ -1384,6 +1421,90 @@ namespace sci
 			std::vector<wxDash> m_penDashes;
 			std::vector<State> m_stateStack;
 			textPoint m_fontSize; //stored here in double form as wxFont stores it as an int
+
+		};
+
+		class NullRenderer : public Renderer
+		{
+		public:
+
+			virtual void pushState() override
+			{
+			}
+			virtual void popState() override
+			{
+			}
+			virtual void setBrush(const HlsColour& colour) override
+			{
+			}
+			virtual void setBrush(const RgbColour& colour) override
+			{
+			}
+			virtual void setPen(const HlsColour& colour, const Length& thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
+			{
+			}
+			virtual void setPen(const RgbColour& colour, const Length& thickness, const std::vector<Length>& dashes = std::vector<Length>(0)) override
+			{
+			}
+			virtual void setFont(sci::string facename, Length size, RgbColour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) override
+			{
+			}
+			virtual void setFont(std::vector<sci::string> facenames, Length size, RgbColour colour, Renderer::FontFamily backupFamily = Renderer::FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) override
+			{
+			}
+			millimetre getFontSize() const override
+			{
+				return millimetre(0);
+			}
+			virtual void line(const Point& p1, const Point& p2) override
+			{
+			}
+
+			virtual void line(const Point& point, const Distance& distance) override
+			{
+			}
+
+			virtual TextMetric text(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment) override
+			{
+				return TextMetric{ millimetre(0), millimetre(0), millimetre(0), millimetre(0), millimetre(0) };
+			}
+
+			virtual TextMetric rotatedText(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment, degree rotation) override
+			{
+				return TextMetric{ millimetre(0), millimetre(0), millimetre(0), millimetre(0), millimetre(0) };
+			}
+
+			virtual TextMetric getUnformattedTextExtent(const sci::string& str) override
+			{
+				return TextMetric{ millimetre(0), millimetre(0), millimetre(0), millimetre(0), millimetre(0) };
+			}
+			virtual void elipse(const Point& position, const Distance& radius, unitless xAlignemnt = unitless(0.5), unitless yAlignment = unitless(0.5)) override
+			{
+			}
+			virtual void rectangle(const Point& position, const Distance& size, unitless xAlignemnt = unitless(0.0), unitless yAlignment = unitless(0.0)) override
+			{
+			}
+			virtual void rectangle(const Point& corner1, const Point& corner2) override
+			{
+			}
+			void scaleFontSize(unitless scale) override
+			{
+			}
+			virtual void setClippingRegion(const Point& corner1, const Point& corner2)
+			{
+			}
+			virtual void polyLine(const std::vector<Point>& points)
+			{
+			}
+
+			virtual void polygon(const std::vector<Point>& points)
+			{
+			}
+
+			virtual degree getAngle(const Distance& distance) const
+			{
+				return degree(0);
+			}
 
 		};
 
