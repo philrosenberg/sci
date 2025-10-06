@@ -1840,7 +1840,7 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 
 	//render the fill
 
-	std::vector<std::set<Segment>::iterator> segmentIters(segmentsPerLevel.size());
+	/*std::vector<std::set<Segment>::iterator> segmentIters(segmentsPerLevel.size());
 	for (size_t i = 0; i < segmentsPerLevel.size(); ++i)
 		segmentIters[i] = segmentsPerLevel[i].begin();
 
@@ -1853,7 +1853,7 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 			double x1;
 			double y0;
 			double y1;
-			//if both x and y are the same dimensionality then the will be stored in the same
+			//if both x and y are the same dimensionality then they will be stored in the same
 			//class with x as index 0 and y as index 1. Otherwise they will be stored in different
 			//classes, both as index 0;
 			size_t yIndex = (m_x1d == m_y1d) ? 1 : 0;
@@ -1910,7 +1910,7 @@ void ContourData::plotData(Renderer& renderer, grPerMillimetre scale) const
 
 			intersections.resize(0);
 		}
-	}
+	}*/
 	
 
 	//render the contours
