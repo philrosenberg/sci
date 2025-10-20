@@ -1759,10 +1759,10 @@ namespace sci
 
 		};
 
-		class splotLabel : public DrawableItem
+		class Label : public DrawableItem
 		{
 		public:
-			splotLabel(sci::string text, Point position, grUnitless horizontalAlignment = grUnitless(0.0),
+			Label(sci::string text, Point position, grUnitless horizontalAlignment = grUnitless(0.0),
 				grUnitless verticalAlignment = grUnitless(0.0), Renderer::Font font = Renderer::Font(),
 				grDegree rotation = grDegree(0.0), Length minTextSize = grTextPoint(5.0))
 				:m_text(text), m_position(position), m_horizontalAlignment(horizontalAlignment),
@@ -1771,11 +1771,20 @@ namespace sci
 			{
 
 			}
+
 			virtual void preDraw() override
 			{
 			};
+
 			virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight);
-			void draw(Renderer& renderer, grPerMillimetre scale) override;
+
+			void draw(Renderer& renderer, grPerMillimetre scale) override
+			{
+				sci::graphics::StatePusher statePusher(&renderer);
+				renderer.setFont(m_font);
+				renderer.formattedText(m_text, m_position, m_horizontalAlignment, m_verticalAlignment, m_rotation);
+			}
+
 			virtual bool readyToDraw() const override
 			{
 				return true;
