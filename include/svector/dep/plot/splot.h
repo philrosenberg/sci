@@ -101,7 +101,7 @@ namespace sci
 			//then we can control the m_direction variable and
 			//ensure splotaxis is horizontal and vertical and
 			//ColourScale and splotsizescale are none.
-			friend class PlotAxis;
+			friend class Axis;
 			friend class ColourScale;
 			friend class SizeScale;
 			friend class LevelScale;
@@ -957,7 +957,21 @@ namespace sci
 				}
 			}
 			~LevelScale() {};
-			sci::GridData<double, 1> getLevels() const;
+			sci::GridData<double, 1> getLevels() const
+			{
+				sci::GridData<double, 1> result;
+				if (isLog())
+				{
+					//result = sci::pow(10.0, getLogMin() + m_logValue * (getLogMax() - getLogMin())); //this should work but doesn't so do it manually
+					result.reshape(m_logValue.shape());
+					auto logValueIter = m_logValue.begin();
+					for (auto resultIter = result.begin(); resultIter != result.end(); ++resultIter, ++logValueIter)
+						*resultIter = sci::pow(10.0, getLogMin() + *logValueIter * (getLogMax() - getLogMin()));
+				}
+				else
+					result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
+				return result;
+			}
 		private:
 			sci::GridData<double, 1> m_value;
 			sci::GridData<double, 1> m_logValue;
@@ -1126,7 +1140,7 @@ namespace sci
 			virtual bool readyToDraw() const = 0;
 		};
 
-		class PlotAxis : public Scale, public DrawableItem
+		class Axis : public Scale, public DrawableItem
 		{
 			friend class splot;
 			friend class splot2d;
@@ -1177,31 +1191,33 @@ namespace sci
 				sci::string(*m_customlabelcreator)(double axisvalue);
 				size_t m_maxDigits;
 			};
-			PlotAxis(double min, double max, bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
+			Axis(double min, double max, bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
 				:Scale(min, max, log, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 			}
-			PlotAxis(bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
+			Axis(bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
 				:Scale(log, direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 
 			}
-			PlotAxis(Point start, Point end, Options options = Options(), Direction direction = Direction::none)
+			Axis(Point start, Point end, Options options = Options(), Direction direction = Direction::none)
 				:Scale(direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 
 			}
 
-			~PlotAxis() {};
+			~Axis() {};
 			const Options& getOptions() const
 			{
 				return m_options;
 			}
+
 			void setOptions(const Options& options)
 			{
 				m_hasChanged = true;
 				m_options = options;
 			}
+
 			Direction getBestDirection(Renderer& renderer) const
 			{
 				Direction direction = Scale::getDirection();
@@ -1230,15 +1246,18 @@ namespace sci
 				m_start = start;
 				m_end = end;
 			}
+
 			void getPosition(Point& start, Point& end) const
 			{
 				start = m_start;
 				end = m_end;
 			}
+
 			inline Point getStart() const
 			{
 				return m_start;
 			}
+
 			inline Point getEnd() const
 			{
 				return m_end;
@@ -1247,12 +1266,23 @@ namespace sci
 			void preDraw() override
 			{
 			}
+
 			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
-			void draw(Renderer& renderer, grPerMillimetre scale) override;
+			void draw(Renderer& renderer, grPerMillimetre scale) override
+			{
+				sci::graphics::StatePusher statePusher(&renderer);
+				m_options.m_lineStyle.setPen(renderer);
+				if (isLog())
+					drawLog(renderer, scale);
+				else
+					drawLinear(renderer, scale);
+			}
+
 			bool readyToDraw() const override
 			{
 				return true;
 			}
+
 			Distance alongAxisDistanceFromLinearData(double value) const
 			{
 				double fraction;
@@ -1262,6 +1292,7 @@ namespace sci
 					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
 				return (m_end - m_start) * grUnitless(fraction);
 			}
+
 			Distance alongAxisDistanceFromLoggedIfNeededData(double value) const
 			{
 				double fraction;
@@ -1273,11 +1304,301 @@ namespace sci
 			}
 
 		private:
-			void drawLinear(Renderer& renderer, grPerMillimetre scale);
-			void drawLog(Renderer& renderer, grPerMillimetre scale);
-			void drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor);
-			grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition); //returns the sise of the label perpedicular to the axis
-			void drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis);
+			void drawLinear(Renderer& renderer, grPerMillimetre scale)
+			{
+				//calculate the min, max and span
+				double min = getLinearMin();
+				double max = getLinearMax();
+				if (min > max)
+					std::swap(min, max);
+				double span = max - min;
+
+				//calculate major interval if needed
+				double majorInterval;
+				size_t nAutoSubticks = 0;
+				if (m_options.m_autoMajorInterval)
+				{
+					double spanMagnitude = std::floor(std::log10(span));
+					double spanNormalised = span / std::pow(10.0, spanMagnitude); //this will be in the range 1-9.99999;
+					if (spanNormalised <= 2.0)
+					{
+						majorInterval = 0.2 * std::pow(10.0, spanMagnitude);
+						nAutoSubticks = 3;
+					}
+					else if (spanNormalised <= 5.0)
+					{
+						majorInterval = 0.5 * std::pow(10.0, spanMagnitude);
+						nAutoSubticks = 4;
+					}
+					else
+					{
+						majorInterval = 1.0 * std::pow(10.0, spanMagnitude);
+						nAutoSubticks = 4;
+					}
+				}
+				else
+					majorInterval = m_options.m_majorInterval;
+
+				//calculate the number of subticks
+				size_t nSubticks;
+				if (m_options.m_autoNSubticks)
+				{
+					if (m_options.m_autoMajorInterval)
+						nSubticks = nAutoSubticks;
+					else
+						nSubticks = 4;
+				}
+				else
+					nSubticks = m_options.m_nSubticks;
+
+				//draw the ticks and labels
+				renderer.setFont(m_options.m_labelFont);
+				double currentMajorPosition = std::floor(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
+
+				double minorInterval = majorInterval / double(nSubticks + 1);
+				grMillimetre maxLabelSize(0);
+				while (currentMajorPosition <= max) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
+				{
+					if (currentMajorPosition >= min)
+					{
+						drawTick(renderer, scale, currentMajorPosition, false);
+						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+						maxLabelSize = std::max(labelSize, maxLabelSize);
+					}
+					for (size_t i = 0; i < nSubticks; ++i)
+					{
+						double minorPosition = currentMajorPosition + double(i + 1) * minorInterval;
+						if (minorPosition <= max && minorPosition >= min)
+							drawTick(renderer, scale, minorPosition, true);
+					}
+					currentMajorPosition += majorInterval;
+				}
+
+				//draw the axis
+				renderer.line(m_start, m_end);
+
+				//draw the title
+				renderer.setFont(m_options.m_titleFont);
+				drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
+			}
+
+			void drawLog(Renderer& renderer, grPerMillimetre scale)
+			{
+				//calculate the min, max and span
+				double logMin = getLogMin();
+				double logMax = getLogMax();
+				if (logMin > logMax)
+					std::swap(logMin, logMax);
+				double logSpan = logMax - logMin;
+
+				//calculate major interval if needed
+				double majorLogInterval;
+				if (m_options.m_autoMajorInterval)
+					majorLogInterval = std::ceil(logSpan / 10.0);
+				else
+					majorLogInterval = m_options.m_majorInterval;
+
+				//calculate the number of subticks and the interval
+				size_t nSubticks;
+				if (m_options.m_autoNSubticks)
+					nSubticks = 8;
+				else
+					nSubticks = m_options.m_nSubticks;
+				//If major interval divided by the sub intervals is an integer, then multiply subticks by this number
+				double minorLogInterval = 0;;
+				double testInterval = majorLogInterval / double(nSubticks + 1);
+				if (nSubticks > 0 && testInterval == ceil(testInterval))
+					minorLogInterval = testInterval;
+				double minorInterval = (std::pow(10.0, majorLogInterval) - 1.0) / double(nSubticks + 1);
+
+				//draw the ticks and labels
+				renderer.setFont(m_options.m_labelFont);
+				double currentMajorLogPosition = std::floor(logMin / majorLogInterval) * majorLogInterval;
+				grMillimetre maxLabelSize(0);
+
+				while (currentMajorLogPosition <= logMax) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
+				{
+					double currentMajorPosition = std::pow(10.0, currentMajorLogPosition);
+					if (currentMajorLogPosition >= logMin)
+					{
+						drawTick(renderer, scale, currentMajorPosition, false);
+						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+						maxLabelSize = std::max(labelSize, maxLabelSize);
+					}
+					if (minorLogInterval != 0.0)
+					{
+						for (size_t i = 0; i < nSubticks; ++i)
+						{
+							double currentMinorPosition = std::pow(10.0, currentMajorLogPosition + double(i + 1) * minorLogInterval);
+							if (currentMinorPosition <= getLinearMax() && currentMinorPosition >= getLinearMin())
+								drawTick(renderer, scale, currentMinorPosition, true);
+						}
+
+					}
+					else
+					{
+						for (size_t i = 0; i < nSubticks; ++i)
+						{
+							double currentMinorPosition = currentMajorPosition * double((i + 1) * minorInterval + 1.0);
+							if (currentMinorPosition <= getLinearMax() && currentMinorPosition >= getLinearMin())
+								drawTick(renderer, scale, currentMinorPosition, true);
+						}
+					}
+					currentMajorLogPosition += majorLogInterval;
+				}
+
+				//draw the axis
+				renderer.line(m_start, m_end);
+
+				//draw the title
+				renderer.setFont(m_options.m_titleFont);
+				drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
+			}
+
+			void drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
+			{
+				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
+				Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
+				Point p1 = Point(grMillimetre(0.0), grMillimetre(0.0));
+				Point p2 = p1;
+				Direction direction = getBestDirection(renderer);
+				if (direction == Direction::horizontal)
+				{
+					//set the position of both ends of the tick on the axis initially
+					p1 = pagePosition;
+					p2 = pagePosition;
+					//extend the tick out in either direction as needed
+					if (m_options.m_ticksRightOrUp)
+						p1 += Distance(grMillimetre(0.0), -length);
+					if (m_options.m_ticksLeftOrDown)
+						p2 += Distance(grMillimetre(0.0), length);
+				}
+				else if (direction == Direction::vertical)
+				{
+					//set the position of both ends of the tick on the axis initially
+					p1 = pagePosition;
+					p2 = pagePosition;
+					//extend the tick out in either direction as needed
+					if (m_options.m_ticksLeftOrDown)
+						p1 += Distance(-length, grMillimetre(0.0));
+					if (m_options.m_ticksRightOrUp)
+						p2 += Distance(length, grMillimetre(0.0));
+				}
+				if (p1 != p2)
+					renderer.line(p1, p2);
+			}
+			grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition) //returns the sise of the label perpedicular to the axis
+			{
+				sci::graphics::StatePusher statePusher(&renderer);
+				renderer.setBrush(m_options.m_labelFont.m_colour);
+				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
+				Length distanceFromAxis = m_options.m_majorTickLength * grUnitless(1.2);
+
+				sci::string label;
+				{
+					//make a scope so we destroy the stream and don't access it later
+					sci::stringstream strm;
+					strm.precision(m_options.m_maxDigits);
+					strm << plotPosition;
+
+					//make scientific notation nicer
+					size_t ePosition = strm.str().find(sU("e"));
+					if (ePosition != sci::string::npos && strm.str().length() > ePosition + 2)
+					{
+						label = strm.str().substr(0, ePosition);
+						label = label + sU("\u00D710^{");
+						size_t exponentPosition = ePosition + 1;
+						if (strm.str()[exponentPosition] == sU('-'))
+							label = label + sU('-');
+						++exponentPosition; //skip the + or -
+						while (strm.str()[exponentPosition] == sU('0') && exponentPosition < strm.str().length())
+							++exponentPosition;
+						label = label + strm.str().substr(exponentPosition) + sU("}");
+					}
+					else
+						label = strm.str();
+				}
+
+				grUnitless alignment(0.5);
+				grMillimetre labelSize(0);
+				Direction direction = getBestDirection(renderer);
+				if (direction == Direction::horizontal)
+				{
+					//set the horizontal position and the alignment
+					if (!m_options.m_labelsLeftOrDown)
+					{
+						pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
+						alignment = grUnitless(1.0);
+					}
+					else
+					{
+						pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
+						alignment = grUnitless(0.0);
+					}
+
+					labelSize = (renderer.formattedText(label, pagePosition, grUnitless(0.5), grUnitless(alignment))).ascent;
+				}
+				else if (direction == Direction::vertical)
+				{
+					//set the horizontal position and the alignment
+					if (m_options.m_labelsLeftOrDown)
+					{
+						pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
+						alignment = grUnitless(1.0);
+					}
+					else
+					{
+						pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
+						alignment = grUnitless(0.0);
+					}
+
+					labelSize = (renderer.formattedText(label, pagePosition, grUnitless(alignment), grUnitless(0.5))).width;
+				}
+
+				return labelSize;
+			}
+
+			void drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
+			{
+				sci::graphics::StatePusher statePusher(&renderer);
+				renderer.setBrush(m_options.m_titleFont.m_colour);
+				Point pagePosition = m_start + (m_end - m_start) * grUnitless(0.5);
+
+				grUnitless alignment(0.5);
+				Direction direction = getBestDirection(renderer);
+				if (direction == Direction::horizontal)
+				{
+					//set the horizontal position and the alignment
+					if (!m_options.m_labelsLeftOrDown)
+					{
+						pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
+						alignment = grUnitless(1.0);
+					}
+					else
+					{
+						pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
+						alignment = grUnitless(0.0);
+					}
+
+					renderer.formattedText(m_options.m_title, pagePosition, grUnitless(0.5), grUnitless(alignment));
+				}
+				else if (direction == Direction::vertical)
+				{
+					//set the horizontal position and the alignment
+					if (m_options.m_labelsLeftOrDown)
+					{
+						pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
+						alignment = grUnitless(1.0);
+					}
+					else
+					{
+						pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
+						alignment = grUnitless(0.0);
+					}
+
+					renderer.formattedText(m_options.m_title, pagePosition, grUnitless(0.5), grUnitless(alignment), grDegree(90));
+				}
+			}
 
 			std::string createploptstring() const;
 
@@ -1409,10 +1730,10 @@ namespace sci
 		class HorizontalColourBar : public DrawableItem
 		{
 		public:
-			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale> colourscale, PlotAxis::Options axisOptions = PlotAxis::Options())
+			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale> colourscale, Axis::Options axisOptions = Axis::Options())
 				:m_colourscale(colourscale),
-				m_xAxis(new PlotAxis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale::Direction::horizontal)),
-				m_yAxis(new PlotAxis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), PlotAxis::Options::getBlankAxis(), sci::plot::Scale::Direction::horizontal))
+				m_xAxis(new Axis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale::Direction::horizontal)),
+				m_yAxis(new Axis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis::Options::getBlankAxis(), sci::plot::Scale::Direction::horizontal))
 			{
 			}
 			void preDraw() override
@@ -1426,8 +1747,8 @@ namespace sci
 			}
 		private:
 			std::shared_ptr<ColourScale> m_colourscale;
-			std::shared_ptr<PlotAxis> m_xAxis;
-			std::shared_ptr<PlotAxis> m_yAxis;
+			std::shared_ptr<Axis> m_xAxis;
+			std::shared_ptr<Axis> m_yAxis;
 
 		};
 

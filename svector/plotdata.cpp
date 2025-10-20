@@ -391,7 +391,7 @@ std::vector<const double*> sci::plot::StructuredData::getPointer(size_t dimensio
 	return result;
 }
 
-sci::plot::LineData::LineData(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
+sci::plot::LineData::LineData(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle &lineStyle, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, {xAxis, yAxis}, transformer), m_lineStyle(lineStyle)
 {
 }
@@ -421,7 +421,7 @@ void sci::plot::LineData::plotData(Renderer& renderer, grPerMillimetre scale) co
 	renderer.polyLine(points);
 }
 
-sci::plot::PointData::PointData(std::span<const double> x, std::span<const double> y, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
+sci::plot::PointData::PointData(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol &symbol, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ x, y }, {xAxis, yAxis}, transformer), m_symbol(symbol)
 {
 }
@@ -452,7 +452,7 @@ void sci::plot::PointData::plotData(Renderer& renderer, grPerMillimetre scale) c
 	}
 }
 
-sci::plot::PointDataColourVarying::PointDataColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+sci::plot::PointDataColourVarying::PointDataColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const ColourVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getColourscale())}, transformer), m_symbol(symbol)
 {
 }
@@ -480,7 +480,7 @@ void sci::plot::PointDataColourVarying::plotData( plstream *pl, double scale) co
 	}
 }
 
-sci::plot::PointDataSizeVarying::PointDataSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+sci::plot::PointDataSizeVarying::PointDataSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const SizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
 {
 }
@@ -509,7 +509,7 @@ void sci::plot::PointDataSizeVarying::plotData( plstream *pl, double scale) cons
 	}
 }
 
-sci::plot::PointDataColourAndSizeVarying::PointDataColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
+sci::plot::PointDataColourAndSizeVarying::PointDataColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const ColourAndSizeVaryingSymbol &symbol, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zsColour, zsSize }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getColourscale()), std::shared_ptr<sci::plot::Scale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
 {
 }
@@ -539,7 +539,7 @@ void sci::plot::PointDataColourAndSizeVarying::plotData( plstream *pl, double sc
 	}
 }
 
-sci::plot::HorizontalErrorBars::HorizontalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
+sci::plot::HorizontalErrorBars::HorizontalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ ys,
 		sci::GridData<double, 1>(sci::GridData<double, 1>(xs.begin(), xs.end()) + sci::GridData<double, 1>(plusErrors.begin(), plusErrors.end())),
 		sci::GridData<double, 1>(sci::GridData<double, 1>(xs.begin(), xs.end()) - sci::GridData<double, 1>(minusErrors.begin(), minusErrors.end())) },
@@ -564,7 +564,7 @@ void sci::plot::HorizontalErrorBars::plotData( plstream *pl, double scale) const
 	m_style.resetLineStyle( pl, 1 );
 }
 
-sci::plot::VerticalErrorBars::VerticalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
+sci::plot::VerticalErrorBars::VerticalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs,
 		sci::GridData<double, 1>(sci::GridData<double, 1>(ys.begin(), ys.end()) + sci::GridData<double, 1>(plusErrors.begin(), plusErrors.end())),
 		sci::GridData<double, 1>(sci::GridData<double, 1>(ys.begin(), ys.end()) - sci::GridData<double, 1>(minusErrors.begin(), minusErrors.end())) },
@@ -588,7 +588,7 @@ void sci::plot::VerticalErrorBars::plotData( plstream *pl, double scale ) const
 	m_style.resetLineStyle( pl, 1 );
 }
 
-sci::plot::VerticalBars::VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer )
+sci::plot::VerticalBars::VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer )
 	: PlotableItem(xAxis, yAxis, transformer),
 	UnstructuredData({ sci::GridData<double,1>(sci::GridData<double,1>(xs.begin(), xs.end()) - 0.5 * sci::GridData<double,1>(widths.begin(), widths.end())),
 		ys,
@@ -633,7 +633,7 @@ void sci::plot::VerticalBars::plotData( plstream *pl, double scale) const
 	}
 }
 
-sci::plot::FillData::FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, const FillStyle& fillStyle, const LineStyle& outlineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::FillData::FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle, const LineStyle& outlineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 {
 
@@ -767,7 +767,7 @@ private:
 	Y m_y;
 };
 
-sci::plot::Data2d::Data2d(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::Data2d::Data2d(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), StructuredData({ &zs }, { zScale }, transformer)
 {
 	sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -781,7 +781,7 @@ sci::plot::Data2d::Data2d(std::span<const double> xs, std::span<const double> ys
 	m_yAxis = yAxis;
 }
 
-sci::plot::Data2d::Data2d(const sci::GridData<double, 2> &xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::Data2d::Data2d(const sci::GridData<double, 2> &xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({}, {}, transformer), StructuredData({ &xs, &ys, &zs }, { xAxis, yAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -795,7 +795,7 @@ sci::plot::Data2d::Data2d(const sci::GridData<double, 2> &xs, const sci::GridDat
 	m_yAxis = yAxis;
 }
 
-sci::plot::Data2d::Data2d(std::span<const double> xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::Data2d::Data2d(std::span<const double> xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs }, { xAxis }, transformer), StructuredData({ &ys, &zs }, { yAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -809,7 +809,7 @@ sci::plot::Data2d::Data2d(std::span<const double> xs, const sci::GridData<double
 	m_yAxis = yAxis;
 }
 
-sci::plot::Data2d::Data2d(const sci::GridData<double, 2> &xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::Data2d::Data2d(const sci::GridData<double, 2> &xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ ys }, { yAxis }, transformer), StructuredData({ &xs, &zs }, { xAxis, zScale }, transformer)
 {
 	sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -830,7 +830,7 @@ void sci::plot::Data2d::autoscaleAxes()
 	StructuredData::autoscaleAxes();
 }
 
-sci::plot::GridData::GridData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::GridData::GridData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -839,7 +839,7 @@ sci::plot::GridData::GridData(std::span<const double> xs, std::span<const double
 	m_colourscale = colourScale;
 }
 
-sci::plot::GridData::GridData(const sci::GridData<double, 2> &xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::GridData::GridData(const sci::GridData<double, 2> &xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -852,7 +852,7 @@ sci::plot::GridData::GridData(const sci::GridData<double, 2> &xs, const sci::Gri
 	m_colourscale = colourScale;
 }
 
-sci::plot::GridData::GridData(std::span<const double> xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::GridData::GridData(std::span<const double> xs, const sci::GridData<double, 2> &ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -863,7 +863,7 @@ sci::plot::GridData::GridData(std::span<const double> xs, const sci::GridData<do
 	m_colourscale = colourScale;
 }
 
-sci::plot::GridData::GridData(const sci::GridData<double, 2> &xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
+sci::plot::GridData::GridData(const sci::GridData<double, 2> &xs, std::span<const double> ys, const sci::GridData<double, 2> &zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -1050,7 +1050,7 @@ void sci::plot::GridData::plotData(Renderer& renderer, grPerMillimetre scale) co
 	}
 }
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1061,7 +1061,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const 
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1072,7 +1072,7 @@ sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const s
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1083,7 +1083,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridD
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<sci::plot::ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, colourScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1096,7 +1096,7 @@ sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::sp
 
 
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1107,7 +1107,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const 
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1118,7 +1118,7 @@ sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const s
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1129,7 +1129,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridD
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));

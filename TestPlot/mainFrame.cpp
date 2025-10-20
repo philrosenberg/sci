@@ -64,14 +64,14 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 	std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::plot::Point(unitless(0.02), unitless(0.08)), sci::plot::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(sci::graphics::RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(sci::graphics::millimetre(1.0)), title, sci::graphics::Length(sci::graphics::textPoint(12.0)), sci::plot::Length(sci::graphics::textPoint(30.0))));
 	std::vector<unitless> limits{ unitless(0.1), unitless(0.1 + 0.8 / 4.0), unitless(0.1 + 2.0 * 0.8 / 4.0), unitless(0.1 + 3.0 * 0.8 / 4.0), unitless(0.1 + 0.8) };
-	sci::plot::PlotAxis::Options options;
-	std::shared_ptr<sci::plot::PlotAxis> xAxis1(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[0],unitless(0.9)), sci::graphics::Point(limits[1], unitless(0.9)),  options.setTitle(sU("x-1d y-1d"))));
-	std::shared_ptr<sci::plot::PlotAxis> xAxis2(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[1], unitless(0.9)), sci::graphics::Point(limits[2], unitless(0.9)), options.setTitle(sU("x-2d y-1d"))));
-	std::shared_ptr<sci::plot::PlotAxis> xAxis3(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[2], unitless(0.9)), sci::graphics::Point(limits[3], unitless(0.9)), options.setTitle(sU("x-1d y-2d"))));
-	std::shared_ptr<sci::plot::PlotAxis> xAxis4(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[3], unitless(0.9)), sci::graphics::Point(limits[4], unitless(0.9)), options.setTitle(sU("x-2d y-2d"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis1(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.9)), sci::graphics::Point(limits[0], unitless(0.7)), options.setTitle(sU("Contour"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis2(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.7)), sci::graphics::Point(limits[0], unitless(0.5)), options.setTitle(sU("Shade"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis3(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.5)), sci::graphics::Point(limits[0], unitless(0.3)), options.setTitle(sU("Grid"))));
+	sci::plot::Axis::Options options;
+	std::shared_ptr<sci::plot::Axis> xAxis1(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[0],unitless(0.9)), sci::graphics::Point(limits[1], unitless(0.9)),  options.setTitle(sU("x-1d y-1d"))));
+	std::shared_ptr<sci::plot::Axis> xAxis2(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[1], unitless(0.9)), sci::graphics::Point(limits[2], unitless(0.9)), options.setTitle(sU("x-2d y-1d"))));
+	std::shared_ptr<sci::plot::Axis> xAxis3(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[2], unitless(0.9)), sci::graphics::Point(limits[3], unitless(0.9)), options.setTitle(sU("x-1d y-2d"))));
+	std::shared_ptr<sci::plot::Axis> xAxis4(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[3], unitless(0.9)), sci::graphics::Point(limits[4], unitless(0.9)), options.setTitle(sU("x-2d y-2d"))));
+	std::shared_ptr<sci::plot::Axis> yAxis1(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.9)), sci::graphics::Point(limits[0], unitless(0.7)), options.setTitle(sU("Contour"))));
+	std::shared_ptr<sci::plot::Axis> yAxis2(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.7)), sci::graphics::Point(limits[0], unitless(0.5)), options.setTitle(sU("Shade"))));
+	std::shared_ptr<sci::plot::Axis> yAxis3(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(limits[0], unitless(0.5)), sci::graphics::Point(limits[0], unitless(0.3)), options.setTitle(sU("Grid"))));
 	
 	size_t nx = 21;
 	size_t ny = 21;
@@ -178,8 +178,8 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr<sci::plot::ContourData> contour3(new sci::plot::ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
 	std::shared_ptr<sci::plot::ContourData> contour4(new sci::plot::ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
-	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
-	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
+	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis::Options(sU("Discrete Colourbar used by Shade"))));
+	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis::Options(sU("Continuous Colourbar used by Grid"))));
 	
 	//do a test with a NullRenderer - this makes debugging much easier
 	sci::graphics::NullRenderer nullRenderer;
@@ -294,9 +294,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		auto canvas = frame->getPanel()->getCanvas();
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 1: This plot should have an x and y axis running from 0.0-1.0 inside\na 0.8 level grey box with a 1 mm wide outline and no data."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
-		sci::plot::PlotAxis::Options options;
-		std::shared_ptr<sci::plot::PlotAxis> xAxis(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
-		std::shared_ptr<sci::plot::PlotAxis> yAxis(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		sci::plot::Axis::Options options;
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -313,9 +313,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		auto canvas = frame->getPanel()->getCanvas();
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have square data sci::graphics::Points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
-		sci::plot::PlotAxis::Options options;
-		std::shared_ptr<sci::plot::PlotAxis> xAxis(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
-		std::shared_ptr<sci::plot::PlotAxis> yAxis(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		sci::plot::Axis::Options options;
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
 		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, sci::plot::Symbol()));
 
 		canvas->addItem(box);
@@ -334,9 +334,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		auto canvas = frame->getPanel()->getCanvas();
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
-		sci::plot::PlotAxis::Options options;
-		std::shared_ptr<sci::plot::PlotAxis> xAxis(new sci::plot::PlotAxis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
-		std::shared_ptr<sci::plot::PlotAxis> yAxis(new sci::plot::PlotAxis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		sci::plot::Axis::Options options;
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
 		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, sci::plot::Symbol()));
 
 		canvas->addItem(box);
@@ -355,9 +355,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		auto canvas = frame->getPanel()->getCanvas();
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::plot::Point(unitless(0.03), unitless(0.15)), sci::graphics::Point(unitless(0.98), unitless(0.9)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should show an exponentially decreasing sin and cos wave and their average on a window with a size of 1200 x 400.\n The cos wave should have dot dash markings and the sum should have identical dot dash markings and be a wine red colour"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
-		sci::plot::PlotAxis::Options options;
-		std::shared_ptr<sci::plot::PlotAxis> xAxis(new sci::plot::PlotAxis(0.0, 2500, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.98), unitless(0.85)), options.setTitle(sU("x"))));
-		std::shared_ptr<sci::plot::PlotAxis> yAxis(new sci::plot::PlotAxis(-1.0, 1.0, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.06), unitless(0.15)), options.setTitle(sU("y"))));
+		sci::plot::Axis::Options options;
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 2500, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.98), unitless(0.85)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(-1.0, 1.0, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.06), unitless(0.15)), options.setTitle(sU("y"))));
 		std::vector<double> x(501);
 		std::vector<double> y1(501);
 		std::vector<double> y2(501);
@@ -687,60 +687,60 @@ void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 
 	//linear horizontal axes
 
-	sci::plot::PlotAxis axis1(0.0, 10.0, false, left, right, sci::plot::PlotAxis::Options(sU("0-10 with auto major interval of 2 and 3 subticks")));
+	sci::plot::Axis axis1(0.0, 10.0, false, left, right, sci::plot::Axis::Options(sU("0-10 with auto major interval of 2 and 3 subticks")));
 	axis1.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis2(0.0, 20.0, false, left + voffset, right + voffset, sci::plot::PlotAxis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
+	sci::plot::Axis axis2(0.0, 20.0, false, left + voffset, right + voffset, sci::plot::Axis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
 	axis2.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis3(0.0, 50.0, false, left + voffset * unitless(2.0), right + voffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
+	sci::plot::Axis axis3(0.0, 50.0, false, left + voffset * unitless(2.0), right + voffset * unitless(2.0), sci::plot::Axis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
 	axis3.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis4(0.0, 80.0, false, left + voffset * unitless(3.0), right + voffset * unitless(3.0), sci::plot::PlotAxis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));
+	sci::plot::Axis axis4(0.0, 80.0, false, left + voffset * unitless(3.0), right + voffset * unitless(3.0), sci::plot::Axis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));
 	axis4.draw(renderer, perInch(96));
 
 	//linear vertical axes
 
-	sci::plot::PlotAxis axis5(0.0, 10.0, false, bottom, top, sci::plot::PlotAxis::Options(sU("1-10 with auto major interval of 2 and 3 subticks")));
+	sci::plot::Axis axis5(0.0, 10.0, false, bottom, top, sci::plot::Axis::Options(sU("1-10 with auto major interval of 2 and 3 subticks")));
 	axis5.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis6(0.0, 20.0, false, bottom + hoffset * unitless(1.0), top + hoffset * unitless(1.0), sci::plot::PlotAxis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
+	sci::plot::Axis axis6(0.0, 20.0, false, bottom + hoffset * unitless(1.0), top + hoffset * unitless(1.0), sci::plot::Axis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
 	axis6.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis7(0.0, 50.0, false, bottom + hoffset * unitless(2.0), top + hoffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
+	sci::plot::Axis axis7(0.0, 50.0, false, bottom + hoffset * unitless(2.0), top + hoffset * unitless(2.0), sci::plot::Axis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
 	axis7.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis8(0.0, 80.0, false, bottom + hoffset * unitless(3.0), top + hoffset * unitless(3.0), sci::plot::PlotAxis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));
+	sci::plot::Axis axis8(0.0, 80.0, false, bottom + hoffset * unitless(3.0), top + hoffset * unitless(3.0), sci::plot::Axis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));
 	axis8.draw(renderer, perInch(96));
 
 	//log axes
 
-	sci::plot::PlotAxis axis9(1.0, 10.0, true, left + voffset * unitless(4.0), right + voffset * unitless(4.0), sci::plot::PlotAxis::Options(sU("1-10 log increments")));
+	sci::plot::Axis axis9(1.0, 10.0, true, left + voffset * unitless(4.0), right + voffset * unitless(4.0), sci::plot::Axis::Options(sU("1-10 log increments")));
 	axis9.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis10(1.0, 100000.0, true, left + voffset * unitless(5.0), right + voffset * unitless(5.0), sci::plot::PlotAxis::Options(sU("1-1\u00D710^{5} log increments (scientific from 10,000)")));
+	sci::plot::Axis axis10(1.0, 100000.0, true, left + voffset * unitless(5.0), right + voffset * unitless(5.0), sci::plot::Axis::Options(sU("1-1\u00D710^{5} log increments (scientific from 10,000)")));
 	axis10.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis11(1.0, 200.0, true, left + voffset * unitless(6.0), right + voffset * unitless(6.0), sci::plot::PlotAxis::Options(sU("1-200 log increments")));
+	sci::plot::Axis axis11(1.0, 200.0, true, left + voffset * unitless(6.0), right + voffset * unitless(6.0), sci::plot::Axis::Options(sU("1-200 log increments")));
 	axis11.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis::Options options12(sU("1-1\u00D710^{20} ticks on decades"));
+	sci::plot::Axis::Options options12(sU("1-1\u00D710^{20} ticks on decades"));
 	options12.m_majorInterval = 5;
 	options12.m_nSubticks = 4;
 	options12.m_autoMajorInterval = false;
 	options12.m_autoNSubticks = false;
-	sci::plot::PlotAxis axis12(1.0, 1e20, true, left + voffset * unitless(7.0), right + voffset * unitless(7.0), options12);
+	sci::plot::Axis axis12(1.0, 1e20, true, left + voffset * unitless(7.0), right + voffset * unitless(7.0), options12);
 	axis12.draw(renderer, perInch(96));
 
 
 
-	sci::plot::PlotAxis::Options options13;
+	sci::plot::Axis::Options options13;
 	options13.m_lineStyle = sci::plot::LineStyle(millimetre(1), RgbColour(1.0, 0.3, 0.0));
 	options13.m_title = sU("Diferent colours with Algerian font");
 	options13.m_titleFont.m_facenames = { sci::string(sU("Algerian")) };
 	options13.m_titleFont.m_colour = RgbColour(0.0, 0.0, 0.5);
 	options13.m_labelFont.m_colour = RgbColour(0.5, 0.5, 0.5);
-	sci::plot::PlotAxis axis13(0.0, 20.0, false, bottom + voffset, bottom + (right - left) + voffset, options13);
+	sci::plot::Axis axis13(0.0, 20.0, false, bottom + voffset, bottom + (right - left) + voffset, options13);
 	axis13.draw(renderer, perInch(96));
 }
 
@@ -750,34 +750,34 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 
 	//bottom left plot regular axis directions
-	std::shared_ptr<sci::plot::PlotAxis> xAxis1(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)),
-		sci::graphics::Point(unitless(0.45), unitless(0.9)), sci::plot::PlotAxis::Options(sU("Normal x axis"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis1(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)),
-		sci::graphics::Point(unitless(0.1), unitless(0.55)), sci::plot::PlotAxis::Options(sU("Normal y axis"))));
+	std::shared_ptr<sci::plot::Axis> xAxis1(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)),
+		sci::graphics::Point(unitless(0.45), unitless(0.9)), sci::plot::Axis::Options(sU("Normal x axis"))));
+	std::shared_ptr<sci::plot::Axis> yAxis1(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)),
+		sci::graphics::Point(unitless(0.1), unitless(0.55)), sci::plot::Axis::Options(sU("Normal y axis"))));
 	
 	//top left plot
 	//reversed both x values and end sci::graphics::Points to give regular direction
 	//reversed y end sci::graphics::Points to give reversed axis
-	std::shared_ptr<sci::plot::PlotAxis> xAxis2(new sci::plot::PlotAxis(1.0, 0.0, false, sci::graphics::Point(unitless(0.45), unitless(0.1)),
-		sci::graphics::Point(unitless(0.1), unitless(0.1)), sci::plot::PlotAxis::Options(sU("Double reversed x axis"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis2(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.1)),
-		sci::graphics::Point(unitless(0.1), unitless(0.45)), sci::plot::PlotAxis::Options(sU("Reversed position y axis"))));
+	std::shared_ptr<sci::plot::Axis> xAxis2(new sci::plot::Axis(1.0, 0.0, false, sci::graphics::Point(unitless(0.45), unitless(0.1)),
+		sci::graphics::Point(unitless(0.1), unitless(0.1)), sci::plot::Axis::Options(sU("Double reversed x axis"))));
+	std::shared_ptr<sci::plot::Axis> yAxis2(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.1)),
+		sci::graphics::Point(unitless(0.1), unitless(0.45)), sci::plot::Axis::Options(sU("Reversed position y axis"))));
 
 	//bottom right plot
 	//reversed x end sci::graphics::Points to give reversed direction
 	//reversed both y values and end sci::graphics::Points to give regular direction
-	std::shared_ptr<sci::plot::PlotAxis> xAxis3(new sci::plot::PlotAxis(0.0, 1.0, false, sci::graphics::Point(unitless(0.9), unitless(0.9)),
-		sci::graphics::Point(unitless(0.55), unitless(0.9)), sci::plot::PlotAxis::Options(sU("Reversed position x axis"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis3(new sci::plot::PlotAxis(1.0, 0.0, false, sci::graphics::Point(unitless(0.9), unitless(0.55)),
-		sci::graphics::Point(unitless(0.9), unitless(0.9)), sci::plot::PlotAxis::Options(sU("Double reversed y axis"))));
+	std::shared_ptr<sci::plot::Axis> xAxis3(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.9), unitless(0.9)),
+		sci::graphics::Point(unitless(0.55), unitless(0.9)), sci::plot::Axis::Options(sU("Reversed position x axis"))));
+	std::shared_ptr<sci::plot::Axis> yAxis3(new sci::plot::Axis(1.0, 0.0, false, sci::graphics::Point(unitless(0.9), unitless(0.55)),
+		sci::graphics::Point(unitless(0.9), unitless(0.9)), sci::plot::Axis::Options(sU("Double reversed y axis"))));
 
 	//top right plot
 	//reversed x values to give reversed direction
 	//reversed y values to give reversed direction
-	std::shared_ptr<sci::plot::PlotAxis> xAxis4(new sci::plot::PlotAxis(1.0, 0.0, false, sci::graphics::Point(unitless(0.55), unitless(0.1)),
-		sci::graphics::Point(unitless(0.9), unitless(0.1)), sci::plot::PlotAxis::Options(sU("Reversed values x axis"))));
-	std::shared_ptr<sci::plot::PlotAxis> yAxis4(new sci::plot::PlotAxis(1.0, 0.0, false, sci::graphics::Point(unitless(0.9), unitless(0.45)),
-		sci::graphics::Point(unitless(0.9), unitless(0.1)), sci::plot::PlotAxis::Options(sU("Reversed values y axis"))));
+	std::shared_ptr<sci::plot::Axis> xAxis4(new sci::plot::Axis(1.0, 0.0, false, sci::graphics::Point(unitless(0.55), unitless(0.1)),
+		sci::graphics::Point(unitless(0.9), unitless(0.1)), sci::plot::Axis::Options(sU("Reversed values x axis"))));
+	std::shared_ptr<sci::plot::Axis> yAxis4(new sci::plot::Axis(1.0, 0.0, false, sci::graphics::Point(unitless(0.9), unitless(0.45)),
+		sci::graphics::Point(unitless(0.9), unitless(0.1)), sci::plot::Axis::Options(sU("Reversed values y axis"))));
 	//yAxis->setticksdirection(true, false);
 
 	xAxis1->draw(renderer, perInch(96));
