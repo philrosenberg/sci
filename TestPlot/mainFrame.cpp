@@ -159,7 +159,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr<sci::plot::ColourScale> colourScaleDiscrete(new sci::plot::ColourScale(valuesDiscrete, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	sci::plot::LineStyle contourStyle(millimetre(0.5));
 
-	std::shared_ptr<sci::plot::splotlevelscale> levelScale(new sci::plot::splotlevelscale(valuesDiscrete, log, autoscale));
+	std::shared_ptr<sci::plot::LevelScale> levelScale(new sci::plot::LevelScale(valuesDiscrete, log, autoscale));
 
 	std::shared_ptr<sci::plot::ColourScale> colourScaleContinuous(new sci::plot::ColourScale(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	

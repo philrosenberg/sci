@@ -73,31 +73,31 @@ namespace sci
 		class SizeVaryingSymbol : public VaryingSymbol
 		{
 		public:
-			SizeVaryingSymbol(std::shared_ptr<splotsizescale> sizeScale, ::sci::string symbol = symText::filledCircle, ::sci::graphics::RgbColour colour = ::sci::graphics::RgbColour(0.0, 0.0, 0.0));
+			SizeVaryingSymbol(std::shared_ptr<SizeScale> sizeScale, ::sci::string symbol = symText::filledCircle, ::sci::graphics::RgbColour colour = ::sci::graphics::RgbColour(0.0, 0.0, 0.0));
 			void setupSymbol(plstream* pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale) const override;
 			bool isLogScaled() const override;
 			//parameterPreLogged is only utilised for log scales
 			double getSize(double parameter, bool parameterPreLogged) const;
-			std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
+			std::shared_ptr<SizeScale>getSizeScale() const { return m_sizeScale; }
 		private:
 			::sci::graphics::RgbColour m_colour;
-			std::shared_ptr<splotsizescale> m_sizeScale;
+			std::shared_ptr<SizeScale> m_sizeScale;
 		};
 
 		class ColourAndSizeVaryingSymbol : public SymbolBase
 		{
 		public:
-			ColourAndSizeVaryingSymbol(std::shared_ptr<ColourScale> colourScale, std::shared_ptr<splotsizescale> sizeScale, ::sci::string symbol = symText::filledCircle);
+			ColourAndSizeVaryingSymbol(std::shared_ptr<ColourScale> colourScale, std::shared_ptr<SizeScale> sizeScale, ::sci::string symbol = symText::filledCircle);
 			void setupSymbol(plstream* pl, PLINT colourIndex, double colourParameter, bool colourParameterPreLogged, double sizeParameter, bool sizeParameterPreLogged, double scale) const;
 			bool isColourLogScaled() const;
 			bool isSizeLogScaled() const;
 			//parameterPreLogged is only utilised for log scales
 			double getSize(double parameter, bool parameterPreLogged) const;
 			std::shared_ptr<ColourScale> getColourscale() const { return m_colourScale; }
-			std::shared_ptr<splotsizescale>getSizeScale() const { return m_sizeScale; }
+			std::shared_ptr<SizeScale>getSizeScale() const { return m_sizeScale; }
 		private:
 			std::shared_ptr<ColourScale> m_colourScale;
-			std::shared_ptr<splotsizescale> m_sizeScale;
+			std::shared_ptr<SizeScale> m_sizeScale;
 		};
 
 		class FillStyle
@@ -500,16 +500,16 @@ namespace sci
 			ContourData(std::span<const double> xs, const ::sci::GridData<double, 2>& ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 			ContourData(const ::sci::GridData<double, 2>& xs, std::span<const double> ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<ColourScale> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 
-			ContourData(std::span<const double> xs, std::span<const double> ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-			ContourData(const ::sci::GridData<double, 2>& xs, const ::sci::GridData<double, 2>& ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-			ContourData(std::span<const double> xs, const ::sci::GridData<double, 2>& ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
-			ContourData(const ::sci::GridData<double, 2>& xs, std::span<const double> ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+			ContourData(std::span<const double> xs, std::span<const double> ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+			ContourData(const ::sci::GridData<double, 2>& xs, const ::sci::GridData<double, 2>& ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+			ContourData(std::span<const double> xs, const ::sci::GridData<double, 2>& ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
+			ContourData(const ::sci::GridData<double, 2>& xs, std::span<const double> ys, const ::sci::GridData<double, 2>& zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr);
 			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override;
 		private:
 
 			std::shared_ptr<ColourScale> m_colourscale;
-			std::shared_ptr<splotlevelscale> m_levelScale;
+			std::shared_ptr<LevelScale> m_levelScale;
 			LineStyle m_lineStyle;
 		};
 	}

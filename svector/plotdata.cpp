@@ -220,7 +220,7 @@ bool sci::plot::ColourVaryingSymbol::isLogScaled() const
 	return m_colourScale->isLog();
 }
 
-sci::plot::SizeVaryingSymbol::SizeVaryingSymbol (std::shared_ptr<splotsizescale> sizeScale, sci::string symbol, rgbcolour colour)
+sci::plot::SizeVaryingSymbol::SizeVaryingSymbol (std::shared_ptr<SizeScale> sizeScale, sci::string symbol, rgbcolour colour)
 	:VaryingSymbol( symbol )
 {
 	m_sizeScale = sizeScale;
@@ -248,7 +248,7 @@ double sci::plot::SizeVaryingSymbol::getSize(double parameter, bool parameterPre
 	return m_sizeScale->getsize(parameter, parameterPreLogged);
 }
 
-sci::plot::ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<splotsizescale> sizeScale, sci::string symbol )
+sci::plot::ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<SizeScale> sizeScale, sci::string symbol )
 	:SymbolBase( symbol, 0 )
 {
 	m_colourScale = colourScale;
@@ -1096,7 +1096,7 @@ sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::sp
 
 
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1107,7 +1107,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, std::span<const 
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1118,7 +1118,7 @@ sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, const s
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridData<double, 2> & ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -1129,7 +1129,7 @@ sci::plot::ContourData::ContourData(std::span<const double> xs, const sci::GridD
 	m_lineStyle = lineStyle;
 }
 
-sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<splotlevelscale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
+sci::plot::ContourData::ContourData(const sci::GridData<double, 2> & xs, std::span<const double> ys, const sci::GridData<double, 2> & zs, std::shared_ptr<PlotAxis> xAxis, std::shared_ptr<PlotAxis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer)
 	: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 {
 	sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
