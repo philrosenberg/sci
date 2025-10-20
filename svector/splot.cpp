@@ -986,7 +986,7 @@ void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = std::pow(10.0, currentMajorLogPosition + double(i+1) * minorLogInterval);
-				if(currentMinorPosition<=getLogMax())
+				if(currentMinorPosition<=getLinearMax())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 
@@ -996,7 +996,7 @@ void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = currentMajorPosition * double((i+1)*minorInterval  + 1.0);
-				if(currentMinorPosition <=getLogMax())
+				if(currentMinorPosition <=getLinearMax())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 		}
