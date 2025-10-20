@@ -134,24 +134,34 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 	size_t nColours = 10;
 	std::vector<HlsColour> colours(nColours);
-	std::vector<double> values(nColours + 1);
-	double hueInterval = 240.0 / (nColours - 1);
-	double valueInterval = scaleRange / nColours;
+	std::vector<double> valuesDiscrete(nColours + 1);
+	std::vector<double> valuesContinuous(nColours);
+	degree hueInterval = degree(240.0) / unitless(nColours - 1);
+	double valueIntervalDiscrete = scaleRange / (nColours);
+	double valueIntervalContinuous = scaleRange / (nColours - 1);
 	for (size_t i = 0; i < nColours; ++i)
-		colours[i] = HlsColour(degree(240 - i * hueInterval), 0.5, 1.0);
-	for (size_t i = 0; i < nColours + 1; ++i)
-		values[i] = scaleBegin + i * valueInterval;
+	{
+		colours[i] = HlsColour(degree(240) - unitless(i) * hueInterval, 0.5, 1.0);
+	}
+	for (size_t i = 0; i < valuesDiscrete.size(); ++i)
+		valuesDiscrete[i] = scaleBegin + i * valueIntervalDiscrete;
+	for (size_t i = 0; i < valuesContinuous.size(); ++i)
+		valuesContinuous[i] = scaleBegin + i * valueIntervalContinuous;
 
 	if (log)
-		for (auto& v : values)
+	{
+		for (auto& v : valuesDiscrete)
 			v = std::pow(10.0, v);
+		for (auto& v : valuesContinuous)
+			v = std::pow(10.0, v);
+	}
 
-	std::shared_ptr<sci::plot::ColourScale> colourScaleDiscrete(new sci::plot::ColourScale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<sci::plot::ColourScale> colourScaleDiscrete(new sci::plot::ColourScale(valuesDiscrete, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	sci::plot::LineStyle contourStyle(millimetre(0.5));
 
-	std::shared_ptr<sci::plot::splotlevelscale> levelScale(new sci::plot::splotlevelscale(values, log, autoscale));
+	std::shared_ptr<sci::plot::splotlevelscale> levelScale(new sci::plot::splotlevelscale(valuesDiscrete, log, autoscale));
 
-	std::shared_ptr<sci::plot::ColourScale> colourScaleContinuous(new sci::plot::ColourScale(values, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
+	std::shared_ptr<sci::plot::ColourScale> colourScaleContinuous(new sci::plot::ColourScale(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	
 	std::shared_ptr<sci::plot::GridData> grid1(new sci::plot::GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
 	std::shared_ptr<sci::plot::GridData> grid2(new sci::plot::GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
@@ -168,8 +178,8 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr<sci::plot::ContourData> contour3(new sci::plot::ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
 	std::shared_ptr<sci::plot::ContourData> contour4(new sci::plot::ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
-	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.25)), colourScaleDiscrete, sci::plot::PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
-	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.25-0.09)), colourScaleContinuous, sci::plot::PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
+	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::PlotAxis::Options(sU("Discrete Colourbar used by Shade"))));
+	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::PlotAxis::Options(sU("Continuous Colourbar used by Grid"))));
 	
 	//do a test with a NullRenderer - this makes debugging much easier
 	sci::graphics::NullRenderer nullRenderer;

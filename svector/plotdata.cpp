@@ -416,7 +416,7 @@ void sci::plot::LineData::plotData(Renderer& renderer, grPerMillimetre scale) co
 	std::vector<Point> points(getNPoints());
 	for (size_t i = 0; i < points.size(); ++i)
 	{
-		points[i] = getPoint(getPointer(0)[i], getPointer(1)[i]);
+		points[i] = getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]);
 	}
 	renderer.polyLine(points);
 }
@@ -448,7 +448,7 @@ void sci::plot::PointData::plotData(Renderer& renderer, grPerMillimetre scale) c
 
 	for (size_t i = 0; i < getNPoints(); ++i)
 	{
-		m_symbol.draw(getPoint(getPointer(0)[i], getPointer(1)[i]), renderer);
+		m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), renderer);
 	}
 }
 
@@ -667,7 +667,7 @@ void sci::plot::FillData::plotData(Renderer& renderer, grPerMillimetre scale) co
 	std::vector<Point> points(getNPoints());
 	for (size_t i = 0; i < points.size(); ++i)
 	{
-		points[i] = getPoint(getPointer(0)[i], getPointer(1)[i]);
+		points[i] = getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]);
 	}
 
 	renderer.polygon(points);
@@ -984,7 +984,7 @@ void sci::plot::GridData::plotData(Renderer& renderer, grPerMillimetre scale) co
 				if (zs[i][j] > zMax)
 					continue;
 				renderer.setBrush(m_colourscale->getRgbOriginalScale(zs[i][j], true));
-				renderer.rectangle(getPoint(x[i], y[j]), getPoint(x[i + 1], y[j + 1]));
+				renderer.rectangle(getPointFromLoggedIfNeededData(x[i], y[j]), getPointFromLoggedIfNeededData(x[i + 1], y[j + 1]));
 			}
 		}
 	}
@@ -1002,9 +1002,9 @@ void sci::plot::GridData::plotData(Renderer& renderer, grPerMillimetre scale) co
 				if (zs[i][j] > zMax)
 					continue;
 				renderer.setBrush(m_colourscale->getRgbOriginalScale(zs[i][j], true));
-				renderer.polygon({ getPoint(x[i], y[i][j]), getPoint(x[i + 1], y[i + 1][j]),
-					getPoint(x[i + 1], y[i + 1][j + 1]), getPoint(x[i], y[i][j + 1]),
-					getPoint(x[i], y[i][j]) });
+				renderer.polygon({ getPointFromLoggedIfNeededData(x[i], y[i][j]), getPointFromLoggedIfNeededData(x[i + 1], y[i + 1][j]),
+					getPointFromLoggedIfNeededData(x[i + 1], y[i + 1][j + 1]), getPointFromLoggedIfNeededData(x[i], y[i][j + 1]),
+					getPointFromLoggedIfNeededData(x[i], y[i][j]) });
 			}
 		}
 	}
@@ -1022,9 +1022,9 @@ void sci::plot::GridData::plotData(Renderer& renderer, grPerMillimetre scale) co
 				if (zs[i][j] > zMax)
 					continue;
 				renderer.setBrush(m_colourscale->getRgbOriginalScale(zs[i][j], true));
-				renderer.polygon({ getPoint(x[i][j], y[j]), getPoint(x[i + 1][j], y[j]),
-					getPoint(x[i + 1][j + 1], y[j + 1]), getPoint(x[i][j + 1], y[j + 1]),
-					getPoint(x[i][j], y[j]) });
+				renderer.polygon({ getPointFromLoggedIfNeededData(x[i][j], y[j]), getPointFromLoggedIfNeededData(x[i + 1][j], y[j]),
+					getPointFromLoggedIfNeededData(x[i + 1][j + 1], y[j + 1]), getPointFromLoggedIfNeededData(x[i][j + 1], y[j + 1]),
+					getPointFromLoggedIfNeededData(x[i][j], y[j]) });
 			}
 		}
 	}
@@ -1042,9 +1042,9 @@ void sci::plot::GridData::plotData(Renderer& renderer, grPerMillimetre scale) co
 				if (zs[i][j] > zMax)
 					continue;
 				renderer.setBrush(m_colourscale->getRgbOriginalScale(zs[i][j], true));
-				renderer.polygon({ getPoint(x[i][j], y[i][j]), getPoint(x[i + 1][j], y[i + 1][j]),
-					getPoint(x[i + 1][j + 1], y[i + 1][j + 1]), getPoint(x[i][j + 1], y[i][j + 1]),
-					getPoint(x[i][j], y[i][j]) });
+				renderer.polygon({ getPointFromLoggedIfNeededData(x[i][j], y[i][j]), getPointFromLoggedIfNeededData(x[i + 1][j], y[i + 1][j]),
+					getPointFromLoggedIfNeededData(x[i + 1][j + 1], y[i + 1][j + 1]), getPointFromLoggedIfNeededData(x[i][j + 1], y[i][j + 1]),
+					getPointFromLoggedIfNeededData(x[i][j], y[i][j]) });
 			}
 		}
 	}
@@ -1817,7 +1817,7 @@ void sci::plot::ContourData::plotData(Renderer& renderer, grPerMillimetre scale)
 			m_lineStyle.setPen(renderer);
 			points.resize(xs.size());
 			for (size_t j = 0; j < points.size(); ++j)
-				points[j] = getPoint(xs[j], ys[j]);
+				points[j] = getPointFromLoggedIfNeededData(xs[j], ys[j]);
 			renderer.polyLine(points);
 		}
 	}
@@ -1832,7 +1832,7 @@ void sci::plot::ContourData::plotData(Renderer& renderer, grPerMillimetre scale)
 			m_lineStyle.setPen(renderer);
 			points.resize(xs.size());
 			for (size_t j = 0; j < points.size(); ++j)
-				points[j] = getPoint(xs[j], ys[j]);
+				points[j] = getPointFromLoggedIfNeededData(xs[j], ys[j]);
 			renderer.polyLine(points);
 		}
 	}
@@ -1847,7 +1847,7 @@ void sci::plot::ContourData::plotData(Renderer& renderer, grPerMillimetre scale)
 			m_lineStyle.setPen(renderer);
 			points.resize(xs.size());
 			for (size_t j = 0; j < points.size(); ++j)
-				points[j] = getPoint(xs[j], ys[j]);
+				points[j] = getPointFromLoggedIfNeededData(xs[j], ys[j]);
 			renderer.polyLine(points);
 		}
 	}
@@ -1862,7 +1862,7 @@ void sci::plot::ContourData::plotData(Renderer& renderer, grPerMillimetre scale)
 			m_lineStyle.setPen(renderer);
 			points.resize(xs.size());
 			for (size_t j = 0; j < points.size(); ++j)
-				points[j] = getPoint(xs[j], ys[j]);
+				points[j] = getPointFromLoggedIfNeededData(xs[j], ys[j]);
 			renderer.polyLine(points);
 		}
 	}

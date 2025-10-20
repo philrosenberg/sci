@@ -1015,7 +1015,7 @@ void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 
 void sci::plot::PlotAxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
 {
-	Point pagePosition = m_start + alongAxisDistance(plotPosition);
+	Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
 	Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
 	Point p1 = Point(grMillimetre(0.0), grMillimetre(0.0));
 	Point p2 = p1;
@@ -1050,7 +1050,7 @@ sci::graphics::millimetre sci::plot::PlotAxis::drawLabel(Renderer& renderer, grP
 {
 	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setBrush(m_options.m_labelFont.m_colour);
-	Point pagePosition = m_start + alongAxisDistance(plotPosition);
+	Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
 	Length distanceFromAxis = m_options.m_majorTickLength * grUnitless(1.2);
 
 	sci::string label;
@@ -1243,9 +1243,9 @@ void sci::plot::HorizontalColourBar::draw(Renderer& renderer, grPerMillimetre sc
 	if (m_colourscale->isDiscrete())
 	{
 		sci::GridData<double, 2> cb({ 2, 2 });
-		cb[0][0] = m_colourscale->getLinearOrLogMin();
+		cb[0][0] = m_colourscale->getLinearMin();
 		cb[0][1] = cb[0][0];
-		cb[1][0] = m_colourscale->getLinearOrLogMax();
+		cb[1][0] = m_colourscale->getLinearMax();
 		cb[1][1] = cb[1][0];
 		std::vector<double> cbX{ cb[0][0], cb[1][0] };
 		std::vector<double> cbY{ 0.0, 1.0 };
@@ -1257,8 +1257,8 @@ void sci::plot::HorizontalColourBar::draw(Renderer& renderer, grPerMillimetre sc
 	}
 	else
 	{
-		sci::GridData<double, 2> cb({ 256, 1 });
-		std::vector<double> cbX(cb.shape()[0] + 1);
+		sci::GridData<double, 2> z({ 256, 1 });
+		std::vector<double> cbX(z.shape()[0] + 1);
 
 
 		double min = m_colourscale->getLinearOrLogMin();
@@ -1266,33 +1266,30 @@ void sci::plot::HorizontalColourBar::draw(Renderer& renderer, grPerMillimetre sc
 
 		if (m_colourscale->isLog())
 		{
-			min = std::log10(min);
-			max = std::log10(max);
-
 			double range = max - min;
-			double step = range / (cb.size());
+			double step = range / (z.shape()[0]);
 
 			for (size_t i = 0; i < cbX.size(); ++i)
 				cbX[i] = std::pow(10, min + i * step);
 
-			for (size_t i = 0; i < cb.size(); ++i)
-				cb[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
+			for (size_t i = 0; i < z.size(); ++i)
+				z[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
 		}
 		else
 		{
 			double range = max - min;
-			double step = range / (cb.size());
+			double step = range / (z.size());
 
 			for (size_t i = 0; i < cbX.size(); ++i)
 				cbX[i] = min + i * step;
 
-			for (size_t i = 0; i < cb.size(); ++i)
-				cb[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
+			for (size_t i = 0; i < z.size(); ++i)
+				z[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
 		}
 
 		std::vector<double> cbY{ 0.0, 1.0 };
 
-		GridData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale);
+		GridData data(cbX, cbY, z, m_xAxis, m_yAxis, m_colourscale);
 
 		data.draw(renderer, scale);
 		m_xAxis->draw(renderer, scale);

@@ -205,9 +205,13 @@ namespace sci
 			}
 			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
 			void draw(Renderer& renderer, grPerMillimetre scale) override;
-			Point getPoint(double x, double y) const
+			Point getPointFromLinearData(double x, double y) const
 			{
-				return m_intersection + m_xAxis->alongAxisDistance(x) + m_yAxis->alongAxisDistance(y);
+				return m_intersection + m_xAxis->alongAxisDistanceFromLinearData(x) + m_yAxis->alongAxisDistanceFromLinearData(y);
+			}
+			Point getPointFromLoggedIfNeededData(double x, double y) const
+			{
+				return m_intersection + m_xAxis->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis->alongAxisDistanceFromLoggedIfNeededData(y);
 			}
 		private:
 			virtual void autoscaleAxes() = 0;

@@ -711,11 +711,20 @@ namespace sci
 			{
 				return true;
 			}
-			Distance alongAxisDistance(double value) const
+			Distance alongAxisDistanceFromLinearData(double value) const
 			{
 				double fraction;
 				if (isLog())
 					fraction = (std::log10(value) - getLogMin()) / (getLogMax() - getLogMin());
+				else
+					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
+				return (m_end - m_start) * grUnitless(fraction);
+			}
+			Distance alongAxisDistanceFromLoggedIfNeededData(double value) const
+			{
+				double fraction;
+				if (isLog())
+					fraction = (value - getLogMin()) / (getLogMax() - getLogMin());
 				else
 					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
 				return (m_end - m_start) * grUnitless(fraction);
