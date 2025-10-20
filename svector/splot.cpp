@@ -160,17 +160,17 @@ sci::string loglonghand(double axisvalue)
 	return result.str();
 }
 
-void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,PLPointer function)
+void sci::plot::customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length,PLPointer function)
 {
 	if( length == 0 )
 		return;
-	customlabeler userfunction=( customlabeler )function;
+	sci::plot::customlabeler userfunction=( sci::plot::customlabeler )function;
 	sci::string stdlabel=userfunction(value);
 	if(stdlabel.length()>(unsigned int)length) stdlabel.erase(length-1);
 	strcpy(label,sci::toUtf8(stdlabel).c_str());
 }
 
-void PlotScale::expand(const std::vector<double>& data)
+void sci::plot::Scale::expand(const std::vector<double>& data)
 {
 	if (isAutoscale())
 	{
@@ -217,16 +217,16 @@ void PlotScale::expand(const std::vector<double>& data)
 	}
 }
 
-splotcolourscale::splotcolourscale()
-	:PlotScale(false, Direction::none, 0.0)
+sci::plot::ColourScale::ColourScale()
+	:sci::plot::Scale(false, Direction::none, 0.0)
 {
 	setupdefault();
 }
 
-splotcolourscale::splotcolourscale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
-	:PlotScale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
+sci::plot::ColourScale::ColourScale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+	:sci::plot::Scale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
 {
-	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
 	{
 		//setup continuous colour scale
@@ -250,7 +250,7 @@ splotcolourscale::splotcolourscale(std::span<const double> value, std::span<cons
 	}
 }
 
-void splotcolourscale::setup(std::span<const double> value, std::span<const rgbcolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+void sci::plot::ColourScale::setup(std::span<const double> value, std::span<const rgbcolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
 	m_value = sci::GridData<double, 1>(value.begin(), value.end());
 	sci::GridData<rgbcolour, 1> colourCopy(colour.begin(), colour.end());
@@ -286,10 +286,10 @@ void splotcolourscale::setup(std::span<const double> value, std::span<const rgbc
 	m_fillOffscaleTop = fillOffscaleTop;
 }
 
-splotcolourscale::splotcolourscale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
-	:PlotScale(logarithmic, Direction::none, 0.0)
+sci::plot::ColourScale::ColourScale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+	:sci::plot::Scale(logarithmic, Direction::none, 0.0)
 {
-	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale constructor called with invalid sizes for the values or colours array."));
+	sci::assertThrow(value.size()>1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale constructor called with invalid sizes for the values or colours array."));
 	if (value.size() == colour.size())
 	{
 		//setup continuous colour scale
@@ -313,7 +313,7 @@ splotcolourscale::splotcolourscale(std::span<const double> value, std::span<cons
 	}
 }
 
-void splotcolourscale::setup(std::span<const double> value, std::span<const hlscolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+void sci::plot::ColourScale::setup(std::span<const double> value, std::span<const hlscolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
 	m_value = sci::GridData<double, 1>(value.begin(), value.end());
 	sci::GridData<hlscolour, 1> colourCopy(colour.begin(), colour.end());
@@ -422,7 +422,7 @@ void splotcolourscale::setup(std::span<const double> value, std::span<const hlsc
 }
 
 //interpolate the given value to a colour
-void splotcolourscale::interpolate(double value, double &c1, double &c2, double &c3, double &a, bool valuePreLogged) const
+void sci::plot::ColourScale::interpolate(double value, double &c1, double &c2, double &c3, double &a, bool valuePreLogged) const
 {
 	if (isLog() && !valuePreLogged)
 		value = std::log10(value);
@@ -507,7 +507,7 @@ void splotcolourscale::interpolate(double value, double &c1, double &c2, double 
 	a=m_alpha[maxIndex]*highWeight+m_alpha[maxIndex-1]*(1.0-highWeight);
 }
 
-rgbcolour splotcolourscale::getRgbOriginalScale( double value, bool valuePrelogged ) const
+sci::graphics::RgbColour sci::plot::ColourScale::getRgbOriginalScale( double value, bool valuePrelogged ) const
 {
 	if (m_hls)
 	{
@@ -522,7 +522,7 @@ rgbcolour splotcolourscale::getRgbOriginalScale( double value, bool valuePrelogg
 	return rgbcolour(r, g, b, a);
 }
 
-hlscolour splotcolourscale::getHlsOriginalScale( double value, bool valuePreLogged ) const
+sci::graphics::HlsColour sci::plot::ColourScale::getHlsOriginalScale( double value, bool valuePreLogged ) const
 {
 	if (!m_hls)
 	{
@@ -537,7 +537,7 @@ hlscolour splotcolourscale::getHlsOriginalScale( double value, bool valuePreLogg
 	return hlscolour(grDegree(h), l, s, a);
 }
 
-void splotcolourscale::setupdefault()
+void sci::plot::ColourScale::setupdefault()
 {
 	//assign values as are
 	m_colour1.resize(0);
@@ -559,28 +559,28 @@ void splotcolourscale::setupdefault()
 	m_fillOffscaleBottom = false;
 	m_fillOffscaleTop = false;
 }	
-rgbcolour splotcolourscale::getRgbOffscaleBottom() const
+sci::graphics::RgbColour sci::plot::ColourScale::getRgbOffscaleBottom() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
 	else
 		return hlscolour (grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
 }
-rgbcolour splotcolourscale::getRgbOffscaleTop() const
+sci::graphics::RgbColour sci::plot::ColourScale::getRgbOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
 	else
 		return hlscolour (grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
 }
-hlscolour splotcolourscale::getHlsOffscaleBottom() const
+sci::graphics::HlsColour sci::plot::ColourScale::getHlsOffscaleBottom() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToHls();
 	else
 		return hlscolour (grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]);
 }
-hlscolour splotcolourscale::getHlsOffscaleTop() const
+sci::graphics::HlsColour sci::plot::ColourScale::getHlsOffscaleTop() const
 {
 	if(!m_hls)
 		return rgbcolour (m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToHls();
@@ -588,14 +588,14 @@ hlscolour splotcolourscale::getHlsOffscaleTop() const
 		return hlscolour (grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back());
 }
 
-void splotcolourscale::setupForImage(plstream *pl) const
+void sci::plot::ColourScale::setupForImage(plstream *pl) const
 {
 	const double* intensity = isLog() ? &m_logValue[0] : &m_value[0];
 	pl->scmap1n(256);
 	pl->scmap1la(!m_hls, m_colour1.size(), intensity, &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
 }
 
-void splotcolourscale::setupForShade(plstream* pl) const
+void sci::plot::ColourScale::setupForShade(plstream* pl) const
 {
 	//when doing filled contouring using plshade, plPlot takes the colourscale
 	//and uses the lowest value for the first interval, the
@@ -606,7 +606,7 @@ void splotcolourscale::setupForShade(plstream* pl) const
 
 	//Note to self - this still breaks if autoscale is off of fill off scale top/bottom are on
 
-	sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::setupForShade called with a not discrete colour scale."));
+	sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setupForShade called with a not discrete colour scale."));
 
 	size_t nBoundaries = m_value.size() / 2 + 1;
 	double spacing = 1.0 / (nBoundaries - 2.0);
@@ -622,9 +622,9 @@ void splotcolourscale::setupForShade(plstream* pl) const
 	pl->scmap1la(!m_hls, m_colour1.size(), &newValues[0], &m_colour1[0], &m_colour2[0], &m_colour3[0], &m_alpha[0], NULL);
 }
 
-std::vector<double> splotcolourscale::getDiscreteValues() const
+std::vector<double> sci::plot::ColourScale::getDiscreteValues() const
 {
-	sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "splotcolourscale::getDiscreteValues called with a not discrete colour scale."));
+	sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::getDiscreteValues called with a not discrete colour scale."));
 
 	std::vector<double> result(m_value.size() / 2 + 1);
 	if (isLog())
@@ -648,8 +648,8 @@ std::vector<double> splotcolourscale::getDiscreteValues() const
 	return result;
 }
 
-splotsizescale::splotsizescale(std::span<const double> value, std::span<const double> size, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
-	:PlotScale(logarithmic, Direction::none, 0.0)
+sci::plot::splotsizescale::splotsizescale(std::span<const double> value, std::span<const double> size, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+	:sci::plot::Scale(logarithmic, Direction::none, 0.0)
 {
 	m_value = sci::GridData<double, 1>(value.begin(), value.end());
 	m_size = sci::GridData<double, 1>(size.begin(), size.end());
@@ -671,7 +671,7 @@ splotsizescale::splotsizescale(std::span<const double> value, std::span<const do
 	}
 }
 
-double splotsizescale::getsize(double value, bool valuePreLogged) const
+double sci::plot::splotsizescale::getsize(double value, bool valuePreLogged) const
 {
 	if (isLog() && !valuePreLogged)
 		value = std::log10(value);
@@ -723,8 +723,8 @@ double splotsizescale::getsize(double value, bool valuePreLogged) const
 	return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 }
 
-splotlevelscale::splotlevelscale(std::span<const double> value, bool logarithmic, bool autostretch)
-	:PlotScale(logarithmic, Direction::none, 0.0)
+sci::plot::splotlevelscale::splotlevelscale(std::span<const double> value, bool logarithmic, bool autostretch)
+	:sci::plot::Scale(logarithmic, Direction::none, 0.0)
 {
 	m_value = sci::GridData<double, 1>(value.begin(), value.end());
 	sci::GridData<double, 1> dummy = m_value;
@@ -744,7 +744,7 @@ splotlevelscale::splotlevelscale(std::span<const double> value, bool logarithmic
 	}
 }
 
-sci::GridData<double, 1> splotlevelscale::getLevels() const
+sci::GridData<double, 1> sci::plot::splotlevelscale::getLevels() const
 {
 	sci::GridData<double, 1> result;
 	if (isLog())
@@ -760,25 +760,31 @@ sci::GridData<double, 1> splotlevelscale::getLevels() const
 	return result;
 }
 
-std::string PlotAxis::createploptstring() const
+std::string sci::plot::PlotAxis::createploptstring() const
 {
 	std::string opt = "bci";
 	if (m_options.m_timeformat != sU(""))opt = opt + "d";
 	if (m_options.m_customlabelcreator != NULL)opt = opt + "o";
 	if (!m_options.m_labelFont.m_size.isAlwaysZero())
 	{
-		if (!m_options.m_labelsLeftOrDown)opt = opt + "m";
-		else opt = opt + wxT("n");
+		if (!m_options.m_labelsLeftOrDown)
+			opt = opt + "m";
+		else
+			opt = opt + "n";
 	}
-	if (isLog())opt = opt + "l";
-	if (m_options.m_majorTickLength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))opt = opt + "t";
-	else opt = opt + "x";
-	if (m_options.m_minorTickLength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))opt = opt + "s";
+	if (isLog())
+		opt = opt + "l";
+	if (m_options.m_majorTickLength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))
+		opt = opt + "t";
+	else
+		opt = opt + "x";
+	if (m_options.m_minorTickLength.getLength(grMillimetre(0.0), grMillimetre(0.0)) > grMillimetre(0.0))
+		opt = opt + "s";
 
 	return opt;
 }
 
-void PlotAxis::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+void sci::plot::PlotAxis::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
 	//get the tick interval and subintervals
 	//double ymajint = m_yaxis.m_automajorinterval ? 0.0 : m_yaxis.m_majorinterval;
@@ -851,7 +857,7 @@ void PlotAxis::draw(plstream* pl, double scale, double pageWidth, double pageHei
 
 }
 
-void PlotAxis::draw(Renderer& renderer, grPerMillimetre scale)
+void sci::plot::PlotAxis::draw(Renderer& renderer, grPerMillimetre scale)
 {
 	sci::graphics::StatePusher statePusher(&renderer);
 	m_options.m_lineStyle.setPen(renderer);
@@ -861,7 +867,7 @@ void PlotAxis::draw(Renderer& renderer, grPerMillimetre scale)
 		drawLinear(renderer, scale);
 }
 
-void PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
+void sci::plot::PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 {
 	//calculate the min, max and span
 	double min = getLinearMin();
@@ -937,7 +943,7 @@ void PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 	drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
 }
 
-void PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
+void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 {
 	//calculate the min, max and span
 	double logMin = getLogMin();
@@ -1007,7 +1013,7 @@ void PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 	drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
 }
 
-void PlotAxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
+void sci::plot::PlotAxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
 {
 	Point pagePosition = m_start + alongAxisDistance(plotPosition);
 	Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
@@ -1040,7 +1046,7 @@ void PlotAxis::drawTick(Renderer& renderer, grPerMillimetre scale, double plotPo
 		renderer.line(p1, p2);
 }
 
-grMillimetre PlotAxis::drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition)
+sci::graphics::millimetre sci::plot::PlotAxis::drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition)
 {
 	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setBrush(m_options.m_labelFont.m_colour);
@@ -1111,7 +1117,7 @@ grMillimetre PlotAxis::drawLabel(Renderer& renderer, grPerMillimetre scale, doub
 	return labelSize;
 }
 
-void PlotAxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
+void sci::plot::PlotAxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
 {
 	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setBrush(m_options.m_titleFont.m_colour);
@@ -1153,7 +1159,7 @@ void PlotAxis::drawTitle(Renderer& renderer, grPerMillimetre scale, Length dista
 	}
 }
 
-void splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+void sci::plot::splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
 	//pl->vpor(0.0, 1.0, 0.0, 1.0);
 	//pl->wind(0.0, 1.0, 0.0, 1.0);
@@ -1164,14 +1170,14 @@ void splotLabel::draw(plstream* pl, double scale, double pageWidth, double pageH
 	//pl->ptex(m_xPosition, m_yPosition, 1, 0, m_alignment, sci::toUtf8(m_text).c_str());
 }
 
-void splotLabel::draw(Renderer& renderer, grPerMillimetre scale)
+void sci::plot::splotLabel::draw(Renderer& renderer, grPerMillimetre scale)
 {
 	sci::graphics::StatePusher statePusher(&renderer);
 	renderer.setFont(m_font);
 	renderer.formattedText(m_text, m_position, m_horizontalAlignment, m_verticalAlignment, m_rotation);
 }
 
-void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
+void sci::plot::HorizontalColourBar::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
 	if (m_colourscale->isDiscrete())
 	{
@@ -1232,7 +1238,7 @@ void splothorizontalcolourbar::draw(plstream* pl, double scale, double pageWidth
 	}
 }
 
-void splothorizontalcolourbar::draw(Renderer& renderer, grPerMillimetre scale)
+void sci::plot::HorizontalColourBar::draw(Renderer& renderer, grPerMillimetre scale)
 {
 	if (m_colourscale->isDiscrete())
 	{
@@ -1293,7 +1299,7 @@ void splothorizontalcolourbar::draw(Renderer& renderer, grPerMillimetre scale)
 	}
 }
 
-void PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultiplier)
+void sci::plot::PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultiplier)
 {
 
 	//no point in messing around if the size is zero
@@ -1365,7 +1371,7 @@ void PlotCanvas::render(wxDC* dc, int width, int height, double linewidthmultipl
 //strings then png is used, although the given extension will still be used 
 //in the filename. the antialiasing parameter is ignored for vector graphics.
 
-bool PlotCanvas::writetofile(sci::string filename, int width, int height, grPerMillimetre scale)
+bool sci::plot::PlotCanvas::writetofile(sci::string filename, int width, int height, grPerMillimetre scale)
 {
 	//get the extension
 	wxFileName fullfile = wxString(sci::nativeUnicode(filename));
