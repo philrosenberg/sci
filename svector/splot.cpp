@@ -376,18 +376,22 @@ void sci::plot::PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 
 	//draw the ticks and labels
 	renderer.setFont(m_options.m_labelFont);
-	double currentMajorPosition = std::ceil(min / majorInterval) * majorInterval;
+	double currentMajorPosition = std::floor(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
+
 	double minorInterval = majorInterval / double(nSubticks + 1);
 	grMillimetre maxLabelSize(0);
 	while (currentMajorPosition <= max) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 	{
-		drawTick(renderer, scale, currentMajorPosition, false);
-		grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
-		maxLabelSize = std::max(labelSize, maxLabelSize);
+		if (currentMajorPosition >= min)
+		{
+			drawTick(renderer, scale, currentMajorPosition, false);
+			grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+			maxLabelSize = std::max(labelSize, maxLabelSize);
+		}
 		for (size_t i = 0; i < nSubticks; ++i)
 		{
 			double minorPosition = currentMajorPosition + double(i + 1) * minorInterval;
-			if (minorPosition <= max)
+			if (minorPosition <= max && minorPosition >=min)
 				drawTick(renderer, scale, minorPosition, true);
 		}
 		currentMajorPosition += majorInterval;
@@ -432,21 +436,24 @@ void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 
 	//draw the ticks and labels
 	renderer.setFont(m_options.m_labelFont);
-	double currentMajorLogPosition = std::ceil(logMin / majorLogInterval) * majorLogInterval;
+	double currentMajorLogPosition = std::floor(logMin / majorLogInterval) * majorLogInterval;
 	grMillimetre maxLabelSize(0);
 
 	while (currentMajorLogPosition <= logMax) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 	{
 		double currentMajorPosition = std::pow(10.0, currentMajorLogPosition);
-		drawTick(renderer, scale, currentMajorPosition, false);
-		grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
-		maxLabelSize = std::max(labelSize, maxLabelSize);
+		if (currentMajorLogPosition >= logMin)
+		{
+			drawTick(renderer, scale, currentMajorPosition, false);
+			grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+			maxLabelSize = std::max(labelSize, maxLabelSize);
+		}
 		if (minorLogInterval != 0.0)
 		{
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = std::pow(10.0, currentMajorLogPosition + double(i+1) * minorLogInterval);
-				if(currentMinorPosition<=getLinearMax())
+				if(currentMinorPosition<=getLinearMax() && currentMinorPosition >=getLinearMin())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 
@@ -456,7 +463,7 @@ void sci::plot::PlotAxis::drawLog(Renderer& renderer, grPerMillimetre scale)
 			for (size_t i = 0; i < nSubticks; ++i)
 			{
 				double currentMinorPosition = currentMajorPosition * double((i+1)*minorInterval  + 1.0);
-				if(currentMinorPosition <=getLinearMax())
+				if(currentMinorPosition <=getLinearMax() && currentMinorPosition >= getLinearMin())
 					drawTick(renderer, scale, currentMinorPosition, true);
 			}
 		}
