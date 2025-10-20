@@ -693,7 +693,7 @@ void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 	sci::plot::PlotAxis axis2(0.0, 20.0, false, left + voffset, right + voffset, sci::plot::PlotAxis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
 	axis2.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis3(0.0, 50.0, false, left + voffset * unitless(2.0), right + voffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 10 and 4 subticks")));
+	sci::plot::PlotAxis axis3(0.0, 50.0, false, left + voffset * unitless(2.0), right + voffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
 	axis3.draw(renderer, perInch(96));
 
 	sci::plot::PlotAxis axis4(0.0, 80.0, false, left + voffset * unitless(3.0), right + voffset * unitless(3.0), sci::plot::PlotAxis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));
@@ -707,7 +707,7 @@ void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 	sci::plot::PlotAxis axis6(0.0, 20.0, false, bottom + hoffset * unitless(1.0), top + hoffset * unitless(1.0), sci::plot::PlotAxis::Options(sU("0-20 with auto major interval of 2 and 3 subticks")));
 	axis6.draw(renderer, perInch(96));
 
-	sci::plot::PlotAxis axis7(0.0, 50.0, false, bottom + hoffset * unitless(2.0), top + hoffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 10 and 4 subticks")));
+	sci::plot::PlotAxis axis7(0.0, 50.0, false, bottom + hoffset * unitless(2.0), top + hoffset * unitless(2.0), sci::plot::PlotAxis::Options(sU("0-50 with auto major interval of 5 and 4 subticks")));
 	axis7.draw(renderer, perInch(96));
 
 	sci::plot::PlotAxis axis8(0.0, 80.0, false, bottom + hoffset * unitless(3.0), top + hoffset * unitless(3.0), sci::plot::PlotAxis::Options(sU("0-80 with auto major interval of 10 and 4 subticks")));

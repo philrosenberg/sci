@@ -906,9 +906,7 @@ void sci::plot::PlotAxis::drawLinear(Renderer & renderer, grPerMillimetre scale)
 	size_t nSubticks;
 	if (m_options.m_autoNSubticks)
 	{
-		if (isLog())
-			nSubticks = 8;
-		else if (m_options.m_autoMajorInterval)
+		if (m_options.m_autoMajorInterval)
 			nSubticks = nAutoSubticks;
 		else
 			nSubticks = 4;
