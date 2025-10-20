@@ -1362,7 +1362,7 @@ namespace sci
 					if (currentMajorPosition >= min)
 					{
 						drawTick(renderer, scale, currentMajorPosition, false);
-						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, minorInterval);
 						maxLabelSize = std::max(labelSize, maxLabelSize);
 					}
 					for (size_t i = 0; i < nSubticks; ++i)
@@ -1422,7 +1422,7 @@ namespace sci
 					if (currentMajorLogPosition >= logMin)
 					{
 						drawTick(renderer, scale, currentMajorPosition, false);
-						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition);
+						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, 0.0);
 						maxLabelSize = std::max(labelSize, maxLabelSize);
 					}
 					if (minorLogInterval != 0.0)
@@ -1487,7 +1487,8 @@ namespace sci
 				if (p1 != p2)
 					renderer.line(p1, p2);
 			}
-			grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition) //returns the sise of the label perpedicular to the axis
+
+			grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition, double minorInterval) //returns the sise of the label perpedicular to the axis
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setBrush(m_options.m_labelFont.m_colour);
@@ -1499,7 +1500,13 @@ namespace sci
 					//make a scope so we destroy the stream and don't access it later
 					sci::stringstream strm;
 					strm.precision(m_options.m_maxDigits);
-					strm << plotPosition;
+
+					//check we are not so close to zero we should just be zero
+					double temp = std::log10(std::abs(plotPosition) / minorInterval);
+					if (!m_log && std::log10(std::abs(plotPosition)/minorInterval) < -double(m_options.m_maxDigits))
+						strm << 0;
+					else
+						strm << plotPosition;
 
 					//make scientific notation nicer
 					size_t ePosition = strm.str().find(sU("e"));
