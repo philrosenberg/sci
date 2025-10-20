@@ -5,7 +5,6 @@
 #include<string>
 #include<memory>
 
-#include"splot.h"
 #include"../../Units.h"
 #include<svector/grid.h>
 #include<svector/gridtransformview.h>

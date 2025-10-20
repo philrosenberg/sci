@@ -1733,6 +1733,17 @@ namespace sci
 				return values;
 			}
 		};
+	}
+}
+
+		//have to #include this down here as classes in here need some of the declarations from
+		//above, but they don't get included because of the #ifdef protection
+#include"plotdata.h"
+
+namespace sci
+{
+	namespace plot
+	{
 
 		class HorizontalColourBar : public DrawableItem
 		{
@@ -1747,7 +1758,63 @@ namespace sci
 			{
 			}
 			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
-			void draw(Renderer& renderer, grPerMillimetre scale) override;
+			void draw(Renderer& renderer, grPerMillimetre scale) override
+			{
+				if (m_colourscale->isDiscrete())
+				{
+					sci::GridData<double, 2> cb({ 2, 2 });
+					cb[0][0] = m_colourscale->getLinearMin();
+					cb[0][1] = cb[0][0];
+					cb[1][0] = m_colourscale->getLinearMax();
+					cb[1][1] = cb[1][0];
+					std::vector<double> cbX{ cb[0][0], cb[1][0] };
+					std::vector<double> cbY{ 0.0, 1.0 };
+
+					ContourData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
+
+					data.draw(renderer, scale);
+					m_xAxis->draw(renderer, scale);
+				}
+				else
+				{
+					sci::GridData<double, 2> z({ 256, 1 });
+					std::vector<double> cbX(z.shape()[0] + 1);
+
+
+					double min = m_colourscale->getLinearOrLogMin();
+					double max = m_colourscale->getLinearOrLogMax();
+
+					if (m_colourscale->isLog())
+					{
+						double range = max - min;
+						double step = range / (z.shape()[0]);
+
+						for (size_t i = 0; i < cbX.size(); ++i)
+							cbX[i] = std::pow(10, min + i * step);
+
+						for (size_t i = 0; i < z.size(); ++i)
+							z[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
+					}
+					else
+					{
+						double range = max - min;
+						double step = range / (z.size());
+
+						for (size_t i = 0; i < cbX.size(); ++i)
+							cbX[i] = min + i * step;
+
+						for (size_t i = 0; i < z.size(); ++i)
+							z[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
+					}
+
+					std::vector<double> cbY{ 0.0, 1.0 };
+
+					GridData data(cbX, cbY, z, m_xAxis, m_yAxis, m_colourscale);
+
+					data.draw(renderer, scale);
+					m_xAxis->draw(renderer, scale);
+				}
+			}
 			bool readyToDraw() const override
 			{
 				return true;
@@ -1789,6 +1856,7 @@ namespace sci
 			{
 				return true;
 			}
+
 		private:
 			sci::string m_text;
 			Point m_position;
@@ -1798,17 +1866,7 @@ namespace sci
 			grDegree m_rotation;
 			Length m_minTextSize;
 		};
-	}
-}
 
-		//have to #include this down here as classes in here need some of the declarations from
-		//above, but they don't get included because of the #ifdef protection
-#include"plotdata.h"
-
-namespace sci
-{
-	namespace plot
-	{
 		class PlotCanvas
 		{
 		public:

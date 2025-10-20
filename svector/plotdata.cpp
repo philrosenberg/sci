@@ -1,4 +1,4 @@
-#include "../include/svector/dep/plot/plotdata.h"
+#include "../include/svector/dep/plot/splot.h"
 #include "../include/svector/dep/plot/transforms.h"
 #include "../include/svector/serr.h"
 #include "../include/svector/svector.h"
