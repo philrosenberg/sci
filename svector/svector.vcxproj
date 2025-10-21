@@ -347,12 +347,19 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\algorithm.h" />
     <ClInclude Include="..\include\svector\apexWorkspace.h" />
+    <ClInclude Include="..\include\svector\dep\plot\errorBar.h" />
+    <ClInclude Include="..\include\svector\dep\plot\fillBars.h" />
+    <ClInclude Include="..\include\svector\dep\plot\gridContour.h" />
+    <ClInclude Include="..\include\svector\dep\plot\linePoint.h" />
+    <ClInclude Include="..\include\svector\dep\plot\physical.h" />
+    <ClInclude Include="..\include\svector\dep\plot\plotable.h" />
+    <ClInclude Include="..\include\svector\dep\plot\elements.h" />
     <ClInclude Include="..\include\svector\grid.h" />
     <ClInclude Include="..\include\svector\ArrayManipulation.h" />
     <ClInclude Include="..\include\svector\controls.h" />
     <ClInclude Include="..\include\svector\dep\nc.h" />
-    <ClInclude Include="..\include\svector\dep\plot\plotdata.h" />
-    <ClInclude Include="..\include\svector\dep\plot\splot.h" />
+    <ClInclude Include="..\include\svector\dep\plot\varyingPoints.h" />
+    <ClInclude Include="..\include\svector\dep\plot\plot.h" />
     <ClInclude Include="..\include\svector\dep\plot\splottest.h" />
     <ClInclude Include="..\include\svector\dep\plot\transforms.h" />
     <ClInclude Include="..\include\svector\dep\ppfile.h" />
@@ -377,7 +384,7 @@
     <ClInclude Include="..\include\svector\sminimiser.h" />
     <ClInclude Include="..\include\svector\sminimiser2.h" />
     <ClInclude Include="..\include\svector\Spectral.h" />
-    <ClInclude Include="..\include\svector\splot.h" />
+    <ClInclude Include="..\include\svector\plot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="..\include\svector\sstdwrappers.h" />
     <ClInclude Include="..\include\svector\sstring.h" />

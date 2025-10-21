@@ -1,6 +1,6 @@
 #include "mainFrame.h"
 #include<svector/svector.h>
-#include<svector/splot.h>
+#include<svector/plot.h>
 #include<svector/sreadwrite.h>
 #include<svector/sstring.h>
 #include<wx/scrolwin.h>

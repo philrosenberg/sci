@@ -185,10 +185,10 @@
     <ClInclude Include="..\include\svector\dep\windows.h">
       <Filter>Header Files\dep</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\dep\plot\plotdata.h">
+    <ClInclude Include="..\include\svector\dep\plot\varyingPoints.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\dep\plot\splot.h">
+    <ClInclude Include="..\include\svector\dep\plot\plot.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\dep\plot\splottest.h">
@@ -197,7 +197,7 @@
     <ClInclude Include="..\include\svector\dep\plot\transforms.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\splot.h">
+    <ClInclude Include="..\include\svector\plot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\Traits.h">
@@ -241,6 +241,27 @@
     </ClInclude>
     <ClInclude Include="..\include\svector\graphics.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\elements.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\plotable.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\linePoint.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\errorBar.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\gridContour.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\physical.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\fillBars.h">
+      <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

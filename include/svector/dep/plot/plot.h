@@ -1738,12 +1738,67 @@ namespace sci
 
 		//have to #include this down here as classes in here need some of the declarations from
 		//above, but they don't get included because of the #ifdef protection
-#include"plotdata.h"
+#include"elements.h"
+#include"gridContour.h"
 
 namespace sci
 {
 	namespace plot
 	{
+
+
+		class PlotFrame : public DrawableItem
+		{
+		public:
+			PlotFrame(const Point topLeft, const Point bottomRight, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine,
+				::sci::string title = sU(""), Length titlesize = Length(grTextPoint(12.0)), Length titledistance = Length(grTextPoint(12.0)),
+				::sci::string titlefont = sU(""), int32_t titlestyle = 0, rgbcolour titlecolour = rgbcolour(0, 0, 0))
+			{
+				m_topLeft = topLeft;
+				m_bottomRight = bottomRight;
+				m_fillStyle = fillStyle;
+				m_lineStyle = lineStyle;
+				m_title = title;
+				m_titlesize = titlesize;
+				m_titledistance = titledistance;
+				m_titlefont = titlefont;
+				m_titlestyle = titlestyle;
+				m_titlecolour = titlecolour;
+			}
+			void preDraw() override
+			{
+			}
+			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
+			void draw(Renderer& renderer, grPerMillimetre scale) override
+			{
+				sci::graphics::StatePusher state(&renderer);
+				m_fillStyle.setBrush(renderer);
+				m_lineStyle.setPen(renderer);
+				renderer.rectangle(m_topLeft, m_bottomRight - m_topLeft);
+
+				Point titlePosition(m_topLeft.getX() + (m_bottomRight.getX() - m_topLeft.getX()) / grUnitless(2), m_topLeft.getY() - m_titledistance);
+
+				renderer.setFont(m_titlefont, m_titlesize, m_titlecolour);
+				renderer.formattedText(m_title, titlePosition, grUnitless(0.5), grUnitless(0.0));
+			}
+			bool readyToDraw() const override
+			{
+				return true;
+			}
+		private:
+			Point m_topLeft;
+			Point m_bottomRight;
+			FillStyle m_fillStyle;
+			LineStyle m_lineStyle;
+			::sci::string m_title;
+			Length m_titlesize;
+			Length m_titledistance;
+			::sci::string m_titlefont;
+			int32_t m_titlestyle;
+			rgbcolour m_titlecolour;
+		};
+
+
 
 		class HorizontalColourBar : public DrawableItem
 		{
@@ -1956,7 +2011,105 @@ namespace sci
 				//clear the items to skip
 				m_itemsToSkipNextRendering.resize(0);
 			}
-			bool writetofile(::sci::string filename, int width, int height, grPerMillimetre scale);
+			bool writetofile(::sci::string filename, int width, int height, grPerMillimetre scale)
+			{
+				//get the extension
+				wxFileName fullfile = wxString(sci::nativeUnicode(filename));
+				wxString extension = fullfile.GetExt().Lower();
+
+				bool result = true;
+
+
+				if (extension == "ps")
+				{
+					//here we redraw the plot like OnPaint but using a postscript DC.
+					wxPrintData setupdata;
+					setupdata.SetColour(true);
+					setupdata.SetFilename(sci::nativeUnicode(filename));
+					//setupdata.SetPaperId(wxPAPER_A4);
+					setupdata.SetPaperId(wxPAPER_NONE);
+					//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
+					//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
+					//than the screen. Here we've multiplied by 10 to get 30 times better.
+					int sizemultiplier = 10;
+					setupdata.SetPaperSize(wxSize(width * sizemultiplier, height * sizemultiplier));
+					setupdata.SetPrintMode(wxPRINT_MODE_FILE);
+					//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
+					wxPostScriptDC psdc(setupdata);
+					result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
+					if (result == false)
+						return result;
+					sci::graphics::wxRenderer renderer(&psdc, wxSize(width, height), scale);
+					render(renderer, scale);
+					psdc.EndDoc();
+				}
+#ifdef _WIN32
+				else if (extension == "emf")
+				{
+					//here we redraw the plot like OnPaint but using a wxMetafile DC.
+					wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
+					sci::graphics::wxRenderer renderer(&metadc, wxSize(width, height), scale);
+					render(renderer, scale);;//0 gives vector output
+					//close the file - note this gives us a copy of the file in memory which we must delete
+					wxMetafile* metafile = metadc.Close();
+					result = metafile != NULL;
+					delete metafile;
+					//we must call this function to make the file importable into other software
+					int minx = metadc.MinX();
+					int maxx = metadc.MaxX();
+					int miny = metadc.MinY();
+					int maxy = metadc.MaxY();
+					//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
+				}
+#endif
+				else if (extension == "svg")
+				{
+					wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, scale.value<grPerInch>());
+					sci::graphics::wxRenderer renderer(&dc, wxSize(width, height), scale);
+					render(renderer, scale);
+					result = true;
+				}
+				else
+				{
+					//load the image handlers
+					wxInitAllImageHandlers();
+					//create a wxBitmapType to define the type saved as
+					//use PNG as default
+					wxBitmapType type = wxBITMAP_TYPE_PNG;
+					if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
+					else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
+					else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
+					else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
+					else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
+					else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
+					else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
+
+
+					//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
+					//except if using AGG then we create an image instead which we'll need to copy to the bitmap
+					wxMemoryDC memdc;
+					wxBitmap bitmap(width, height, 32);
+					if (!bitmap.IsOk())
+						return false;
+					memdc.SelectObject(bitmap);
+					//fill the bitmap with white giving a white background for plplot
+					//or to show blank if there are no plots
+					memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
+
+					sci::graphics::wxRenderer renderer(&memdc, wxSize(width, height), scale);
+					render(renderer, scale);
+
+
+					//reselect null bitmap for the memdc
+					memdc.SelectObject(wxNullBitmap);
+
+					//write the bitmap to file
+					result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
+
+				}
+
+				return result;
+			}
 			void skipNextRenderingOf(std::shared_ptr<DrawableItem> item)
 			{
 				m_itemsToSkipNextRendering.push_back(item);

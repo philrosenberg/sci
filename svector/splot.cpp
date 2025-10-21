@@ -7,7 +7,7 @@
 #include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
                        // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
                        //not sure why.
-#include"../include/svector/dep/plot/splot.h"
+#include"../include/svector/dep/plot/plot.h"
 #include"../include/svector/dep/plot/transforms.h"
 #include"../include/svector/serr.h"
 //#include"../include/svector/svector.h"
@@ -436,111 +436,4 @@ void sci::plot::PlotCanvas::render(wxDC* dc, int width, int height, double linew
 
 	//we're done drawing so delete pl
 	delete pl;
-}
-
-//Write the plot window to an image file. This can be either a raster
-//or vector graphic image. The file extension defines the type of image saved. 
-//Valid extensions are png, jpg, bmp, tif, pcx, xpm, xbm, pnm for bitmaps and
-//ps, svg, emf for vector. If the extension does not correspond to any of these 
-//strings then png is used, although the given extension will still be used 
-//in the filename. the antialiasing parameter is ignored for vector graphics.
-
-bool sci::plot::PlotCanvas::writetofile(sci::string filename, int width, int height, grPerMillimetre scale)
-{
-	//get the extension
-	wxFileName fullfile = wxString(sci::nativeUnicode(filename));
-	wxString extension = fullfile.GetExt().Lower();
-
-	bool result = true;
-
-
-	if (extension == "ps")
-	{
-		//here we redraw the plot like OnPaint but using a postscript DC.
-		wxPrintData setupdata;
-		setupdata.SetColour(true);
-		setupdata.SetFilename(sci::nativeUnicode(filename));
-		//setupdata.SetPaperId(wxPAPER_A4);
-		setupdata.SetPaperId(wxPAPER_NONE);
-		//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
-		//So setting the image size to the screen resolution gives us a ps resolution of about 3 times bettr 
-		//than the screen. Here we've multiplied by 10 to get 30 times better.
-		int sizemultiplier = 10;
-		setupdata.SetPaperSize(wxSize(width * sizemultiplier, height * sizemultiplier));
-		setupdata.SetPrintMode(wxPRINT_MODE_FILE);
-		//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
-		wxPostScriptDC psdc(setupdata);
-		result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
-		if (result == false)
-			return result;
-		sci::graphics::wxRenderer renderer(&psdc, wxSize(width, height), scale);
-		render(renderer, scale);
-		psdc.EndDoc();
-	}
-#ifdef _WIN32
-	else if (extension == "emf")
-	{
-		//here we redraw the plot like OnPaint but using a wxMetafile DC.
-		wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
-		sci::graphics::wxRenderer renderer(&metadc, wxSize(width, height), scale);
-		render(renderer, scale);;//0 gives vector output
-		//close the file - note this gives us a copy of the file in memory which we must delete
-		wxMetafile* metafile = metadc.Close();
-		result = metafile != NULL;
-		delete metafile;
-		//we must call this function to make the file importable into other software
-		int minx = metadc.MinX();
-		int maxx = metadc.MaxX();
-		int miny = metadc.MinY();
-		int maxy = metadc.MaxY();
-		//wxMakeMetaFilePlaceable(minx,miny,maxx,maxy);
-	}
-#endif
-	else if (extension == "svg")
-	{
-		wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, scale.value<grPerInch>());
-		sci::graphics::wxRenderer renderer(&dc, wxSize(width, height), scale);
-		render(renderer, scale);
-		result = true;
-	}
-	else
-	{
-		//load the image handlers
-		wxInitAllImageHandlers();
-		//create a wxBitmapType to define the type saved as
-		//use PNG as default
-		wxBitmapType type = wxBITMAP_TYPE_PNG;
-		if (extension == wxT("jpg")) type = wxBITMAP_TYPE_JPEG;
-		else if (extension == wxT("bmp")) type = wxBITMAP_TYPE_BMP;
-		else if (extension == wxT("tif")) type = wxBITMAP_TYPE_TIF;
-		else if (extension == wxT("pcx")) type = wxBITMAP_TYPE_PCX;
-		else if (extension == wxT("xpm")) type = wxBITMAP_TYPE_XPM;
-		else if (extension == wxT("xbm")) type = wxBITMAP_TYPE_XBM;
-		else if (extension == wxT("pnm")) type = wxBITMAP_TYPE_PNM;
-
-			
-		//create a wxMemoryDC which will be linked to the bitmap. We'll use this to draw to the bitmap
-		//except if using AGG then we create an image instead which we'll need to copy to the bitmap
-		wxMemoryDC memdc;
-		wxBitmap bitmap(width, height, 32);
-		if (!bitmap.IsOk())
-			return false;
-		memdc.SelectObject(bitmap);
-		//fill the bitmap with white giving a white background for plplot
-		//or to show blank if there are no plots
-		memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
-
-		sci::graphics::wxRenderer renderer(&memdc, wxSize(width, height), scale);
-		render(renderer, scale);
-
-
-		//reselect null bitmap for the memdc
-		memdc.SelectObject(wxNullBitmap);
-
-		//write the bitmap to file
-		result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
-			
-	}
-
-	return result;
 }
