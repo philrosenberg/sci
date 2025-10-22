@@ -138,6 +138,10 @@ namespace sci
 			{
 				return m_data.size();
 			}
+			const std::vector<std::shared_ptr<Scale>>& getAxes()
+			{
+				return m_axes;
+			}
 		protected:
 		private:
 			std::vector<std::vector<double>> m_data;

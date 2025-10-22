@@ -11,37 +11,80 @@ namespace sci
 		class PointDataColourVarying : public UnstructuredData
 		{
 		public:
-			PointDataColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const ColourVaryingSymbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getColourscale())}, transformer), m_symbol(symbol)
+			PointDataColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale}, transformer), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
 			void plotData(plstream* pl, double scale) const override;
+			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			{
+				if (!hasData())
+					return;
+
+				for (size_t i = 0; i < getNPoints(); ++i)
+				{
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(getPointer(2)[i], true));
+					renderer.setPen(rgbcolour(), grMillimetre(0.0));
+					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), renderer);
+				}
+			}
 		private:
-			ColourVaryingSymbol m_symbol;
+			Symbol m_symbol;
+			const std::shared_ptr<ColourScale> m_colourScale;
 		};
 
 		class PointDataSizeVarying : public UnstructuredData
 		{
 		public:
-			PointDataSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const SizeVaryingSymbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
+			PointDataSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, sizeScale}, transformer), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
 			void plotData(plstream* pl, double scale) const override;
+			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			{
+				if (!hasData())
+					return;
+
+				renderer.setBrush(m_colour);
+				renderer.setPen(rgbcolour(), grMillimetre(0.0));
+				for (size_t i = 0; i < getNPoints(); ++i)
+				{
+					double size = m_sizeScale->getsize(getPointer(2)[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), graphics::unitless(size), renderer);
+				}
+			}
 		private:
-			SizeVaryingSymbol m_symbol;
+			Symbol m_symbol;
+			sci::graphics::RgbColour m_colour;
+			const std::shared_ptr<SizeScale> m_sizeScale;
 		};
 
 		class PointDataColourAndSizeVarying : public UnstructuredData
 		{
 		public:
-			PointDataColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const ColourAndSizeVaryingSymbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zsColour, zsSize }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, std::shared_ptr<sci::plot::Scale>(symbol.getColourscale()), std::shared_ptr<sci::plot::Scale>(symbol.getSizeScale())}, transformer), m_symbol(symbol)
+			PointDataColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zsColour, zsSize }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale, sizeScale}, transformer), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
 			void plotData(plstream* pl, double scale) const override;
+			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			{
+				if (!hasData())
+					return;
+
+				for (size_t i = 0; i < getNPoints(); ++i)
+				{
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(getPointer(2)[i], true));
+					renderer.setPen(rgbcolour(), grMillimetre(0.0));
+					double size = m_sizeScale->getsize(getPointer(3)[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), graphics::unitless(size), renderer);
+				}
+			}
 		private:
-			ColourAndSizeVaryingSymbol m_symbol;
+			Symbol m_symbol;
+			const std::shared_ptr<ColourScale> m_colourScale;
+			const std::shared_ptr<SizeScale> m_sizeScale;
 		};
 	}
 }

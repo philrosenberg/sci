@@ -314,13 +314,22 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have square data sci::graphics::Points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
 		sci::plot::Axis::Options options;
+		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
+		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
+		std::array<double, 3> xErrors{ 0.2, 0.1, 0.12 };
+		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, sci::plot::Symbol()));
+		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5)));
+		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5)));
+
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
 		canvas->addItem(yAxis);
+		canvas->addItem(xBars);
+		canvas->addItem(yBars);
 		canvas->addItem(points);
 
 		frame->Show(true);
@@ -335,14 +344,84 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
 		sci::plot::Axis::Options options;
+		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
+		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
+		std::array<double, 3> xErrors{ 0.2, 0.1, 0.12 };
+		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(std::array<double, 3>{ 0.1, 0.5, 0.8 }, std::array<double, 3>{ 0.2, 0.4, 0.6 }, xAxis, yAxis, sci::plot::Symbol()));
+		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), false));
+		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), false));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
 		canvas->addItem(yAxis);
+		canvas->addItem(xBars);
+		canvas->addItem(yBars);
 		canvas->addItem(points);
+
+		frame->Show(true);
+	}
+
+	{
+		//create a frame with auto scaled axes and 3 circular sci::graphics::Points
+		//this tests that auto scaling axes works
+		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		frame->SetClientSize(800, 800);
+		auto canvas = frame->getPanel()->getCanvas();
+
+		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		sci::plot::Axis::Options options;
+		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
+		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
+		std::array<double, 3> xErrors{ 0.2, 0.1, 0.12 };
+		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), true));
+		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), true));
+
+		canvas->addItem(box);
+		canvas->addItem(xAxis);
+		canvas->addItem(yAxis);
+		canvas->addItem(xBars);
+		canvas->addItem(yBars);
+		canvas->addItem(points);
+
+		frame->Show(true);
+	}
+
+	{
+		//create a plot showing points with varying size and colour
+		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		frame->SetClientSize(800, 800);
+		auto canvas = frame->getPanel()->getCanvas();
+
+		std::vector<double> y1(10, 1.0);
+		std::vector<double> y2(10, 2.0);
+		std::vector<double> y3(10, 3.0);
+		std::vector<double> x{ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 };
+		std::vector<double> z = x;
+
+		std::shared_ptr <sci::plot::ColourScale> colourScale( new sci::plot::ColourScale(std::vector<double>{1.0, 10.0}, std::vector<sci::graphics::RgbColour>{sci::graphics::RgbColour(1.0, 0.0, 0.0), sci::graphics::RgbColour(0.0, 0.0, 1.0)}));
+		std::shared_ptr <sci::plot::SizeScale > sizeScale(new sci::plot::SizeScale(std::vector<double>{1.0, 10.0}, std::vector<double>{1.0, 10.0}));
+
+		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Varying Symbol Plot. Going left to right, points should transition from small to big and red to blue."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		sci::plot::Axis::Options options;
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 11.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 4.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		std::shared_ptr<sci::plot::PointDataSizeVarying> pointsSizeVarying(new sci::plot::PointDataSizeVarying(x, y1, z, xAxis, yAxis, sizeScale, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::PointDataColourVarying> pointsColourVarying(new sci::plot::PointDataColourVarying(x, y2, z, xAxis, yAxis, colourScale, sci::plot::Symbol()));
+		std::shared_ptr<sci::plot::PointDataColourAndSizeVarying> pointsColourAndSizeVarying(new sci::plot::PointDataColourAndSizeVarying(x, y3, z, z, xAxis, yAxis, colourScale, sizeScale, sci::plot::Symbol()));
+
+		canvas->addItem(box);
+		canvas->addItem(xAxis);
+		canvas->addItem(yAxis);
+		canvas->addItem(pointsSizeVarying);
+		canvas->addItem(pointsColourVarying);
+		canvas->addItem(pointsColourAndSizeVarying);
 
 		frame->Show(true);
 	}
@@ -798,22 +877,22 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	sci::graphics::Distance(millimetre(1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)) };
 
 	std::shared_ptr<sci::plot::LineData> lineData1(new sci::plot::LineData(x, y, xAxis1, yAxis1, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData1(new sci::plot::PointData(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol, RgbColour(0.5, 0.0, 0.8))));
+	std::shared_ptr<sci::plot::PointData> pointData1(new sci::plot::PointData(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData1->draw(renderer, perInch(96));
 	pointData1->draw(renderer, perInch(96));
 
 	std::shared_ptr<sci::plot::LineData> lineData2(new sci::plot::LineData(x, y, xAxis2, yAxis2, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData2(new sci::plot::PointData(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol, RgbColour(0.5, 0.0, 0.8))));
+	std::shared_ptr<sci::plot::PointData> pointData2(new sci::plot::PointData(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData2->draw(renderer, perInch(96));
 	pointData2->draw(renderer, perInch(96));
 
 	std::shared_ptr<sci::plot::LineData> lineData3(new sci::plot::LineData(x, y, xAxis3, yAxis3, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData3(new sci::plot::PointData(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol, RgbColour(0.5, 0.0, 0.8))));
+	std::shared_ptr<sci::plot::PointData> pointData3(new sci::plot::PointData(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData3->draw(renderer, perInch(96));
 	pointData3->draw(renderer, perInch(96));
 
 	std::shared_ptr<sci::plot::LineData> lineData4(new sci::plot::LineData(x, y, xAxis4, yAxis4, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData4(new sci::plot::PointData(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol, RgbColour(0.5, 0.0, 0.8))));
+	std::shared_ptr<sci::plot::PointData> pointData4(new sci::plot::PointData(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData4->draw(renderer, perInch(96));
 	pointData4->draw(renderer, perInch(96));
 }

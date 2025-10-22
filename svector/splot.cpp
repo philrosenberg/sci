@@ -1,12 +1,5 @@
 #include<wx/wx.h>
 #include<wx/filename.h>
-#include<wx/dcps.h>
-#include <wx/dcsvg.h>
-#include<wx/metafile.h>
-#include<wx/gdicmn.h>
-#include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
-                       // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
-                       //not sure why.
 #include"../include/svector/dep/plot/plot.h"
 #include"../include/svector/dep/plot/transforms.h"
 #include"../include/svector/serr.h"

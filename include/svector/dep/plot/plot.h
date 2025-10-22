@@ -15,6 +15,14 @@
 #include<limits>
 #include<wx/print.h>
 #include<wx/printdlg.h>
+#include<wx/filename.h>
+#include<wx/dcps.h>
+#include <wx/dcsvg.h>
+#include<wx/metafile.h>
+#include<wx/gdicmn.h>
+#include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
+// where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
+//not sure why.
 #pragma warning(pop)
 #include"../../sstring.h"
 #include"../../serr.h"
@@ -148,35 +156,35 @@ namespace sci
 			}
 			void expand(const std::vector<double>& data)
 			{
-				if (isAutoscale())
+				if (!isAutoscale())
+					return;
+				
+				double min = std::numeric_limits<double>::quiet_NaN();
+				double max = std::numeric_limits<double>::quiet_NaN();
+				if (isLog())
 				{
-					double min = std::numeric_limits<double>::quiet_NaN();
-					double max = std::numeric_limits<double>::quiet_NaN();
-					if (isLog())
+					for (auto& x : data)
 					{
-						for (auto& x : data)
+						if (x > 0 && x < std::numeric_limits<double>::infinity())
 						{
-							if (x > 0 && x < std::numeric_limits<double>::infinity())
-							{
-								min = min < x ? min : x;
-								max = max > x ? max : x;
-							}
+							min = min < x ? min : x;
+							max = max > x ? max : x;
 						}
 					}
-					else
-					{
-						for (auto& x : data)
-						{
-							if (std::isfinite(x))
-							{
-								min = min < x ? min : x;
-								max = max > x ? max : x;
-							}
-						}
-					}
-					expand(min);
-					expand(max);
 				}
+				else
+				{
+					for (auto& x : data)
+					{
+						if (std::isfinite(x))
+						{
+							min = min < x ? min : x;
+							max = max > x ? max : x;
+						}
+					}
+				}
+				expand(min);
+				expand(max);
 			}
 			void expand(double value)
 			{
@@ -895,7 +903,7 @@ namespace sci
 				}
 				else
 				{
-					value = (value - getLinearMin()) / (getLinearMin() - getLinearMax());
+					value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
 
 					while (value > m_value[maxIndex])
 						maxIndex++;
@@ -1039,9 +1047,9 @@ namespace sci
 			{
 				return m_width;
 			}
-			void getPattern(std::vector<Length>& dashes) const
+			std::vector<Length> getPattern() const
 			{
-				dashes = m_dashes;
+				return m_dashes;
 			}
 			rgbcolour getColour() const
 			{

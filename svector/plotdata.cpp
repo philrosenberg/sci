@@ -92,88 +92,6 @@ void sci::plot::PlotFrame::draw(plstream* pl, double scale, double pageWidth, do
 	pl->mtex("t", distance, 0.5, 0.5, sci::utf16ToUtf8(m_title).c_str());
 }
 
-sci::plot::SymbolBase::SymbolBase( sci::string symbol, PLUNICODE fci )
-{
-	m_symbolText = symbol;
-	m_fci = fci;
-}
-
-PLUNICODE sci::plot::SymbolBase::getFci() const
-{
-	return m_fci;
-}
-
-
-sci::plot::Symbol::Symbol(sci::string symbol, double size, rgbcolour colour)
-	: SymbolBase(symbol, 0)
-{
-	m_size = size;
-	m_colour = colour;
-}
-
-
-void sci::plot::Symbol::setupSymbol( plstream *pl, PLINT colourIndex, double scale ) const
-{
-	pl->sfci( getFci() );
-	//pl->sfontf(m_pointfont[i].mb_str());
-	pl->schr( m_size, scale );
-	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
-	pl->col0( colourIndex );
-}
-
-sci::plot::VaryingSymbol::VaryingSymbol ( sci::string symbol )
-	: SymbolBase( symbol, 0 )
-{
-}
-
-sci::plot::ColourVaryingSymbol::ColourVaryingSymbol ( std::shared_ptr<sci::plot::ColourScale> colourScale, sci::string symbol, double size )
-	:VaryingSymbol( symbol )
-{
-	m_size = size;
-	m_colourScale = colourScale;
-}
-
-//we must call this prior to each individual symbol being plotted
-void sci::plot::ColourVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const
-{
-	pl->sfci( getFci() );
-	//pl->sfontf(m_pointfont[i].mb_str());
-	pl->schr( m_size, scale );
-	rgbcolour colour = m_colourScale->getRgbOriginalScale(parameter, parameterPreLogged);
-	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
-	pl->col0( colourIndex );
-}
-
-//we must call this prior to each individual symbol being plotted
-void sci::plot::SizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double parameter, bool parameterPreLogged, double scale ) const
-{
-	pl->sfci( getFci() );
-	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = m_sizeScale->getsize(parameter, parameterPreLogged);
-	pl->schr( size, scale );
-	pl->scol0a( colourIndex, m_colour.r() * 255, m_colour.g() * 255, m_colour.b() * 255, m_colour.a() );
-	pl->col0( colourIndex );
-}
-
-sci::plot::ColourAndSizeVaryingSymbol::ColourAndSizeVaryingSymbol ( std::shared_ptr<sci::plot::ColourScale> colourScale, std::shared_ptr<SizeScale> sizeScale, sci::string symbol )
-	:SymbolBase( symbol, 0 )
-{
-	m_colourScale = colourScale;
-	m_sizeScale = sizeScale;
-}
-
-//we must call this prior to each individual symbol being plotted
-void sci::plot::ColourAndSizeVaryingSymbol::setupSymbol( plstream *pl, PLINT colourIndex, double colourParameter, bool colourParameterPreLogged, double sizeParameter, bool sizeParameterPreLogged, double scale ) const
-{
-	pl->sfci( getFci() );
-	//pl->sfontf(m_pointfont[i].mb_str());
-	double size = m_sizeScale->getsize( sizeParameter, sizeParameterPreLogged );
-	pl->schr( size, scale );
-	rgbcolour colour = m_colourScale->getRgbOriginalScale( colourParameter, colourParameterPreLogged );
-	pl->scol0a( colourIndex, colour.r() * 255, colour.g() * 255, colour.b() * 255, colour.a() );
-	pl->col0( colourIndex );
-}
-
 void sci::plot::PlotableItem::draw(plstream* pl, double scale, double pageWidth, double pageHeight)
 {
 
@@ -223,7 +141,7 @@ void sci::plot::PointData::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
-	m_symbol.setupSymbol( pl, 1, scale );
+	//m_symbol.setupSymbol( pl, 1, scale );
 	sci::string symbol = m_symbol.getSymbol();
 	const double* x = getPointer(0);
 	const double* y = getPointer(1);
@@ -248,7 +166,7 @@ void sci::plot::PointDataColourVarying::plotData( plstream *pl, double scale) co
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, scale, true);
+			//m_symbol.setupSymbol( pl, 1, *zi, scale, true);
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
 			pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
@@ -271,10 +189,10 @@ void sci::plot::PointDataSizeVarying::plotData( plstream *pl, double scale) cons
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zi )
 		{
-			m_symbol.setupSymbol( pl, 1, *zi, scale, true );
+			//m_symbol.setupSymbol( pl, 1, *zi, scale, true );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if(m_symbol.getSize(*zi, true) > 0.0)
-				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
+			//if(m_symbol.getSize(*zi, true) > 0.0)
+				//pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
 }
@@ -297,25 +215,14 @@ void sci::plot::PointDataColourAndSizeVarying::plotData( plstream *pl, double sc
 		const double *xEnd = x + getNPoints();
 		for( ; xi != xEnd; ++xi, ++yi, ++zColouri, ++zSizei )
 		{
-			m_symbol.setupSymbol( pl, 1, *zColouri, true, *zSizei, true, scale );
+			//m_symbol.setupSymbol( pl, 1, *zColouri, true, *zSizei, true, scale );
 			//pl->poin(m_xs[i].size(),x,y,m_pointchar[i][0]);
-			if (m_symbol.getSize(*zSizei, true) > 0.0)
-				pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
+			//if (m_symbol.getSize(*zSizei, true) > 0.0)
+				//pl->string(1,xi,yi,sci::toUtf8(symbol).c_str());
 		}
 	}
 }
 
-sci::plot::HorizontalErrorBars::HorizontalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ ys,
-		sci::GridData<double, 1>(sci::GridData<double, 1>(xs.begin(), xs.end()) + sci::GridData<double, 1>(plusErrors.begin(), plusErrors.end())),
-		sci::GridData<double, 1>(sci::GridData<double, 1>(xs.begin(), xs.end()) - sci::GridData<double, 1>(minusErrors.begin(), minusErrors.end())) },
-		{yAxis, xAxis, xAxis}, transformer)
-{
-	//a note on the above - the result of xs+plusError and xs-minusError is an r-value, meaning we
-	//can't directly take it's address. However, when we assign it to a const reference the temporary's
-	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address.
-	m_style = style;
-}
 void sci::plot::HorizontalErrorBars::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
@@ -330,17 +237,6 @@ void sci::plot::HorizontalErrorBars::plotData( plstream *pl, double scale) const
 	m_style.resetLineStyle( pl, 1 );
 }
 
-sci::plot::VerticalErrorBars::VerticalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle style, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs,
-		sci::GridData<double, 1>(sci::GridData<double, 1>(ys.begin(), ys.end()) + sci::GridData<double, 1>(plusErrors.begin(), plusErrors.end())),
-		sci::GridData<double, 1>(sci::GridData<double, 1>(ys.begin(), ys.end()) - sci::GridData<double, 1>(minusErrors.begin(), minusErrors.end())) },
-		{xAxis, yAxis, yAxis}, transformer)
-{
-	//a note on the above - the result of ys+plusError and ys-minusError is an r-value, meaning we
-	//can't directly take it's address. However, when we assign it to a const reference the temporary's
-	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address.
-	m_style = style;
-}
 void sci::plot::VerticalErrorBars::plotData( plstream *pl, double scale ) const
 {
 	if (!hasData())
