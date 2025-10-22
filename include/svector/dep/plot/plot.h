@@ -124,27 +124,43 @@ namespace sci
 			};
 			double getLinearOrLogMin() const
 			{
-				return m_log ? m_logMin : m_min;
+				return m_log ? getLogMin() : getLinearMin();
 			}
 			double getLinearOrLogMax() const
 			{
-				return m_log ? m_logMax : m_max;
+				return m_log ? getLogMax() : getLinearMax();
 			}
 			double getLinearMin() const
 			{
-				return m_min;
+				if (!m_autoscale)
+					return m_minFixed;
+				double min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				//if all the points are one size of zero, but min is the other side of zero or closer to zero than to m_minPoint then set min to zero
+				if (m_minPoint * m_maxPoint >= 0.0 && (min * m_maxPoint < 0.0 || m_minPoint / min > 2.0))
+					min = 0.0;
+				return min;
 			}
 			double getLinearMax() const
 			{
-				return m_max;
+				if (!m_autoscale)
+					return m_maxFixed;
+				double max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				//as per getLinearMin
+				if (m_minPoint * m_maxPoint >= 0.0 && (max * m_minPoint < 0.0 || m_maxPoint / max > 2.0))
+					max = 0.0;
+				return max;
 			}
 			double getLogMin() const
 			{
-				return m_logMin;
+				if (!m_autoscale)
+					return m_logMinFixed;
+				return m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);;
 			}
 			double getLogMax() const
 			{
-				return m_logMax;
+				if (!m_autoscale)
+					return m_logMaxFixed;
+				return m_logMaxPoint + m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
 			}
 			bool isAutoscale() const
 			{
@@ -195,33 +211,15 @@ namespace sci
 				if (m_minPoint != m_minPoint || value < m_minPoint)
 				{
 					if (!m_log || value > 0.0)
-					{
 						m_minPoint = value;
-						m_min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-						m_max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-						m_logMinPoint = std::log10(value);
-						m_logMin = m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
-						m_logMax = m_logMaxPoint + m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
-					}
 				}
 				if (m_maxPoint != m_maxPoint || value > m_maxPoint)
-				{
 					m_maxPoint = value;
-					m_min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-					m_max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-					m_logMaxPoint = std::log10(value);
-					m_logMin = m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
-					m_logMax = m_logMaxPoint + m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);
-				}
 			}
 			void contract()
 			{
 				if (!m_autoscale)
 					return;
-				m_min = std::numeric_limits<double>::quiet_NaN();
-				m_max = std::numeric_limits<double>::quiet_NaN();
-				m_logMin = std::numeric_limits<double>::quiet_NaN();
-				m_logMax = std::numeric_limits<double>::quiet_NaN();
 				m_minPoint = std::numeric_limits<double>::quiet_NaN();
 				m_maxPoint = std::numeric_limits<double>::quiet_NaN();
 				m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
@@ -236,10 +234,10 @@ namespace sci
 			void setFixedScale(double min, double max)
 			{
 				m_autoscale = false;
-				m_min = min;
-				m_max = max;
-				m_logMin = std::log10(min);
-				m_logMax = std::log10(max);
+				m_minFixed = min;
+				m_maxFixed = max;
+				m_logMinFixed = std::log10(min);
+				m_logMaxFixed = std::log10(max);
 				m_minPoint = std::numeric_limits<double>::quiet_NaN();
 				m_maxPoint = std::numeric_limits<double>::quiet_NaN();
 				m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
@@ -348,10 +346,10 @@ namespace sci
 				m_autoscaleEndSpace = autoscaleEndSpace;
 				contract();
 			}
-			double m_min;
-			double m_max;
-			double m_logMin;
-			double m_logMax;
+			double m_minFixed;
+			double m_maxFixed;
+			double m_logMinFixed;
+			double m_logMaxFixed;
 			double m_minPoint;
 			double m_maxPoint;
 			double m_logMinPoint;
