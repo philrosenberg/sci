@@ -9,10 +9,10 @@ namespace sci
 	namespace plot
 	{
 
-		class LineData : public UnstructuredData
+		class Lines : public UnstructuredData
 		{
 		public:
-			LineData(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_lineStyle(lineStyle)
 			{
 			}
@@ -33,10 +33,10 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-		class PointData : public UnstructuredData
+		class Points : public UnstructuredData
 		{
 		public:
-			PointData(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ x, y }, { xAxis, yAxis }, transformer), m_symbol(symbol), m_colour(colour)
 			{
 			}

@@ -350,7 +350,7 @@
     <ClInclude Include="..\include\svector\dep\plot\errorBar.h" />
     <ClInclude Include="..\include\svector\dep\plot\fillBars.h" />
     <ClInclude Include="..\include\svector\dep\plot\gridContour.h" />
-    <ClInclude Include="..\include\svector\dep\plot\linePoint.h" />
+    <ClInclude Include="..\include\svector\dep\plot\linesPoints.h" />
     <ClInclude Include="..\include\svector\dep\plot\physical.h" />
     <ClInclude Include="..\include\svector\dep\plot\plotable.h" />
     <ClInclude Include="..\include\svector\dep\plot\elements.h" />

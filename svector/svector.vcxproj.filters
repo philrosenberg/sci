@@ -248,7 +248,7 @@
     <ClInclude Include="..\include\svector\dep\plot\plotable.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\dep\plot\linePoint.h">
+    <ClInclude Include="..\include\svector\dep\plot\linesPoints.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\dep\plot\errorBar.h">

@@ -8,10 +8,10 @@ namespace sci
 {
 	namespace plot
 	{
-		class PointDataColourVarying : public UnstructuredData
+		class PointsColourVarying : public UnstructuredData
 		{
 		public:
-			PointDataColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+			PointsColourVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale}, transformer), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
@@ -33,10 +33,10 @@ namespace sci
 			const std::shared_ptr<ColourScale> m_colourScale;
 		};
 
-		class PointDataSizeVarying : public UnstructuredData
+		class PointsSizeVarying : public UnstructuredData
 		{
 		public:
-			PointDataSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+			PointsSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, sizeScale}, transformer), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
@@ -60,10 +60,10 @@ namespace sci
 			const std::shared_ptr<SizeScale> m_sizeScale;
 		};
 
-		class PointDataColourAndSizeVarying : public UnstructuredData
+		class PointsColourAndSizeVarying : public UnstructuredData
 		{
 		public:
-			PointDataColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+			PointsColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale> colourScale, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zsColour, zsSize }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale, sizeScale}, transformer), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}

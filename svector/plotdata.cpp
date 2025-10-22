@@ -2,7 +2,7 @@
 #include "../include/svector/dep/plot/transforms.h"
 #include "../include/svector/serr.h"
 #include "../include/svector/svector.h"
-#include "../include/svector/dep/plot/linePoint.h"
+#include "../include/svector/dep/plot/linesPoints.h"
 #include "../include/svector/dep/plot/varyingPoints.h"
 #include "../include/svector/dep/plot/fillBars.h"
 #include "../include/svector/dep/plot/errorBar.h"
@@ -125,7 +125,7 @@ void sci::plot::PlotableItem::draw(plstream* pl, double scale, double pageWidth,
 	pl->stransform(NULL, NULL);
 }
 
-void sci::plot::LineData::plotData( plstream *pl, double scale) const
+void sci::plot::Lines::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -137,7 +137,7 @@ void sci::plot::LineData::plotData( plstream *pl, double scale) const
 	m_lineStyle.resetLineStyle( pl, 1 );
 }
 
-void sci::plot::PointData::plotData( plstream *pl, double scale) const
+void sci::plot::Points::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -150,7 +150,7 @@ void sci::plot::PointData::plotData( plstream *pl, double scale) const
 		pl->string(getNPoints(), x, y, sci::toUtf8(symbol).c_str());
 }
 
-void sci::plot::PointDataColourVarying::plotData( plstream *pl, double scale) const
+void sci::plot::PointsColourVarying::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -173,7 +173,7 @@ void sci::plot::PointDataColourVarying::plotData( plstream *pl, double scale) co
 	}
 }
 
-void sci::plot::PointDataSizeVarying::plotData( plstream *pl, double scale) const
+void sci::plot::PointsSizeVarying::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -197,7 +197,7 @@ void sci::plot::PointDataSizeVarying::plotData( plstream *pl, double scale) cons
 	}
 }
 
-void sci::plot::PointDataColourAndSizeVarying::plotData( plstream *pl, double scale) const
+void sci::plot::PointsColourAndSizeVarying::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -414,7 +414,7 @@ private:
 	Y m_y;
 };
 
-void sci::plot::GridData::plotData(plstream* pl, double scale) const
+void sci::plot::Grid::plotData(plstream* pl, double scale) const
 {
 	if (!StructuredData::hasData())
 		return;
@@ -490,7 +490,7 @@ void sci::plot::GridData::plotData(plstream* pl, double scale) const
 	}
 }
 
-void sci::plot::ContourData::plotData(plstream* pl, double scale) const
+void sci::plot::Contours::plotData(plstream* pl, double scale) const
 {
 	if (!StructuredData::hasData())
 		return;

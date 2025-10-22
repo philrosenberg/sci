@@ -163,20 +163,20 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 	std::shared_ptr<sci::plot::ColourScale> colourScaleContinuous(new sci::plot::ColourScale(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	
-	std::shared_ptr<sci::plot::GridData> grid1(new sci::plot::GridData(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::GridData> grid2(new sci::plot::GridData(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::GridData> grid3(new sci::plot::GridData(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::GridData> grid4(new sci::plot::GridData(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid> grid1(new sci::plot::Grid(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid> grid2(new sci::plot::Grid(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid> grid3(new sci::plot::Grid(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid> grid4(new sci::plot::Grid(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
 
-	std::shared_ptr<sci::plot::ContourData> shade1(new sci::plot::ContourData(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::ContourData> shade2(new sci::plot::ContourData(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::ContourData> shade3(new sci::plot::ContourData(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::ContourData> shade4(new sci::plot::ContourData(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours> shade1(new sci::plot::Contours(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours> shade2(new sci::plot::Contours(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours> shade3(new sci::plot::Contours(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours> shade4(new sci::plot::Contours(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine));
 
-	std::shared_ptr<sci::plot::ContourData> contour1(new sci::plot::ContourData(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::ContourData> contour2(new sci::plot::ContourData(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::ContourData> contour3(new sci::plot::ContourData(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::ContourData> contour4(new sci::plot::ContourData(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours> contour1(new sci::plot::Contours(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours> contour2(new sci::plot::Contours(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours> contour3(new sci::plot::Contours(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours> contour4(new sci::plot::Contours(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
 	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis::Options(sU("Discrete Colourbar used by Shade"))));
 	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis::Options(sU("Continuous Colourbar used by Grid"))));
@@ -320,7 +320,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::Points> points(new sci::plot::Points(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
 		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5)));
 		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5)));
 
@@ -350,7 +350,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::Points> points(new sci::plot::Points(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
 		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), false));
 		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), false));
 
@@ -379,7 +379,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointData> points(new sci::plot::PointData(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::Points> points(new sci::plot::Points(xs, ys, xAxis, yAxis, sci::plot::Symbol(), sci::graphics::RgbColour()));
 		std::shared_ptr<sci::plot::HorizontalErrorBars> xBars(new sci::plot::HorizontalErrorBars(xs, ys, xErrors, xErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), true));
 		std::shared_ptr<sci::plot::VerticalErrorBars> yBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), true));
 
@@ -446,9 +446,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		sci::plot::Axis::Options options;
 		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(0.0, 11.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
 		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(0.0, 4.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
-		std::shared_ptr<sci::plot::PointDataSizeVarying> pointsSizeVarying(new sci::plot::PointDataSizeVarying(x, y1, z, xAxis, yAxis, sizeScale, sci::plot::Symbol(), sci::graphics::RgbColour()));
-		std::shared_ptr<sci::plot::PointDataColourVarying> pointsColourVarying(new sci::plot::PointDataColourVarying(x, y2, z, xAxis, yAxis, colourScale, sci::plot::Symbol()));
-		std::shared_ptr<sci::plot::PointDataColourAndSizeVarying> pointsColourAndSizeVarying(new sci::plot::PointDataColourAndSizeVarying(x, y3, z, z, xAxis, yAxis, colourScale, sizeScale, sci::plot::Symbol()));
+		std::shared_ptr<sci::plot::PointsSizeVarying> pointsSizeVarying(new sci::plot::PointsSizeVarying(x, y1, z, xAxis, yAxis, sizeScale, sci::plot::Symbol(), sci::graphics::RgbColour()));
+		std::shared_ptr<sci::plot::PointsColourVarying> pointsColourVarying(new sci::plot::PointsColourVarying(x, y2, z, xAxis, yAxis, colourScale, sci::plot::Symbol()));
+		std::shared_ptr<sci::plot::PointsColourAndSizeVarying> pointsColourAndSizeVarying(new sci::plot::PointsColourAndSizeVarying(x, y3, z, z, xAxis, yAxis, colourScale, sizeScale, sci::plot::Symbol()));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -484,9 +484,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		for (size_t i = 0; i < y1.size(); ++i)
 			y3[i] = (y1[i]+y2[i])/2.0;
 
-		std::shared_ptr<sci::plot::LineData> line1(new sci::plot::LineData(x, y1, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0))));
-		std::shared_ptr<sci::plot::LineData> line2(new sci::plot::LineData(x, y2, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0, 0, 0), sU(".       -_\t   "))));
-		std::shared_ptr<sci::plot::LineData> line3(new sci::plot::LineData(x, y3, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0.8, 0, 0.2), { millimetre(0.5), millimetre(3.5), millimetre(3.0), millimetre(3.0) })));
+		std::shared_ptr<sci::plot::Lines> line1(new sci::plot::Lines(x, y1, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0))));
+		std::shared_ptr<sci::plot::Lines> line2(new sci::plot::Lines(x, y2, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0, 0, 0), sU(".       -_\t   "))));
+		std::shared_ptr<sci::plot::Lines> line3(new sci::plot::Lines(x, y3, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0.8, 0, 0.2), { millimetre(0.5), millimetre(3.5), millimetre(3.0), millimetre(3.0) })));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -910,23 +910,23 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	std::vector<sci::graphics::Distance> squareSymbol{ sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)), sci::graphics::Distance(millimetre(1.0), millimetre(-1.0)),
 	sci::graphics::Distance(millimetre(1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)) };
 
-	std::shared_ptr<sci::plot::LineData> lineData1(new sci::plot::LineData(x, y, xAxis1, yAxis1, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData1(new sci::plot::PointData(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	std::shared_ptr<sci::plot::Lines> lineData1(new sci::plot::Lines(x, y, xAxis1, yAxis1, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Points> pointData1(new sci::plot::Points(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData1->draw(renderer, perInch(96));
 	pointData1->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::LineData> lineData2(new sci::plot::LineData(x, y, xAxis2, yAxis2, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData2(new sci::plot::PointData(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	std::shared_ptr<sci::plot::Lines> lineData2(new sci::plot::Lines(x, y, xAxis2, yAxis2, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Points> pointData2(new sci::plot::Points(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData2->draw(renderer, perInch(96));
 	pointData2->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::LineData> lineData3(new sci::plot::LineData(x, y, xAxis3, yAxis3, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData3(new sci::plot::PointData(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	std::shared_ptr<sci::plot::Lines> lineData3(new sci::plot::Lines(x, y, xAxis3, yAxis3, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Points> pointData3(new sci::plot::Points(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData3->draw(renderer, perInch(96));
 	pointData3->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::LineData> lineData4(new sci::plot::LineData(x, y, xAxis4, yAxis4, sci::plot::LineStyle()));
-	std::shared_ptr<sci::plot::PointData> pointData4(new sci::plot::PointData(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	std::shared_ptr<sci::plot::Lines> lineData4(new sci::plot::Lines(x, y, xAxis4, yAxis4, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Points> pointData4(new sci::plot::Points(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData4->draw(renderer, perInch(96));
 	pointData4->draw(renderer, perInch(96));
 }

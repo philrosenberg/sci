@@ -317,7 +317,7 @@ void sci::plot::HorizontalColourBar::draw(plstream* pl, double scale, double pag
 		std::vector<double> cbX{ cb[0][0], cb[1][0] };
 		std::vector<double> cbY{ 0.0, 1.0 };
 
-		ContourData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
+		Contours data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
 
 		data.draw(pl, scale, pageWidth, pageHeight);
 		m_xAxis->draw(pl, scale, pageWidth, pageHeight);
@@ -359,7 +359,7 @@ void sci::plot::HorizontalColourBar::draw(plstream* pl, double scale, double pag
 		
 		std::vector<double> cbY{ 0.0, 1.0 };
 
-		GridData data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale);
+		Grid data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale);
 
 		data.draw(pl, scale, pageWidth, pageHeight);
 		m_xAxis->draw(pl, scale, pageWidth, pageHeight);
