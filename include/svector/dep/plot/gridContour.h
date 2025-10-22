@@ -662,7 +662,7 @@ namespace sci
 				line.push_back(*found);
 				segments.erase(found);
 
-				Segment previousSegment{ -1, -1, 0 };
+				Segment previousSegment{ size_t(-1), size_t(-1), 0};
 				while (1)
 				{
 					std::array<Segment, 6> linkOptions = getPossibleLinkOptions(line.back(), nDim1, nDim2); // any elements equal to line.back() are a flag for blank
