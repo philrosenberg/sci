@@ -280,13 +280,7 @@ void sci::plot::VerticalBars::plotData( plstream *pl, double scale) const
 	}
 }
 
-sci::plot::FillData::FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle, const LineStyle& outlineStyle, std::shared_ptr<splotTransformer> transformer)
-	: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
-{
-
-}
-
-void sci::plot::FillData::plotData(plstream* pl, double scale) const
+void sci::plot::Fill::plotData(plstream* pl, double scale) const
 {
 	if (!hasData())
 		return;
@@ -302,22 +296,6 @@ void sci::plot::FillData::plotData(plstream* pl, double scale) const
 	pl->fill(getNPoints(), x, y);
 
 	m_fillStyle.resetFillStyle(pl, 1); //just so we don't have residually selected hatching patterns
-}
-
-void sci::plot::FillData::plotData(Renderer& renderer, grPerMillimetre scale) const
-{
-	if (!hasData())
-		return;
-	m_lineStyle.setPen(renderer);
-	m_fillStyle.setBrush(renderer);
-
-	std::vector<Point> points(getNPoints());
-	for (size_t i = 0; i < points.size(); ++i)
-	{
-		points[i] = getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]);
-	}
-
-	renderer.polygon(points);
 }
 
 

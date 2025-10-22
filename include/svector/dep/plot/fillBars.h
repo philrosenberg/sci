@@ -145,12 +145,29 @@ namespace sci
 			double m_zeroLineLogged;
 		};
 
-		class FillData : public UnstructuredData
+		class Fill : public UnstructuredData
 		{
 		public:
-			FillData(const std::vector<double>& xs, const std::vector<double>& ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr);
+			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+			{
+			}
+			
 			void plotData(plstream* pl, double scale) const override;
-			void plotData(Renderer& renderer, grPerMillimetre scale) const override;
+			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			{
+				if (!hasData())
+					return;
+				m_lineStyle.setPen(renderer);
+				m_fillStyle.setBrush(renderer);
+
+				std::vector<Point> points(getNPoints());
+				for (size_t i = 0; i < points.size(); ++i)
+				{
+					points[i] = getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]);
+				}
+				renderer.polygon(points);
+			}
 		private:
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;

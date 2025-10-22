@@ -394,7 +394,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	}
 
 	{
-		//create a frame with auto scaled axes and 3 vertical bars
+		//create a frame with auto scaled axes, 3 vertical and 3 horizontal bars
 		//this tests that auto scaling axes works
 		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
@@ -423,6 +423,33 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		canvas->addItem(horizontalBars);
 		canvas->addItem(xErrorBars);
 		canvas->addItem(yErrorBars);
+
+		frame->Show(true);
+	}
+
+	{
+		//create a frame with auto scaled axes and a filled area
+		//this tests that auto scaling axes works
+		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		frame->SetClientSize(800, 800);
+		auto canvas = frame->getPanel()->getCanvas();
+
+		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		sci::plot::Axis::Options options;
+		std::array<double, 5> xs1{ 0.1, 0.5, 0.4, 0.2, 0.1 };
+		std::array<double, 5> ys1{ 0.2, 0.4, 0.6, 0.4, 0.5 };
+		std::array<double, 6> xs2{ 0.6, 1.0, 0.9, 0.7, 0.6, 0.6 };
+		std::array<double, 6> ys2{ 0.7, 0.9, 1.1, 0.9, 1.0, 0.7 };
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		std::shared_ptr<sci::plot::Fill> fill1(new sci::plot::Fill(xs1, ys1, xAxis, yAxis, sci::graphics::RgbColour(0.2, 0.2, 0.8), sci::plot::LineStyle(sci::graphics::millimetre(2))));
+		std::shared_ptr<sci::plot::Fill> fill2(new sci::plot::Fill(xs2, ys2, xAxis, yAxis, sci::graphics::RgbColour(0.2, 0.2, 0.8), sci::plot::LineStyle(sci::graphics::millimetre(2))));
+		
+		canvas->addItem(box);
+		canvas->addItem(xAxis);
+		canvas->addItem(yAxis);
+		canvas->addItem(fill1);
+		canvas->addItem(fill2);
 
 		frame->Show(true);
 	}
