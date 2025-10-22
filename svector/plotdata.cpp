@@ -250,21 +250,6 @@ void sci::plot::VerticalErrorBars::plotData( plstream *pl, double scale ) const
 	m_style.resetLineStyle( pl, 1 );
 }
 
-sci::plot::VerticalBars::VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle &lineStyle, const FillStyle &fillStyle, double zeroLine, std::shared_ptr<splotTransformer> transformer )
-	: PlotableItem(xAxis, yAxis, transformer),
-	UnstructuredData({ sci::GridData<double,1>(sci::GridData<double,1>(xs.begin(), xs.end()) - 0.5 * sci::GridData<double,1>(widths.begin(), widths.end())),
-		ys,
-		sci::GridData<double,1>(sci::GridData<double,1>(xs.begin(), xs.end()) + 0.5 * sci::GridData<double,1>(widths.begin(), widths.end())) },
-		{xAxis, yAxis, xAxis}, transformer)
-{
-	//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
-	//can't directly take it's address. However, when we assign it to a const reference the temporary's
-	//lifetime is extended to the lifetime of the reference, so then we can legally get it's address. 
-	m_lineStyle = lineStyle;
-	m_fillStyle = fillStyle;
-	m_zeroLine = zeroLine;
-	m_zeroLineLogged = zeroLine > 0.0 ? std::log( m_zeroLine ) : std::numeric_limits<double>::quiet_NaN();
-}
 void sci::plot::VerticalBars::plotData( plstream *pl, double scale) const
 {
 	if (!hasData())
@@ -275,7 +260,7 @@ void sci::plot::VerticalBars::plotData( plstream *pl, double scale) const
 	const double* yData = getPointer(1);
 	const double* xPlusWidth = getPointer(1);
 
-	double zero = isLog(1) ? std::log10(m_zeroLine) : m_zeroLine;
+	double zero = isLog(1) ? m_zeroLineLogged : m_zeroLineLinear;
 	for(size_t i=0; i<getNPoints(); ++i)
 	{
 		

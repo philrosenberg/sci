@@ -394,6 +394,33 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	}
 
 	{
+		//create a frame with auto scaled axes and 3 vertical bars
+		//this tests that auto scaling axes works
+		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		frame->SetClientSize(800, 800);
+		auto canvas = frame->getPanel()->getCanvas();
+
+		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		sci::plot::Axis::Options options;
+		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
+		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
+		std::array<double, 3> widths{ 0.2, 0.2, 0.2 };
+		std::array<double, 3> yErrors{ 0.05, 0.05, 0.05 };
+		std::shared_ptr<sci::plot::Axis> xAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x"))));
+		std::shared_ptr<sci::plot::Axis> yAxis(new sci::plot::Axis(false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y"))));
+		std::shared_ptr<sci::plot::VerticalBars> bars(new sci::plot::VerticalBars(xs, ys, widths, xAxis, yAxis, sci::plot::LineStyle(), sci::graphics::RgbColour(0.6, 0.0, 0.8)));
+		std::shared_ptr<sci::plot::VerticalErrorBars> yErrorBars(new sci::plot::VerticalErrorBars(xs, ys, yErrors, yErrors, xAxis, yAxis, sci::graphics::millimetre(5), sci::plot::LineStyle(), false));
+
+		canvas->addItem(box);
+		canvas->addItem(xAxis);
+		canvas->addItem(yAxis);
+		canvas->addItem(bars);
+		canvas->addItem(yErrorBars);
+
+		frame->Show(true);
+	}
+
+	{
 		//create a plot showing points with varying size and colour
 		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
