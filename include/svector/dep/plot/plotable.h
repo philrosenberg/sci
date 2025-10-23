@@ -21,6 +21,10 @@ namespace sci
 		class PlotableItem : public DrawableItem
 		{
 		public:
+			PlotableItem()
+				:m_xAxis(nullptr), m_yAxis(nullptr), m_transformer(nullptr), m_scaledAxes(false)
+			{
+			}
 			PlotableItem(std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<splotTransformer> transformer)
 				:m_xAxis(xAxis), m_yAxis(yAxis), m_transformer(transformer), m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
 			{
@@ -43,7 +47,6 @@ namespace sci
 			{
 				return m_scaledAxes;
 			}
-			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				Point endCorner(m_xAxis->getEnd().getX(), m_yAxis->getEnd().getY());
@@ -64,7 +67,6 @@ namespace sci
 			}
 		private:
 			virtual void autoscaleAxes() = 0;
-			virtual void plotData(plstream* pl, double scale) const = 0;
 			virtual void plotData(Renderer& renderer, grPerMillimetre scale) const {};
 			std::shared_ptr<Axis> m_xAxis;
 			std::shared_ptr<Axis> m_yAxis;
@@ -76,6 +78,8 @@ namespace sci
 		//this class holds data of n dimensions where there is just a 1d
 		//vector in each dimension. Eg, x-y scatter data or line data
 		//or x y z data where the z data is one value for each x, y point
+		//Note virtual inheritance so if a class derived from this class is created,
+		//the PlotableItem constructor must be called from there
 		class UnstructuredData : virtual public PlotableItem
 		{
 		public:
@@ -152,6 +156,8 @@ namespace sci
 		//this class holds data of n dimensions where there is a 2d
 		//vector in each dimension. Eg, gridded data over a plane.
 		//Note this data can hold x, y and z data for a curvilinear grid
+		//Note virtual inheritance so if a class derived from this class is created,
+		//the PlotableItem constructor must be called from there
 		class StructuredData : virtual public PlotableItem
 		{
 		public:

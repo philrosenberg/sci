@@ -17,69 +17,6 @@ const double PI=3.14159265359;
 	}
 }*/
 
-//constructor when using 1d x and y data
-splotindextransformer1d::splotindextransformer1d(std::vector<double> *x,std::vector<double> *y, void (*transformfunc)(double xindex, double yindex, const std::vector<double> &x, const std::vector<double> &y, double &xout, double &yout))
-{
-	if(x==NULL || y==NULL || transformfunc==NULL)
-	{
-		m_x=NULL;
-		m_y=NULL;
-		m_transformfunc=NULL;
-	}
-	else
-	{
-		m_x=x;
-		m_y=y;
-		m_transformfunc=transformfunc;
-	}
-}
-
-//constructor when using 2d x and y data
-splotindextransformer2d::splotindextransformer2d(std::vector< std::vector< double > > *x, std::vector< std::vector< double > > *y, void (*transformfunc)(double xindex, double yindex, const std::vector< std::vector< double > > &x, const std::vector< std::vector< double > > &y, double &xout, double &yout))
-{
-	if(x==NULL || y==NULL || transformfunc==NULL)
-	{
-		m_x=NULL;
-		m_y=NULL;
-		m_transformfunc=NULL;
-	}
-	else
-	{
-		m_x=x;
-		m_y=y;
-		m_transformfunc=transformfunc;
-	}
-}
-	
-void splotindextransformer1d::xform( PLFLT ox, PLFLT oy, PLFLT& nx, PLFLT& ny )const
-{
-	//ox is oldx, i.e the index
-	//nx is newx i.e. the actual x value
-	//same for y
-
-	//we set our values using m_transformfunc or if we are uninitialised just return the indices
-	if(m_transformfunc!=NULL)m_transformfunc(ox,oy,*m_x,*m_y,nx,ny);
-	else
-	{
-		nx=ox;
-		ny=oy;
-	}
-}
-	
-void splotindextransformer2d::xform( PLFLT ox, PLFLT oy, PLFLT& nx, PLFLT& ny )const
-{
-	//ox is oldx, i.e the index
-	//nx is newx i.e. the actual x value
-	//same for y
-
-	//we set our values using m_transformfunc or if we are uninitialised just return the indices
-	if(m_transformfunc!=NULL)m_transformfunc(ox,oy,*m_x,*m_y,nx,ny);
-	else
-	{
-		nx=ox;
-		ny=oy;
-	}
-}
 
 
 void splotTransform(double oldX, double oldY, double *newX, double *newY, void* userP)

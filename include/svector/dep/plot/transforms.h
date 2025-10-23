@@ -1,60 +1,10 @@
 #ifndef TRANSFORMS_H
 #define TRANSFORMS_H
 
-#pragma warning(push, 0)
-#include <plplot/plstream.h>
-#pragma warning(pop)
 #include <vector>
 
 void splotmapform(void *userp, int npoints, double *x, double *y);
 
-//these are for transforming from index to x/y values
-class splotindextransformer : public Coord_Xformer
-{
-public:
-	//receives the x/y index as a float - may be between indices
-	//outputs the x and y values at the given indices
-	virtual void xform( PLFLT ox, PLFLT oy, PLFLT& nx, PLFLT& ny )const {nx=ox; ny=oy;}
-	virtual bool isrectilinear()const {return false;};
-};
-
-class splotindextransformer1d : public splotindextransformer
-{
-	friend class splot2d;
-	friend class splotlegend;
-public:
-	//receives the x/y index as a float - may be between indices
-	//outputs the x and y values at the given indices
-	void xform( PLFLT ox, PLFLT oy, PLFLT& nx, PLFLT& ny )const;
-	bool isrectilinear()const {return true;}
-private:
-	splotindextransformer1d(std::vector< double > *x,std::vector< double > *y, void (*transformfunc)(double xindex, double yindex, const std::vector<double> &x, const std::vector<double> &y, double &xout, double &yout)=NULL);
-	std::vector< double > *m_x;
-	std::vector< double > *m_y;
-	//function called by xform. receives the x/y index as a float - may be between indices
-	//the m_x and m_y values from this object are used for x and y
-	//outputs the x and y values at the given indices
-	void (*m_transformfunc)(double xindex, double yindex, const std::vector< double > &x, const std::vector< double > &y, double &xout, double &yout);
-};
-
-class splotindextransformer2d : public splotindextransformer
-{
-	friend class splot2d;
-	friend class splotlegend;
-public:
-	//receives the x/y index as a float - may be between indices
-	//outputs the x and y values at the given indices
-	void xform( PLFLT ox, PLFLT oy, PLFLT& nx, PLFLT& ny )const;
-	bool isrectilinear()const {return false;}
-private:
-	splotindextransformer2d(std::vector< std::vector< double > > *x, std::vector< std::vector< double > > *y, void (*transformfunc)(double xindex, double yindex, const std::vector< std::vector< double > > &x, const std::vector< std::vector< double > > &y, double &xout, double &yout)=NULL);
-	std::vector< std::vector< double > > *m_x;
-	std::vector< std::vector< double > > *m_y;
-	//function called by xform. receives the x/y index as a float - may be between indices
-	//the m_x and m_y values from this object are used for x and y
-	//outputs the x and y values at the given indices
-	void (*m_transformfunc)(double xindex, double yindex, const std::vector< std::vector< double > > &x, const std::vector< std::vector< double > > &y, double &xout, double &yout);
-};
 
 //these are for applying arbitrary x and y transforms
 //currently they probably have problems for log axes

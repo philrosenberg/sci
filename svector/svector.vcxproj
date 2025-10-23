@@ -325,7 +325,6 @@
     <ClCompile Include="LinearAlgebra.cpp" />
     <ClCompile Include="memorymap.cpp" />
     <ClCompile Include="nc.cpp" />
-    <ClCompile Include="plotdata.cpp" />
     <ClCompile Include="ppfile.cpp" />
     <ClCompile Include="sdialog.cpp" />
     <ClCompile Include="serr.cpp" />

@@ -21,7 +21,6 @@ namespace sci
 				m_stopLength = stopLength;
 				m_useForAutoscale = useForAutoscale;
 			}
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -87,7 +86,6 @@ namespace sci
 				m_stopLength = stopLength;
 				m_useForAutoscale = useForAutoscale;
 			}
-			void plotData(plstream* pl, double scale) const override;
 
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{

@@ -17,7 +17,6 @@ namespace sci
 			{
 			}
 		private:
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -43,7 +42,7 @@ namespace sci
 		private:
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
-			void plotData(plstream* pl, double scale) const override;
+
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())

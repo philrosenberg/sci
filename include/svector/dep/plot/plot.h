@@ -8,8 +8,6 @@
 
 #pragma warning(push, 0)
 #include<vector>
-#include<wx/colour.h>
-#include<plplot/plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>
@@ -68,39 +66,6 @@ namespace sci
 			shadecont,
 			bar
 		};
-
-		//values for changing font with plplot
-#define pl_SANSSERIF 0x80000000
-#define pl_SERIF     0x80000001
-#define pl_MONOSPACE 0x80000002
-#define pl_SCRIPT    0x80000003
-#define pl_SYMBOL    0x80000004
-//
-#define pl_UPRIGHT   0x80000000
-#define pl_ITALIC    0x80000010
-#define pl_OBLIQUE   0x80000020
-//
-#define pl_NOBOLD    0x80000000
-#define pl_BOLD      0x80000100
-
-//shorthand defines for transform functions
-#define splot_REGULAR1DXY &lineartransform
-#define splot_REGULAR2DXY &lineartransform2d
-
-//transformation functions
-		void lineartransform(double xindex, double yindex, const std::vector<double>& x, const std::vector<double>& y, double& xout, double& yout);
-		void lineartransform2d(double xindex, double yindex, const std::vector< std::vector< double > >& x, const std::vector< std::vector< double > >& y, double& xout, double& yout);
-
-		//custom label functions
-		sci::string loglonghand(double axisvalue);
-		void customlabelinterpreter(PLINT axis, PLFLT value, char* label, PLINT length, PLPointer function);
-		typedef  sci::string(*customlabeler)(double);
-
-
-
-		int sploterrorcatcher(const char* message);
-		class PlotData2dStructured;
-
 
 
 		class Scale
@@ -446,12 +411,7 @@ namespace sci
 			rgbcolour getRgbOriginalScale(double value, bool valuePrelogged) const
 			{
 				if (m_hls)
-				{
-					hlscolour hls = getHlsOriginalScale(value, valuePrelogged);
-					double r, g, b;
-					plhlsrgb(hls.h().value<grDegree>(), hls.l(), hls.s(), &r, &g, &b);
-					return (rgbcolour(r, g, b, hls.a()));
-				}
+					return getHlsOriginalScale(value, valuePrelogged).convertToRgb();
 
 				double r, g, b, a;
 				interpolate(value, r, g, b, a, valuePrelogged);
@@ -462,12 +422,7 @@ namespace sci
 			hlscolour getHlsOriginalScale(double value, bool valuePreLogged) const
 			{
 				if (!m_hls)
-				{
-					rgbcolour rgb = getRgbOriginalScale(value, valuePreLogged);
-					double h, l, s;
-					plrgbhls(rgb.r(), rgb.g(), rgb.b(), &h, &l, &s);
-					return hlscolour(grDegree(h), l, s, rgb.a());
-				}
+					return getRgbOriginalScale(value, valuePreLogged).convertToHls();
 
 				double h, l, s, a;
 				interpolate(value, h, l, s, a, valuePreLogged);
@@ -508,10 +463,6 @@ namespace sci
 
 			virtual ~ColourScale()
 			{};
-
-			void setupForImage(plstream* pl) const;
-
-			void setupForShade(plstream* pl) const;
 
 			bool isDiscrete() const
 			{
@@ -983,52 +934,6 @@ namespace sci
 			sci::GridData<double, 1> m_logValue;
 		};
 
-
-		//this is simply an interface to a 2d std::vector
-		class splot2dmatrix : public Contourable_Data
-		{
-		public:
-			PLFLT operator()(PLINT i, PLINT j) const { return (*m_z)[i][j]; };
-			splot2dmatrix(std::vector< std::vector<double> >* z) :Contourable_Data((int)z->size(), (int)z->at(0).size())
-			{
-				//sci::assertThrow(sci::rectangular(*z), sci::err(sci::SERR_PLOT, 0, sU("splot2dmatrix data is not rectangular.")));
-				sci::assertThrow(z->size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
-				if (z->size() > 0)
-					sci::assertThrow(z->at(0).size() <= std::numeric_limits<int>::max(), sci::err(sci::SERR_PLOT, 0, sU("data size is too large for a plplot Contourable_Data object.")));
-				m_z = z;
-			};
-			splot2dmatrix() :Contourable_Data(0, 0) { m_z = NULL; };
-			void changepointerleavingsizethesame(std::vector< std::vector<double> >* z) { m_z = z; }
-		private:
-			std::vector< std::vector<double> >* m_z;
-		};
-
-		namespace symText
-		{
-			//const sci::string filledCircle = sU("#[0x25cf]");
-			const sci::string filledCircle = sU("#[0x2b24]");
-			const sci::string openCircle = sU("#[0x2b55]");
-			const sci::string dottedCircle = sU("#[0x25cc]");
-			const sci::string openCentreFilledCircle = sU("#[0x25c9]");
-			const sci::string openDoubleCircle = sU("#[0x25c9]");
-			const sci::string openRoundedSquare = sU("#[0x25a2]");
-			const sci::string openSquare = sU("#[0x25a1]");
-			const sci::string filledSquare = sU("#[0x25a0]");
-			const sci::string openFilledCentreSquare = sU("#[0x25a3]");
-			const sci::string upwardFilledTriangle = sU("#[0x25b2]");
-			const sci::string upwardOpenTriangle = sU("#[0x25b3]");
-			const sci::string downwardFilledTriangle = sU("#[0x25bc]");
-			const sci::string downwardOpenTriangle = sU("#[0x25bd]");
-			const sci::string leftwardFilledTriangle = sU("#[0x25c0]");
-			const sci::string leftwardOpenTriangle = sU("#[0x25c1]");
-			const sci::string rightwardFilledTriangle = sU("#[0x25b6]");
-			const sci::string rightwardOpenTriangle = sU("#[0x25b7]");
-			const sci::string filledDiamond = sU("#[0x25c6]");
-			const sci::string openDiamond = sU("#[0x25c7]");
-			const sci::string openCentreFilledDiamond = sU("#[0x25c8]");
-
-		}
-
 		class LineStyle
 		{
 		public:
@@ -1036,25 +941,28 @@ namespace sci
 				: m_width(width), m_colour(colour), m_dashes(dashes)
 			{
 			}
+
 			LineStyle(Length width, const rgbcolour& colour, sci::string pattern)
 				: m_width(width), m_colour(colour)
 			{
 				parseLineStyle(pattern, width, m_dashes);
 			}
+
 			Length getWidth() const
 			{
 				return m_width;
 			}
+
 			std::vector<Length> getPattern() const
 			{
 				return m_dashes;
 			}
+
 			rgbcolour getColour() const
 			{
 				return m_colour;
 			}
-			void setupLineStyle(plstream* pl, PLINT colourIndex, double scale) const;
-			void resetLineStyle(plstream* pl, PLINT colourIndex) const;
+
 			//Converts a series of characters into dots/dashes and spaces.
 			//Here a space represents a gap of 0.5m, a tab 1.5 mm and for dashes a . is 0.5 mm, a - or a _ are 1.5 mm.
 			//Adjacent space or dash characters are summed, so a 2 mm gap followed by a 2 mm dash could be "    ...."
@@ -1139,7 +1047,6 @@ namespace sci
 		public:
 			virtual ~DrawableItem() {}
 			virtual void preDraw() = 0;
-			virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight) = 0;
 			virtual void draw(Renderer& renderer, grPerMillimetre scale)
 			{
 			}
@@ -1273,7 +1180,6 @@ namespace sci
 			{
 			}
 
-			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
@@ -1774,7 +1680,6 @@ namespace sci
 			void preDraw() override
 			{
 			}
-			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				sci::graphics::StatePusher state(&renderer);
@@ -1818,7 +1723,6 @@ namespace sci
 			void preDraw() override
 			{
 			}
-			void draw(plstream* pl, double scale, double pageWidth, double pageHeight) override;
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				if (m_colourscale->isDiscrete())
@@ -1904,8 +1808,6 @@ namespace sci
 			{
 			};
 
-			virtual void draw(plstream* pl, double scale, double pageWidth, double pageHeight);
-
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
@@ -1975,7 +1877,6 @@ namespace sci
 				}
 				return false;
 			}
-			void render(wxDC* dc, int width, int height, double linewidthmultiplier);
 			void render(Renderer& renderer, grPerMillimetre scale)
 			{
 				//remove any items we wish to skip

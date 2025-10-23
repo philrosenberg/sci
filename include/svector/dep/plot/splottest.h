@@ -9,7 +9,6 @@
 #pragma warning(push, 0)
 #include<vector>
 #include<wx/colour.h>
-#include<plstream.h>
 #include<wx/wx.h>
 #include<wx/scrolwin.h>
 #include<limits>

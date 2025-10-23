@@ -138,7 +138,6 @@ namespace sci
 				m_colourscale = colourScale;
 			}
 			
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!StructuredData::hasData())
@@ -322,6 +321,7 @@ namespace sci
 				m_levelScale = levelScale;
 				m_lineStyle = lineStyle;
 			}
+
 			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: PlotableItem(xAxis, yAxis, transformer), Data2d(xs, ys, zs, xAxis, yAxis, levelScale, transformer)
 			{
@@ -332,7 +332,7 @@ namespace sci
 				m_levelScale = levelScale;
 				m_lineStyle = lineStyle;
 			}
-			void plotData(plstream* pl, double scale) const override;
+
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				sci::GridData<double, 1> contourLevels;

@@ -1,7 +1,7 @@
 #ifndef SVECTOR_PLOTPHYSICAL_H
 #define SVECTOR_PLOTPHYSICAL_H
 
-#include "linePoint.h"
+#include "linesPoints.h"
 #include "gridContour.h"
 
 

@@ -637,6 +637,13 @@ void mainFrame::OnRunGraphicsTests(wxCommandEvent& event)
 		assert(y == p1.getY(millimetre(10), millimetre(10)));
 	}
 
+	{
+		//unit test for rgb<->hls conversion
+		sci::graphics::RgbColour redRgb(1.0, 0.0, 0.0);
+		sci::graphics::HlsColour redHls = redRgb.convertToHls();
+		redRgb = redHls.convertToRgb();
+	}
+
 	sci::graphics::GraphicsFrame<PlotAxisTestPanel>* frame = new sci::graphics::GraphicsFrame<PlotAxisTestPanel>(this);
 	frame->Show();
 

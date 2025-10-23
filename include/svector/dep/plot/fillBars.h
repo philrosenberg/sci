@@ -23,6 +23,7 @@ namespace sci
 				m_zeroLineLinear = zeroLine;
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
 			}
+
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -44,7 +45,7 @@ namespace sci
 					renderer.rectangle(p1, p2);
 				}
 			}
-			void plotData(plstream* pl, double scale) const override;
+
 			virtual void autoscaleAxes() override
 			{
 				const std::vector<std::shared_ptr<Scale>>& axes = getAxes();
@@ -90,6 +91,7 @@ namespace sci
 				m_zeroLineLinear = zeroLine;
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
 			}
+
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -111,9 +113,7 @@ namespace sci
 					renderer.rectangle(p1, p2);
 				}
 			}
-			void plotData(plstream* pl, double scale) const override
-			{
-			}
+
 			virtual void autoscaleAxes() override
 			{
 				const std::vector<std::shared_ptr<Scale>>& axes = getAxes();
@@ -153,7 +153,6 @@ namespace sci
 			{
 			}
 			
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())

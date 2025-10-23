@@ -15,7 +15,6 @@ namespace sci
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale}, transformer), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -40,7 +39,6 @@ namespace sci
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zs }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, sizeScale}, transformer), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
@@ -67,7 +65,6 @@ namespace sci
 				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys, zsColour, zsSize }, std::vector<std::shared_ptr<sci::plot::Scale>>{xAxis, yAxis, colourScale, sizeScale}, transformer), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
-			void plotData(plstream* pl, double scale) const override;
 			void plotData(Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())

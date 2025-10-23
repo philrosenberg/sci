@@ -8,8 +8,8 @@
 
 #pragma warning(push, 0)
 #include<vector>
-#include<wx/colour.h>
 #include<wx/wx.h>
+#include<wx/colour.h>
 #include<wx/scrolwin.h>
 #include<limits>
 #include<wx/print.h>
@@ -97,9 +97,58 @@ namespace sci
 			}
 			HlsColour convertToHls() const
 			{
-				double h, l, s;
-				plrgbhls(m_r, m_g, m_b, &h, &l, &s);
-				return HlsColour(degree(h), l, s, m_a);
+				const char redMax = 1;
+				const char greenMax = 2;
+				const char blueMax = 4;
+				const char redMin = 8;
+				const char greenMin = 16;
+				const char blueMin = 32;
+
+				char minMaxChannel = 0;
+				if (m_r >= m_g && m_r >= m_b)
+				{
+					minMaxChannel += redMax;
+					minMaxChannel += m_g <= m_b ? greenMin : blueMin;
+				}
+				else if (m_g >= m_b)
+				{
+					minMaxChannel += greenMax;
+					minMaxChannel += m_r <= m_b ? redMin : blueMin;
+				}
+				else
+				{
+					minMaxChannel += blueMax;
+					minMaxChannel += m_r <= m_g ? redMin : greenMin;
+				}
+
+				double min = minMaxChannel & redMin ? m_r : (minMaxChannel & greenMin ? m_g : m_b);
+				double max = minMaxChannel & redMax ? m_r : (minMaxChannel & greenMax ? m_g : m_b);
+				
+				double chroma = max - min;
+
+				double hDash;
+				if (minMaxChannel & greenMax)
+					hDash = (m_b - m_r) / chroma + 2.0;
+				else if (minMaxChannel & blueMax)
+					hDash = (m_r - m_g) / chroma + 4.0;
+				else
+				{
+					double segment = (m_g - m_b) / chroma;
+					hDash = segment < 0.0 ? segment + 6 : segment;
+				}
+
+				degree hue = unitless(hDash) * degree(60);
+				//this will give an indefinite (0/0) when r==g==b
+
+
+				double lightness = 0.5 * (min + max);
+
+				double saturation = chroma / (1 - std::abs(2 * lightness - 1));
+				//again this gives an indefinite if r==g==b
+				if (saturation != saturation)
+					saturation = 0.0;
+
+				return HlsColour(hue, lightness, saturation, m_a);
 			}
 			inline double r() const { return m_r; }
 			inline double g() const { return m_g; }
@@ -113,9 +162,87 @@ namespace sci
 
 		inline RgbColour HlsColour::convertToRgb() const
 		{
-			double r, g, b;
-			plhlsrgb(m_h.value<degree>(), m_l, m_s, &r, &g, &b);
-			return RgbColour(r, g, b, m_a);
+			if (m_s == 0 || m_s != m_s || m_h != m_h)
+				return RgbColour(m_l, m_l, m_l);
+
+
+
+			double chroma = m_s * (1.0 - std::abs(2 * m_l - 1));
+			double max = m_l + 0.5 * chroma;
+			double min = 2 * m_l - max;
+
+			const char redMax = 1;
+			const char greenMax = 2;
+			const char blueMax = 4;
+			const char redMin = 8;
+			const char greenMin = 16;
+			const char blueMin = 32;
+
+			degree hue = m_h - sci::floor<unitless>(m_h / degree(360)) * degree(360);
+
+			double hDash = (hue / degree(60)).value<unitless>();
+			char minMaxChannel = 0;
+			if (hDash >= 5.0)
+				minMaxChannel += redMax;
+			else if (hDash >= 3.0)
+				minMaxChannel += blueMax;
+			else if (hDash >= 1.0)
+				minMaxChannel += greenMax;
+			else
+				minMaxChannel += redMax;
+
+			if (hDash >= 4.0)
+				minMaxChannel += greenMin;
+			else if (hDash >= 2.0)
+				minMaxChannel += redMin;
+			else
+				minMaxChannel += blueMin;
+
+			double red;
+			double green;
+			double blue;
+			if (minMaxChannel & blueMax)
+			{
+				blue = max;
+				if (minMaxChannel & redMin)
+				{
+					red = min;
+					green = red - (hDash - 4.0) * chroma;
+				}
+				else
+				{
+					green = min;
+					red = green + (hDash - 4.0) * chroma;
+				}
+			}
+			else if (minMaxChannel & greenMax)
+			{
+				green = max;
+				if (minMaxChannel & redMin)
+				{
+					red = min;
+					blue = red + (hDash - 2.0) * chroma;
+				}
+				else
+				{
+					blue = min;
+					red = blue - (hDash - 2.0) * chroma;
+				}
+			}
+			else if (minMaxChannel & blueMin) // red is max
+			{
+				red = max;
+				blue = min;
+				green = hDash * chroma + blue;
+			}
+			else //red is max green is min
+			{
+				red = max;
+				green = min;
+				blue = green - (hDash - 6.0) * chroma;
+			}
+
+			return RgbColour(red, green, blue, m_a);
 		}
 
 		//a length is a scalar, it's primary use is as the x and y components of GraphicsVector or where an item needs a size with no direction
