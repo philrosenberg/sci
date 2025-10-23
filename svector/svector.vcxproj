@@ -331,12 +331,10 @@
     <ClCompile Include="sframe.cpp" />
     <ClCompile Include="sminimiser.cpp" />
     <ClCompile Include="spectral.cpp" />
-    <ClCompile Include="splot.cpp" />
     <ClCompile Include="sreadwrite.cpp" />
     <ClCompile Include="sstring.cpp" />
     <ClCompile Include="svector.cpp" />
     <ClCompile Include="svi.cpp" />
-    <ClCompile Include="transforms.cpp" />
     <ClCompile Include="undoable.cpp" />
     <ClCompile Include="wgdos.cpp" />
   </ItemGroup>
@@ -353,6 +351,7 @@
     <ClInclude Include="..\include\svector\dep\plot\physical.h" />
     <ClInclude Include="..\include\svector\dep\plot\plotable.h" />
     <ClInclude Include="..\include\svector\dep\plot\elements.h" />
+    <ClInclude Include="..\include\svector\dep\plot\transforms.h" />
     <ClInclude Include="..\include\svector\grid.h" />
     <ClInclude Include="..\include\svector\ArrayManipulation.h" />
     <ClInclude Include="..\include\svector\controls.h" />
@@ -360,7 +359,6 @@
     <ClInclude Include="..\include\svector\dep\plot\varyingPoints.h" />
     <ClInclude Include="..\include\svector\dep\plot\plot.h" />
     <ClInclude Include="..\include\svector\dep\plot\splottest.h" />
-    <ClInclude Include="..\include\svector\dep\plot\transforms.h" />
     <ClInclude Include="..\include\svector\dep\ppfile.h" />
     <ClInclude Include="..\include\svector\dep\sreadwrite.h" />
     <ClInclude Include="..\include\svector\dep\svector.h" />

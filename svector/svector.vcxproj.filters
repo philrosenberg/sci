@@ -42,9 +42,6 @@
     <ClCompile Include="sframe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="splot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sreadwrite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
     <ClCompile Include="svi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="transforms.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="undoable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -70,9 +64,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="memorymap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="plotdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kiss_fft\kiss_fft.c">
@@ -194,9 +185,6 @@
     <ClInclude Include="..\include\svector\dep\plot\splottest.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\dep\plot\transforms.h">
-      <Filter>Header Files\dep\plot</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\svector\plot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -261,6 +249,9 @@
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\dep\plot\fillBars.h">
+      <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\dep\plot\transforms.h">
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
   </ItemGroup>
