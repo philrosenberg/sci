@@ -21,6 +21,7 @@
 #include<array>
 #include<map>
 #include<optional>
+#include<span>
 
 
 namespace sci
@@ -740,6 +741,24 @@ namespace sci
 			Renderer* m_renderer;
 		};
 
+		class Clipper
+		{
+		public:
+			virtual ~Clipper();
+		private:
+			friend class Renderer;
+			Clipper(Renderer* renderer)
+			{
+				m_renderer = renderer;
+			}
+			Clipper(Clipper&& other)
+			{
+				m_renderer = other.m_renderer;
+				other.m_renderer = nullptr;
+			}
+			Renderer* m_renderer;
+		};
+
 
 		template<class DATA_TYPE>
 		class TrieNode
@@ -934,7 +953,6 @@ namespace sci
 			virtual void setFont(std::vector<sci::string> facenames, Length size, RgbColour colour, FontFamily backupFamily = FontFamily::defaultFont, bool bold = false, bool italic = false, bool underline = false, RgbColour backgroundColour = RgbColour(0, 0, 0, 1)) = 0;
 			virtual void scaleFontSize(unitless scale) = 0;
 			virtual millimetre getFontSize() const = 0;
-			virtual void setClippingRegion(const Point& corner1, const Point& corner2) = 0;
 			virtual void elipse(const Point& position, const Distance& radius, unitless xAlignemnt = unitless(0.5), unitless yAlignment = unitless(0.5)) = 0;
 			virtual void rectangle(const Point& position, const Distance& size, unitless xAlignemnt = unitless(0.0), unitless yAlignment = unitless(0.0)) = 0;
 			virtual void rectangle(const Point& corner1, const Point& corner2)
@@ -1221,7 +1239,35 @@ namespace sci
 					return extent;
 				}
 			};
+			friend class Clipper;
+			Clipper addClippingRegion(Point point, Distance distance)
+			{
+				applyClippingRegion(point, distance);
+				return std::move(Clipper(this));
+			}
+			Clipper addClippingRegion(Point corner1, Point corner2)
+			{
+				applyClippingRegion(corner1, corner2);
+				return std::move(Clipper(this));
+			}
+			Clipper addClippingRegion(std::span<const Point> points)
+			{
+				applyClippingRegion(points);
+				return std::move(Clipper(this));
+			}
+		private:
+			virtual void applyClippingRegion(Point point, Distance distance) = 0;
+			virtual void applyClippingRegion(Point corner1, Point corner2) = 0;
+			virtual void applyClippingRegion(std::span<const Point> points) = 0;
+			virtual void popClippingRegion() = 0;
 		};
+
+
+		inline Clipper::~Clipper()
+		{
+			if (m_renderer)
+				m_renderer->popClippingRegion();
+		}
 
 		class StatePusher
 		{
@@ -1282,6 +1328,13 @@ namespace sci
 					m_stateStack.pop_back();
 				}
 				m_stateStack.pop_back();
+			}
+
+			virtual void applyClippingRegion(Point point, Distance distance) override
+			{
+				wxRegion region(getWxPoint(point), getWxPoint(point, distance));
+				m_clippingRegions.push_back(region);
+				m_dc->SetClippingRegion(region);
 			}
 			virtual void setBrush(const HlsColour& colour) override
 			{
@@ -1431,9 +1484,6 @@ namespace sci
 				font.SetFractionalPointSize(m_fontSize.value<textPoint>());
 				m_dc->SetFont(font);
 			}
-			virtual void setClippingRegion(const Point& corner1, const Point& corner2)
-			{
-			}
 			virtual void polyLine(const std::vector<Point>& points)
 			{
 				if (points.size() == 0)
@@ -1463,6 +1513,34 @@ namespace sci
 				return sci::atan2(unitless(-y), unitless(x));
 			}
 		private:
+
+			virtual void applyClippingRegion(Point corner1, Point corner2) override
+			{
+				wxRegion region(getWxPoint(corner1), getWxPoint(corner2));
+				m_clippingRegions.push_back(region);
+				m_dc->SetClippingRegion(region);
+			}
+
+			virtual void applyClippingRegion(std::span<const Point> points) override
+			{
+				std::vector<wxPoint> wxPoints(points.size());
+				for (size_t i = 0; i < wxPoints.size(); ++i)
+					wxPoints[i] = getWxPoint(points[i]);
+				wxRegion region(wxPoints.size(), &wxPoints[0]);
+				m_clippingRegions.push_back(region);
+				m_dc->SetClippingRegion(region);
+			}
+
+			virtual void popClippingRegion() override
+			{
+				m_dc->DestroyClippingRegion();
+				if (m_clippingRegions.size() == 0)
+					return;
+				m_clippingRegions.resize(m_clippingRegions.size() - 1);
+				for (auto& r : m_clippingRegions)
+					m_dc->SetClippingRegion(r);
+			}
+
 			struct State
 			{
 				wxPen m_pen;
@@ -1548,7 +1626,7 @@ namespace sci
 			std::vector<wxDash> m_penDashes;
 			std::vector<State> m_stateStack;
 			textPoint m_fontSize; //stored here in double form as wxFont stores it as an int
-
+			std::vector<wxRegion> m_clippingRegions;
 		};
 
 		class NullRenderer : public Renderer
@@ -1617,9 +1695,6 @@ namespace sci
 			void scaleFontSize(unitless scale) override
 			{
 			}
-			virtual void setClippingRegion(const Point& corner1, const Point& corner2)
-			{
-			}
 			virtual void polyLine(const std::vector<Point>& points)
 			{
 			}
@@ -1633,6 +1708,21 @@ namespace sci
 				return degree(0);
 			}
 
+			virtual void applyClippingRegion(Point point, Distance distance) override
+			{
+			}
+
+			virtual void applyClippingRegion(Point corner1, Point corner2) override
+			{
+			}
+
+			virtual void applyClippingRegion(std::span<const Point> points) override
+			{
+			}
+
+			virtual void popClippingRegion() override
+			{
+			}
 		};
 
 

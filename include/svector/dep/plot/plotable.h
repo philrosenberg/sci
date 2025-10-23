@@ -50,7 +50,7 @@ namespace sci
 			void draw(Renderer& renderer, grPerMillimetre scale) override
 			{
 				Point endCorner(m_xAxis->getEnd().getX(), m_yAxis->getEnd().getY());
-				renderer.setClippingRegion(m_intersection, endCorner);
+				sci::graphics::Clipper clipper = renderer.addClippingRegion(m_intersection, endCorner);
 
 				//plot the data
 				plotData(renderer, scale);
