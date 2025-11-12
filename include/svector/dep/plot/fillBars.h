@@ -161,9 +161,11 @@ namespace sci
 				m_fillStyle.setBrush(renderer);
 
 				std::vector<Point> points(getNPoints());
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]);
+					points[i] = getPointFromLoggedIfNeededData(x[i], y[i]);
 				}
 				renderer.polygon(points);
 			}

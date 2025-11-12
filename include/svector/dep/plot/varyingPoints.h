@@ -20,11 +20,14 @@ namespace sci
 				if (!hasData())
 					return;
 
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& z = getVector(2);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					renderer.setBrush(m_colourScale->getRgbOriginalScale(getVector(2)[i], true));
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(z[i], true));
 					renderer.setPen(rgbcolour(), grMillimetre(0.0));
-					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), renderer);
+					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), renderer);
 				}
 			}
 		private:
@@ -46,10 +49,13 @@ namespace sci
 
 				renderer.setBrush(m_colour);
 				renderer.setPen(rgbcolour(), grMillimetre(0.0));
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& z = getVector(2);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					double size = m_sizeScale->getsize(getVector(2)[i], true);
-					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), graphics::unitless(size), renderer);
+					double size = m_sizeScale->getsize(z[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), graphics::unitless(size), renderer);
 				}
 			}
 		private:
@@ -70,12 +76,16 @@ namespace sci
 				if (!hasData())
 					return;
 
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& z1 = getVector(2);
+				const std::vector<double>& z2 = getVector(3);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					renderer.setBrush(m_colourScale->getRgbOriginalScale(getVector(2)[i], true));
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(z1[i], true));
 					renderer.setPen(rgbcolour(), grMillimetre(0.0));
-					double size = m_sizeScale->getsize(getVector(3)[i], true);
-					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), graphics::unitless(size), renderer);
+					double size = m_sizeScale->getsize(z2[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), graphics::unitless(size), renderer);
 				}
 			}
 		private:

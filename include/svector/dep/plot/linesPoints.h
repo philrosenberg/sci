@@ -23,9 +23,11 @@ namespace sci
 					return;
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(getNPoints());
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]);
+					points[i] = getPointFromLoggedIfNeededData(x[i], y[i]);
 				}
 				renderer.polyLine(points);
 			}
@@ -51,9 +53,11 @@ namespace sci
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), grMillimetre(0.0));
 
+				const std::vector<double>& x = getVector(0);
+				const std::vector<double>& y = getVector(1);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), renderer);
+					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), renderer);
 				}
 			}
 		};
