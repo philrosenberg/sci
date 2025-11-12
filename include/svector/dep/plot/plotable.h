@@ -75,82 +75,172 @@ namespace sci
 			Point m_intersection;
 		};
 
-		//this class holds data of n dimensions where there is just a 1d
-		//vector in each dimension. Eg, x-y scatter data or line data
-		//or x y z data where the z data is one value for each x, y point
-		//Note virtual inheritance so if a class derived from this class is created,
-		//the PlotableItem constructor must be called from there
-		class UnstructuredData : virtual public PlotableItem
+
+		template<class... CONTAINERS>
+		class Data : virtual public PlotableItem
 		{
 		public:
-			UnstructuredData(const std::vector<std::span<const double>>& data, std::vector<std::shared_ptr<Scale>> axes, std::shared_ptr<splotTransformer> transformer)
+			using containersTuple = std::tuple<CONTAINERS...>;
+			constexpr static int nDimensions = sizeof...(CONTAINERS);
+
+			template< class... RECEIVEDCONTAINERS>
+			Data(std::array<std::shared_ptr<Scale>, nDimensions> axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
+				:m_axes(axes)
 			{
-				sci::assertThrow(data.size() == axes.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data and axes of different lengths."));
-				m_data.resize(data.size());
-				for (size_t i = 0; i < data.size(); ++i)
-				{
-					m_data[i] = std::vector<double>(data[i].begin(), data[i].end());
-					//if(i>0)
-					//	sci::assertThrow(data[0]->size() == data[i]->size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "UnstructuredData constructor called with data in different dimensions having different lengths."));
-				}
-				m_dataLogged.resize(m_data.size());
-				for (size_t i = 0; i < m_data.size(); ++i)
-				{
-					m_dataLogged[i].resize(m_data[i].size());
-					for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
-						m_dataLogged[i][j] = sci::log10(m_data[i][j]);
-				}
-				//m_dataLogged = std::vector<std::vector<double>>(m_data.size());
-				//for (size_t i = 0; i < m_dataLogged.size(); ++i)
-				//{
-				//	m_dataLogged[i] = std::vector<double>(m_data[i].size());
-				//	for (size_t j = 0; j < m_dataLogged[i].size(); ++j)
-				//		m_dataLogged[i][j] = std::max(std::log10(m_data[i][j]), std::numeric_limits<double>::min()); //don't let logged data get to -infinity, it causes problems in plplot
-				//}
-
-				m_axes = axes;
+				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the expected number");
+				copyLinear(data...);
+				calculateLog<0>();
 			}
-
 			virtual void autoscaleAxes() override
 			{
-				for (size_t i = 0; i < m_data.size(); ++i)
-					if (m_axes[i])
-						m_axes[i]->expand(m_data[i]);
+				autoscaleAxesRecursive<0>();
 			}
-
-			const double* getPointer(size_t dimension) const
+			template<int dimension>
+			constexpr const auto& getData() const
 			{
-				return m_axes[dimension]->isLog() ? (&(m_dataLogged[dimension][0])) : (&(m_data[dimension][0]));
+				return m_axes[dimension]->isLog() ? std::get<dimension>(m_dataLogged) : std::get<dimension>(m_data);
 			}
-			const std::vector<double>& getVector(size_t dimension) const
-			{
-				return m_axes[dimension]->isLog() ? (m_dataLogged[dimension]) : (m_data[dimension]);
-			}
-			bool isLog(size_t dimension) const
+			constexpr bool isLog(size_t dimension) const
 			{
 				return m_axes[dimension]->isLog();
 			}
-			bool hasData() const
+			constexpr bool hasData() const
 			{
-				return m_data.size() > 0 && m_data[0].size() > 0;
+				return getNPoints() > 0;
 			}
-			size_t getNPoints() const
+			constexpr size_t getNPoints() const
 			{
-				return m_data[0].size();
+				if constexpr (nDimensions == 0)
+					return 0;
+				else
+					return std::get<0>(m_data).size();
 			}
-			size_t getNDimensions() const
+			constexpr size_t getNDimensions() const
 			{
-				return m_data.size();
+				return nDimensions;
 			}
-			const std::vector<std::shared_ptr<Scale>>& getAxes()
+			constexpr const std::array<std::shared_ptr<Scale>, nDimensions>& getAxes()
 			{
 				return m_axes;
 			}
-		protected:
 		private:
-			std::vector<std::vector<double>> m_data;
-			std::vector<std::vector<double>> m_dataLogged;
-			std::vector<std::shared_ptr<Scale>> m_axes;
+			template<class... REMAINING>
+			void copyLinear(auto next, REMAINING... remaining)
+			{
+				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
+				auto& linear = std::get<index>(m_data);
+				linear.assign(next.begin(), next.end());
+				if constexpr ( index != nDimensions - 1)
+					copyLinear(remaining...);
+			}
+			template<int index>
+			void calculateLog()
+			{
+				auto& linear = std::get<index>(m_data);
+				auto& log = std::get<index>(m_dataLogged);
+				log = linear;
+				for (auto& v : log)
+					v = sci::log10(v);
+				if constexpr (index != nDimensions - 1)
+					calculateLog<index + 1>();
+			}
+			template <int index>
+			void autoscaleAxesRecursive()
+			{
+				if(m_axes[index])
+					m_axes[index]->expand(std::get<index>(m_data));
+				if constexpr (index != nDimensions - 1)
+					autoscaleAxesRecursive<index + 1>();
+			}
+			containersTuple m_data;
+			containersTuple m_dataLogged;
+			std::array<std::shared_ptr<Scale>, nDimensions> m_axes;
+		};
+
+		class Bars : virtual public PlotableItem
+		{
+		public:
+			Bars(std::span<const double> alongs, std::span<const double> acrosses, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> alongAxis, std::shared_ptr<Axis> acrossAxis, bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: PlotableItem(alongAxis, acrossAxis, transformer), m_acrosses(acrosses.begin(), acrosses.end()), m_alongs(alongs.begin(), alongs.end()),
+				m_alongAxis(alongAxis), m_acrossAxis(acrossAxis)
+			{
+				m_minAlongs.resize(alongs.size());
+				m_maxAlongs.resize(alongs.size());
+				for (size_t i = 0; i < alongs.size(); ++i)
+				{
+					m_minAlongs[i] = alongs[i] - minusErrors[i];
+					m_maxAlongs[i] = alongs[i] + plusErrors[i];
+				}
+
+				m_acrossesLogged = m_acrosses;
+				m_alongsLogged = m_alongs;
+				m_minAlongsLogged = m_minAlongs;
+				m_maxAlongsLogged = m_maxAlongs;
+				for (auto& v : m_acrossesLogged)
+					v = sci::log10(v);
+				for (auto& v : m_alongsLogged)
+					v = sci::log10(v);
+				for (auto& v : m_minAlongsLogged)
+					v = sci::log10(v);
+				for (auto& v : m_maxAlongsLogged)
+					v = sci::log10(v);
+
+				m_useForAutoscale = useForAutoscale;
+			}
+			size_t getNPoints() const
+			{
+				return m_acrosses.size();
+			}
+			bool hasData() const
+			{
+				return getNPoints() > 0;
+			}
+			virtual void autoscaleAxes() override
+			{
+				if (!m_useForAutoscale)
+					return;
+
+				if (m_alongAxis && m_alongAxis->isAutoscale())
+				{
+					for (auto& x : m_minAlongs)
+						m_alongAxis->expand(x);
+					for (auto& x : m_maxAlongs)
+						m_alongAxis->expand(x);
+				}
+				if (m_acrossAxis && m_acrossAxis->isAutoscale())
+				{
+					for (auto& y : m_acrosses)
+						m_acrossAxis->expand(y);
+				}
+			}
+			const std::vector<double>& getAlongData() const
+			{
+				return m_alongAxis->isLog() ? m_alongsLogged : m_alongs;
+			}
+			const std::vector<double>& getAcrossData() const
+			{
+				return m_acrossAxis->isLog() ? m_acrossesLogged : m_acrosses;
+			}
+			const std::vector<double>& getMinAlongData() const
+			{
+				return m_alongAxis->isLog() ? m_minAlongsLogged : m_minAlongs;
+			}
+			const std::vector<double>& getMaxAlongData() const
+			{
+				return m_alongAxis->isLog() ? m_maxAlongsLogged : m_maxAlongs;
+			}
+		private:
+			std::vector<double> m_acrosses;
+			std::vector<double> m_alongs;
+			std::vector<double> m_minAlongs;
+			std::vector<double> m_maxAlongs;
+			std::vector<double> m_acrossesLogged;
+			std::vector<double> m_alongsLogged;
+			std::vector<double> m_minAlongsLogged;
+			std::vector<double> m_maxAlongsLogged;
+			std::shared_ptr<Scale> m_alongAxis;
+			std::shared_ptr<Scale> m_acrossAxis;
+			bool m_useForAutoscale;
 		};
 
 		//this class holds data of n dimensions where there is a 2d
@@ -182,20 +272,6 @@ namespace sci
 						if (m_axes[i])
 							m_axes[i]->expand(d);
 			}
-
-			std::vector<const double*> getPointer(size_t dimension) const
-			{
-				std::vector<const double*> result(m_data[dimension].shape()[0]);
-				if (m_axes[dimension]->isLog())
-					for (size_t i = 0; i < result.size(); ++i)
-						result[i] = &m_dataLogged[dimension][i][0];
-				else
-					for (size_t i = 0; i < result.size(); ++i)
-						result[i] = &m_data[dimension][i][0];
-
-				return result;
-			}
-
 			const ::sci::GridData<double, 2>& getGrid(size_t dimension) const
 			{
 				return m_axes[dimension]->isLog() ? (m_dataLogged[dimension]) : (m_data[dimension]);

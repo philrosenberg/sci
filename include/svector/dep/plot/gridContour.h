@@ -9,11 +9,12 @@ namespace sci
 {
 	namespace plot
 	{
-		class Data2d : public UnstructuredData, public StructuredData
+		class Data2d : public Data<std::vector<double>, std::vector<double>>, public StructuredData
 		{
 		public:
 			Data2d(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), StructuredData({ &zs }, { zScale }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, xs, ys), StructuredData({ &zs }, { zScale }, transformer)
 			{
 				sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
 				sci::assertThrow(zs.shape()[1] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -27,7 +28,8 @@ namespace sci
 			}
 
 			Data2d(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({}, {}, transformer), StructuredData({ &xs, &ys, &zs }, { xAxis, yAxis, zScale }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({}, transformer, std::vector<double>(0), std::vector<double>(0)), StructuredData({ &xs, &ys, &zs }, { xAxis, yAxis, zScale }, transformer)
 			{
 				sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
 				sci::assertThrow(zs.shape()[1] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -41,7 +43,8 @@ namespace sci
 			}
 			
 			Data2d(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs }, { xAxis }, transformer), StructuredData({ &ys, &zs }, { yAxis, zScale }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ xAxis }, transformer, xs, std::vector<double>(0)), StructuredData({ &ys, &zs }, { yAxis, zScale }, transformer)
 			{
 				sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
 				sci::assertThrow(zs.shape()[1] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -55,7 +58,8 @@ namespace sci
 			}
 			
 			Data2d(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<Scale> zScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ ys }, { yAxis }, transformer), StructuredData({ &xs, &zs }, { xAxis, zScale }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ yAxis }, transformer, ys, std::vector<double>(0)), StructuredData({ &xs, &zs }, { xAxis, zScale }, transformer)
 			{
 				sci::assertThrow(zs.shape()[0] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
 				sci::assertThrow(zs.shape()[1] > 0, sci::err(sci::SERR_PLOT, plotDataErrorCode, "Data2d constructor called with zs of zero length."));
@@ -71,7 +75,7 @@ namespace sci
 
 			virtual void autoscaleAxes() override//because this class inherits this function from both UnstructuredData and StructuredData, it must override in this class
 			{
-				UnstructuredData::autoscaleAxes();
+				Data<std::vector<double>, std::vector<double>>::autoscaleAxes();
 				StructuredData::autoscaleAxes();
 			}
 
@@ -161,8 +165,8 @@ namespace sci
 
 				if (m_x1d && m_y1d)
 				{
-					const std::vector<double>& x = UnstructuredData::getVector(0);
-					const std::vector<double>& y = UnstructuredData::getVector(1);
+					const std::vector<double>& x = getData<0>();
+					const std::vector<double>& y = getData<1>();
 					const sci::GridData<double, 2>& zs = StructuredData::getGrid(0); //returns logged data if it's a log z axis
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
@@ -179,7 +183,7 @@ namespace sci
 				}
 				else if (m_x1d)
 				{
-					const std::vector<double>& x = UnstructuredData::getVector(0);
+					const std::vector<double>& x = getData<0>();
 					const sci::GridData<double, 2>& y = StructuredData::getGrid(0);
 					const sci::GridData<double, 2>& zs = StructuredData::getGrid(1); //returns logged data if it's a log z axis
 					for (size_t i = 0; i < m_xNBoxes; ++i)
@@ -200,7 +204,7 @@ namespace sci
 				else if (m_y1d)
 				{
 					const sci::GridData<double, 2>& x = StructuredData::getGrid(0);
-					const std::vector<double>& y = UnstructuredData::getVector(0);
+					const std::vector<double>& y = getData<0>();
 					const sci::GridData<double, 2>& zs = StructuredData::getGrid(1);
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
@@ -443,8 +447,8 @@ namespace sci
 				std::vector<Point> points;
 				if (m_x1d && m_y1d)
 				{
-					const std::vector<double>& inputXs = getVector(0);
-					const std::vector<double>& inputYs = getVector(1);
+					const std::vector<double>& inputXs = getData<0>();
+					const std::vector<double>& inputYs = getData<1>();
 					for (size_t i = 0; i < segments.size(); ++i)
 					{
 						getContourLine(inputXs, inputYs, zs, segments[i], xs, ys);
@@ -474,7 +478,7 @@ namespace sci
 				else if (!m_x1d)
 				{
 					const sci::GridData<double, 2>& inputXs = getGrid(0);
-					const std::vector<double>& inputYs = getVector(0);
+					const std::vector<double>& inputYs = getData<0>();
 					for (size_t i = 0; i < segments.size(); ++i)
 					{
 						getContourLine(inputXs, inputYs, zs, segments[i], xs, ys);
@@ -488,7 +492,7 @@ namespace sci
 				}
 				else
 				{
-					const std::vector<double>& inputXs = getVector(0);
+					const std::vector<double>& inputXs = getData<0>();
 					const sci::GridData<double, 2>& inputYs = getGrid(0);
 					for (size_t i = 0; i < segments.size(); ++i)
 					{

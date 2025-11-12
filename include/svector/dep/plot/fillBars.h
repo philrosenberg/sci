@@ -8,12 +8,12 @@ namespace sci
 {
 	namespace plot
 	{
-		class VerticalBars : public UnstructuredData
+		class VerticalBars : public Bars
 		{
 		public:
 			VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer),
-				UnstructuredData({ xs, ys, widths},	{ xAxis, yAxis, xAxis }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer), m_yAxis(yAxis),
+				Bars(xs, ys, half(widths), half(widths), xAxis, yAxis, true, transformer)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -32,56 +32,45 @@ namespace sci
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				double zeroLine = isLog(1) ? m_zeroLineLogged : m_zeroLineLinear;
+				double zeroLine = m_yAxis->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const std::vector<double>& xs = getVector(0);
-				const std::vector<double>& ys = getVector(1);
-				const std::vector<double>& widths = getVector(2);
+				const std::vector<double>& minXs = getMinAlongData();
+				const std::vector<double>& maxXs = getMaxAlongData();
+				const std::vector<double>& ys = getAcrossData();
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					Point p1 = getPointFromLoggedIfNeededData(xs[i] - 0.5 * widths[i], zeroLine);
-					Point p2 = getPointFromLoggedIfNeededData(xs[i] + 0.5 * widths[i], ys[i]);
+					Point p1 = getPointFromLoggedIfNeededData(minXs[i], zeroLine);
+					Point p2 = getPointFromLoggedIfNeededData(maxXs[i], ys[i]);
 					renderer.rectangle(p1, p2);
 				}
 			}
-
 			virtual void autoscaleAxes() override
 			{
-				const std::vector<std::shared_ptr<Scale>>& axes = getAxes();
-
-				const std::vector<double>& xs = getVector(0);
-				const std::vector<double>& ys = getVector(1);
-				const std::vector<double>& widths = getVector(2);
-
-				if (axes[0] && axes[0]->isAutoscale())
-				{
-					for (size_t i = 0; i < xs.size(); ++i)
-					{
-						axes[0]->expand(xs[i] + 0.5 * widths[i]);
-						axes[0]->expand(xs[i] - 0.5 * widths[i]);
-					}
-				}
-				if (axes[1] && axes[1]->isAutoscale())
-				{
-					axes[1]->expand(ys);
-					axes[1]->expand(axes[1]->isLog() ? m_zeroLineLogged : m_zeroLineLinear);
-				}
-
+				m_yAxis->expand(m_zeroLineLinear);
+				Bars::autoscaleAxes();
 			}
 		private:
+			static std::vector<double> half(const std::span<const double> values)
+			{
+				std::vector<double> result(values.begin(), values.end());
+				for (auto& r : result)
+					r = 0.5 * r;
+				return result;
+			}
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;
 			double m_zeroLineLinear;
 			double m_zeroLineLogged;
+			std::shared_ptr<Scale> m_yAxis;
 		};
 
-		class HorizontalBars : public UnstructuredData
+		class HorizontalBars : public Bars
 		{
 		public:
 			HorizontalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer),
-				UnstructuredData({ xs, ys, widths }, { xAxis, yAxis, xAxis }, transformer)
+				: PlotableItem(xAxis, yAxis, transformer), m_xAxis(xAxis),
+				Bars(ys, xs, half(widths), half(widths), yAxis, xAxis, true, transformer)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -100,56 +89,46 @@ namespace sci
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				double zeroLine = isLog(0) ? m_zeroLineLogged : m_zeroLineLinear;
+				double zeroLine = m_xAxis->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const std::vector<double>& xs = getVector(0);
-				const std::vector<double>& ys = getVector(1);
-				const std::vector<double>& widths = getVector(2);
+				const std::vector<double>& minYs = getMinAlongData();
+				const std::vector<double>& maxYs = getMaxAlongData();
+				const std::vector<double>& xs = getAcrossData();
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					Point p1 = getPointFromLoggedIfNeededData(zeroLine, ys[i] - 0.5 * widths[i]);
-					Point p2 = getPointFromLoggedIfNeededData(xs[i], ys[i] + 0.5 * widths[i]);
+					Point p1 = getPointFromLoggedIfNeededData(zeroLine, minYs[i]);
+					Point p2 = getPointFromLoggedIfNeededData(xs[i], maxYs[i]);
 					renderer.rectangle(p1, p2);
 				}
 			}
 
 			virtual void autoscaleAxes() override
 			{
-				const std::vector<std::shared_ptr<Scale>>& axes = getAxes();
-
-				const std::vector<double>& xs = getVector(0);
-				const std::vector<double>& ys = getVector(1);
-				const std::vector<double>& widths = getVector(2);
-
-				if (axes[0] && axes[0]->isAutoscale())
-				{
-					axes[0]->expand(xs);
-					axes[0]->expand(axes[0]->isLog() ? m_zeroLineLogged : m_zeroLineLinear);
-				}
-
-				if (axes[1] && axes[1]->isAutoscale())
-				{
-					for (size_t i = 0; i < xs.size(); ++i)
-					{
-						axes[1]->expand(ys[i] + 0.5 * widths[i]);
-						axes[1]->expand(ys[i] - 0.5 * widths[i]);
-					}
-				}
-
+				m_xAxis->expand(m_zeroLineLinear);
+				Bars::autoscaleAxes();
 			}
 		private:
+			static std::vector<double> half(const std::span<const double> values)
+			{
+				std::vector<double> result(values.begin(), values.end());
+				for (auto& r : result)
+					r = 0.5 * r;
+				return result;
+			}
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;
 			double m_zeroLineLinear;
 			double m_zeroLineLogged;
+			std::shared_ptr<Scale> m_xAxis;
 		};
 
-		class Fill : public UnstructuredData
+		class Fill : public Data<std::vector<double>, std::vector<double>>
 		{
 		public:
 			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			
@@ -161,8 +140,8 @@ namespace sci
 				m_fillStyle.setBrush(renderer);
 
 				std::vector<Point> points(getNPoints());
-				const std::vector<double>& x = getVector(0);
-				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& x = getData<0>();
+				const std::vector<double>& y = getData<1>();
 				for (size_t i = 0; i < points.size(); ++i)
 				{
 					points[i] = getPointFromLoggedIfNeededData(x[i], y[i]);

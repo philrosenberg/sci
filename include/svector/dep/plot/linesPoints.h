@@ -9,11 +9,12 @@ namespace sci
 	namespace plot
 	{
 
-		class Lines : public UnstructuredData
+		class Lines : public Data<std::vector<double>, std::vector<double>>
 		{
 		public:
 			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ xs, ys }, { xAxis, yAxis }, transformer), m_lineStyle(lineStyle)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
@@ -23,8 +24,8 @@ namespace sci
 					return;
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(getNPoints());
-				const std::vector<double>& x = getVector(0);
-				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& x = getData<0>();
+				const std::vector<double>& y = getData<1>();
 				for (size_t i = 0; i < points.size(); ++i)
 				{
 					points[i] = getPointFromLoggedIfNeededData(x[i], y[i]);
@@ -34,11 +35,12 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-		class Points : public UnstructuredData
+		class Points : public Data<std::vector<double>, std::vector<double>>
 		{
 		public:
 			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer), UnstructuredData({ x, y }, { xAxis, yAxis }, transformer), m_symbol(symbol), m_colour(colour)
+				: PlotableItem(xAxis, yAxis, transformer),
+				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:
@@ -53,8 +55,8 @@ namespace sci
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), grMillimetre(0.0));
 
-				const std::vector<double>& x = getVector(0);
-				const std::vector<double>& y = getVector(1);
+				const std::vector<double>& x = getData<0>();
+				const std::vector<double>& y = getData<1>();
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
 					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), renderer);
