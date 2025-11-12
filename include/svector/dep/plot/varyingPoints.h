@@ -22,9 +22,9 @@ namespace sci
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					renderer.setBrush(m_colourScale->getRgbOriginalScale(getPointer(2)[i], true));
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(getVector(2)[i], true));
 					renderer.setPen(rgbcolour(), grMillimetre(0.0));
-					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), renderer);
+					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), renderer);
 				}
 			}
 		private:
@@ -48,8 +48,8 @@ namespace sci
 				renderer.setPen(rgbcolour(), grMillimetre(0.0));
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					double size = m_sizeScale->getsize(getPointer(2)[i], true);
-					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), graphics::unitless(size), renderer);
+					double size = m_sizeScale->getsize(getVector(2)[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), graphics::unitless(size), renderer);
 				}
 			}
 		private:
@@ -72,10 +72,10 @@ namespace sci
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					renderer.setBrush(m_colourScale->getRgbOriginalScale(getPointer(2)[i], true));
+					renderer.setBrush(m_colourScale->getRgbOriginalScale(getVector(2)[i], true));
 					renderer.setPen(rgbcolour(), grMillimetre(0.0));
-					double size = m_sizeScale->getsize(getPointer(3)[i], true);
-					m_symbol.draw(getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]), graphics::unitless(size), renderer);
+					double size = m_sizeScale->getsize(getVector(3)[i], true);
+					m_symbol.draw(getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]), graphics::unitless(size), renderer);
 				}
 			}
 		private:

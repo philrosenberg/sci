@@ -914,7 +914,7 @@ namespace sci
 				}
 			}
 			~LevelScale() {};
-			sci::GridData<double, 1> getLevels() const
+			sci::GridData<double, 1> getLevelsLinear() const
 			{
 				sci::GridData<double, 1> result;
 				if (isLog())
@@ -924,6 +924,17 @@ namespace sci
 					auto logValueIter = m_logValue.begin();
 					for (auto resultIter = result.begin(); resultIter != result.end(); ++resultIter, ++logValueIter)
 						*resultIter = sci::pow(10.0, getLogMin() + *logValueIter * (getLogMax() - getLogMin()));
+				}
+				else
+					result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
+				return result;
+			}
+			sci::GridData<double, 1> getLevelsLoggedIfNeeded() const
+			{
+				sci::GridData<double, 1> result;
+				if (isLog())
+				{
+					result = getLogMin() + m_logValue * (getLogMax() - getLogMin());
 				}
 				else
 					result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());

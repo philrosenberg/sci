@@ -161,9 +161,9 @@ namespace sci
 
 				if (m_x1d && m_y1d)
 				{
-					const double* x = UnstructuredData::getPointer(0);
-					const double* y = UnstructuredData::getPointer(1);
-					std::vector<const double*> zs = StructuredData::getPointer(0); //returns logged data if it's a log z axis
+					const std::vector<double>& x = UnstructuredData::getVector(0);
+					const std::vector<double>& y = UnstructuredData::getVector(1);
+					const sci::GridData<double, 2>& zs = StructuredData::getGrid(0); //returns logged data if it's a log z axis
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
 						for (size_t j = 0; j < m_yNBoxes; ++j)
@@ -179,9 +179,9 @@ namespace sci
 				}
 				else if (m_x1d)
 				{
-					const double* x = UnstructuredData::getPointer(0);
-					std::vector<const double*> y = StructuredData::getPointer(0);
-					std::vector<const double*> zs = StructuredData::getPointer(1); //returns logged data if it's a log z axis
+					const std::vector<double>& x = UnstructuredData::getVector(0);
+					const sci::GridData<double, 2>& y = StructuredData::getGrid(0);
+					const sci::GridData<double, 2>& zs = StructuredData::getGrid(1); //returns logged data if it's a log z axis
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
 						for (size_t j = 0; j < m_yNBoxes; ++j)
@@ -199,9 +199,9 @@ namespace sci
 				}
 				else if (m_y1d)
 				{
-					std::vector<const double*> x = StructuredData::getPointer(0);
-					const double* y = UnstructuredData::getPointer(0);
-					std::vector<const double*> zs = StructuredData::getPointer(1);
+					const sci::GridData<double, 2>& x = StructuredData::getGrid(0);
+					const std::vector<double>& y = UnstructuredData::getVector(0);
+					const sci::GridData<double, 2>& zs = StructuredData::getGrid(1);
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
 						for (size_t j = 0; j < m_yNBoxes; ++j)
@@ -219,9 +219,9 @@ namespace sci
 				}
 				else
 				{
-					std::vector<const double*> x = StructuredData::getPointer(0);
-					std::vector<const double*> y = StructuredData::getPointer(1);
-					std::vector<const double*> zs = StructuredData::getPointer(2);
+					const sci::GridData<double, 2>& x = StructuredData::getGrid(0);
+					const sci::GridData<double, 2>& y = StructuredData::getGrid(1);
+					const sci::GridData<double, 2>& zs = StructuredData::getGrid(2);
 					for (size_t i = 0; i < m_xNBoxes; ++i)
 					{
 						for (size_t j = 0; j < m_yNBoxes; ++j)
@@ -338,7 +338,7 @@ namespace sci
 				sci::GridData<double, 1> contourLevels;
 				if (m_levelScale)
 				{
-					contourLevels = m_levelScale->getLevels();
+					contourLevels = m_levelScale->getLevelsLoggedIfNeeded();
 					sci::assertThrow(contourLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a level scale with fewer than 2 levels."));
 				}
 

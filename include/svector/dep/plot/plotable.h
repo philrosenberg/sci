@@ -198,7 +198,7 @@ namespace sci
 
 			const ::sci::GridData<double, 2>& getGrid(size_t dimension) const
 			{
-				return m_data[dimension];
+				return m_axes[dimension]->isLog() ? (m_dataLogged[dimension]) : (m_data[dimension]);
 			}
 			bool isLog(size_t dimension) const
 			{

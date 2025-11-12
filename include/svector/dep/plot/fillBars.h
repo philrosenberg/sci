@@ -163,7 +163,7 @@ namespace sci
 				std::vector<Point> points(getNPoints());
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(getPointer(0)[i], getPointer(1)[i]);
+					points[i] = getPointFromLoggedIfNeededData(getVector(0)[i], getVector(1)[i]);
 				}
 				renderer.polygon(points);
 			}
