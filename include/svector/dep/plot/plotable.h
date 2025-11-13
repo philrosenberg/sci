@@ -18,6 +18,8 @@ namespace sci
 		const int plotDataErrorCode = 1;
 		class splotTransformer;
 
+		//This class is the base class for all plotable items, it provides the interface for
+		//the items
 		class PlotableItem : public DrawableItem
 		{
 		public:
@@ -37,7 +39,9 @@ namespace sci
 				//Instead, we find the intersection as the point up from the start of the x axis and across from the start of the y
 				//axis. This point can be represented by a Point and hence will scale properly.
 			}
-			virtual ~PlotableItem() {}
+			virtual ~PlotableItem()
+			{
+			}
 			void preDraw() override
 			{
 				autoscaleAxes();
@@ -75,7 +79,13 @@ namespace sci
 			Point m_intersection;
 		};
 
-
+		//This class can be used as a base class for plotable data sets. It holds multiple 1d or 2d
+		//data sets. The class types holding each data set are passed as parameter packs. Typically
+		//the data would be stored as std::vector<double>, sci::GridData<double, 1> or
+		//sci::GridData<double, 2>, but in theory any container class can be used which has size
+		//and assign methods
+		//This function stores both linear and logged versions of the data and the getData<dimension>()
+		//method will select the correct one based upon the axis being plotted against.
 		template<class... CONTAINERS>
 		class Data : virtual public PlotableItem
 		{
@@ -90,6 +100,9 @@ namespace sci
 				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the expected number");
 				copyLinear(data...);
 				calculateLog<0>();
+			}
+			virtual ~Data()
+			{
 			}
 			virtual void autoscaleAxes() override
 			{
@@ -125,12 +138,23 @@ namespace sci
 			}
 		private:
 			template<class... REMAINING>
-			void copyLinear(auto next, REMAINING... remaining)
+			void copyLinear(const auto &next, REMAINING... remaining)
 			{
 				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
 				auto& linear = std::get<index>(m_data);
 				linear.assign(next.begin(), next.end());
 				if constexpr ( index != nDimensions - 1)
+					copyLinear(remaining...);
+			}
+			template<class... REMAINING>
+			void copyLinear(const sci::GridData<double, 2>& next, REMAINING... remaining)
+			{
+				//Need to specialize this for grids as there is no assign method for
+				// multi dimensional grids
+				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
+				auto& linear = std::get<index>(m_data);
+				linear = next;
+				if constexpr (index != nDimensions - 1)
 					copyLinear(remaining...);
 			}
 			template<int index>
@@ -241,57 +265,6 @@ namespace sci
 			std::shared_ptr<Scale> m_alongAxis;
 			std::shared_ptr<Scale> m_acrossAxis;
 			bool m_useForAutoscale;
-		};
-
-		//this class holds data of n dimensions where there is a 2d
-		//vector in each dimension. Eg, gridded data over a plane.
-		//Note this data can hold x, y and z data for a curvilinear grid
-		//Note virtual inheritance so if a class derived from this class is created,
-		//the PlotableItem constructor must be called from there
-		class StructuredData : virtual public PlotableItem
-		{
-		public:
-			StructuredData(const std::vector<const ::sci::GridData<double, 2>*>& data, std::vector<std::shared_ptr<Scale>> axes, std::shared_ptr<splotTransformer> transformer)
-			{
-
-				sci::assertThrow(data.size() == axes.size(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "StructuredData constructor called with data and axes of different lengths."));
-				m_data.resize(data.size());
-				m_dataLogged.resize(data.size());
-				for (size_t i = 0; i < data.size(); ++i)
-				{
-					m_data[i] = *(data[i]);
-					m_dataLogged[i] = sci::log10(m_data[i]);
-				}
-				m_axes = axes;
-			}
-
-			virtual void autoscaleAxes() override
-			{
-				for (size_t i = 0; i < m_data.size(); ++i)
-					for (auto d : m_data[i])
-						if (m_axes[i])
-							m_axes[i]->expand(d);
-			}
-			const ::sci::GridData<double, 2>& getGrid(size_t dimension) const
-			{
-				return m_axes[dimension]->isLog() ? (m_dataLogged[dimension]) : (m_data[dimension]);
-			}
-			bool isLog(size_t dimension) const
-			{
-				return m_axes[dimension]->isLog();
-			}
-			bool hasData() const
-			{
-				return m_data.size() > 0 && m_data[0].size() > 0 && m_data[0][0].size() > 0;
-			}
-			size_t getNDimensions() const
-			{
-				return m_data.size();
-			}
-		private:
-			std::vector<::sci::GridData<double, 2>> m_data;
-			std::vector<::sci::GridData<double, 2>> m_dataLogged;
-			std::vector<std::shared_ptr<Scale>> m_axes;
 		};
 	}
 }

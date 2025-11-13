@@ -163,20 +163,20 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 	std::shared_ptr<sci::plot::ColourScale> colourScaleContinuous(new sci::plot::ColourScale(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop));
 	
-	std::shared_ptr<sci::plot::Grid> grid1(new sci::plot::Grid(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid> grid2(new sci::plot::Grid(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid> grid3(new sci::plot::Grid(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid> grid4(new sci::plot::Grid(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid<1, 1>> grid1(new sci::plot::Grid<1, 1>(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid<2, 1>> grid2(new sci::plot::Grid<2, 1>(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid<1, 2>> grid3(new sci::plot::Grid<1, 2>(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
+	std::shared_ptr<sci::plot::Grid<2, 2>> grid4(new sci::plot::Grid<2, 2>(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
 
-	std::shared_ptr<sci::plot::Contours> shade1(new sci::plot::Contours(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours> shade2(new sci::plot::Contours(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours> shade3(new sci::plot::Contours(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours> shade4(new sci::plot::Contours(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours<1, 1>> shade1(new sci::plot::Contours<1, 1>(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours<2, 1>> shade2(new sci::plot::Contours<2, 1>(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours<1, 2>> shade3(new sci::plot::Contours<1, 2>(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	std::shared_ptr<sci::plot::Contours<2, 2>> shade4(new sci::plot::Contours<2, 2>(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine));
 
-	std::shared_ptr<sci::plot::Contours> contour1(new sci::plot::Contours(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours> contour2(new sci::plot::Contours(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours> contour3(new sci::plot::Contours(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours> contour4(new sci::plot::Contours(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours<1, 1>> contour1(new sci::plot::Contours<1, 1>(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours<2, 1>> contour2(new sci::plot::Contours<2, 1>(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours<1, 2>> contour3(new sci::plot::Contours<1, 2>(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
+	std::shared_ptr<sci::plot::Contours<2, 2>> contour4(new sci::plot::Contours<2, 2>(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
 	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarContour(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis::Options(sU("Discrete Colourbar used by Shade"))));
 	std::shared_ptr< sci::plot::HorizontalColourBar> colourbarGrid(new sci::plot::HorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis::Options(sU("Continuous Colourbar used by Grid"))));
