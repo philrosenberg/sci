@@ -13,22 +13,21 @@ namespace sci
 		{
 		public:
 			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer),
-				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, xs, ys), m_lineStyle(lineStyle)
+				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, yAxis }, transformer, xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
-			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(getNPoints());
-				const std::vector<double>& x = getData<0>();
-				const std::vector<double>& y = getData<1>();
+				const std::vector<double>& x = getData<0>(axisSetIndex);
+				const std::vector<double>& y = getData<1>(axisSetIndex);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(x[i], y[i]);
+					points[i] = getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex);
 				}
 				renderer.polyLine(points);
 			}
@@ -39,15 +38,14 @@ namespace sci
 		{
 		public:
 			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: PlotableItem(xAxis, yAxis, transformer),
-				Data<std::vector<double>, std::vector<double>>({ xAxis, yAxis }, transformer, x, y), m_symbol(symbol), m_colour(colour)
+				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, yAxis }, transformer, x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
 
-			void plotData(Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -55,11 +53,11 @@ namespace sci
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), grMillimetre(0.0));
 
-				const std::vector<double>& x = getData<0>();
-				const std::vector<double>& y = getData<1>();
+				const std::vector<double>& x = getData<0>(axisSetIndex);
+				const std::vector<double>& y = getData<1>(axisSetIndex);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i]), renderer);
+					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), renderer);
 				}
 			}
 		};
