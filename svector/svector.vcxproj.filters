@@ -45,9 +45,6 @@
     <ClCompile Include="sreadwrite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sstring.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="svector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -253,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="..\include\svector\dep\plot\transforms.h">
       <Filter>Header Files\dep\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\codepage.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

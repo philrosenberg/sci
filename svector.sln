@@ -25,9 +25,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMinimiser", "TestMinimiser\TestMinimiser.vcxproj", "{A0DD1388-0E61-4B5D-BFAE-ECC7A4A42120}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPlot", "TestPlot\TestPlot.vcxproj", "{06C2344F-52C4-4DC3-A61B-5357BB216BEE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{B1A56281-2E8C-4BA8-9207-F90F1440AC7E} = {B1A56281-2E8C-4BA8-9207-F90F1440AC7E}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestRender", "TestRender\TestRender.vcxproj", "{11A1F9BA-B0C8-4B3F-9124-ACA4957B1CE1}"
 EndProject

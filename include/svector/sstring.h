@@ -19,36 +19,13 @@
 
 namespace sci
 {
-	/*
-	void replaceAll(std::string &destination, std::string textToFind, std::string replacementText);
-	std::string afterLast(std::string source, std::string textToFind);
-	std::string beforeLast(std::string source, std::string textToFind);
-	std::string afterFirst(std::string source, std::string textToFind);
-	std::string beforeFirst(std::string source, std::string textToFind);
-	std::string lower( const std::string &str );
-	std::string upper( const std::string &str );
-	void toLower( std::string &str );
-	void toUpper( std::string &str );
-	std::string trimmed( const std::string &str );
-	void trim( std::string &str );
-
-	void replaceAll(std::wstring &destination, std::wstring textToFind, std::wstring replacementText);
-	std::wstring afterLast(std::wstring source, std::wstring textToFind);
-	std::wstring beforeLast(std::wstring source, std::wstring textToFind);
-	std::wstring afterFirst(std::wstring source, std::wstring textToFind);
-	std::wstring beforeFirst(std::wstring source, std::wstring textToFind);
-	std::wstring lower(const std::wstring &str);
-	std::wstring upper(const std::wstring &str);
-	void toLower(std::wstring &str);
-	void toUpper(std::wstring &str);
-	std::wstring trimmed(const std::wstring &str);
-	void trim(std::wstring &str);
-	*/
 	typedef char16_t char_t;
 	typedef std::basic_string<sci::char_t> string;
 	typedef std::basic_stringstream<sci::char_t> stringstream;
 	typedef std::basic_istringstream<sci::char_t> istringstream;
 	typedef std::basic_ostringstream<sci::char_t> ostringstream;
+
+	const string bom = sU("\uFEFF");
 
 	//returns 0 if the character pointed to by index is not whitespace
 	//otherwise, returns 1. It returns a number for consistency with
@@ -414,16 +391,6 @@ namespace sci
 			appendCodepoint(result, s);
 		return result;
 	}
-
-	std::string nativeCodepage(const std::wstring& str);
-	std::string nativeCodepage(const std::u16string& str);
-	std::string nativeCodepage(const std::u32string& str);
-	std::string nativeCodepage(const std::wstring& str, char replacementCharacter);
-	std::string nativeCodepage(const std::u16string& str, char replacementCharacter);
-	std::string nativeCodepage(const std::u32string& str, char replacementCharacter);
-	std::string nativeCodepage(const std::wstring& str, char replacementCharacter, bool& usedReplacement);
-	std::string nativeCodepage(const std::u16string& str, char replacementCharacter, bool& usedReplacement);
-	std::string nativeCodepage(const std::u32string& str, char replacementCharacter, bool& usedReplacement);
 #else
 	//On Linux the native unicode version is UTS-8 represented by std:::string
 	inline const std::string& nativeUnicode(const std::string& str)
@@ -473,15 +440,18 @@ namespace sci
 		return nativeUnicode(str);
 	}
 #endif
+
  
 }
+
+#include"codepage.h"
 
 #ifdef _WIN32
 
 //This class permits sci::stringstream to work when using the dynamic c runtime library.
 //Without this there is an error because the ID variable is imported from the runtime and
 //it does not exist for the char32_t type
-
+/*
 // CLASS TEMPLATE numpunct
 namespace std
 {
@@ -616,11 +586,14 @@ namespace std
 	};
 }
 
+#ifdef _WIN32
+//needed for the definition of the numpunct<char16_t>::id variable, sadly it's a specialization so must go in a cpp file not a h file
+__PURE_APPDOMAIN_GLOBAL std::locale::id std::numpunct<char16_t>::id;
+#endif
+*/
+
 namespace sci
 {
-
-
-
 	inline std::ostream& operator << (std::ostream& stream, const sci::string& str)
 	{
 		return static_cast<std::ostream&>(stream << sci::nativeCodepage(str));
@@ -733,6 +706,7 @@ namespace sci
 }
 
 #endif
+
 
 #ifdef MUSTUNDEFNOMINMAX
 #undef NOMINMAX

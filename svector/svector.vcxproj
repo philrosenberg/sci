@@ -332,7 +332,6 @@
     <ClCompile Include="sminimiser.cpp" />
     <ClCompile Include="spectral.cpp" />
     <ClCompile Include="sreadwrite.cpp" />
-    <ClCompile Include="sstring.cpp" />
     <ClCompile Include="svector.cpp" />
     <ClCompile Include="svi.cpp" />
     <ClCompile Include="undoable.cpp" />
@@ -344,6 +343,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\svector\algorithm.h" />
     <ClInclude Include="..\include\svector\apexWorkspace.h" />
+    <ClInclude Include="..\include\svector\codepage.h" />
     <ClInclude Include="..\include\svector\dep\plot\errorBar.h" />
     <ClInclude Include="..\include\svector\dep\plot\fillBars.h" />
     <ClInclude Include="..\include\svector\dep\plot\gridContour.h" />
