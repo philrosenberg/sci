@@ -366,6 +366,7 @@
     <ClInclude Include="..\include\svector\graphics.h" />
     <ClInclude Include="..\include\svector\gridtransformview.h" />
     <ClInclude Include="..\include\svector\gridview.h" />
+    <ClInclude Include="..\include\svector\iostream.h" />
     <ClInclude Include="..\include\svector\kdTree.h" />
     <ClInclude Include="..\include\svector\LinearAlgebra.h" />
     <ClInclude Include="..\include\svector\math.h" />
@@ -384,11 +385,13 @@
     <ClInclude Include="..\include\svector\plot.h" />
     <ClInclude Include="..\include\svector\sreadwrite.h" />
     <ClInclude Include="..\include\svector\sstdwrappers.h" />
-    <ClInclude Include="..\include\svector\sstring.h" />
+    <ClInclude Include="..\include\svector\sstream.h" />
+    <ClInclude Include="..\include\svector\string.h" />
     <ClInclude Include="..\include\svector\stable.h" />
     <ClInclude Include="..\include\svector\stashcodes.h" />
     <ClInclude Include="..\include\svector\Statistics.h" />
     <ClInclude Include="..\include\svector\sterminal.h" />
+    <ClInclude Include="..\include\svector\stringfuncs.h" />
     <ClInclude Include="..\include\svector\svector.h" />
     <ClInclude Include="..\include\svector\svi.h" />
     <ClInclude Include="..\include\svector\time.h" />

@@ -128,7 +128,7 @@
     <ClInclude Include="..\include\svector\sstdwrappers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\svector\sstring.h">
+    <ClInclude Include="..\include\svector\string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\stable.h">
@@ -252,6 +252,15 @@
       <Filter>Header Files\dep\plot</Filter>
     </ClInclude>
     <ClInclude Include="..\include\svector\codepage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\sstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\stringfuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\svector\iostream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

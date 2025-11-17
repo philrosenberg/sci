@@ -6,7 +6,7 @@
 #include"../include/svector/dep/svi.h"
 #include"../include/svector/operators.h"
 #include"../include/svector/math.h"
-#include"../include/svector/sstring.h"
+#include"../include/svector/string.h"
 #include<assert.h>
 #include"eigeneng/eigeneng.h"
 

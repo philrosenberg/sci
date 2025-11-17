@@ -1,7 +1,7 @@
 #include"../include/svector/sreadwrite.h"
 #include"../include/svector/serr.h"
 #include"../include/svector/svector.h"
-#include"../include/svector/sstring.h"
+#include"../include/svector/string.h"
 #include<wx/filefn.h>
 #include<wx/dir.h>
 

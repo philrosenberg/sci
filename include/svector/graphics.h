@@ -15,7 +15,8 @@
 #include<wx/print.h>
 #include<wx/printdlg.h>
 #pragma warning(pop)
-#include"sstring.h"
+#include"string.h"
+#include"stringfuncs.h"
 #include"Units.h"
 #include<utility>
 #include<array>

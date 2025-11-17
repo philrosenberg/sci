@@ -6,7 +6,7 @@
 #include<algorithm>
 #include"../serr.h"
 //#include"../svector.h"
-#include"../sstring.h"
+#include"../string.h"
 #include"../Units.h"
 #include"../gridview.h"
 #include"../Statistics.h"

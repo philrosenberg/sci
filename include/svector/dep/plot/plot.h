@@ -22,7 +22,7 @@
 // where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
 //not sure why.
 #pragma warning(pop)
-#include"../../sstring.h"
+#include"../../string.h"
 #include"../../serr.h"
 //#include"../../svector.h"
 #include"../../graphics.h"

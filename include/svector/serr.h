@@ -1,7 +1,8 @@
 #ifndef serr_H
 #define serr_H
 #include<string>
-#include"sstring.h"
+#include"string.h"
+#include"codepage.h"
 #ifdef _WIN32
 #include<Windows.h>
 #endif

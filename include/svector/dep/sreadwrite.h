@@ -8,7 +8,8 @@
 #include<sstream>
 #include<vector>
 #include"nc.h"
-#include"../sstring.h"
+#include"../string.h"
+#include"../codepage.h"
 
 #ifdef max
 #define SVECTOR_RESTORE_MAX max

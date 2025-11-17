@@ -5,7 +5,7 @@
 #include<svector/svector.h>
 #include<svector/splot.h>
 #include<svector/sreadwrite.h>
-#include<svector/sstring.h>
+#include<svector/string.h>
 #include<wx/timer.h>
 
 class mainFrame : public wxFrame

@@ -1,11 +1,11 @@
 // testString.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "../include/svector/sstring.h"
-#include<iostream>
+#include <svector/string.h>
+#include<svector/codepage.h>
+#include<svector/sstream.h>
+#include<svector/iostream.h>
 
-#include<vector>
-#include <Windows.h>
 #include<map>
 const std::map<std::string, LCID> codepages
 {
@@ -435,15 +435,15 @@ int main()
 
     if (utf8Test == utf8Result)
     {
-        std::cout << "To UTF-8 passed" << std::endl;
+        sci::cout << "To UTF-8 passed" << std::endl;
         if (test == utf16Test)
-            std::cout << "UTF-16 round trip test passed" << std::endl;
+            sci::cout << "UTF-16 round trip test passed" << std::endl;
         else
-            std::cout << "UTF-16 round trip test failed" << std::endl;
+            sci::cout << "UTF-16 round trip test failed" << std::endl;
 
     }
     else
-        std::cout << "To UTF-8 failed" << std::endl;
+        sci::cout << "To UTF-8 failed" << std::endl;
 
     const std::string test2 = "\x41\xAE\xC6";
     const std::wstring test2WesternResult = L"\u0041\u00AE\u00C6";
@@ -455,15 +455,20 @@ int main()
 
     std::setlocale(LC_ALL, "ja_JP");
 
-    std::cout << "\nTesting windows codepage conversion\n";
+    sci::cout << "\nTesting windows codepage conversion\n";
     std::cout << test2 << std::endl;
     std::wcout << nativeUnicodeWindows << std::endl;
-    std::cout << "The above two strings should be identical" << std::endl;
+    sci::cout << "The above two strings should be identical" << std::endl;
 
     std::cout << test2 << std::endl;
     std::wstring nativeUnicodeWindowsJapanese = sci::nativeUnicode(sci::fromCodepage(test2));
     std::wcout << nativeUnicodeWindowsJapanese << std::endl;
-    std::cout << "The above two strings should be identical" << std::endl;
+    sci::cout << "The above two strings should be identical" << std::endl;
     std::setlocale(LC_ALL, oldLocale.c_str());
 
+    sci::cout << sci::string(sU("Test writing directly to cout\n"));
+    std::wcout << sci::string(sU("Test writing directly to wcout\n"));
+
+    sci::ostringstream stream;
+    stream << 2.5;
 }

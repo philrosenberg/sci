@@ -1,6 +1,7 @@
 #include"../include/svector/serr.h"
 #include"../include/svector/dep/nc.h"
-#include"../include/svector/sstring.h"
+#include"../include/svector/string.h"
+#include"../include/svector/codepage.h"
 #include<cstring>
 
 void sci::checkNcCall(long errorCode)

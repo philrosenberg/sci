@@ -1,7 +1,7 @@
 #ifndef SCICODEPAGE_H
 #define SCICODEPAGE_H
 
-#include "../include/svector/sstring.h"
+#include "string.h"
 #include<vector>
 
 #ifdef _WIN32
@@ -51,12 +51,10 @@ namespace sci
 		if (locale == L"C") //this will be the situation almost every time
 			return CP_ACP;
 
-		LCID lcid = LocaleNameToLCID(locale.c_str(), LOCALE_ALLOW_NEUTRAL_NAMES);
-
-		//convert the LCIF to codepage number
-		char buffer[10];
-		GetLocaleInfoA(lcid, LOCALE_IDEFAULTANSICODEPAGE, buffer, 10);
-		UINT result = atof(buffer);
+		wchar_t buffer[10];
+		GetLocaleInfoEx(locale.c_str(), LOCALE_IDEFAULTANSICODEPAGE, buffer, 10);
+		
+		UINT result = _wtoi(buffer);
 		if (result == 0)
 			return CP_ACP;
 		return result;
@@ -209,180 +207,20 @@ namespace sci
 	}
 }
 
+inline std::ostream& operator << (std::ostream& stream, const sci::string& str)
+{
+	return static_cast<std::ostream&>(stream << sci::nativeCodepage(str));
+}
+
+inline std::istream& operator >> (std::istream& stream, sci::string& str)
+{
+	std::string temp;
+	std::istream& result = static_cast<std::istream&>(stream >> temp);
+	str = sci::fromCodepage(temp);
+	return result;
+}
 
 /*
-void sci::replaceAll(std::string &destination, std::string textToFind, std::string replacementText)
-{
-	size_t findLength=textToFind.length();
-	size_t replacementLength=replacementText.length();
-	size_t pos=0;
-	while(1)
-	{
-		pos=destination.find(textToFind,pos);
-		if(pos==std::string::npos)
-			break;
-		destination.replace(pos,findLength,replacementText);
-		pos+=replacementLength-findLength;
-	}
-}
-
-
-std::string sci::afterLast(std::string source, std::string textToFind)
-{
-	size_t start=source.find_last_of(textToFind)+1;
-	if(start<source.size())
-		return source.substr(start);
-	return std::string();
-}
-
-std::string sci::beforeLast(std::string source, std::string textToFind)
-{
-	return source.substr(0,source.find_last_of(textToFind));
-}
-std::string sci::afterFirst(std::string source, std::string textToFind)
-{
-	size_t start=source.find_first_of(textToFind)+1;
-	if(start<source.size())
-		return source.substr(start);
-	return std::string();
-}
-std::string sci::beforeFirst(std::string source, std::string textToFind)
-{
-	return source.substr(0,source.find_first_of(textToFind));
-}
-
-
-std::string sci::lower( const std::string &str )
-{
-	std::string result=str;
-	sci::toLower( result );
-	return result;
-}
-std::string sci::upper( const std::string &str )
-{
-	std::string result=str;
-	sci::toUpper( result );
-	return result;
-}
-void sci::toLower( std::string &str )
-{
-	if( str.length() > 0 )
-		std::transform(&str[0], &str[str.length()-1], &str[0], ::tolower);
-}
-void sci::toUpper( std::string &str )
-{
-	if( str.length() > 0 )
-		std::transform(&str[0], &str[str.length()-1], &str[0], ::toupper);
-}
-
-std::string sci::trimmed( const std::string &str )
-{
-	std::string result = str;
-	sci::trim( result );
-	return result;
-}
-
-void sci::trim( std::string &str )
-{
-	std::string whitespaces=" \t\n\r";
-	size_t start=str.find_first_not_of(whitespaces);
-	if( start > str.length() )
-		str = "";
-	else
-	{
-		size_t end=str.find_last_not_of(whitespaces);
-		str=str.substr( start, end - start + 1 );
-	}
-}
-*/
-
-//*************wstring versions************************
-/*
-void sci::replaceAll(std::wstring &destination, std::wstring textToFind, std::wstring replacementText)
-{
-	size_t findLength = textToFind.length();
-	size_t replacementLength = replacementText.length();
-	size_t pos = 0;
-	while (1)
-	{
-		pos = destination.find(textToFind, pos);
-		if (pos == std::wstring::npos)
-			break;
-		destination.replace(pos, findLength, replacementText);
-		pos += replacementLength - findLength;
-	}
-}
-
-
-std::wstring sci::afterLast(std::wstring source, std::wstring textToFind)
-{
-	size_t start = source.find_last_of(textToFind) + 1;
-	if (start<source.size())
-		return source.substr(start);
-	return std::wstring();
-}
-
-std::wstring sci::beforeLast(std::wstring source, std::wstring textToFind)
-{
-	return source.substr(0, source.find_last_of(textToFind));
-}
-std::wstring sci::afterFirst(std::wstring source, std::wstring textToFind)
-{
-	size_t start = source.find_first_of(textToFind) + 1;
-	if (start<source.size())
-		return source.substr(start);
-	return std::wstring();
-}
-std::wstring sci::beforeFirst(std::wstring source, std::wstring textToFind)
-{
-	return source.substr(0, source.find_first_of(textToFind));
-}
-
-
-std::wstring sci::lower(const std::wstring &str)
-{
-	std::wstring result = str;
-	sci::toLower(result);
-	return result;
-}
-std::wstring sci::upper(const std::wstring &str)
-{
-	std::wstring result = str;
-	sci::toUpper(result);
-	return result;
-}
-void sci::toLower(std::wstring &str)
-{
-	if (str.length() > 0)
-		std::transform(&str[0], &str[str.length() - 1], &str[0], ::tolower);
-}
-void sci::toUpper(std::wstring &str)
-{
-	if (str.length() > 0)
-		std::transform(&str[0], &str[str.length() - 1], &str[0], ::toupper);
-}
-
-std::wstring sci::trimmed(const std::wstring &str)
-{
-	std::wstring result = str;
-	sci::trim(result);
-	return result;
-}
-
-void sci::trim(std::wstring &str)
-{
-	std::wstring whitespaces = L" \t\n\r";
-	size_t start = str.find_first_not_of(whitespaces);
-	if (start > str.length())
-		str = L"";
-	else
-	{
-		size_t end = str.find_last_not_of(whitespaces);
-		str = str.substr(start, end - start + 1);
-	}
-}
-
-
 
 //This is a simple class that can be used to inherit from code_cvt
 //we do this because on gcc code_cvt has a protected destructor
@@ -394,52 +232,6 @@ struct sci_code_cvt : CODE_CVT
 	sci_code_cvt(Args&& ...args) : CODE_CVT(std::forward<Args>(args)...) {}
 	~sci_code_cvt() {}
 };
-
-#ifdef _WIN32
-//On Windows the native unicode version is UTF-16 represented by std:::wstring
-
-//We cannot know if a std::string is utf-8 or codepage, so don't attempt
-//this conversion.
-//std::wstring nativeUnicode(const std::string &str)
-//{
-//
-//}
-
-
-
-#else
-//On Linux the native unicode version is UTF-8 represented by std:::string
-
-//avoid copying by using references
-const std::string &sci::nativeUnicode(const std::string &str)
-{
-	//no conversion to do, just return the string
-	return str;
-}
-std::string &sci::nativeUnicode(std::string &str)
-{
-	//no conversion to do, just return the string
-	return str;
-}
-std::string sci::nativeUnicode(const std::wstring &str)
-{
-	typedef sci_code_cvt< std::codecvt<wchar_t, char, std::mbstate_t>> deletableCvt;
-	std::wstring_convert<deletableCvt, wchar_t>converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
-	return converter.to_bytes(str);
-}
-std::string sci::nativeUnicode(const std::u16string &str)
-{
-	typedef sci_code_cvt<std::codecvt<char16_t, char, std::mbstate_t>> deletableCvt;
-	std::wstring_convert<deletableCvt, char16_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
-	return converter.to_bytes(str);
-}
-std::string sci::nativeUnicode(const std::u32string &str)
-{
-	typedef sci_code_cvt<std::codecvt<char32_t, char, std::mbstate_t>> deletableCvt;
-	std::wstring_convert<deletableCvt, char32_t> converter; // Converter between UTF-8 and UTF-16 wide characters. Windows uses wchar_t for UTF-16.
-	return converter.to_bytes(str);
-}
-#endif
 
 */
 

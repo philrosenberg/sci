@@ -9,7 +9,7 @@
 #include<wx/checkbox.h>
 #include<wx/combobox.h>
 #include<wx/stattext.h>
-#include"sstring.h"
+#include"string.h"
 #include<vector>
 #include"serr.h"
 

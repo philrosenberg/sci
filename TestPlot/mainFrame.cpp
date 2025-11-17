@@ -2,7 +2,7 @@
 #include<svector/svector.h>
 #include<svector/plot.h>
 #include<svector/sreadwrite.h>
-#include<svector/sstring.h>
+#include<svector/string.h>
 #include<wx/scrolwin.h>
 
 const int mainFrame::ID_FILE_EXIT = ::wxNewId();
