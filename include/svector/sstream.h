@@ -9,9 +9,6 @@
 #include<wx/string.h>
 #endif
 
-//A way to set unicode strings, but change it globally if I want to swap the types
-#define sU(x) u##x
-
 namespace sci
 {
 	typedef std::basic_stringstream<sci::char_t> stringstream;
@@ -271,11 +268,6 @@ namespace sci
 	using Oteestream = BasicOteestream<STREAM1, STREAM2, char_t, std::char_traits<char_t>>;
 }
 
-#endif
-
-
-#ifdef MUSTUNDEFNOMINMAX
-#undef NOMINMAX
 #endif
 
 #endif

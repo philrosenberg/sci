@@ -263,5 +263,8 @@
     <ClInclude Include="..\include\svector\iostream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\svector\unicode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

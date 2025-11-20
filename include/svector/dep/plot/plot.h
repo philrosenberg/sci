@@ -1933,7 +1933,7 @@ namespace sci
 			bool writetofile(::sci::string filename, int width, int height, grPerMillimetre scale)
 			{
 				//get the extension
-				wxFileName fullfile = wxString(sci::nativeUnicode(filename));
+				wxFileName fullfile = wxString(sci::toNativeUnicode(filename));
 				wxString extension = fullfile.GetExt().Lower();
 
 				bool result = true;
@@ -1944,7 +1944,7 @@ namespace sci
 					//here we redraw the plot like OnPaint but using a postscript DC.
 					wxPrintData setupdata;
 					setupdata.SetColour(true);
-					setupdata.SetFilename(sci::nativeUnicode(filename));
+					setupdata.SetFilename(sci::toNativeUnicode(filename));
 					//setupdata.SetPaperId(wxPAPER_A4);
 					setupdata.SetPaperId(wxPAPER_NONE);
 					//note we set the image size in mm, but ps uses pts(1/72 inch, ~0.35 mm) and uses integer coordinates. 
@@ -1955,7 +1955,7 @@ namespace sci
 					setupdata.SetPrintMode(wxPRINT_MODE_FILE);
 					//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
 					wxPostScriptDC psdc(setupdata);
-					result = psdc.StartDoc(sci::nativeUnicode(sU("Writing ") + filename));
+					result = psdc.StartDoc(sci::toNativeUnicode(sU("Writing ") + filename));
 					if (result == false)
 						return result;
 					sci::graphics::wxRenderer renderer(&psdc, wxSize(width, height), scale);
@@ -1966,7 +1966,7 @@ namespace sci
 				else if (extension == "emf")
 				{
 					//here we redraw the plot like OnPaint but using a wxMetafile DC.
-					wxMetafileDC metadc(sci::nativeUnicode(filename), width, height);
+					wxMetafileDC metadc(sci::toNativeUnicode(filename), width, height);
 					sci::graphics::wxRenderer renderer(&metadc, wxSize(width, height), scale);
 					render(renderer, scale);;//0 gives vector output
 					//close the file - note this gives us a copy of the file in memory which we must delete
@@ -1983,7 +1983,7 @@ namespace sci
 #endif
 				else if (extension == "svg")
 				{
-					wxSVGFileDC dc(sci::nativeUnicode(filename), width, height, scale.value<grPerInch>());
+					wxSVGFileDC dc(sci::toNativeUnicode(filename), width, height, scale.value<grPerInch>());
 					sci::graphics::wxRenderer renderer(&dc, wxSize(width, height), scale);
 					render(renderer, scale);
 					result = true;
@@ -2023,7 +2023,7 @@ namespace sci
 					memdc.SelectObject(wxNullBitmap);
 
 					//write the bitmap to file
-					result = bitmap.SaveFile(sci::nativeUnicode(filename), type);
+					result = bitmap.SaveFile(sci::toNativeUnicode(filename), type);
 
 				}
 

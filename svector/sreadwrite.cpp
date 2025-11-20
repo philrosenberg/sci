@@ -870,7 +870,7 @@ std::vector< sci::string > sci::getAllFiles( sci::string directory, bool recursi
 	wxArrayString wxResult(false);
 	int flags = wxDIR_FILES | ( recursive ? wxDIR_DIRS : 0 ) | ( includeHidden ? wxDIR_HIDDEN : 0 );
 	if(directory.length() > 0)
-		wxDir::GetAllFiles( sci::nativeUnicode(directory), &wxResult, "", flags);
+		wxDir::GetAllFiles( sci::toNativeUnicode(directory), &wxResult, "", flags);
 	else
 	{
 		wxString cwd = wxGetCwd();
@@ -882,7 +882,7 @@ std::vector< sci::string > sci::getAllFiles( sci::string directory, bool recursi
 	}
 	std::vector<sci::string> result(wxResult.size());
 	for(size_t i=0; i<wxResult.size(); ++i)
-		result[i] = fromUtf8(wxResult[i].utf8_str().data());
+		result[i] = sci::fromUtf8<sci::string>((const char8_t*)wxResult[i].utf8_str().data());
 
 	return result;
 }

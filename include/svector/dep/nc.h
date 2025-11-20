@@ -693,7 +693,7 @@ namespace sci
 	std::vector<T> InputNcFile::getVariable(const sci::string &name, std::vector<size_t> &shape)
 	{
 		int varId;
-		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+		checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(name).c_str(), &varId));
 		int nDims;
 		checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
 		size_t nValues = 1;
@@ -732,7 +732,7 @@ namespace sci
 	std::vector<T> InputNcFile::getVariable(const sci::string& name, const std::vector<size_t>& start, const std::vector<size_t> &shape)
 	{
 		int varId;
-		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+		checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(name).c_str(), &varId));
 		sci::assertThrow(start.size() == shape.size(), sci::err(sci::SERR_NC, 0, sU("Attempted to read a part of a netcdf file with the start having a different number of elements to the lengths.")));
 		std::vector<size_t> variableShape = getVariableShape(name);
 		sci::assertThrow(start.size() == variableShape.size(), sci::err(sci::SERR_NC, 0, sU("Attempted to read a part of a netcdf file with the start having a different number of elements to the variable shape.")));
@@ -750,7 +750,7 @@ namespace sci
 	T InputNcFile::getVariable(const sci::string& name, std::array<size_t, T::ndims>& shape)
 	{
 		int varId;
-		checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+		checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(name).c_str(), &varId));
 		int nDims;
 		checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
 		sci::assertThrow(nDims == T::ndims, sci::err(sci::SERR_NC, 0, sU("Attempted to read a netcdf file into GridData with the wrong number of dimensions")));

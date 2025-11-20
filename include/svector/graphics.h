@@ -1386,7 +1386,7 @@ namespace sci
 				for (auto& facename : facenames)
 				{
 					font = wxFont(); //clear the font - not sure if this is needed
-					font.SetFaceName(sci::toUtf8(facename));
+					font.SetFaceName(toWxString(facename));
 					if (font.IsOk())
 						break;
 				}
@@ -1418,7 +1418,7 @@ namespace sci
 			virtual TextMetric text(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment) override
 			{
 				wxPoint wxPosition = getWxPoint(position);
-				wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
+				wxString wxStr = toWxString(str);
 				wxCoord width, ascentPlusDescent, descent, leading;
 				m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 				wxCoord ascent = ascentPlusDescent - descent;
@@ -1438,7 +1438,7 @@ namespace sci
 			virtual TextMetric rotatedText(const sci::string& str, const Point& position, unitless horizontalAlignment, unitless verticalAlignment, degree rotation) override
 			{
 				wxPoint wxPosition = getWxPoint(position);
-				wxString wxStr = wxString::FromUTF8(sci::toUtf8(str));
+				wxString wxStr = toWxString(str);
 				//wxSize extent = m_dc->GetTextExtent(wxStr);
 				wxCoord width, ascentPlusDescent, descent, leading;
 				m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
@@ -1514,7 +1514,16 @@ namespace sci
 				return sci::atan2(unitless(-y), unitless(x));
 			}
 		private:
-
+			wxString toWxString(const sci::string &str)
+			{
+				//wxWidgets matches it's unicode version to the native std::wstring encoding
+				//so this should be the easiest format to pass in
+#ifdef _WIN32
+				return wxString(sci::toNativeUnicode(str));
+#else
+				return wxString((wchar_t*)sci::toUtf32(str).c_str());
+#endif
+			}
 			virtual void applyClippingRegion(Point corner1, Point corner2) override
 			{
 				wxRegion region(getWxPoint(corner1), getWxPoint(corner2));
@@ -1590,7 +1599,7 @@ namespace sci
 			virtual TextMetric getUnformattedTextExtent(const sci::string& str) override
 			{
 				wxCoord width, ascentPlusDescent, descent, leading;
-				wxString wxStr = str.length() > 0 ? wxString::FromUTF8(sci::toUtf8(str)) : wxString("M"); // ensure the string isn't empty so it gets a non-zero height
+				wxString wxStr = str.length() > 0 ? toWxString(str) : wxString("M"); // ensure the string isn't empty so it gets a non-zero height
 				m_dc->GetTextExtent(wxStr, &width, &ascentPlusDescent, &descent, &leading);
 				wxCoord ascent = ascentPlusDescent - descent;
 				if (str.length() == 0)

@@ -47,7 +47,7 @@ namespace sci
 		char* localeTemp = std::setlocale(LC_ALL, nullptr);
 		if (localeTemp == 0)
 			return CP_ACP;
-		std::wstring locale = sci::utf8To<std::wstring>(std::string(localeTemp));
+		std::wstring locale = toNativeUnicode(std::u8string(localeTemp, localeTemp + std::strlen(localeTemp)));
 		if (locale == L"C") //this will be the situation almost every time
 			return CP_ACP;
 
@@ -60,179 +60,173 @@ namespace sci
 		return result;
 	}
 
-	inline sci::string fromCodepage(const std::string& string)
+	//**************************************************
+	//codepageTo functions
+	//**************************************************
+	template <class STRING>
+	inline STRING codepageTo(const std::string& string)
 	{
 #ifdef _WIN32
 		if (string.length() == 0)
-			return sci::string();
+			return STRING();
 		UINT codePage = getWindowsCodePage();
-		size_t nCharsNeeded = MultiByteToWideChar(codePage, 0, string.c_str(), -1, nullptr, 0);
+		int nCharsNeeded = MultiByteToWideChar(codePage, 0, string.c_str(), -1, nullptr, 0);
 
-		std::vector<WCHAR> buffer(nCharsNeeded);
+		std::wstring buffer((size_t)nCharsNeeded, 0);
 		MultiByteToWideChar(codePage, 0, string.c_str(), -1, &buffer[0], nCharsNeeded);
-		std::wstring wideString(&buffer[0]);
-		return fromNativeUnicode(wideString);
+		return nativeUnicodeTo<STRING>(buffer);
 #else
-		return utf8ToUtf16(string);
+		return utf8To<STRING>(string);
 #endif
 	}
 
-	inline std::string nativeCodepage(const std::wstring& str)
-	{
+	//**************************************************
+	//codepageFrom functions
+	//**************************************************
+
 #ifdef _WIN32
+	inline std::string codepageFrom(const std::wstring& str, char replacementCharacter = '?')
+	{
 		UINT codePage = getWindowsCodePage();
 		int nBytesNeeded = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-		return std::string(&buffer[0]);
+		std::string buffer((size_t)nBytesNeeded, 0);
+		WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+		return buffer;
+	}
+#endif
+
+	inline std::string codepageFrom(const std::u8string& str, char replacementCharacter = '?')
+	{
+#ifdef _WIN32
+		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf16ToUtf8(string);
+		return utf8From(string);
 #endif
 	}
 
-	inline std::string nativeCodepage(const std::u16string& str)
+	inline std::string codepageFrom(const std::u16string& str, char replacementCharacter = '?')
 	{
 #ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, NULL, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-		return std::string(&buffer[0]);
+		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf16ToUtf8(string);
+		return utf8From(string);
 #endif
 	}
 
-	inline std::string nativeCodepage(const std::u32string& str)
+	inline std::string codepageFrom(const std::u32string& str, char replacementCharacter = '?')
 	{
 #ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		std::wstring wideString = sci::nativeUnicode(str);
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, NULL, 0, NULL, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), NULL, NULL);
-		return std::string(&buffer[0]);
+		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf32ToUtf8(string);
+		return utf8From(string);
 #endif
 	}
 
-	inline std::string nativeCodepage(const std::wstring& str, char replacementCharacter)
+	inline const std::string &codepageFrom(const std::string& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-		return std::string(&buffer[0]);
-#else
-		return utf16ToUtf8(string);
-#endif
+		return str;
 	}
 
-	inline std::string nativeCodepage(const std::u16string& str, char replacementCharacter)
+	//*************************************
+	//toCodepage functions
+	//*************************************
+
+	inline std::string toCodepage(const std::wstring& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, &replacementCharacter, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-		return std::string(&buffer[0]);
-#else
-		return utf16ToUtf8(string);
-#endif
+		return codepageFrom(str, replacementCharacter);
 	}
 
-	inline std::string nativeCodepage(const std::u32string& str, char replacementCharacter)
+	inline std::string toCodepage(const std::u8string& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		std::wstring wideString = sci::nativeUnicode(str);
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, NULL);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
-		return std::string(&buffer[0]);
-#else
-		return utf32ToUtf8(string);
-#endif
+		return codepageFrom(str, replacementCharacter);
 	}
 
-	inline std::string nativeCodepage(const std::wstring& str, char replacementCharacter, bool& usedReplacement)
+	inline std::string toCodepage(const std::u16string& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		BOOL replaced;
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, str.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-		usedReplacement = replaced > 0;
-		return std::string(&buffer[0]);
-#else
-		usedReplacement = false;
-		return utf32ToUtf8(string);
-#endif
+		return codepageFrom(str, replacementCharacter);
 	}
 
-	inline std::string nativeCodepage(const std::u16string& str, char replacementCharacter, bool& usedReplacement)
+	inline std::string toCodepage(const std::u32string& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		BOOL replaced;
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, NULL, 0, &replacementCharacter, &replaced);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, reinterpret_cast<const wchar_t*>(str.c_str()), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-		usedReplacement = replaced > 0;
-		return std::string(&buffer[0]);
-#else
-		usedReplacement = false;
-		return utf16ToUtf8(string);
-#endif
+		return codepageFrom(str, replacementCharacter);
 	}
 
-	inline std::string nativeCodepage(const std::u32string& str, char replacementCharacter, bool& usedReplacement)
+	inline const std::string &toCodepage(const std::string& str, char replacementCharacter = '?')
 	{
-#ifdef _WIN32
-		UINT codePage = getWindowsCodePage();
-		BOOL replaced;
-		std::wstring wideString = sci::nativeUnicode(str);
-		int nBytesNeeded = WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, NULL, 0, &replacementCharacter, &replaced);
-		std::vector<char>buffer(nBytesNeeded);
-		WideCharToMultiByte(codePage, 0, wideString.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, &replaced);
-		usedReplacement = replaced > 0;
-		return std::string(&buffer[0]);
-#else
-		usedReplacement = false;
-		return utf32ToUtf8(string);
-#endif
+		return str;
 	}
+
+	//*************************************
+	//fromCodepage functions
+	//*************************************
+	template<class STRING>
+	inline STRING fromCodepage(const std::string& str)
+	{
+		return codepageTo<STRING>(str);
+	}
+
+	//*************************************
+	//to_______ functions
+	//*************************************
+
+#ifdef _WIN32 //These functions all already exist on non-Windoows for the unicode version
+	inline std::u8string toUtf8(const std::string& string)
+	{
+		return fromCodepage<std::u8string>(string);
+	}
+
+	inline std::u16string toUtf16(const std::string& string)
+	{
+		return fromCodepage<std::u16string>(string);
+	}
+
+	inline std::u32string toUtf32(const std::string& string)
+	{
+		return fromCodepage<std::u32string>(string);
+	}
+
+	inline sci::string toSci(const std::string& string)
+	{
+		return fromCodepage<sci::string>(string);
+	}
+
+	inline std::wstring toNativeUnicode(const std::string& string)
+	{
+		return fromCodepage<std::wstring>(string);
+	}
+#endif 
+
+	//***************************************
+	//from_______ functions
+	//***************************************
+#ifdef _WIN32 //These functions use the template in unicode.h on non-Windoows
+	template<>
+	std::string fromUtf8<std::string>(const std::u8string& string)
+	{
+		return toCodepage(string);
+	}
+	template<>
+	std::string fromUtf16<std::string>(const std::u16string& string)
+	{
+		return toCodepage(string);
+	}
+	template<>
+	std::string fromUtf32<std::string>(const std::u32string& string)
+	{
+		return toCodepage(string);
+	}
+	template<>
+	std::string fromSci<std::string>(const sci::string& string)
+	{
+		return toCodepage(string);
+	}
+	template<>
+	std::string fromNativeUnicode<std::string>(const std::wstring& string)
+	{
+		return toCodepage(string);
+	}
+#endif
+
 }
-
-inline std::ostream& operator << (std::ostream& stream, const sci::string& str)
-{
-	return static_cast<std::ostream&>(stream << sci::nativeCodepage(str));
-}
-
-inline std::istream& operator >> (std::istream& stream, sci::string& str)
-{
-	std::string temp;
-	std::istream& result = static_cast<std::istream&>(stream >> temp);
-	str = sci::fromCodepage(temp);
-	return result;
-}
-
-/*
-
-//This is a simple class that can be used to inherit from code_cvt
-//we do this because on gcc code_cvt has a protected destructor
-//so we must inherit from it and provide a public destructor
-template<class CODE_CVT>
-struct sci_code_cvt : CODE_CVT
-{
-	template<class ...Args>
-	sci_code_cvt(Args&& ...args) : CODE_CVT(std::forward<Args>(args)...) {}
-	~sci_code_cvt() {}
-};
-
-*/
 
 #endif

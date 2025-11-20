@@ -428,9 +428,9 @@ const std::map<std::string, LCID> codepages
 int main()
 {
     const sci::string test = sU("a\u007F \u0080 \u07ff \u0800 \uFFFF \U00010000 \U0010FFFF");
-    const std::string utf8Test = sci::toUtf8(test);
-    const std::string utf8Result = "a\x7F \xC2\x80 \xDF\xBF \xE0\xA0\x80 \xEF\xBF\xBF \xF0\x90\x80\x80 \xF4\x8F\xBF\xBF";
-    const sci::string utf16Test = sci::fromUtf8(utf8Test);
+    const std::u8string utf8Test = sci::toUtf8(test);
+    const std::u8string utf8Result = u8"a\x7F \xC2\x80 \xDF\xBF \xE0\xA0\x80 \xEF\xBF\xBF \xF0\x90\x80\x80 \xF4\x8F\xBF\xBF";
+    const sci::string utf16Test = sci::fromUtf8<sci::string>(utf8Test);
 
 
     if (utf8Test == utf8Result)
@@ -451,7 +451,7 @@ int main()
 
     std::string oldLocale = std::setlocale(LC_ALL, nullptr);
     std::setlocale(LC_ALL, "en_GB");
-    std::wstring nativeUnicodeWindows = sci::nativeUnicode(sci::fromCodepage(test2));
+    std::wstring nativeUnicodeWindows = sci::nativeUnicodeFrom(sci::codepageTo<sci::string>(test2));
 
     std::setlocale(LC_ALL, "ja_JP");
 
@@ -461,8 +461,11 @@ int main()
     sci::cout << "The above two strings should be identical" << std::endl;
 
     std::cout << test2 << std::endl;
-    std::wstring nativeUnicodeWindowsJapanese = sci::nativeUnicode(sci::fromCodepage(test2));
+    std::wstring nativeUnicodeWindowsJapanese = sci::nativeUnicodeFrom(sci::codepageTo<sci::string>(test2));
     std::wcout << nativeUnicodeWindowsJapanese << std::endl;
+    sci::ensureUtf8();
+    sci::cout << sci::fromNativeUnicode<sci::string>(nativeUnicodeWindowsJapanese);
+    std::wcout << sci::fromNativeUnicode<sci::string>(nativeUnicodeWindowsJapanese);
     sci::cout << "The above two strings should be identical" << std::endl;
     std::setlocale(LC_ALL, oldLocale.c_str());
 

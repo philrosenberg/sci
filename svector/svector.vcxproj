@@ -397,6 +397,7 @@
     <ClInclude Include="..\include\svector\time.h" />
     <ClInclude Include="..\include\svector\Traits.h" />
     <ClInclude Include="..\include\svector\undoable.h" />
+    <ClInclude Include="..\include\svector\unicode.h" />
     <ClInclude Include="..\include\svector\Units.h" />
     <ClInclude Include="..\include\svector\wgdos.h" />
     <ClInclude Include="eigeneng\eigeneng.h" />

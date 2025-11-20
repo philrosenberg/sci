@@ -110,8 +110,8 @@ namespace sci
 	csv_err writecsvcolumns(sci::string filename, sci::string header, const T& data)
 	{
 		std::ofstream fout;
-		fout.open(sci::nativeUnicode(filename).c_str(), std::ios::out);
-		return sci::writecsvcolumns(fout, sci::nativeCodepage(header), data);
+		fout.open(sci::toNativeUnicode(filename).c_str(), std::ios::out);
+		return sci::writecsvcolumns(fout, sci::toNativeUnicode(header), data);
 	}
 	template<class T>
 	csv_err writecsvcolumns(std::string filename, std::string header, const T& data)

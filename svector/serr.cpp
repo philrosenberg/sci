@@ -33,7 +33,7 @@ sci::string sci::WindowsError::GetWindowsErrorMessageFromCode( DWORD code)
 	//Free the buffer.
 	LocalFree(messageBuffer);
 
-	return sci::fromNativeUnicode(message);
+	return sci::fromNativeUnicode<sci::string>(message);
 }
 #endif
 
@@ -41,7 +41,7 @@ sci::err::err(errcategory category, long code)
 	: m_category(category), m_code(code)
 {}
 sci::err::err(errcategory category, long code, const std::string &message)
-	: m_category(category), m_code(code), m_message(sci::fromCodepage(message))
+	: m_category(category), m_code(code), m_message(sci::fromCodepage<sci::string>(message))
 {}
 sci::err::err(errcategory category, long code, const sci::string &message)
 	: m_category(category), m_code(code), m_message(message)

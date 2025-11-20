@@ -39,7 +39,7 @@ void sci::NcFileBase::openReadOnly(const sci::string &fileName, bool diskless)
 	int flag = NC_NOWRITE;
 	if (diskless)
 		flag = flag | NC_DISKLESS;
-	checkNcCall(nc_open(sci::nativeCodepage(fileName).c_str(), flag, &m_id));
+	checkNcCall(nc_open(sci::toCodepage(fileName).c_str(), flag, &m_id));
 	m_open = true;
 	m_fileName = fileName;
 }
@@ -47,7 +47,7 @@ void sci::NcFileBase::openReadOnly(const sci::string &fileName, bool diskless)
 void sci::NcFileBase::openWritable(const sci::string &fileName, int formatFlags, bool diskless)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(sci::nativeCodepage(fileName).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
+	checkNcCall(nc_create(sci::toCodepage(fileName).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
 	m_fileName = fileName;
 }
@@ -55,7 +55,7 @@ void sci::NcFileBase::openWritable(const sci::string &fileName, int formatFlags,
 void sci::NcFileBase::openWritable(const sci::string &fileName, char unicodeReplacementCharacter, int formatFlags, bool diskless)
 {
 	sci::assertThrow(!m_open, sci::err(SERR_NC, localNcError, "sci::NcFileBase::OpenWritable called when the file is already open."));
-	checkNcCall(nc_create(sci::nativeCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
+	checkNcCall(nc_create(sci::toCodepage(fileName, unicodeReplacementCharacter).c_str(), NC_CLOBBER | formatFlags | (diskless ? NC_DISKLESS : 0), &m_id));
 	m_open = true;
 	m_fileName = fileName;
 }
@@ -84,11 +84,11 @@ std::vector<sci::string> sci::InputNcFile::getVariableNames()
 	int id = 0;
 	while (count<nVars)
 	{
-		char name[NC_MAX_NAME + 1];
+		char8_t name[NC_MAX_NAME + 1];
 		try
 		{
-			checkNcCall(nc_inq_varname(getId(), id, name));
-			result[count] = sci::fromUtf8(name);
+			checkNcCall(nc_inq_varname(getId(), id, (char*)name));
+			result[count] = sci::fromUtf8<sci::string>(name);
 			++count;
 		}
 		catch (...)
@@ -102,7 +102,7 @@ std::vector<sci::string> sci::InputNcFile::getVariableNames()
 std::vector<size_t> sci::InputNcFile::getVariableShape(const sci::string& name)
 {
 	int varId;
-	checkNcCall(nc_inq_varid(getId(), sci::toUtf8(name).c_str(), &varId));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(name).c_str(), &varId));
 	int nDims;
 	checkNcCall(nc_inq_varndims(getId(), varId, &nDims));
 	std::vector<size_t> shape(nDims);
@@ -123,11 +123,11 @@ template<>
 double sci::InputNcFile::getGlobalAttribute<double>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 	
 	double result;
-	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -136,11 +136,11 @@ template<>
 float sci::InputNcFile::getGlobalAttribute<float>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 	
 	float result;
-	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -149,11 +149,11 @@ template<>
 short sci::InputNcFile::getGlobalAttribute<short>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 	
 	short result;
-	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -162,11 +162,11 @@ template<>
 int sci::InputNcFile::getGlobalAttribute<int>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 	
 	int result;
-	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -175,11 +175,11 @@ template<>
 long sci::InputNcFile::getGlobalAttribute<long>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 	
 	long result;
-	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -188,11 +188,11 @@ template<>
 int8_t sci::InputNcFile::getGlobalAttribute<int8_t>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 
 	int8_t result;
-	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -201,11 +201,11 @@ template<>
 uint8_t sci::InputNcFile::getGlobalAttribute<uint8_t>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested variable " + sci::toUtf8(name) + " as a single variable, but it is an array."));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested variable ") + name + sU(" as a single variable, but it is an array.")));
 
 	uint8_t result;
-	checkNcCall(nc_get_att_ubyte(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result));
+	checkNcCall(nc_get_att_ubyte(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result));
 
 	return result;
 }
@@ -214,23 +214,23 @@ template<>
 sci::string sci::InputNcFile::getGlobalAttribute<sci::string>(const sci::string &name)
 {
 	size_t nChars;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nChars));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nChars));
 	std::vector<char> characters(nChars + 1); // they are all initialised to 0
-	checkNcCall(nc_get_att_text(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &characters[0]));
+	checkNcCall(nc_get_att_text(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &characters[0]));
 
-	std::string utf8String(&characters[0]);
+	std::u8string utf8String((char8_t*) & characters[0]);
 
-	return sci::fromUtf8(utf8String);
+	return sci::fromUtf8<sci::string>(utf8String);
 }
 
 template<>
 sci::RawAttributeData sci::InputNcFile::getGlobalAttribute<sci::RawAttributeData>(const sci::string& name)
 {
 	sci::RawAttributeData result;
-	checkNcCall(nc_inq_atttype(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result.type));
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result.nValues));
+	checkNcCall(nc_inq_atttype(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result.type));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result.nValues));
 	result.data.resize(result.nValues*getNcDataSize(result.type));
-	checkNcCall(nc_get_att(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), (void*)&result.data[0]));
+	checkNcCall(nc_get_att(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), (void*)&result.data[0]));
 
 	return result;
 }
@@ -239,10 +239,10 @@ template<>
 std::vector<double> sci::InputNcFile::getGlobalAttribute<std::vector<double>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<double> result(nValues);
-	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_double(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -251,10 +251,10 @@ template<>
 std::vector<float> sci::InputNcFile::getGlobalAttribute<std::vector<float>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<float> result(nValues);
-	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_float(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -263,10 +263,10 @@ template<>
 std::vector<short> sci::InputNcFile::getGlobalAttribute<std::vector<short>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<short> result(nValues);
-	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_short(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -275,10 +275,10 @@ template<>
 std::vector<int> sci::InputNcFile::getGlobalAttribute<std::vector<int>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<int> result(nValues);
-	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_int(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -287,10 +287,10 @@ template<>
 std::vector<long> sci::InputNcFile::getGlobalAttribute<std::vector<long>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<long> result(nValues);
-	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_long(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -299,10 +299,10 @@ template<>
 std::vector<int8_t> sci::InputNcFile::getGlobalAttribute<std::vector<int8_t>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<int8_t> result(nValues);
-	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_schar(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -311,10 +311,10 @@ template<>
 std::vector<uint8_t> sci::InputNcFile::getGlobalAttribute<std::vector<uint8_t>>(const sci::string &name)
 {
 	size_t nValues;
-	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &nValues));
+	checkNcCall(nc_inq_attlen(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &nValues));
 
 	std::vector<uint8_t> result(nValues);
-	checkNcCall(nc_get_att_uchar(getId(), NC_GLOBAL, sci::toUtf8(name).c_str(), &result[0]));
+	checkNcCall(nc_get_att_uchar(getId(), NC_GLOBAL, (char*)sci::toUtf8(name).c_str(), &result[0]));
 
 	return result;
 }
@@ -326,9 +326,9 @@ std::vector<sci::string> sci::InputNcFile::getGlobalAttributeList()
 	std::vector<sci::string> result(nAttributes);
 	for (int i = 0; i < nAttributes; ++i)
 	{
-		std::vector<char> thisName(NC_MAX_NAME + 1);
-		nc_inq_attname(getId(), NC_GLOBAL, i, &thisName[0]);
-		result[i] = fromUtf8(&thisName[0]);
+		std::vector<char8_t> thisName(NC_MAX_NAME + 1);
+		nc_inq_attname(getId(), NC_GLOBAL, i, (char*)&thisName[0]);
+		result[i] = sci::fromUtf8<sci::string>(&thisName[0]);
 	}
 	return result;
 }
@@ -339,12 +339,12 @@ double sci::InputNcFile::getVariableAttribute<double>(const sci::string& variabl
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	double result;
-	checkNcCall(nc_get_att_double(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_double(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -353,12 +353,12 @@ float sci::InputNcFile::getVariableAttribute<float>(const sci::string& variableN
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	float result;
-	checkNcCall(nc_get_att_float(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_float(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -367,12 +367,12 @@ short sci::InputNcFile::getVariableAttribute<short>(const sci::string& variableN
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	short result;
-	checkNcCall(nc_get_att_short(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_short(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -381,12 +381,12 @@ int sci::InputNcFile::getVariableAttribute<int>(const sci::string& variableName,
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	int result;
-	checkNcCall(nc_get_att_int(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_int(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -395,12 +395,12 @@ long sci::InputNcFile::getVariableAttribute<long>(const sci::string& variableNam
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	long result;
-	checkNcCall(nc_get_att_long(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_long(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -409,12 +409,12 @@ int8_t sci::InputNcFile::getVariableAttribute<int8_t>(const sci::string& variabl
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	int8_t result;
-	checkNcCall(nc_get_att_schar(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_schar(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -423,12 +423,12 @@ uint8_t sci::InputNcFile::getVariableAttribute<uint8_t>(const sci::string& varia
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
 	uint8_t result;
-	checkNcCall(nc_get_att_ubyte(getId(), id, sci::toUtf8(attributeName).c_str(), &result));
+	checkNcCall(nc_get_att_ubyte(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result));
 
 	return result;
 }
@@ -438,36 +438,36 @@ sci::string sci::InputNcFile::getVariableAttribute<sci::string>(const sci::strin
 	size_t nValues;
 	int id;
 	nc_type type;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
-	checkNcCall(nc_inq_atttype(getId(), id, sci::toUtf8(attributeName).c_str(), &type));
-	sci::assertThrow(type == NC_CHAR || type == NC_STRING, sci::err(SERR_NC, -999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a string, but it is not a string or character type."));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_atttype(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &type));
+	sci::assertThrow(type == NC_CHAR || type == NC_STRING, sci::err(SERR_NC, -999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a string, but it is not a string or character type.")));
 	
 	sci::string result;
 	if (type == NC_STRING)
 	{
-		sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, "Requested attribute " + sci::toUtf8(variableName) + ":" + sci::toUtf8(attributeName) + " as a single attribute, but it is an array."));
+		sci::assertThrow(nValues == 1, sci::err(SERR_NC, -9999, sU("Requested attribute ") + variableName + sU(":") + attributeName + sU(" as a single attribute, but it is an array.")));
 
-		char* utf8String = nullptr;
+		char8_t* utf8String = nullptr;
 		try
 		{
-			checkNcCall(nc_get_att_string(getId(), id, sci::toUtf8(attributeName).c_str(), &utf8String));
-			result = sci::fromUtf8(std::string(utf8String));
+			checkNcCall(nc_get_att_string(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), (char**) &utf8String));
+			result = sci::fromUtf8<sci::string>(std::u8string(utf8String));
 		}
 		catch (...)
 		{
 			if (utf8String)
-				nc_free_string(1, &utf8String);
+				nc_free_string(1, (char**) & utf8String);
 		}
 		if (utf8String)
-			nc_free_string(1, &utf8String);
+			nc_free_string(1, (char**) & utf8String);
 	}
 	else
 	{
-		std::vector<char> utf8String(nValues+1);
+		std::vector<char8_t> utf8String(nValues+1);
 		utf8String[nValues] = '\0';
-		checkNcCall(nc_get_att_text(getId(), id, sci::toUtf8(attributeName).c_str(), &utf8String[0]));
-		result = sci::fromUtf8(std::string(&utf8String[0]));
+		checkNcCall(nc_get_att_text(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), (char*) &utf8String[0]));
+		result = sci::fromUtf8<sci::string>(std::u8string(&utf8String[0]));
 	}
 
 	return result;
@@ -478,11 +478,11 @@ sci::RawAttributeData sci::InputNcFile::getVariableAttribute<sci::RawAttributeDa
 {
 	sci::RawAttributeData result;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_atttype(getId(), id, sci::toUtf8(variableName).c_str(), &result.type));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(variableName).c_str(), &result.nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_atttype(getId(), id, (char*)sci::toUtf8(variableName).c_str(), &result.type));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(variableName).c_str(), &result.nValues));
 	result.data.resize(result.nValues*getNcDataSize(result.type));
-	checkNcCall(nc_get_att(getId(), id, sci::toUtf8(variableName).c_str(), (void*)&result.data[0]));
+	checkNcCall(nc_get_att(getId(), id, (char*)sci::toUtf8(variableName).c_str(), (void*)&result.data[0]));
 
 	return result;
 }
@@ -492,11 +492,11 @@ std::vector<double> sci::InputNcFile::getVariableAttribute<std::vector<double>>(
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<double> result(nValues);
-	checkNcCall(nc_get_att_double(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_double(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -506,11 +506,11 @@ std::vector<float> sci::InputNcFile::getVariableAttribute<std::vector<float>>(co
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<float> result(nValues);
-	checkNcCall(nc_get_att_float(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_float(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -520,11 +520,11 @@ std::vector<short> sci::InputNcFile::getVariableAttribute<std::vector<short>>(co
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<short> result(nValues);
-	checkNcCall(nc_get_att_short(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_short(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -534,11 +534,11 @@ std::vector<int> sci::InputNcFile::getVariableAttribute<std::vector<int>>(const 
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<int> result(nValues);
-	checkNcCall(nc_get_att_int(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_int(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -548,11 +548,11 @@ std::vector<long> sci::InputNcFile::getVariableAttribute<std::vector<long>>(cons
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<long> result(nValues);
-	checkNcCall(nc_get_att_long(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_long(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -562,11 +562,11 @@ std::vector<int8_t> sci::InputNcFile::getVariableAttribute<std::vector<int8_t>>(
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<int8_t> result(nValues);
-	checkNcCall(nc_get_att_schar(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_schar(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -576,11 +576,11 @@ std::vector<uint8_t> sci::InputNcFile::getVariableAttribute<std::vector<uint8_t>
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
 	std::vector<uint8_t> result(nValues);
-	checkNcCall(nc_get_att_ubyte(getId(), id, sci::toUtf8(attributeName).c_str(), &result[0]));
+	checkNcCall(nc_get_att_ubyte(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &result[0]));
 
 	return result;
 }
@@ -590,16 +590,16 @@ std::vector<sci::string> sci::InputNcFile::getVariableAttribute<std::vector<sci:
 {
 	size_t nValues;
 	int id;
-	checkNcCall(nc_inq_varid(getId(), toUtf8(variableName).c_str(), &id));
-	checkNcCall(nc_inq_attlen(getId(), id, sci::toUtf8(attributeName).c_str(), &nValues));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_attlen(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), &nValues));
 
-	std::vector<char*> utf8Strings(nValues, nullptr);
+	std::vector<char8_t*> utf8Strings(nValues, nullptr);
 	std::vector<sci::string> result(nValues);
 	try
 	{
-		checkNcCall(nc_get_att_string(getId(), id, sci::toUtf8(attributeName).c_str(), &utf8Strings[0]));
+		checkNcCall(nc_get_att_string(getId(), id, (char*)sci::toUtf8(attributeName).c_str(), (char**) & utf8Strings[0]));
 		for (size_t i = 0; i < result.size(); ++i)
-			result[i] = sci::fromUtf8(std::string(utf8Strings[i]));
+			result[i] = sci::fromUtf8<sci::string>(std::u8string(utf8Strings[i]));
 	}
 	catch (...)
 	{
@@ -608,9 +608,9 @@ std::vector<sci::string> sci::InputNcFile::getVariableAttribute<std::vector<sci:
 			if (utf8Strings[i])
 				++count;
 		if (count > 0)
-			nc_free_string(count, &utf8Strings[0]);
+			nc_free_string(count, (char**) & utf8Strings[0]);
 	}
-	nc_free_string(utf8Strings.size(), &utf8Strings[0]);
+	nc_free_string(utf8Strings.size(), (char**) & utf8Strings[0]);
 
 	return result;
 }
@@ -618,15 +618,15 @@ std::vector<sci::string> sci::InputNcFile::getVariableAttribute<std::vector<sci:
 std::vector<sci::string> sci::InputNcFile::getVariableAttributeList(const sci::string& variableName)
 {
 	int id;
-	checkNcCall(nc_inq_varid(getId(), sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
 	int nAttributes;
 	checkNcCall(nc_inq_varnatts(getId(), id, &nAttributes));
 	std::vector<sci::string> result(nAttributes);
 	for (int i = 0; i < nAttributes; ++i)
 	{
-		std::vector<char> thisName(NC_MAX_NAME + 1);
-		nc_inq_attname(getId(), id, i, &thisName[0]);
-		result[i] = fromUtf8(&thisName[0]);
+		std::vector<char8_t> thisName(NC_MAX_NAME + 1);
+		nc_inq_attname(getId(), id, i, (char*) & thisName[0]);
+		result[i] = sci::fromUtf8<sci::string>(std::u8string(&thisName[0]));
 	}
 	return result;
 }
@@ -634,7 +634,7 @@ std::vector<sci::string> sci::InputNcFile::getVariableAttributeList(const sci::s
 std::vector<sci::string> sci::InputNcFile::getVariableDimensions(const sci::string& variableName)
 {
 	int id;
-	checkNcCall(nc_inq_varid(getId(), sci::toUtf8(variableName).c_str(), &id));
+	checkNcCall(nc_inq_varid(getId(), (char*)sci::toUtf8(variableName).c_str(), &id));
 	int nDims;
 	checkNcCall(nc_inq_varndims(getId(), id, &nDims));
 	std::vector<int> dimIds(nDims);
@@ -642,9 +642,9 @@ std::vector<sci::string> sci::InputNcFile::getVariableDimensions(const sci::stri
 	std::vector<sci::string> result(nDims);
 	for (size_t i = 0; i < result.size(); ++i)
 	{
-		char utf8Name[NC_MAX_NAME + 1];
-		checkNcCall(nc_inq_dimname(getId(), dimIds[i], utf8Name));
-		result[i] = sci::fromUtf8(utf8Name);
+		char8_t utf8Name[NC_MAX_NAME + 1];
+		checkNcCall(nc_inq_dimname(getId(), dimIds[i], (char*)utf8Name));
+		result[i] = sci::fromUtf8<sci::string>(std::u8string(utf8Name));
 	}
 	return result;
 }
@@ -669,7 +669,7 @@ void sci::NcDimension::setLength(size_t length)
 void sci::NcDimension::load(const InputNcFile &ncFile)
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcDimension::load called before the file was opened."));
-	checkNcCall(nc_inq_dimid(ncFile.getId(), sci::toUtf8(m_name).c_str(), &m_id));
+	checkNcCall(nc_inq_dimid(ncFile.getId(), (char*)sci::toUtf8(m_name).c_str(), &m_id));
 	checkNcCall(nc_inq_dimlen(ncFile.getId(), m_id, &m_length));
 	m_hasId = true;
 }
@@ -677,7 +677,7 @@ void sci::NcDimension::load(const InputNcFile &ncFile)
 void sci::NcDimension::write(const OutputNcFile &ncFile) const
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcDimension::write called before the file was opened."));
-	checkNcCall(nc_def_dim(ncFile.getId(), sci::toUtf8(m_name).c_str(), m_length, &m_id));
+	checkNcCall(nc_def_dim(ncFile.getId(), (char*)sci::toUtf8(m_name).c_str(), m_length, &m_id));
 	m_hasId = true;
 }
 
@@ -753,7 +753,7 @@ void sci::NcAttribute::setNull()
 sci::NcAttribute::NcAttribute(const sci::string& name, sci::string value)
 {
 	m_name = name;
-	std::string utf8String = sci::toUtf8(value);
+	std::u8string utf8String = sci::toUtf8(value);
 	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
@@ -769,7 +769,7 @@ sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<sci::st
 		stream << value[0];
 	for (size_t i = 1; i < value.size(); ++i)
 		stream << separator << value[i];
-	std::string utf8String = sci::toUtf8(stream.str());
+	std::u8string utf8String = sci::toUtf8(stream.str());
 	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
@@ -786,7 +786,7 @@ sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<const c
 		stream << value[0];
 	for (size_t i = 1; i < value.size(); ++i)
 		stream << sU(", ") << value[i];
-	std::string utf8String = sci::toUtf8(stream.str());
+	std::u8string utf8String = sci::toUtf8(stream.str());
 	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
@@ -797,7 +797,7 @@ sci::NcAttribute::NcAttribute(const sci::string& name, const std::vector<const c
 sci::NcAttribute::NcAttribute(const sci::string& name, const char16_t *value)
 {
 	m_name = name;
-	std::string utf8String = sci::toUtf8(value);
+	std::u8string utf8String = sci::toUtf8(value);
 	m_nValues = utf8String.length() + 1;
 	m_writeType = NC_CHAR;
 	m_nBytes = m_nValues;
@@ -818,7 +818,7 @@ sci::NcAttribute::NcAttribute(const sci::string& name, const sci::RawAttributeDa
 void sci::NcAttribute::write(const sci::OutputNcFile & ncFile) const
 {
 	sci::assertThrow(ncFile.isOpen(), sci::err(SERR_NC, localNcError, "sci::NcAttribute::write called before the file was opened."));
-	checkNcCall(nc_put_att(ncFile.getId(), NC_GLOBAL, sci::toUtf8(m_name).c_str(), m_writeType, m_nValues, m_values));
+	checkNcCall(nc_put_att(ncFile.getId(), NC_GLOBAL, (char*)sci::toUtf8(m_name).c_str(), m_writeType, m_nValues, m_values));
 }
 
 /*template<class T>
