@@ -478,9 +478,9 @@ namespace sci
 	//toUtf8
 	//*******************
 
-	inline std::u8string toUtf8(const std::u8string& string)
+	inline const std::u8string &toUtf8(const std::u8string& string)
 	{
-		return utf8From(string);
+		return string;
 	}
 
 	inline std::u8string toUtf8(const std::u16string& string)
@@ -513,9 +513,9 @@ namespace sci
 		return utf16From(string);
 	}
 
-	inline std::u16string toUtf16(const std::u16string& string)
+	inline const std::u16string &toUtf16(const std::u16string& string)
 	{
-		return utf16From(string);
+		return string;
 	}
 
 	inline std::u16string toUtf16(const std::u32string& string)
@@ -548,9 +548,9 @@ namespace sci
 		return utf32From(string);
 	}
 
-	inline std::u32string toUtf32(const std::u32string& string)
+	inline const std::u32string &toUtf32(const std::u32string& string)
 	{
-		return utf32From(string);
+		return string;
 	}
 #ifdef _WIN32
 	inline std::u32string toUtf32(const std::wstring& string)
@@ -582,9 +582,9 @@ namespace sci
 	{
 		return nativeUnicodeFrom(string);
 	}
-	inline std::wstring toNativeUnicode(const std::wstring& string)
+	inline const std::wstring &toNativeUnicode(const std::wstring& string)
 	{
-		return nativeUnicodeFrom(string);
+		return string;
 	}
 #else
 	inline std::string toNativeUnicode(const std::u8string& string)
@@ -601,9 +601,9 @@ namespace sci
 	{
 		return nativeUnicodeFrom(string);
 	}
-	inline std::string toNativeUnicode(const std::wstring& string)
+	inline const std::string &toNativeUnicode(const std::string& string)
 	{
-		return nativeUnicodeFrom(string);
+		return string;
 	}
 #endif
 

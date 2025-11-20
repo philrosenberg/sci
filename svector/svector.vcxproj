@@ -371,6 +371,7 @@
     <ClInclude Include="..\include\svector\LinearAlgebra.h" />
     <ClInclude Include="..\include\svector\math.h" />
     <ClInclude Include="..\include\svector\MemoryMap.h" />
+    <ClInclude Include="..\include\svector\nullstream.h" />
     <ClInclude Include="..\include\svector\NumberFromTextValidator.h" />
     <ClInclude Include="..\include\svector\operators.h" />
     <ClInclude Include="..\include\svector\Ranges.h" />
@@ -394,6 +395,7 @@
     <ClInclude Include="..\include\svector\stringfuncs.h" />
     <ClInclude Include="..\include\svector\svector.h" />
     <ClInclude Include="..\include\svector\svi.h" />
+    <ClInclude Include="..\include\svector\teestream.h" />
     <ClInclude Include="..\include\svector\time.h" />
     <ClInclude Include="..\include\svector\Traits.h" />
     <ClInclude Include="..\include\svector\undoable.h" />
