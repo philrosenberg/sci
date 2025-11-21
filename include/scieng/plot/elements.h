@@ -5,8 +5,8 @@
 #include<string>
 #include<memory>
 
-#include"../../string.h"
-#include"../../graphics.h"
+#include"../string.h"
+#include"../graphics.h"
 #include<span>
 #include"plot.h"
 

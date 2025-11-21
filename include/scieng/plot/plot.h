@@ -6,10 +6,10 @@
 #define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #endif
 
-#include"../../string.h"
-#include"../../graphics.h"
-#include"../../grid.h"
-#include"../../gridtransformview.h"
+#include"../string.h"
+#include"../graphics.h"
+#include"../grid.h"
+#include"../gridtransformview.h"
 #include<algorithm>
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS

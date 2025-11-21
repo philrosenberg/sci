@@ -1,7 +1,7 @@
 #pragma once
-#include"dep/plot/plot.h"
-#include"dep/plot/linesPoints.h"
-#include"dep/plot/varyingPoints.h"
-#include"dep/plot/gridContour.h"
-#include"dep/plot/errorBar.h"
-#include"dep/plot/fillBars.h"
+#include"plot/plot.h"
+#include"plot/linesPoints.h"
+#include"plot/varyingPoints.h"
+#include"plot/gridContour.h"
+#include"plot/errorBar.h"
+#include"plot/fillBars.h"
