@@ -1,7 +1,7 @@
 //this is a test to ensure things compile if just grid.h is included
 //it also checks that a bool grid actually uses uint8_t rather than the
 //bool omptimisation
-#include"../include/svector/grid.h"
+#include"../include/scieng/grid.h"
 
 template<typename Container, typename expectedType>
 concept unoptimisedBoolContainer = requires(Container c, expectedType * ptr)

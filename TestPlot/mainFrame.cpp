@@ -1,7 +1,7 @@
 #include "mainFrame.h"
-#include"../include/svector/plot.h"
-#include"../include/svector/string.h"
-#include"../include/svector/math.h"
+#include"../include/scieng/plot.h"
+#include"../include/scieng/string.h"
+#include"../include/scieng/math.h"
 #include<wx/scrolwin.h>
 
 const int mainFrame::ID_FILE_EXIT = ::wxNewId();

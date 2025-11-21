@@ -1,6 +1,6 @@
 #include <iostream>
-#include"../include/svector/Units.h"
-#include"../include/svector/Time.h"
+#include"../include/scieng/Units.h"
+#include"../include/scieng/Time.h"
 #include<assert.h>
 
 typedef sci::Physical<sci::Metre<>, double> dMetre;
