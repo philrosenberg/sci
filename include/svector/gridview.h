@@ -467,7 +467,7 @@ namespace sci
 		//using sentinel = iterator;
 		static const size_t ndims = NDIMS;
 
-		constexpr grid_view() = default;
+		//constexpr grid_view() = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS> const& rhs) = default;
 		constexpr grid_view(grid_view<RANGE, NDIMS>&& rhs) = default;
 		constexpr grid_view operator=(grid_view<RANGE, NDIMS> const& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
@@ -504,11 +504,16 @@ namespace sci
 		{
 		}
 
-		template<class T, class Allocator>
+		grid_view(RANGE&& range) requires (std::ranges::random_access_range<RANGE>)
+			: m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }
+		{
+		}
+
+		/*template<class T, class Allocator>
 		grid_view(GridData<T, NDIMS, Allocator> &gridData)
 			: m_dataMembers{ new data_members_t{(gridData)} }, m_strides(gridData.getStridesPointer())
 		{
-		}
+		}*/
 
 		grid_view(RANGE&& range) requires (!std::ranges::range<RANGE> && NDIMS == 0)
 			: m_dataMembers{ new data_members_t{std::forward<RANGE>(range)} }
@@ -577,7 +582,12 @@ namespace sci
 			else if constexpr (NDIMS == 1)
 				return operator[](index[0]);
 			else
-				return m_dataMembers->m_range[m_strides.getOffset(index)];
+			{
+				RANGE& range = m_dataMembers->m_range;
+				size_t offset = m_strides.getOffset(index);
+				return range[offset];
+				//return m_dataMembers->m_range[m_strides.getOffset(index)];
+			}
 		}
 		const reference_type operator[](const std::array<size_t, NDIMS>& index) const
 		{

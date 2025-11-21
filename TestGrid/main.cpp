@@ -127,28 +127,15 @@ void output2d(GRID grid)
 	for (size_t i = 0; i < shape[0]; ++i)
 	{
 		for (size_t j = 0; j < shape[1]; ++j)
-			std::cout << grid[i][j] << ",";
+			//std::cout << grid[i][j] << ",";
+			std::cout << grid[{ i, j }] << ",";
 		std::cout << "\n";
 	}
 	std::cout << "\n\n";
 }
 
 template<class T>
-void output2d(T grid)
-{
-	std::array<size_t, 2> shape = grid.shape();
-
-	for (size_t i = 0; i < shape[0]; ++i)
-	{
-		for (size_t j = 0; j < shape[1]; ++j)
-			std::cout << grid[i][j] << ",";
-		std::cout << "\n";
-	}
-	std::cout << "\n\n";
-}
-
-template<class BASERANGE>
-void output1d(sci::grid_view<BASERANGE, 1> grid)
+void output1d(T grid) requires (T::ndims == 1)
 {
 	std::array<size_t, 1> shape = grid.shape();
 
@@ -173,6 +160,7 @@ int main()
 		sci::GridData<double, 1> d1{ 1., 2., 3., 4., 5. };
 		sci::GridData<double, 1> d1_2{ 11., 12., 13., 14., 15. };
 		auto d1_3 = d1 + d1 + 2;
+		output1d(d1_3);
 		d2.push_back(d1_3);
 	}
 	//testing grid_view
@@ -249,25 +237,36 @@ int main()
 		grid.reshape({ 6, 4 }, 8.0);
 		output2d(grid.getView());
 
-		std::cout << "Testing grid_view(GridData) constructor\n";
-		sci::grid_view<sci::GridData<double, 2>, 2>view(grid);
-		output2d(view);
+		//std::cout << "Testing grid_view(GridData) constructor\n";
+		//sci::grid_view<std::vector<double>, 2>view(grid);
+		//output2d(view);
 	}
 
 	//testing gridtuple_view
 	{
+		//transforming 1d arrays
+		sci::GridData<double, 1> grid1(3, 1);
+		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 1>, sci::GridData<double, 1>> pair1d(grid1, grid1);
+		std::cout << "testing gridtuple_view operator[](size_t) accessor for a 1D case\n";
+		output1d(pair1d);
+
+		//transforming 2d arrays
 		std::array<size_t, 2> shape2d{ 4, 3 };
-		sci::GridData<double, 2>grid1(shape2d, 1.0);
-		sci::GridData<double, 2>grid2(shape2d, 3.0);
-		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 2>, sci::GridData<double, 2>> pair(grid1, grid2);
-		std::cout << "Testing gridtuple_view operator[](std::array) accessor\n";
-		auto val2 = pair[{0, 0}];
+		sci::GridData<double, 2>grid2(shape2d, 1.0);
+		sci::GridData<double, 2>grid3(shape2d, 3.0);
+		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 2>, sci::GridData<double, 2>> pair2d(grid2, grid3);
+		std::cout << "Testing gridtuple_view operator[](std::array) accessor for a 2D case\n";
+		auto val2 = pair2d[{0, 0}];
 		std::cout << val2 << "\n\n";
-		std::cout << "testing gridtuple_view operator[](size_t) slice accessor\n";
-		auto val = pair[0];
+		std::cout << "testing gridtuple_view operator[](size_t) slice accessor for a 2D case\n";
+		auto val = pair2d[0];
 		for (size_t j = 0; j < shape2d[1]; ++j)
 			std::cout << val[j] << ",";
 		std::cout << "\n\n";
+
+		//transforming 1d and 2d mixed
+		//sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 2>, sci::GridData<double, 1>> pairmixed(grid2, grid1); //this shouldn't compile 
+
 
 		//std::cout << "testing transforming a gridtuple_view, then turning it back to a grid\n";
 		//for(size_t i=0; i<shape2d[0]; ++i)
@@ -280,22 +279,22 @@ int main()
 		//return operated | views::grid<std::max(T::ndims, U::ndims)>(a.getStrides());
 		//output2d(operated | sci::views::grid<2>(grid1.getStrides()));
 
-		const sci::GridData<double, 2>& gridref = grid1;
+		const sci::GridData<double, 2>& gridref = grid2;
 		auto gridbad = sci::getGridView(gridref);
 		output2d(gridbad);
 		std::cout << "testing operator +\n";
-		auto grid3 = grid1 + grid2;
+		auto grid4 = grid2 + grid3;
 		output2d(grid3);
 
-		auto grid4 = grid1 + 5.0 - grid2;
-		output2d(grid4);
+		auto grid5 = grid2 + 5.0 - grid3;
+		output2d(grid5);
 
-		auto grid5 = grid1 + 2.0;
-		std::cout << "ndims = " << grid5.ndims << "\n\n";
-		sci::GridData<double, 2>grid7(grid5);
-		sci::GridData<double, 2> grid6 = grid5;
-		typename decltype(grid5)::value_type value=3.0;
-		static_assert(sci::IsGridDims<decltype(grid5),2>, "transformed grid is not a grid");
+		auto grid6 = grid2 + 2.0;
+		std::cout << "ndims = " << grid6.ndims << "\n\n";
+		sci::GridData<double, 2>grid8(grid6);
+		sci::GridData<double, 2> grid7 = grid6;
+		typename decltype(grid6)::value_type value=3.0;
+		static_assert(sci::IsGridDims<decltype(grid6),2>, "transformed grid is not a grid");
 
 		std::cout << "testing operator ==\n";
 		output2d(grid2 == 3.0);

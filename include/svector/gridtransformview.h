@@ -197,8 +197,8 @@ namespace sci
 		using size_type = typename iterator::size_type;
 		using difference_type = typename iterator::difference_type;
 		using sentinel = iterator;
-		using  reference_type = typename iterator::value_type;
-		using  const_reference_type = typename iterator::value_type;
+		//using  reference_type = typename iterator::value_type;
+		using  const_reference_type = typename const_iterator::value_type;
 		using value_type = typename iterator::value_type;
 
 		constexpr gridpairtransform_view() = default;
@@ -243,36 +243,36 @@ namespace sci
 		{
 			return std::size(m_grid1);
 		}
-		reference_type operator[](const difference_type& index) requires(NDIMS == 1)
+		/*reference_type operator[](const difference_type& index) requires(NDIMS == 1)
 		{
 			return reference_type(*(begin() + index));
-		}
-		const_reference_type operator[](const difference_type& index) const requires(std::max(NDIMS1, NDIMS2) == 1)
+		}*/
+		const_reference_type operator[](const difference_type& index) const requires(NDIMS == 1)
 		{
 			return const_reference_type(*(begin() + index));
 		}
-		reference_type operator[](const std::array<size_t, NDIMS>& index)
+		/*reference_type operator[](const std::array<size_t, NDIMS>& index)
 		{
 			return reference_type(*(begin() + m_strides.getOffset(index)));
-		}
+		}*/
 		const_reference_type operator[](const std::array<size_t, NDIMS>& index) const
 		{
 			return const_reference_type(*(begin() + m_grid1.getStrides().getOffset(index)));
 		}
-		auto operator[](const difference_type& index) requires(NDIMS != 1)
+		/* auto operator[](const difference_type& index) requires(NDIMS != 1);
 		{
 			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
 			{
 				auto sub1 = m_grid1[index];
 				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)>(sub1, sub2);
+				return make_gridpairtransform_view < TRANSFORM, decltype(sub1)>(sub1, sub2);
 			}
-			else if constexpr (NDIMS1 > 1)
+			else if constexpr (NDIMS1 > 0)
 			{
 				auto sub1 = m_grid1[index];
 				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(sub1, m_grid2);
 			}
-			else if constexpr (NDIMS2 > 1)
+			else if constexpr (NDIMS2 > 0)
 			{
 				auto sub2 = m_grid2[index];
 				return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, sub2);
@@ -281,29 +281,29 @@ namespace sci
 			//{
 			//	return gridpair_view<decltype(m_grid1), 0, decltype(m_grid2), 0>(m_grid1, m_grid2);
 			//}
-		}
-		const auto operator[](const difference_type& index) const requires(NDIMS > 1)
+		}*/
+		
+		const auto operator[](const difference_type& index) const requires(NDIMS1 > 1 && NDIMS2 > 1)
 		{
-			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
-			{
-				auto sub1 = m_grid1[index];
-				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)::range_type>(sub1, sub2);
-			}
-			else if constexpr (NDIMS1 > 1)
-			{
-				auto sub1 = m_grid1[index];
-				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
-			}
-			else if constexpr (NDIMS2 > 1)
-			{
-				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
-			}
-			//else //operator[] for two scalars probably is nonsensical
-			//{
-			//	return gridpair_view<decltype(m_grid1), 0, decltype(m_grid2), 0>(m_grid1, m_grid2);
-			//}
+			auto sub1 = m_grid1[index];
+			auto sub2 = m_grid2[index];
+			return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)>(sub1, sub2);
+		}
+
+		const auto operator[](const difference_type& index) const requires(NDIMS1 > 1 && NDIMS2 < 2)
+		{
+			auto sub1 = m_grid1[index];
+			return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
+		}
+
+		const auto operator[](const difference_type& index) const requires(NDIMS2 > 1 && NDIMS1 < 2)
+		{
+			auto sub2 = m_grid2[index];
+			return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
+		}
+		const auto operator[](const difference_type& index) const requires(NDIMS == 0)
+		{
+
 		}
 		std::array<size_t, NDIMS> shape() const
 		{
@@ -397,6 +397,32 @@ namespace sci
 	{
 		return gridpairtransform_view<TRANSFORM, decltype(getGridView(grid1)), decltype(getGridView(grid2))>(getGridView(grid1), getGridView(grid2));
 	}
+
+	/*template<auto TRANSFORM, class GRID1, class GRID2 >
+	auto gridpairtransform_view<TRANSFORM, GRID1, GRID2>::operator[](const difference_type& index) requires(NDIMS != 1)
+	{
+		if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
+		{
+			auto sub1 = m_grid1[index];
+			auto sub2 = m_grid2[index];
+			return sci::GridData<double, NDIMS-1>();
+			//return make_gridpairtransform_view<TRANSFORM>(sub1, sub2);
+		}
+		else if constexpr (NDIMS1 > 0)
+		{
+			auto sub1 = m_grid1[index];
+			return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(sub1, m_grid2);
+		}
+		else if constexpr (NDIMS2 > 0)
+		{
+			auto sub2 = m_grid2[index];
+			return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, sub2);
+		}
+		//else //operator[] for two scalars probably is nonsensical
+		//{
+		//	return gridpair_view<decltype(m_grid1), 0, decltype(m_grid2), 0>(m_grid1, m_grid2);
+		//}
+	}*/
 
 	template<auto TRANSFORM, class T1, class T2 >
 	auto discardSecond(const T1& t, T2)
