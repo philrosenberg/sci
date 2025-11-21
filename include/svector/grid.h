@@ -5,32 +5,10 @@
 
 #include"gridview.h"
 #include<vector>
-#include<assert.h>
 #include<functional>
-#include<memory>
-#include<deque>
 
 namespace sci
 {
-	template<class T, size_t NDIMS>
-	class GridView;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	template<class U>
 	struct GridDataVectorType
 	{
@@ -179,7 +157,7 @@ namespace sci
 		{
 		}
 		GridDataMembers(GridDataMembers<T, 1>&& other)
-			:m_data(std::move(other.m_data())), m_view(m_data)
+			:m_data(std::move(other.m_data)), m_view(m_data)
 		{
 		}
 		constexpr size_t multiToVectorPosition(const std::array<size_t, 1>& position) const
@@ -246,6 +224,10 @@ namespace sci
 	public:
 		GridDataMembers()
 		{
+		}
+		GridDataMembers(const T &value)
+		{
+			m_data = value;
 		}
 		GridDataMembers(const GridDataMembers<T, 0>& other)
 		{
@@ -352,7 +334,8 @@ namespace sci
 		{
 			setShape(std::array<size_t, 1>{size}, value);
 		}
-		constexpr GridData()
+
+		constexpr GridData() requires (NDIMS > 1)
 			: members(vector_type(), std::array<size_t, NDIMS>{}) //{} guarantees 0 initialization of the elements
 		{
 			std::array<size_t, NDIMS> shape;
@@ -361,14 +344,34 @@ namespace sci
 			setShape(shape);
 		}
 
-		//template<IsGridDimsVt<NDIMS, value_type> U>
-		template<IsGridDims<NDIMS> U>
-			constexpr GridData(const U& other) //this is a view, not a GridData as GridDatas are dealt with in another constructor
-				:members(vector_type(other.begin(), other.end()), other.shape())
+		constexpr GridData() requires (NDIMS == 1)
+			: members(vector_type()) //{} guarantees 0 initialization of the elements
 		{
 		}
 
+		constexpr GridData() requires (NDIMS == 0) //{} guarantees 0 initialization of the elements
+		{
+		}
 
+		
+		//Construct from a grid_view or other non-GridData objects that begave like a grid.
+		template<IsGridDims<NDIMS> U>
+		constexpr GridData(const U& other) requires (NDIMS > 1)
+			: members(vector_type(other.begin(), other.end()), other.shape())
+		{
+		}
+		//Construct from a grid_view or other non-GridData objects that begave like a grid.
+		template<IsGridDims<NDIMS> U>
+		constexpr GridData(const U& other) requires (NDIMS == 1)
+			: members(vector_type(other.begin(), other.end()))
+		{
+		}
+		//Construct from a grid_view or other non-GridData objects that begave like a grid.
+		template<IsGridDims<NDIMS> U>
+		constexpr GridData(const U& other) requires (NDIMS == 0)
+			: members(*other.begin())
+		{
+		}
 
 		constexpr GridData(const GridData<T, NDIMS, Allocator>& other) = default;
 		constexpr GridData(GridData<T, NDIMS, Allocator>&& other) = default;
@@ -571,13 +574,13 @@ namespace sci
 
 				const std::array<size_t, GRID::ndims> sourceShape = source.shape();
 				std::array<size_t, GRID::ndims> thisShape = shape();
-#ifdef _DEBUG
+
 				if (size() > 0)
 				{
 					for (size_t i = 1; i < GRID::ndims; ++i)
 						assert(sourceShape[i] == thisShape[i]);
 				}
-#endif
+
 				iterator pos = begin() + index * members::getTopStride();
 				members::m_data.insert(pos, source.begin(), source.begin() + sourceShape[0] * members::getTopStride());
 				thisShape[0] += sourceShape[0];

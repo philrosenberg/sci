@@ -5,8 +5,8 @@
 #include<string>
 #include<memory>
 
-#include<svector/string.h>
-#include<svector/graphics.h>
+#include"../../string.h"
+#include"../../graphics.h"
 #include<span>
 #include"plot.h"
 

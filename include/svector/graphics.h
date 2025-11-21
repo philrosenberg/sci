@@ -14,6 +14,12 @@
 #include<limits>
 #include<wx/print.h>
 #include<wx/printdlg.h>
+#include<wx/filename.h>
+#include<wx/dcps.h>
+#include <wx/dcsvg.h>
+#include<wx/metafile.h>
+#include<wx/gdicmn.h>
+#include<wx/dcgraph.h>
 #pragma warning(pop)
 #include"string.h"
 #include"stringfuncs.h"
@@ -23,7 +29,6 @@
 #include<map>
 #include<optional>
 #include<span>
-
 
 namespace sci
 {

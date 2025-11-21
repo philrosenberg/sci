@@ -1,10 +1,10 @@
 // testString.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include <svector/string.h>
-#include<svector/codepage.h>
-#include<svector/sstream.h>
-#include<svector/iostream.h>
+#include"../include/svector/string.h"
+#include"../include/svector/codepage.h"
+#include"../include/svector/sstream.h"
+#include"../include/svector/iostream.h"
 
 #include<map>
 const std::map<std::string, LCID> codepages

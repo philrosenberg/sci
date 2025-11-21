@@ -6,8 +6,8 @@
 #include<memory>
 
 
-#include<svector/grid.h>
-#include<svector/gridtransformview.h>
+#include"../../grid.h"
+#include"../../gridtransformview.h"
 #include"elements.h"
 
 

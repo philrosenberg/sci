@@ -13,6 +13,7 @@ namespace sci
 	const double m_ln2 = 0.693147180559945309417;// ln(2)
 	const double m_ln10 = 2.30258509299404568402;// ln(10)
 	const double m_pi = 3.14159265358979323846;// pi
+	const double m_2pi = 6.28318530717958647692;// 2pi
 	const double m_pi_2 = 1.57079632679489661923;// pi/2
 	const double m_pi_4 = 0.785398163397448309616;// pi/4
 	const double m_1_pi = 0.318309886183790671538;// 1/pi

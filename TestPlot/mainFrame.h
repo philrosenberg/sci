@@ -2,7 +2,7 @@
 #define APEX_MAINFRAME_H
 
 #include "app.h"
-#include<svector/plot.h>
+#include"../include/svector/graphics.h"
 
 class mainFrame : public wxFrame
 {

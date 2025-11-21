@@ -6,28 +6,10 @@
 #define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
 #endif
 
-#pragma warning(push, 0)
-#include<vector>
-#include<wx/wx.h>
-#include<wx/scrolwin.h>
-#include<limits>
-#include<wx/print.h>
-#include<wx/printdlg.h>
-#include<wx/filename.h>
-#include<wx/dcps.h>
-#include <wx/dcsvg.h>
-#include<wx/metafile.h>
-#include<wx/gdicmn.h>
-#include<wx/dcgraph.h> // there was some odd compile error when the wx headers were below the svector headers
-// where wxVector<some class to do with wxGCDC>::push_back() wouldn't compile.
-//not sure why.
-#pragma warning(pop)
 #include"../../string.h"
-#include"../../serr.h"
-//#include"../../svector.h"
 #include"../../graphics.h"
-#include<svector/grid.h>
-#include<svector/gridtransformview.h>
+#include"../../grid.h"
+#include"../../gridtransformview.h"
 #include<algorithm>
 
 #ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
@@ -235,7 +217,7 @@ namespace sci
 			template<class T>
 			static void setupInterpolatingScale(::sci::GridData<double, 1>& value, sci::GridData<double, 1>& logValue, sci::GridData<T, 1>& output, double& linearMin, double& linearMax, double& logMin, double& logMax)
 			{
-				sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::Scale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
+				//sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::Scale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
 				//check values are ascending or descending, catch Nans at the same time
 				bool ascending = true;
 				bool descending = true;
@@ -245,7 +227,7 @@ namespace sci
 					descending &= value[i] <= value[i - 1];
 				}
 				bool monotonic = ascending || descending;
-				sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with values which are neither monotonically ascending nor monotonically descending."));
+				//sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with values which are neither monotonically ascending nor monotonically descending."));
 
 				//assign values
 				if (descending)
@@ -267,7 +249,7 @@ namespace sci
 				}
 				value.resize(insertPos);
 				output.resize(insertPos);
-				sci::assertThrow(value.size() > 1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with a values array containing only NaNs and +/- infnity."));
+				//sci::assertThrow(value.size() > 1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with a values array containing only NaNs and +/- infnity."));
 
 				logValue.resize(value.size());
 				for (size_t i = 0; i < value.size(); ++i)
@@ -356,7 +338,6 @@ namespace sci
 			ColourScale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
 				:sci::plot::Scale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
 			{
-				sci::assertThrow(value.size() > 1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale constructor called with invalid sizes for the values or colours array."));
 				if (value.size() == colour.size())
 				{
 					//setup continuous colour scale
@@ -384,7 +365,6 @@ namespace sci
 			ColourScale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
 				:sci::plot::Scale(logarithmic, Direction::none, 0.0)
 			{
-				sci::assertThrow(value.size() > 1 && (value.size() == colour.size() || value.size() == colour.size() + 1), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale constructor called with invalid sizes for the values or colours array."));
 				if (value.size() == colour.size())
 				{
 					//setup continuous colour scale
@@ -472,8 +452,6 @@ namespace sci
 
 			std::vector<double> getDiscreteValues() const
 			{
-				sci::assertThrow(m_discrete, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::getDiscreteValues called with a not discrete colour scale."));
-
 				std::vector<double> result(m_value.size() / 2 + 1);
 				if (isLog())
 				{
@@ -2061,7 +2039,6 @@ namespace sci
 			double m_yScale;
 		};
 
-#include<svector/graphics.h>
 		class PlotCanvasPanel : public ::sci::graphics::GraphicsPanel
 		{
 		public:

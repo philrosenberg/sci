@@ -5,6 +5,11 @@
 
 #include<vector>
 #include<deque>
+
+void testJustGrid();
+
+
+//These are concepts to help debugging should there be a problem with the requires statements
 template <class _It>
 concept _part__Indirectly_readable_impl = requires(const _It __i) {
 	typename std::iter_value_t<_It>;
@@ -30,48 +35,6 @@ concept part_indirectly_writable = requires(_It && __i, _Ty && __t) {
 	//const_cast<const std::iter_reference_t<_It>&&>(*static_cast<_It&&>(__i)) = static_cast<_Ty&&>(__t);
 };
 
-/*class MyClass
-{
-public:
-	MyClass(int i)
-		:m_i(i)
-	{
-
-	}
-private:
-	int m_i;
-};
-void testFunc(std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>> iter, std::pair<double, double> val)
-{
-	MyClass myClass(1);
-	MyClass& myRef = myClass;
-	MyClass* myPtr = &myClass;
-	const_cast<const MyClass&>(myRef);
-	const_cast<const MyClass*>(&myClass);
-
-
-	double d1;
-	double d2;
-	double& rawRef = d1;
-	const_cast<const double&>(rawRef);
-	std::reference_wrapper<double> singleRef = d1;
-	const_cast<const std::reference_wrapper<double>>(singleRef);
-	std::pair<std::reference_wrapper<double>, std::reference_wrapper<double>> ref = std::pair<std::reference_wrapper<double>, std::reference_wrapper<double>>(d1, d2);
-	const std::pair<std::reference_wrapper<double>, std::reference_wrapper<double>> r2 = ref;
-	const_cast<const std::pair<std::reference_wrapper<double>, std::reference_wrapper<double>>>(ref);
-	//const_cast<const std::pair<double&, double&>>(iter) = static_cast<std::pair<double, double>>(val);
-	const_cast<const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>>(*iter);// = static_cast<std::pair<double, double>>(val);
-}
-
-template <class _It>
-concept part_indirectly_readable = _part__Indirectly_readable_impl<std::remove_cvref_t<_It>>;
-double d1;
-double d2;
-sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>::iterator iter;
-const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>> ref(d1, d2);
-const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>> ref2(*iter);
-const_cast<const std::iter_reference_t<std::ranges::iterator_t<sci::gridpair_view<std::deque<double>, 1, std::deque<double>, 1>>>>(*iter) = std::pair(d1,d2);
-*/
 
 using gd = sci::GridData<double, 2>;
 static_assert((bool)std::ranges::random_access_range<gd>, "sci::grid_view failed the test for being a random access range");
@@ -149,6 +112,9 @@ void output1d(T grid) requires (T::ndims == 1)
 
 int main()
 {
+	//test the gridOnly cpp file
+	testJustGrid();
+
 	//testing GridData
 	{
 		//std::vector<double> dest;

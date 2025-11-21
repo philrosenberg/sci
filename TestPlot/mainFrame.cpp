@@ -1,8 +1,7 @@
 #include "mainFrame.h"
-#include<svector/svector.h>
-#include<svector/plot.h>
-#include<svector/sreadwrite.h>
-#include<svector/string.h>
+#include"../include/svector/plot.h"
+#include"../include/svector/string.h"
+#include"../include/svector/math.h"
 #include<wx/scrolwin.h>
 
 const int mainFrame::ID_FILE_EXIT = ::wxNewId();
@@ -505,9 +504,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		for (size_t i = 0; i < x.size(); ++i)
 			x[i] = 5.0 * i;
 		for (size_t i = 0; i < y1.size(); ++i)
-			y1[i] = std::sin(x[i] * M_2PI / 360.0) * std::exp(-x[i]/720.0);
+			y1[i] = std::sin(x[i] * sci::m_2pi / 360.0) * std::exp(-x[i]/720.0);
 		for (size_t i = 0; i < y1.size(); ++i)
-			y2[i] = std::cos(x[i] * M_2PI / 360.0) * std::exp(-x[i] / 720.0);
+			y2[i] = std::cos(x[i] * sci::m_2pi / 360.0) * std::exp(-x[i] / 720.0);
 		for (size_t i = 0; i < y1.size(); ++i)
 			y3[i] = (y1[i]+y2[i])/2.0;
 

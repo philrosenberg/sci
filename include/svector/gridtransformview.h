@@ -4,7 +4,6 @@
 #include"gridview.h"
 #include<tuple>
 #include<assert.h>
-//#include"array.h"
 #include"math.h"
 #include"functional.h"
 
