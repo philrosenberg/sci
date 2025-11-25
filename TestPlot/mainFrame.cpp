@@ -1,5 +1,6 @@
 #include "mainFrame.h"
 #include"../include/scieng/plot.h"
+#include"../include/scieng/wxplot.h"
 #include"../include/scieng/string.h"
 #include"../include/scieng/math.h"
 #include<wx/scrolwin.h>
@@ -57,7 +58,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	//create a set of plots all plotting the same z, but using either the grid or contour routines and either 1d or 2d x and y coordinates
 	// we choose the function 1+1/(x^2+2y^2) as this is different in the x and y axes and outside the range 0-1, so it tests to make sure
 	// we do both axes correctly and tests the weird autoscaling of plshades
-	sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(parent);
+	sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel> *frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(parent);
 	frame->SetClientSize(800, 800);
 	auto canvas = frame->getPanel()->getCanvas();
 
@@ -288,7 +289,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with empty axes running from 0-1
 		//this just tests that drawing axes works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel> *frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -307,7 +308,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with axes running from 0-1 and 3 circular sci::graphics::Points
 		//this tests that sci::graphics::Points works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel> *frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -337,7 +338,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with auto scaled axes and 3 circular sci::graphics::Points
 		//this tests that auto scaling axes works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel> *frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -366,7 +367,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with auto scaled axes and 3 circular sci::graphics::Points
 		//this tests that auto scaling axes works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>* frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -395,7 +396,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with auto scaled axes, 3 vertical and 3 horizontal bars
 		//this tests that auto scaling axes works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>* frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -429,7 +430,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame with auto scaled axes and a filled area
 		//this tests that auto scaling axes works
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>* frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -455,7 +456,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 	{
 		//create a plot showing points with varying size and colour
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>* frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>* frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -489,7 +490,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 	{
 		//create a frame showing an exponentially decreasing sin wave
 		//this tests that lines and different line styles work
-		sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel> *frame = new sci::graphics::GraphicsFrame<sci::plot::PlotCanvasPanel>(this);
+		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel> *frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
 		frame->SetClientSize(1200, 400);
 		auto canvas = frame->getPanel()->getCanvas();
 
@@ -643,16 +644,16 @@ void mainFrame::OnRunGraphicsTests(wxCommandEvent& event)
 		redRgb = redHls.convertToRgb();
 	}
 
-	sci::graphics::GraphicsFrame<PlotAxisTestPanel>* frame = new sci::graphics::GraphicsFrame<PlotAxisTestPanel>(this);
+	sci::graphics::wxGraphicsFrame<PlotAxisTestPanel>* frame = new sci::graphics::wxGraphicsFrame<PlotAxisTestPanel>(this);
 	frame->Show();
 
-	sci::graphics::GraphicsFrame<RectangleTestPanel>* frame1 = new sci::graphics::GraphicsFrame<RectangleTestPanel>(this);
+	sci::graphics::wxGraphicsFrame<RectangleTestPanel>* frame1 = new sci::graphics::wxGraphicsFrame<RectangleTestPanel>(this);
 	frame1->Show();
 
-	sci::graphics::GraphicsFrame<TextTestPanel>* frame2 = new sci::graphics::GraphicsFrame<TextTestPanel>(this);
+	sci::graphics::wxGraphicsFrame<TextTestPanel>* frame2 = new sci::graphics::wxGraphicsFrame<TextTestPanel>(this);
 	frame2->Show();
 
-	sci::graphics::GraphicsFrame<PlotLineTestPanel>* frame3 = new sci::graphics::GraphicsFrame<PlotLineTestPanel>(this);
+	sci::graphics::wxGraphicsFrame<PlotLineTestPanel>* frame3 = new sci::graphics::wxGraphicsFrame<PlotLineTestPanel>(this);
 	frame3->Show();
 }
 
@@ -668,7 +669,7 @@ mainFrame::~mainFrame()
 void RectangleTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+	sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 	sci::graphics::Point p1 = sci::graphics::Point(unitless(0.1), unitless(0.1));
 	sci::graphics::Point p2 = sci::graphics::Point(unitless(0.1), unitless(0.7));
 	sci::graphics::Point p3 = sci::graphics::Point(unitless(0.3), unitless(0.7));
@@ -712,7 +713,7 @@ sci::graphics::Distance boundingBox(const sci::graphics::TextMetric& textMetric)
 void TextTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+	sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 
 	sci::graphics::Distance size(millimetre(2.0), millimetre(2.0));
 
@@ -819,7 +820,7 @@ void TextTestPanel::OnPaint(wxPaintEvent& event)
 void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+	sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 
 	sci::string axisTitle = sU("Area (m^2)");
 
@@ -893,7 +894,7 @@ void PlotAxisTestPanel::OnPaint(wxPaintEvent& event)
 void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
-	sci::graphics::wxRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+	sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
 
 	//bottom left plot regular axis directions
 	std::shared_ptr<sci::plot::Axis> xAxis1(new sci::plot::Axis(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)),

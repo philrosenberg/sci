@@ -1936,7 +1936,7 @@ namespace sci
 					result = psdc.StartDoc(sci::toNativeUnicode(sU("Writing ") + filename));
 					if (result == false)
 						return result;
-					sci::graphics::wxRenderer renderer(&psdc, wxSize(width, height), scale);
+					sci::graphics::wxDcRenderer renderer(&psdc, wxSize(width, height), scale);
 					render(renderer, scale);
 					psdc.EndDoc();
 				}
@@ -1945,7 +1945,7 @@ namespace sci
 				{
 					//here we redraw the plot like OnPaint but using a wxMetafile DC.
 					wxMetafileDC metadc(sci::toNativeUnicode(filename), width, height);
-					sci::graphics::wxRenderer renderer(&metadc, wxSize(width, height), scale);
+					sci::graphics::wxDcRenderer renderer(&metadc, wxSize(width, height), scale);
 					render(renderer, scale);;//0 gives vector output
 					//close the file - note this gives us a copy of the file in memory which we must delete
 					wxMetafile* metafile = metadc.Close();
@@ -1962,7 +1962,7 @@ namespace sci
 				else if (extension == "svg")
 				{
 					wxSVGFileDC dc(sci::toNativeUnicode(filename), width, height, scale.value<grPerInch>());
-					sci::graphics::wxRenderer renderer(&dc, wxSize(width, height), scale);
+					sci::graphics::wxDcRenderer renderer(&dc, wxSize(width, height), scale);
 					render(renderer, scale);
 					result = true;
 				}
@@ -1993,7 +1993,7 @@ namespace sci
 					//or to show blank if there are no plots
 					memdc.FloodFill(0, 0, *wxWHITE, wxFLOOD_BORDER);
 
-					sci::graphics::wxRenderer renderer(&memdc, wxSize(width, height), scale);
+					sci::graphics::wxDcRenderer renderer(&memdc, wxSize(width, height), scale);
 					render(renderer, scale);
 
 
@@ -2016,48 +2016,6 @@ namespace sci
 			std::vector<std::shared_ptr<DrawableItem>> m_itemsToSkipNextRendering;
 			wxSize m_previousSize;
 
-		};
-
-
-
-		class wxDCScaler
-		{
-		public:
-			wxDCScaler(wxDC* dc, double xScale, double yScale)
-			{
-				m_dc = dc;
-				dc->GetUserScale(&m_xScale, &m_yScale);
-				dc->SetUserScale(xScale, yScale);
-			}
-			~wxDCScaler()
-			{
-				m_dc->SetUserScale(m_xScale, m_yScale);
-			}
-		private:
-			wxDC* m_dc;
-			double m_xScale;
-			double m_yScale;
-		};
-
-		class PlotCanvasPanel : public ::sci::graphics::GraphicsPanel
-		{
-		public:
-			PlotCanvasPanel(wxWindow* parent, int id = wxID_ANY)
-				: ::sci::graphics::GraphicsPanel(parent, id)
-			{
-			}
-			PlotCanvas* getCanvas()
-			{
-				return &m_plotCanvas;
-			}
-		private:
-			virtual void OnPaint(wxPaintEvent& event) override
-			{
-				wxPaintDC dc(this);
-				::sci::graphics::wxRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
-				m_plotCanvas.render(renderer, grPerInch(FromDIP(96)));
-			}
-			PlotCanvas m_plotCanvas;
 		};
 	}
 }

@@ -2,7 +2,7 @@
 #define SCI_ALGORITHM_H
 #include<algorithm>
 #include<iterator>
-#include<svector/math.h>
+#include"math.h"
 namespace sci
 {
 	//This sci vesion of std::transform avoids the MSVC security warnings which won't switch off

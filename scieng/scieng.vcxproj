@@ -17,7 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -53,27 +52,24 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared" >
+  <ImportGroup Label="Shared">
   </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    </ImportGroup>
-
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -130,8 +126,41 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-
-  <ItemGroup></ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\scieng\algorithm.h" />
+    <ClInclude Include="..\include\scieng\codepage.h" />
+    <ClInclude Include="..\include\scieng\functional.h" />
+    <ClInclude Include="..\include\scieng\graphics.h" />
+    <ClInclude Include="..\include\scieng\grid.h" />
+    <ClInclude Include="..\include\scieng\gridtransformview.h" />
+    <ClInclude Include="..\include\scieng\gridview.h" />
+    <ClInclude Include="..\include\scieng\iostream.h" />
+    <ClInclude Include="..\include\scieng\math.h" />
+    <ClInclude Include="..\include\scieng\plot.h" />
+    <ClInclude Include="..\include\scieng\plot\elements.h" />
+    <ClInclude Include="..\include\scieng\plot\errorBar.h" />
+    <ClInclude Include="..\include\scieng\plot\fillBars.h" />
+    <ClInclude Include="..\include\scieng\plot\gridContour.h" />
+    <ClInclude Include="..\include\scieng\plot\linesPoints.h" />
+    <ClInclude Include="..\include\scieng\plot\physical.h" />
+    <ClInclude Include="..\include\scieng\plot\plot.h" />
+    <ClInclude Include="..\include\scieng\plot\plotable.h" />
+    <ClInclude Include="..\include\scieng\plot\splottest.h" />
+    <ClInclude Include="..\include\scieng\plot\transforms.h" />
+    <ClInclude Include="..\include\scieng\plot\varyingPoints.h" />
+    <ClInclude Include="..\include\scieng\Ranges.h" />
+    <ClInclude Include="..\include\scieng\RangeTree.h" />
+    <ClInclude Include="..\include\scieng\rendering.h" />
+    <ClInclude Include="..\include\scieng\sstream.h" />
+    <ClInclude Include="..\include\scieng\string.h" />
+    <ClInclude Include="..\include\scieng\stringfuncs.h" />
+    <ClInclude Include="..\include\scieng\time.h" />
+    <ClInclude Include="..\include\scieng\Traits.h" />
+    <ClInclude Include="..\include\scieng\unicode.h" />
+    <ClInclude Include="..\include\scieng\Units.h" />
+    <ClInclude Include="..\include\scieng\wxplot.h" />
+    <ClInclude Include="..\include\scieng\wxrenderer.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

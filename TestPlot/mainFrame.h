@@ -2,7 +2,7 @@
 #define APEX_MAINFRAME_H
 
 #include "app.h"
-#include"../include/scieng/graphics.h"
+#include"../include/scieng/wxrenderer.h"
 
 class mainFrame : public wxFrame
 {
@@ -22,41 +22,41 @@ private:
 	DECLARE_EVENT_TABLE();
 };
 
-class RectangleTestPanel : public sci::graphics::GraphicsPanel
+class RectangleTestPanel : public sci::graphics::wxGraphicsPanel
 {
 public:
 	RectangleTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:sci::graphics::GraphicsPanel(parent, id)
+		:sci::graphics::wxGraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class TextTestPanel : public sci::graphics::GraphicsPanel
+class TextTestPanel : public sci::graphics::wxGraphicsPanel
 {
 public:
 	TextTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:sci::graphics::GraphicsPanel(parent, id)
+		:sci::graphics::wxGraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class PlotAxisTestPanel : public sci::graphics::GraphicsPanel
+class PlotAxisTestPanel : public sci::graphics::wxGraphicsPanel
 {
 public:
 	PlotAxisTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:sci::graphics::GraphicsPanel(parent, id)
+		:sci::graphics::wxGraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;
 };
 
-class PlotLineTestPanel : public sci::graphics::GraphicsPanel
+class PlotLineTestPanel : public sci::graphics::wxGraphicsPanel
 {
 public:
 	PlotLineTestPanel(wxWindow* parent, int id = wxID_ANY)
-		:sci::graphics::GraphicsPanel(parent, id)
+		:sci::graphics::wxGraphicsPanel(parent, id)
 	{}
 private:
 	virtual void OnPaint(wxPaintEvent& event) override;

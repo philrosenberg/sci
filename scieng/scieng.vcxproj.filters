@@ -13,5 +13,109 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\plot">
+      <UniqueIdentifier>{a11e210f-5099-403f-a8e3-2dfd76f15722}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\scieng\algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\codepage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\functional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\graphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\gridtransformview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\gridview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\iostream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\Ranges.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\RangeTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\rendering.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\sstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\stringfuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\Traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\unicode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\Units.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\elements.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\errorBar.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\fillBars.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\gridContour.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\linesPoints.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\physical.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\plot.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\plotable.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\splottest.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\transforms.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\varyingPoints.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\wxrenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\wxplot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
