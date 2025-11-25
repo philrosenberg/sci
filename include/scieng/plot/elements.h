@@ -26,11 +26,11 @@ namespace sci
 			Symbol()
 			{
 				m_symbol = std::vector<Distance>{
-				Distance(grMillimetre(-1.0), grMillimetre(-1.0)),
-					Distance(grMillimetre(1.0), grMillimetre(-1.0)),
-					Distance(grMillimetre(1.0), grMillimetre(1.0)),
-					Distance(grMillimetre(-1.0), grMillimetre(1.0)),
-					Distance(grMillimetre(-1.0), grMillimetre(-1.0)) };
+				Distance(millimetre(-1.0), millimetre(-1.0)),
+					Distance(millimetre(1.0), millimetre(-1.0)),
+					Distance(millimetre(1.0), millimetre(1.0)),
+					Distance(millimetre(-1.0), millimetre(1.0)),
+					Distance(millimetre(-1.0), millimetre(-1.0)) };
 			}
 
 			Symbol(const Symbol& symbol) = default;

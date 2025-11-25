@@ -17,7 +17,7 @@ namespace sci
 			{
 			}
 		private:
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -45,13 +45,13 @@ namespace sci
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
 
 				renderer.setBrush(m_colour);
-				renderer.setPen(sci::graphics::RgbColour(), grMillimetre(0.0));
+				renderer.setPen(sci::graphics::RgbColour(), millimetre(0.0));
 
 				const std::vector<double>& x = getData<0>(axisSetIndex);
 				const std::vector<double>& y = getData<1>(axisSetIndex);

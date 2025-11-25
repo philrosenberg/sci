@@ -60,7 +60,7 @@ namespace sci
 			{
 				return m_scaledAxes;
 			}
-			void draw(Renderer& renderer, grPerMillimetre scale) override
+			void draw(Renderer& renderer, perMillimetre scale) override
 			{
 				for (size_t i = 0; i < m_xAxis.size(); ++i)
 				{
@@ -99,7 +99,7 @@ namespace sci
 			}
 		private:
 			virtual void autoscaleAxes(size_t axisSetIndex) = 0;
-			virtual void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const {}
+			virtual void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const {}
 			std::vector<std::shared_ptr<Axis>> m_xAxis;
 			std::vector<std::shared_ptr<Axis>> m_yAxis;
 			std::shared_ptr<splotTransformer> m_transformer;

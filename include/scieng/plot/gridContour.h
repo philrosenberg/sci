@@ -56,12 +56,12 @@ namespace sci
 				m_colourscale = colourScale;
 			}
 			
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (! Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template hasData())
 					return;
 
-				renderer.setPen(rgbcolour(), Length(grMillimetre(0.0)));
+				renderer.setPen(rgbcolour(), Length(millimetre(0.0)));
 
 				//get the limits of the clourscale - this will get either the linear or logged min
 				//as appropriate
@@ -223,7 +223,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				sci::GridData<double, 1> contourLevels;
 				if (m_levelScale)

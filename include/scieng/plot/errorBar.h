@@ -18,7 +18,7 @@ namespace sci
 				m_stopLength = stopLength;
 				m_useForAutoscale = useForAutoscale;
 			}
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -65,7 +65,7 @@ namespace sci
 				m_useForAutoscale = useForAutoscale;
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;

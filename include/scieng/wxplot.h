@@ -22,8 +22,8 @@ namespace sci
 			virtual void OnPaint(wxPaintEvent& event) override
 			{
 				wxPaintDC dc(this);
-				::sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), grPerInch(FromDIP(96)));
-				m_plotCanvas.render(renderer, grPerInch(FromDIP(96)));
+				::sci::graphics::wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+				m_plotCanvas.render(renderer, perInch(FromDIP(96)));
 			}
 			PlotCanvas m_plotCanvas;
 		};
@@ -31,7 +31,7 @@ namespace sci
 
 
 
-		inline bool wxWriteToVectorFile(sci::plot::PlotCanvas& canvas, sci::string filename, grMillimetre width, grMillimetre height)
+		inline bool wxWriteToVectorFile(sci::plot::PlotCanvas& canvas, sci::string filename, millimetre width, millimetre height)
 		{
 			//get the extension
 			wxFileName fullfile = wxString(sci::toNativeUnicode(filename));
@@ -50,9 +50,9 @@ namespace sci
 				setupdata.SetPaperId(wxPAPER_NONE);
 
 				//ps uses the default unit of pt(1/72 inch)
-				grPerInch scale(72);
-				int widthDevice = (width * scale).value<grUnitless>();
-				int heightDevice = (height * scale).value<grUnitless>();
+				perInch scale(72);
+				int widthDevice = (width * scale).value<unitless>();
+				int heightDevice = (height * scale).value<unitless>();
 				setupdata.SetPaperSize(wxSize(widthDevice, heightDevice));
 				setupdata.SetPrintMode(wxPRINT_MODE_FILE);
 				//setupdata.SetQuality(wxPRINT_QUALITY_HIGH); //doesn't seem to do anything
@@ -69,9 +69,9 @@ namespace sci
 			{
 
 				//emf uses the default unit of twip(1/1440 inch, 1/20 pt)
-				grPerInch scale(1440);
-				int widthDevice = (width * scale).value<grUnitless>();
-				int heightDevice = (height * scale).value<grUnitless>();
+				perInch scale(1440);
+				int widthDevice = (width * scale).value<unitless>();
+				int heightDevice = (height * scale).value<unitless>();
 				wxMetafileDC metadc(sci::toNativeUnicode(filename), widthDevice, heightDevice);
 				sci::graphics::wxDcRenderer renderer(&metadc, wxSize(widthDevice, heightDevice), scale);
 				canvas.render(renderer, scale);;//0 gives vector output
@@ -91,10 +91,10 @@ namespace sci
 			{
 				//we can set the units for a wxSVGFileDC, which is nice. It needs to be in
 				//dpi, so I'm going to use twips, for the units, like eps (1/1440 inch, 1/20 pt)
-				grPerInch scale(1440);
-				int widthDevice = (width * scale).value<grUnitless>();
-				int heightDevice = (height * scale).value<grUnitless>();
-				wxSVGFileDC dc(sci::toNativeUnicode(filename), widthDevice, heightDevice, scale.value<grPerInch>());
+				perInch scale(1440);
+				int widthDevice = (width * scale).value<unitless>();
+				int heightDevice = (height * scale).value<unitless>();
+				wxSVGFileDC dc(sci::toNativeUnicode(filename), widthDevice, heightDevice, scale.value<perInch>());
 				sci::graphics::wxDcRenderer renderer(&dc, wxSize(widthDevice, heightDevice), scale);
 				canvas.render(renderer, scale);
 				result = true;
@@ -103,7 +103,7 @@ namespace sci
 			return result;
 		}
 
-		inline bool wxWriteToRasterFile(sci::plot::PlotCanvas& canvas, sci::string filename, int width, int height, grPerInch resolution)
+		inline bool wxWriteToRasterFile(sci::plot::PlotCanvas& canvas, sci::string filename, int width, int height, perInch resolution)
 		{
 			//get the extension
 			wxFileName fullfile = wxString(sci::toNativeUnicode(filename));

@@ -1,10 +1,6 @@
 #ifndef splot_h
 #define splot_h
 
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#define SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
-#endif
 
 #include"../string.h"
 #include"../graphics.h"
@@ -12,10 +8,6 @@
 #include"../gridtransformview.h"
 #include<algorithm>
 
-#ifdef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
-#undef _CRT_SECURE_NO_WARNINGS
-#undef SVECTOR_MUST_RESET_CRT_SECURE_NO_WARNINGS
-#endif
 
 namespace sci
 {
@@ -314,12 +306,12 @@ namespace sci
 		using Point = sci::graphics::Point;
 		using Renderer = sci::graphics::Renderer;
 		using Distance = sci::graphics::Distance;
-		using grMillimetre = sci::graphics::millimetre;
-		using grPerMillimetre = sci::graphics::perMillimetre;
-		using grTextPoint = sci::graphics::textPoint;
-		using grDegree = sci::graphics::degree;
-		using grUnitless = sci::graphics::unitless;
-		using grPerInch = sci::graphics::perInch;
+		using millimetre = sci::graphics::millimetre;
+		using perMillimetre = sci::graphics::perMillimetre;
+		using textPoint = sci::graphics::textPoint;
+		using degree = sci::graphics::degree;
+		using unitless = sci::graphics::unitless;
+		using perInch = sci::graphics::perInch;
 
 
 		class ColourScale : public Scale
@@ -407,7 +399,7 @@ namespace sci
 
 				double h, l, s, a;
 				interpolate(value, h, l, s, a, valuePreLogged);
-				return hlscolour(grDegree(h), l, s, a);
+				return hlscolour(degree(h), l, s, a);
 			}
 
 			rgbcolour getRgbOffscaleBottom() const
@@ -415,7 +407,7 @@ namespace sci
 				if (!m_hls)
 					return rgbcolour(m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
 				else
-					return hlscolour(grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
+					return hlscolour(degree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
 			}
 
 			rgbcolour getRgbOffscaleTop() const
@@ -423,7 +415,7 @@ namespace sci
 				if (!m_hls)
 					return rgbcolour(m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
 				else
-					return hlscolour(grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
+					return hlscolour(degree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
 			}
 
 			hlscolour getHlsOffscaleBottom() const
@@ -431,7 +423,7 @@ namespace sci
 				if (!m_hls)
 					return rgbcolour(m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToHls();
 				else
-					return hlscolour(grDegree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]);
+					return hlscolour(degree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]);
 			}
 
 			hlscolour getHlsOffscaleTop() const
@@ -439,7 +431,7 @@ namespace sci
 				if (!m_hls)
 					return rgbcolour(m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToHls();
 				else
-					return hlscolour(grDegree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back());
+					return hlscolour(degree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back());
 			}
 
 			virtual ~ColourScale()
@@ -575,7 +567,7 @@ namespace sci
 				m_alpha.resize(colour.size());
 				for (size_t i = 0; i < colour.size(); ++i)
 				{
-					m_colour1[i] = colour[i].h().value<grDegree>();
+					m_colour1[i] = colour[i].h().value<degree>();
 					m_colour2[i] = colour[i].l();
 					m_colour3[i] = colour[i].s();
 					m_alpha[i] = colour[i].a();
@@ -927,7 +919,7 @@ namespace sci
 		class LineStyle
 		{
 		public:
-			LineStyle(Length width = grMillimetre(0.5), const rgbcolour& colour = rgbcolour(0.0, 0.0, 0.0, 1.0), const std::vector<Length>& dashes = std::vector<Length>(0))
+			LineStyle(Length width = millimetre(0.5), const rgbcolour& colour = rgbcolour(0.0, 0.0, 0.0, 1.0), const std::vector<Length>& dashes = std::vector<Length>(0))
 				: m_width(width), m_colour(colour), m_dashes(dashes)
 			{
 			}
@@ -970,11 +962,11 @@ namespace sci
 				//set up to start on a mark
 				bool onmark = true;
 				if (pattern[0] == ' ' || pattern[0] == '\t')
-					dashes.push_back(grMillimetre(0.0));
+					dashes.push_back(millimetre(0.0));
 
 				//initialise our current lengths to zero
-				Length marklength = grMillimetre(0.0);
-				Length spacelength = grMillimetre(0.0);
+				Length marklength = millimetre(0.0);
+				Length spacelength = millimetre(0.0);
 
 				//work through each character of style
 				for (size_t i = 0; i < pattern.length(); ++i)
@@ -983,26 +975,26 @@ namespace sci
 					if (onmark == true && (pattern[i] == ' ' || pattern[i] == '\t'))
 					{
 						dashes.push_back(marklength);
-						marklength = grMillimetre(0.0);
+						marklength = millimetre(0.0);
 						onmark = false;
 					}
 					else if (onmark == false && (pattern[i] == '_' || pattern[i] == '.' || pattern[i] == '-'))
 					{
 						dashes.push_back(spacelength);
-						spacelength = grMillimetre(0.0);
+						spacelength = millimetre(0.0);
 						onmark = true;
 					}
 					//add the current character to the current length
 					if (pattern[i] == ' ')
-						spacelength += lineWidth * grUnitless(0.5);
+						spacelength += lineWidth * unitless(0.5);
 					else if (pattern[i] == '\t')
-						spacelength += lineWidth * grUnitless(2.0);
+						spacelength += lineWidth * unitless(2.0);
 					else if (pattern[i] == '.')
-						marklength += lineWidth * grUnitless(0.5);
+						marklength += lineWidth * unitless(0.5);
 					else if (pattern[i] == '_')
-						marklength += lineWidth * grUnitless(2.0);
+						marklength += lineWidth * unitless(2.0);
 					else if (pattern[i] == '-')
-						marklength += lineWidth * grUnitless(2.0);
+						marklength += lineWidth * unitless(2.0);
 				}
 				//add the last mark or space
 				if (onmark == true)
@@ -1030,14 +1022,14 @@ namespace sci
 			std::vector<Length> m_dashes;
 		};
 
-		const LineStyle noLine(grMillimetre(0.0));
+		const LineStyle noLine(millimetre(0.0));
 
 		class DrawableItem
 		{
 		public:
 			virtual ~DrawableItem() {}
 			virtual void preDraw() = 0;
-			virtual void draw(Renderer& renderer, grPerMillimetre scale)
+			virtual void draw(Renderer& renderer, perMillimetre scale)
 			{
 			}
 			virtual bool readyToDraw() const = 0;
@@ -1052,8 +1044,8 @@ namespace sci
 			{
 			public:
 				Options(sci::string title = sU(""))
-					:m_title(title), m_titleDistance(grTextPoint(42)), m_majorTickLength(grMillimetre(4.0)), m_minorTickLength(grMillimetre(2.0)),
-					m_ticksLeftOrDown(true), m_ticksRightOrUp(false), m_labelsLeftOrDown(true), m_labelDirection(grMillimetre(1.0), grMillimetre(0.0)), m_majorInterval(0.0),
+					:m_title(title), m_titleDistance(textPoint(42)), m_majorTickLength(millimetre(4.0)), m_minorTickLength(millimetre(2.0)),
+					m_ticksLeftOrDown(true), m_ticksRightOrUp(false), m_labelsLeftOrDown(true), m_labelDirection(millimetre(1.0), millimetre(0.0)), m_majorInterval(0.0),
 					m_nSubticks(0), m_autoMajorInterval(true), m_autoNSubticks(true), m_customlabelcreator(nullptr), m_maxDigits(4)
 				{
 				}
@@ -1065,7 +1057,7 @@ namespace sci
 				{
 					Options result;
 					result.m_lineStyle = noLine;
-					result.m_labelFont.m_size = grMillimetre(0.0);
+					result.m_labelFont.m_size = millimetre(0.0);
 					return result;
 				}
 				Options& setTitle(const sci::string& title)
@@ -1126,16 +1118,16 @@ namespace sci
 				Direction direction = Scale::getDirection();
 				if (Direction::none == direction)
 				{
-					grDegree angle = renderer.getAngle(m_end - m_start);
-					if (angle < grDegree(0.0))
-						angle += grDegree(360.0);
-					if (angle < grDegree(45.0))
+					degree angle = renderer.getAngle(m_end - m_start);
+					if (angle < degree(0.0))
+						angle += degree(360.0);
+					if (angle < degree(45.0))
 						direction = Direction::horizontal;
-					else if (angle < grDegree(135.0))
+					else if (angle < degree(135.0))
 						direction = Direction::vertical;
-					else if (angle < grDegree(225.0))
+					else if (angle < degree(225.0))
 						direction = Direction::horizontal;
-					else if (angle < grDegree(315.0))
+					else if (angle < degree(315.0))
 						direction = Direction::vertical;
 					else
 						direction = Direction::horizontal;
@@ -1170,7 +1162,7 @@ namespace sci
 			{
 			}
 
-			void draw(Renderer& renderer, grPerMillimetre scale) override
+			void draw(Renderer& renderer, perMillimetre scale) override
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				m_options.m_lineStyle.setPen(renderer);
@@ -1192,7 +1184,7 @@ namespace sci
 					fraction = (std::log10(value) - getLogMin()) / (getLogMax() - getLogMin());
 				else
 					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
-				return (m_end - m_start) * grUnitless(fraction);
+				return (m_end - m_start) * unitless(fraction);
 			}
 
 			Distance alongAxisDistanceFromLoggedIfNeededData(double value) const
@@ -1202,11 +1194,11 @@ namespace sci
 					fraction = (value - getLogMin()) / (getLogMax() - getLogMin());
 				else
 					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
-				return (m_end - m_start) * grUnitless(fraction);
+				return (m_end - m_start) * unitless(fraction);
 			}
 
 		private:
-			void drawLinear(Renderer& renderer, grPerMillimetre scale)
+			void drawLinear(Renderer& renderer, perMillimetre scale)
 			{
 				//calculate the min, max and span
 				double min = getLinearMin();
@@ -1258,13 +1250,13 @@ namespace sci
 				double currentMajorPosition = std::floor(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
 
 				double minorInterval = majorInterval / double(nSubticks + 1);
-				grMillimetre maxLabelSize(0);
+				millimetre maxLabelSize(0);
 				while (currentMajorPosition <= max) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 				{
 					if (currentMajorPosition >= min)
 					{
 						drawTick(renderer, scale, currentMajorPosition, false);
-						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, minorInterval);
+						millimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, minorInterval);
 						maxLabelSize = std::max(labelSize, maxLabelSize);
 					}
 					for (size_t i = 0; i < nSubticks; ++i)
@@ -1281,10 +1273,10 @@ namespace sci
 
 				//draw the title
 				renderer.setFont(m_options.m_titleFont);
-				drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
+				drawTitle(renderer, scale, m_options.m_majorTickLength * unitless(1.4) + maxLabelSize);
 			}
 
-			void drawLog(Renderer& renderer, grPerMillimetre scale)
+			void drawLog(Renderer& renderer, perMillimetre scale)
 			{
 				//calculate the min, max and span
 				double logMin = getLogMin();
@@ -1316,7 +1308,7 @@ namespace sci
 				//draw the ticks and labels
 				renderer.setFont(m_options.m_labelFont);
 				double currentMajorLogPosition = std::floor(logMin / majorLogInterval) * majorLogInterval;
-				grMillimetre maxLabelSize(0);
+				millimetre maxLabelSize(0);
 
 				while (currentMajorLogPosition <= logMax) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 				{
@@ -1324,7 +1316,7 @@ namespace sci
 					if (currentMajorLogPosition >= logMin)
 					{
 						drawTick(renderer, scale, currentMajorPosition, false);
-						grMillimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, 0.0);
+						millimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, 0.0);
 						maxLabelSize = std::max(labelSize, maxLabelSize);
 					}
 					if (minorLogInterval != 0.0)
@@ -1354,14 +1346,14 @@ namespace sci
 
 				//draw the title
 				renderer.setFont(m_options.m_titleFont);
-				drawTitle(renderer, scale, m_options.m_majorTickLength * grUnitless(1.4) + maxLabelSize);
+				drawTitle(renderer, scale, m_options.m_majorTickLength * unitless(1.4) + maxLabelSize);
 			}
 
-			void drawTick(Renderer& renderer, grPerMillimetre scale, double plotPosition, bool minor)
+			void drawTick(Renderer& renderer, perMillimetre scale, double plotPosition, bool minor)
 			{
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
 				Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
-				Point p1 = Point(grMillimetre(0.0), grMillimetre(0.0));
+				Point p1 = Point(millimetre(0.0), millimetre(0.0));
 				Point p2 = p1;
 				Direction direction = getBestDirection(renderer);
 				if (direction == Direction::horizontal)
@@ -1371,9 +1363,9 @@ namespace sci
 					p2 = pagePosition;
 					//extend the tick out in either direction as needed
 					if (m_options.m_ticksRightOrUp)
-						p1 += Distance(grMillimetre(0.0), -length);
+						p1 += Distance(millimetre(0.0), -length);
 					if (m_options.m_ticksLeftOrDown)
-						p2 += Distance(grMillimetre(0.0), length);
+						p2 += Distance(millimetre(0.0), length);
 				}
 				else if (direction == Direction::vertical)
 				{
@@ -1382,20 +1374,20 @@ namespace sci
 					p2 = pagePosition;
 					//extend the tick out in either direction as needed
 					if (m_options.m_ticksLeftOrDown)
-						p1 += Distance(-length, grMillimetre(0.0));
+						p1 += Distance(-length, millimetre(0.0));
 					if (m_options.m_ticksRightOrUp)
-						p2 += Distance(length, grMillimetre(0.0));
+						p2 += Distance(length, millimetre(0.0));
 				}
 				if (p1 != p2)
 					renderer.line(p1, p2);
 			}
 
-			grMillimetre drawLabel(Renderer& renderer, grPerMillimetre scale, double plotPosition, double minorInterval) //returns the sise of the label perpedicular to the axis
+			millimetre drawLabel(Renderer& renderer, perMillimetre scale, double plotPosition, double minorInterval) //returns the sise of the label perpedicular to the axis
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setBrush(m_options.m_labelFont.m_colour);
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
-				Length distanceFromAxis = m_options.m_majorTickLength * grUnitless(1.2);
+				Length distanceFromAxis = m_options.m_majorTickLength * unitless(1.2);
 
 				sci::string label;
 				{
@@ -1428,84 +1420,84 @@ namespace sci
 						label = strm.str();
 				}
 
-				grUnitless alignment(0.5);
-				grMillimetre labelSize(0);
+				unitless alignment(0.5);
+				millimetre labelSize(0);
 				Direction direction = getBestDirection(renderer);
 				if (direction == Direction::horizontal)
 				{
 					//set the horizontal position and the alignment
 					if (!m_options.m_labelsLeftOrDown)
 					{
-						pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
-						alignment = grUnitless(1.0);
+						pagePosition += Distance(millimetre(0.0), -distanceFromAxis);
+						alignment = unitless(1.0);
 					}
 					else
 					{
-						pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
-						alignment = grUnitless(0.0);
+						pagePosition += Distance(millimetre(0.0), distanceFromAxis);
+						alignment = unitless(0.0);
 					}
 
-					labelSize = (renderer.formattedText(label, pagePosition, grUnitless(0.5), grUnitless(alignment))).ascent;
+					labelSize = (renderer.formattedText(label, pagePosition, unitless(0.5), unitless(alignment))).ascent;
 				}
 				else if (direction == Direction::vertical)
 				{
 					//set the horizontal position and the alignment
 					if (m_options.m_labelsLeftOrDown)
 					{
-						pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
-						alignment = grUnitless(1.0);
+						pagePosition += Distance(-distanceFromAxis, millimetre(0.0));
+						alignment = unitless(1.0);
 					}
 					else
 					{
-						pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
-						alignment = grUnitless(0.0);
+						pagePosition += Distance(distanceFromAxis, millimetre(0.0));
+						alignment = unitless(0.0);
 					}
 
-					labelSize = (renderer.formattedText(label, pagePosition, grUnitless(alignment), grUnitless(0.5))).width;
+					labelSize = (renderer.formattedText(label, pagePosition, unitless(alignment), unitless(0.5))).width;
 				}
 
 				return labelSize;
 			}
 
-			void drawTitle(Renderer& renderer, grPerMillimetre scale, Length distanceFromAxis)
+			void drawTitle(Renderer& renderer, perMillimetre scale, Length distanceFromAxis)
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setBrush(m_options.m_titleFont.m_colour);
-				Point pagePosition = m_start + (m_end - m_start) * grUnitless(0.5);
+				Point pagePosition = m_start + (m_end - m_start) * unitless(0.5);
 
-				grUnitless alignment(0.5);
+				unitless alignment(0.5);
 				Direction direction = getBestDirection(renderer);
 				if (direction == Direction::horizontal)
 				{
 					//set the horizontal position and the alignment
 					if (!m_options.m_labelsLeftOrDown)
 					{
-						pagePosition += Distance(grMillimetre(0.0), -distanceFromAxis);
-						alignment = grUnitless(1.0);
+						pagePosition += Distance(millimetre(0.0), -distanceFromAxis);
+						alignment = unitless(1.0);
 					}
 					else
 					{
-						pagePosition += Distance(grMillimetre(0.0), distanceFromAxis);
-						alignment = grUnitless(0.0);
+						pagePosition += Distance(millimetre(0.0), distanceFromAxis);
+						alignment = unitless(0.0);
 					}
 
-					renderer.formattedText(m_options.m_title, pagePosition, grUnitless(0.5), grUnitless(alignment));
+					renderer.formattedText(m_options.m_title, pagePosition, unitless(0.5), unitless(alignment));
 				}
 				else if (direction == Direction::vertical)
 				{
 					//set the horizontal position and the alignment
 					if (m_options.m_labelsLeftOrDown)
 					{
-						pagePosition += Distance(-distanceFromAxis, grMillimetre(0.0));
-						alignment = grUnitless(1.0);
+						pagePosition += Distance(-distanceFromAxis, millimetre(0.0));
+						alignment = unitless(1.0);
 					}
 					else
 					{
-						pagePosition += Distance(distanceFromAxis, grMillimetre(0.0));
-						alignment = grUnitless(0.0);
+						pagePosition += Distance(distanceFromAxis, millimetre(0.0));
+						alignment = unitless(0.0);
 					}
 
-					renderer.formattedText(m_options.m_title, pagePosition, grUnitless(0.5), grUnitless(alignment), grDegree(90));
+					renderer.formattedText(m_options.m_title, pagePosition, unitless(0.5), unitless(alignment), degree(90));
 				}
 			}
 
@@ -1653,7 +1645,7 @@ namespace sci
 		{
 		public:
 			PlotFrame(const Point topLeft, const Point bottomRight, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine,
-				::sci::string title = sU(""), Length titlesize = Length(grTextPoint(12.0)), Length titledistance = Length(grTextPoint(12.0)),
+				::sci::string title = sU(""), Length titlesize = Length(textPoint(12.0)), Length titledistance = Length(textPoint(12.0)),
 				::sci::string titlefont = sU(""), int32_t titlestyle = 0, rgbcolour titlecolour = rgbcolour(0, 0, 0))
 			{
 				m_topLeft = topLeft;
@@ -1670,17 +1662,17 @@ namespace sci
 			void preDraw() override
 			{
 			}
-			void draw(Renderer& renderer, grPerMillimetre scale) override
+			void draw(Renderer& renderer, perMillimetre scale) override
 			{
 				sci::graphics::StatePusher state(&renderer);
 				m_fillStyle.setBrush(renderer);
 				m_lineStyle.setPen(renderer);
 				renderer.rectangle(m_topLeft, m_bottomRight - m_topLeft);
 
-				Point titlePosition(m_topLeft.getX() + (m_bottomRight.getX() - m_topLeft.getX()) / grUnitless(2), m_topLeft.getY() - m_titledistance);
+				Point titlePosition(m_topLeft.getX() + (m_bottomRight.getX() - m_topLeft.getX()) / unitless(2), m_topLeft.getY() - m_titledistance);
 
 				renderer.setFont(m_titlefont, m_titlesize, m_titlecolour);
-				renderer.formattedText(m_title, titlePosition, grUnitless(0.5), grUnitless(0.0));
+				renderer.formattedText(m_title, titlePosition, unitless(0.5), unitless(0.0));
 			}
 			bool readyToDraw() const override
 			{
@@ -1713,7 +1705,7 @@ namespace sci
 			void preDraw() override
 			{
 			}
-			void draw(Renderer& renderer, grPerMillimetre scale) override
+			void draw(Renderer& renderer, perMillimetre scale) override
 			{
 				if (m_colourscale->isDiscrete())
 				{
@@ -1784,9 +1776,9 @@ namespace sci
 		class Label : public DrawableItem
 		{
 		public:
-			Label(sci::string text, Point position, grUnitless horizontalAlignment = grUnitless(0.0),
-				grUnitless verticalAlignment = grUnitless(0.0), Renderer::Font font = Renderer::Font(),
-				grDegree rotation = grDegree(0.0), Length minTextSize = grTextPoint(5.0))
+			Label(sci::string text, Point position, unitless horizontalAlignment = unitless(0.0),
+				unitless verticalAlignment = unitless(0.0), Renderer::Font font = Renderer::Font(),
+				degree rotation = degree(0.0), Length minTextSize = textPoint(5.0))
 				:m_text(text), m_position(position), m_horizontalAlignment(horizontalAlignment),
 				m_verticalAlignment(verticalAlignment), m_font(font), m_rotation(rotation),
 				m_minTextSize(minTextSize)
@@ -1798,7 +1790,7 @@ namespace sci
 			{
 			};
 
-			void draw(Renderer& renderer, grPerMillimetre scale) override
+			void draw(Renderer& renderer, perMillimetre scale) override
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setFont(m_font);
@@ -1814,9 +1806,9 @@ namespace sci
 			sci::string m_text;
 			Point m_position;
 			Renderer::Font m_font;
-			grUnitless m_horizontalAlignment;
-			grUnitless m_verticalAlignment;
-			grDegree m_rotation;
+			unitless m_horizontalAlignment;
+			unitless m_verticalAlignment;
+			degree m_rotation;
 			Length m_minTextSize;
 		};
 
@@ -1867,7 +1859,7 @@ namespace sci
 				}
 				return false;
 			}
-			void render(Renderer& renderer, grPerMillimetre scale)
+			void render(Renderer& renderer, perMillimetre scale)
 			{
 				//remove any items we wish to skip
 				std::vector<std::shared_ptr<DrawableItem>> itemsToRender;
@@ -1908,7 +1900,7 @@ namespace sci
 				//clear the items to skip
 				m_itemsToSkipNextRendering.resize(0);
 			}
-			bool writetofile(::sci::string filename, int width, int height, grPerMillimetre scale)
+			bool writetofile(::sci::string filename, int width, int height, perMillimetre scale)
 			{
 				//get the extension
 				wxFileName fullfile = wxString(sci::toNativeUnicode(filename));
@@ -1961,7 +1953,7 @@ namespace sci
 #endif
 				else if (extension == "svg")
 				{
-					wxSVGFileDC dc(sci::toNativeUnicode(filename), width, height, scale.value<grPerInch>());
+					wxSVGFileDC dc(sci::toNativeUnicode(filename), width, height, scale.value<perInch>());
 					sci::graphics::wxDcRenderer renderer(&dc, wxSize(width, height), scale);
 					render(renderer, scale);
 					result = true;

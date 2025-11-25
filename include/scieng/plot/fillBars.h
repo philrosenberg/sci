@@ -23,7 +23,7 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -71,7 +71,7 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -118,7 +118,7 @@ namespace sci
 				m_fillStyle = fillStyle;
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -153,7 +153,7 @@ namespace sci
 			{
 			}
 			
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;

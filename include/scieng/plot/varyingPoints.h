@@ -15,7 +15,7 @@ namespace sci
 				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::array<std::shared_ptr<sci::plot::Scale>, 3>{xAxis, yAxis, colourScale}, transformer, xs, ys, zs), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -26,7 +26,7 @@ namespace sci
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
 					renderer.setBrush(m_colourScale->getRgbOriginalScale(z[i], true));
-					renderer.setPen(rgbcolour(), grMillimetre(0.0));
+					renderer.setPen(rgbcolour(), millimetre(0.0));
 					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), renderer);
 				}
 			}
@@ -42,13 +42,13 @@ namespace sci
 				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::array<std::shared_ptr<sci::plot::Scale>, 3>{xAxis, yAxis, sizeScale}, transformer, xs, ys, zs ), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
 
 				renderer.setBrush(m_colour);
-				renderer.setPen(rgbcolour(), grMillimetre(0.0));
+				renderer.setPen(rgbcolour(), millimetre(0.0));
 				const std::vector<double>& x = getData<0>(axisSetIndex);
 				const std::vector<double>& y = getData<1>(axisSetIndex);
 				const std::vector<double>& z = getData<2>(axisSetIndex);
@@ -71,7 +71,7 @@ namespace sci
 				: Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::array<std::shared_ptr<sci::plot::Scale>, 4>{xAxis, yAxis, colourScale, sizeScale}, transformer, xs, ys, zsColour, zsSize ), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
-			void plotData(size_t axisSetIndex, Renderer& renderer, grPerMillimetre scale) const override
+			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
 					return;
@@ -83,7 +83,7 @@ namespace sci
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
 					renderer.setBrush(m_colourScale->getRgbOriginalScale(z1[i], true));
-					renderer.setPen(rgbcolour(), grMillimetre(0.0));
+					renderer.setPen(rgbcolour(), millimetre(0.0));
 					double size = m_sizeScale->getsize(z2[i], true);
 					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), graphics::unitless(size), renderer);
 				}
