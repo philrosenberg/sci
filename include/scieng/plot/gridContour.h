@@ -213,7 +213,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -224,7 +224,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -235,7 +235,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -246,7 +246,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -262,7 +262,10 @@ namespace sci
 				sci::GridData<double, 1> contourLevels;
 				if (m_levelScale)
 				{
-					contourLevels = m_levelScale->getLevelsLoggedIfNeeded();
+					if (m_levelScale->isLog())
+						contourLevels = m_levelScale->getLevelsLogged();
+					else
+						contourLevels = m_levelScale->getLevelsLinear();
 					//sci::assertThrow(contourLevels.size() > 1, sci::err(sci::SERR_PLOT, 0, "ContourData::plotData: Cannot use a level scale with fewer than 2 levels."));
 				}
 
@@ -846,7 +849,7 @@ namespace sci
 
 
 			std::shared_ptr<ColourScale<double>> m_colourscale;
-			std::shared_ptr<LevelScale> m_levelScale;
+			std::shared_ptr<LevelScale<double>> m_levelScale;
 			LineStyle m_lineStyle;
 		};
 	}

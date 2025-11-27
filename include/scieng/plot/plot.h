@@ -940,63 +940,44 @@ namespace sci
 			bool m_fillOffscaleTop;
 		};
 
-
-		class LevelScale : public Scale<double>
+		template<class T>
+		class LevelScale : public Scale<T>
 		{
-			friend class splot;
-			friend class splot2d;
-			friend class splotlegend;
 		public:
-			LevelScale(std::span<const double> value = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false)
-				:sci::plot::Scale<double>(logarithmic, Direction::none, 0.0)
+			LevelScale(std::span<const T> value = sci::GridData<T, 1>(0), bool logarithmic = false, bool autostretch = false)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
 			{
-				m_value = sci::GridData<double, 1>(value.begin(), value.end());
-				sci::GridData<double, 1> dummy = m_value;
-				double linearMin;
-				double linearMax;
-				double logMin;
-				double logMax;
-				setupInterpolatingScale(value, m_value, m_logValue, dummy, linearMin, linearMax, logMin, logMax);
+				m_values = sci::GridData<T, 1>(value.begin(), value.end());
+				sci::GridData<double, 1> dummy = m_values;
+				T linearMin;
+				T linearMax;
+				typename Scale<T>::unitless_type logMin;
+				typename Scale<T>::unitless_type logMax;
+				Scale<T>::setupInterpolatingScale(value, m_values, m_logValues, dummy, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
 				{
-					if (isLog())
-						setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+					if (Scale<T>::isLog())
+						Scale<T>::setFixedScale(sci::pow(10, logMin), sci::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
 					else
-						setFixedScale(linearMin, linearMax);
+						Scale<T>::setFixedScale(linearMin, linearMax);
 				}
 			}
 			~LevelScale() {};
-			sci::GridData<double, 1> getLevelsLinear() const
+			sci::GridData<T, 1> getLevelsLinear() const
 			{
-				sci::GridData<double, 1> result;
-				if (isLog())
-				{
-					//result = sci::pow(10.0, getLogMin() + m_logValue * (getLogMax() - getLogMin())); //this should work but doesn't so do it manually
-					result.reshape(m_logValue.shape());
-					auto logValueIter = m_logValue.begin();
-					for (auto resultIter = result.begin(); resultIter != result.end(); ++resultIter, ++logValueIter)
-						*resultIter = sci::pow(10.0, getLogMin() + *logValueIter * (getLogMax() - getLogMin()));
-				}
-				else
-					result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
-				return result;
+				return Scale<T>::getLinearMin() + m_values * (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
 			}
-			sci::GridData<double, 1> getLevelsLoggedIfNeeded() const
+
+			sci::GridData<typename Scale<T>::unitless_type, 1> getLevelsLogged() const
 			{
-				sci::GridData<double, 1> result;
-				if (isLog())
-				{
-					result = getLogMin() + m_logValue * (getLogMax() - getLogMin());
-				}
-				else
-					result = getLinearMin() + m_value * (getLinearMax() - getLinearMin());
-				return result;
+				return Scale<T>::getLogMin() + m_logValues * (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 			}
 		private:
-			sci::GridData<double, 1> m_value;
-			sci::GridData<double, 1> m_logValue;
+
+			sci::GridData<T, 1> m_values;
+			sci::GridData<typename Scale<T>::unitless_type, 1> m_logValues;
 		};
 
 		class LineStyle
