@@ -12,7 +12,7 @@ namespace sci
 		{
 		public:
 			VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, xAxis, yAxis }, transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -60,7 +60,7 @@ namespace sci
 		{
 		public:
 			HorizontalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, xAxis, yAxis }, transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -109,7 +109,7 @@ namespace sci
 		{
 		public:
 			Boxes(std::span<const double> x1s, std::span<const double> x2s, std::span<const double> y1s, std::span<const double> y2s, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, xAxis, yAxis, yAxis }, transformer, x1s, x2s, y1s, y2s)
+				: Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -149,7 +149,7 @@ namespace sci
 		{
 		public:
 			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, yAxis }, transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			

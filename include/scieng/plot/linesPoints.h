@@ -13,7 +13,7 @@ namespace sci
 		{
 		public:
 			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, yAxis }, transformer, xs, ys), m_lineStyle(lineStyle)
+				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
@@ -38,7 +38,7 @@ namespace sci
 		{
 		public:
 			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, { xAxis, yAxis }, transformer, x, y), m_symbol(symbol), m_colour(colour)
+				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:

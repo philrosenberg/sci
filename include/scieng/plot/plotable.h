@@ -72,12 +72,14 @@ namespace sci
 				}
 			}
 
-			Point getPointFromLinearData(double x, double y, size_t axisSetIndex) const
+			template<class T, class U>
+			Point getPointFromLinearData(T x, U y, size_t axisSetIndex) const
 			{
 				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLinearData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLinearData(y);
 			}
 
-			Point getPointFromLoggedIfNeededData(double x, double y, size_t axisSetIndex) const
+			template<class T, class U>
+			Point getPointFromLoggedIfNeededData(T x, U y, size_t axisSetIndex) const
 			{
 				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(y);
 			}
@@ -122,13 +124,46 @@ namespace sci
 		{
 		public:
 			using containersTuple = std::tuple<CONTAINERS...>;
+		private:
+			//The following next two functions get a tuple of shared_ptrs to Scales, with each scale template parameter being the
+			//value_type of the containers in containersTuple. The values of all the pointers is null. This function will
+			//probably never get called in real code. They exists so that declytpe can be called on the result to define the type of
+			//axisTuple
+			template<int index>
+			static auto getNullScalePointersContinued(const auto& current)
+			{
+				if constexpr (index == std::tuple_size<containersTuple>())
+					return current;
+				else
+				{
+					using type = typename std::tuple_element<index, containersTuple>::type::value_type;
+					using scalePtrType = std::shared_ptr<Scale<type>>;
+					return getNullScalePointersContinued<index + 1>(std::tuple_cat(current, std::make_tuple(scalePtrType(nullptr))));
+				}
+			}
+			static auto getNullScalePointers()
+			{
+				return getNullScalePointersContinued<0>(std::tuple<>());
+			}
+
+			template <typename T>
+			struct IsTuple : std::false_type {};
+
+			template <typename... U>
+			struct IsTuple<std::tuple <U...>> : std::true_type {};
+		public:
+			using containersTuple = std::tuple<CONTAINERS...>;
+			using axisTuple = decltype(getNullScalePointers());
 			constexpr static int nDimensions = sizeof...(CONTAINERS);
 
-			template< class... RECEIVEDCONTAINERS>
-			Data(std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::array<std::shared_ptr<Scale>, nDimensions> axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
+			template< class AXISTUPLE, class... RECEIVEDCONTAINERS>
+			Data(std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, AXISTUPLE axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
 				:PlotableItem(xAxis, yAxis, transformer)
 			{
-				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the expected number");
+				static_assert(std::tuple_size<axisTuple>() == nDimensions, "Internal sci::plot::Data error - axisTuple is the wrong size");
+				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the number of dimensions");
+				static_assert(std::tuple_size<AXISTUPLE>() == nDimensions, "The number of axes passed in to sci::plot::Data must match the number of dimensions");
+				static_assert(IsTuple<AXISTUPLE>::value, "The axes must be passed in to sci::plot as a std::tuple");
 				m_axes.push_back(axes);
 				copyLinear(data...);
 				calculateLog<0>();
@@ -143,11 +178,12 @@ namespace sci
 			template<int dimension>
 			constexpr const auto& getData(size_t setIndex) const
 			{
-				return m_axes[setIndex][dimension]->isLog() ? std::get<dimension>(m_dataLogged) : std::get<dimension>(m_data);
+				return isLog<dimension>(setIndex) ? std::get<dimension>(m_dataLogged) : std::get<dimension>(m_data);
 			}
-			constexpr bool isLog(size_t setIndex, size_t dimension) const
+			template<int dimension>
+			constexpr bool isLog(size_t setIndex) const
 			{
-				return m_axes[setIndex][dimension]->isLog();
+				return std::get<dimension>(m_axes[setIndex])->isLog();
 			}
 			constexpr bool hasData() const
 			{
@@ -164,11 +200,12 @@ namespace sci
 			{
 				return nDimensions;
 			}
-			constexpr const std::array<std::shared_ptr<Scale>, nDimensions>& getScales(size_t setIndex)
+			constexpr const auto& getScales(size_t setIndex)
 			{
 				return m_axes[setIndex];
 			}
 		private:
+
 			template<class... REMAINING>
 			void copyLinear(const auto &next, REMAINING... remaining)
 			{
@@ -203,14 +240,14 @@ namespace sci
 			template <int index>
 			void autoscaleAxesRecursive(size_t setIndex)
 			{
-				if(m_axes[setIndex][index])
-					m_axes[setIndex][index]->expand(std::get<index>(m_data));
+				if(std::get<index>(m_axes[setIndex]))
+					std::get<index>(m_axes[setIndex])->expand(std::get<index>(m_data));
 				if constexpr (index != nDimensions - 1)
 					autoscaleAxesRecursive<index + 1>(setIndex);
 			}
 			containersTuple m_data;
 			containersTuple m_dataLogged;
-			std::vector<std::array<std::shared_ptr<Scale>, nDimensions>> m_axes;
+			std::vector<axisTuple> m_axes;
 		};
 	}
 }

@@ -41,61 +41,80 @@ namespace sci
 			bar
 		};
 
-
+		template<class T>
 		class Scale
 		{
-			//only allow construction by these (derived) types
-			//then we can control the m_direction variable and
-			//ensure splotaxis is horizontal and vertical and
-			//ColourScale and splotsizescale are none.
-			friend class Axis;
-			friend class ColourScale;
-			friend class SizeScale;
-			friend class LevelScale;
-			friend class InterpolatedScale;
 		public:
-			virtual ~Scale() {}
+			using value_type = T;
+			using unitless_type = decltype(T() / T());
+			using log_type = decltype(sci::log10(unitless_type()));
+			using value_type_squared = decltype(T()* T());
+
 			enum class Direction
 			{
 				horizontal,
 				vertical,
 				none
 			};
-			double getLinearOrLogMin() const
+
+			Scale(value_type min, value_type max, bool log, Direction direction)
+			{
+				m_direction = direction;
+				m_log = log;
+				setFixedScale(min, max);
+			}
+			Scale(bool log, Direction direction, unitless_type autoscaleEndSpace)
+			{
+				m_direction = direction;
+				m_autoscale = true;
+				m_log = log;
+				m_autoscaleEndSpace = autoscaleEndSpace;
+				contract();
+			}
+			Scale(Direction direction, unitless_type autoscaleEndSpace)
+			{
+				m_direction = direction;
+				m_autoscale = true;
+				m_log = false;
+				m_autoscaleEndSpace = autoscaleEndSpace;
+				contract();
+			}
+			virtual ~Scale() {}
+			/*value_type getLinearOrLogMin() const
 			{
 				return m_log ? getLogMin() : getLinearMin();
 			}
 			double getLinearOrLogMax() const
 			{
 				return m_log ? getLogMax() : getLinearMax();
-			}
-			double getLinearMin() const
+			}*/
+			value_type getLinearMin() const
 			{
 				if (!m_autoscale)
 					return m_minFixed;
-				double min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
-				//if all the points are one size of zero, but min is the other side of zero or closer to zero than to m_minPoint then set min to zero
-				if (m_minPoint * m_maxPoint >= 0.0 && (min * m_maxPoint < 0.0 || m_minPoint / min > 2.0))
-					min = 0.0;
+				value_type min = m_minPoint - m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				//if all the points are one side of zero, but min is the other side of zero or closer to zero than to m_minPoint then set min to zero
+				if (m_minPoint * m_maxPoint >= value_type_squared(0.0) && (min * m_maxPoint < value_type_squared(0.0) || m_minPoint / min > unitless_type(2.0)))
+					min = value_type(0.0);
 				return min;
 			}
-			double getLinearMax() const
+			value_type getLinearMax() const
 			{
 				if (!m_autoscale)
 					return m_maxFixed;
-				double max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
+				value_type max = m_maxPoint + m_autoscaleEndSpace * (m_maxPoint - m_minPoint);
 				//as per getLinearMin
-				if (m_minPoint * m_maxPoint >= 0.0 && (max * m_minPoint < 0.0 || m_maxPoint / max > 2.0))
-					max = 0.0;
+				if (m_minPoint * m_maxPoint >= value_type_squared(0.0) && (max * m_minPoint < value_type_squared(0.0) || m_maxPoint / max > unitless_type(2.0)))
+					max = value_type(0.0);
 				return max;
 			}
-			double getLogMin() const
+			unitless_type getLogMin() const
 			{
 				if (!m_autoscale)
 					return m_logMinFixed;
 				return m_logMinPoint - m_autoscaleEndSpace * (m_logMaxPoint - m_logMinPoint);;
 			}
-			double getLogMax() const
+			unitless_type getLogMax() const
 			{
 				if (!m_autoscale)
 					return m_logMaxFixed;
@@ -115,13 +134,13 @@ namespace sci
 				if (!isAutoscale())
 					return;
 				
-				double min = std::numeric_limits<double>::quiet_NaN();
-				double max = std::numeric_limits<double>::quiet_NaN();
+				value_type min = std::numeric_limits<value_type>::quiet_NaN();
+				value_type max = std::numeric_limits<value_type>::quiet_NaN();
 				if (isLog())
 				{
 					for (auto& x : data)
 					{
-						if (x > 0 && x < std::numeric_limits<double>::infinity())
+						if (x > 0 && x < std::numeric_limits<value_type>::infinity())
 						{
 							min = min < x ? min : x;
 							max = max > x ? max : x;
@@ -142,7 +161,7 @@ namespace sci
 				expand(min);
 				expand(max);
 			}
-			void expand(double value)
+			void expand(value_type value)
 			{
 				if (!m_autoscale)
 					return;
@@ -150,7 +169,7 @@ namespace sci
 					return;
 				if (m_minPoint != m_minPoint || value < m_minPoint)
 				{
-					if (!m_log || value > 0.0)
+					if (!m_log || value > value_type(0.0))
 						m_minPoint = value;
 				}
 				if (m_maxPoint != m_maxPoint || value > m_maxPoint)
@@ -160,10 +179,10 @@ namespace sci
 			{
 				if (!m_autoscale)
 					return;
-				m_minPoint = std::numeric_limits<double>::quiet_NaN();
-				m_maxPoint = std::numeric_limits<double>::quiet_NaN();
-				m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
-				m_logMaxPoint = std::numeric_limits<double>::quiet_NaN();
+				m_minPoint = std::numeric_limits<value_type>::quiet_NaN();
+				m_maxPoint = std::numeric_limits<value_type>::quiet_NaN();
+				m_logMinPoint = std::numeric_limits<value_type>::quiet_NaN();
+				m_logMaxPoint = std::numeric_limits<value_type>::quiet_NaN();
 			}
 			void setAutoscale(double autoscaleEndSpace)
 			{
@@ -171,13 +190,13 @@ namespace sci
 				m_autoscaleEndSpace = autoscaleEndSpace;
 				contract();
 			}
-			void setFixedScale(double min, double max)
+			void setFixedScale(value_type min, value_type max)
 			{
 				m_autoscale = false;
 				m_minFixed = min;
 				m_maxFixed = max;
-				m_logMinFixed = std::log10(min);
-				m_logMaxFixed = std::log10(max);
+				m_logMinFixed = sci::log10(min);
+				m_logMaxFixed = sci::log10(max);
 				m_minPoint = std::numeric_limits<double>::quiet_NaN();
 				m_maxPoint = std::numeric_limits<double>::quiet_NaN();
 				m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
@@ -206,97 +225,89 @@ namespace sci
 			//from the linear values.
 			//It then normalises the scales from 0-1 and puts the limits in the in/max variable
 			//the logMin will be the smallest non -infinity value
-			template<class T>
-			static void setupInterpolatingScale(::sci::GridData<double, 1>& value, sci::GridData<double, 1>& logValue, sci::GridData<T, 1>& output, double& linearMin, double& linearMax, double& logMin, double& logMax)
+			template<class U>
+			static void setupInterpolatingScale(const std::span<const value_type> values, sci::GridData<unitless_type, 1>& normalisedValues, sci::GridData<unitless_type, 1>& normalisedLogValues, sci::GridData<U, 1>& outputs, value_type& linearMin, value_type& linearMax, unitless_type& logMin, unitless_type& logMax)
 			{
+				assert(values.size() > 1);
+				assert(values.size() == outputs.size());
 				//sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::Scale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
-				//check values are ascending or descending, catch Nans at the same time
+				//check values are ascending or descending, and get the max/min at the same time
 				bool ascending = true;
 				bool descending = true;
-				for (size_t i = 1; i < value.size(); ++i)
+				linearMax = -std::numeric_limits<value_type>::infinity();
+				linearMin = std::numeric_limits<value_type>::infinity();
+				value_type linearMinGtZero = std::numeric_limits<value_type>::infinity();
+
+				if (values[0] > linearMax && values[0] != std::numeric_limits<value_type>::infinity())
+					linearMax = values[0];
+				if (values[0] < linearMin && values[0] != -std::numeric_limits<value_type>::infinity())
+					linearMin = values[0];
+				if (values[0] < linearMinGtZero && values[0] > value_type(0))
+					linearMinGtZero = values[0];
+
+				for (size_t i = 1; i < values.size(); ++i)
 				{
-					ascending &= value[i] >= value[i - 1];
-					descending &= value[i] <= value[i - 1];
+					ascending &= values[i] >= values[i - 1];
+					descending &= values[i] <= values[i - 1];
+					if (values[i] > linearMax && values[i] != std::numeric_limits<value_type>::infinity())
+						linearMax = values[i];
+					if (values[i] < linearMin && values[i] != -std::numeric_limits<value_type>::infinity())
+						linearMin = values[i];
+					if (values[i] < linearMinGtZero && values[i] > value_type(0))
+						linearMinGtZero = values[i];
 				}
+				logMin = sci::log10(linearMinGtZero);
+				logMax = sci::log10(linearMax);
 				bool monotonic = ascending || descending;
+				assert(monotonic);
+
+
 				//sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with values which are neither monotonically ascending nor monotonically descending."));
 
-				//assign values
-				if (descending)
-				{
-					std::reverse(value.begin(), value.end());
-					std::reverse(output.begin(), output.end());
-				}
-
-				//remove any nans and infinities
+				//assign the normalised data fitlering nans and infinities from the linear data
+				//we accept that there could be -infinities in the log data
+				normalisedValues.resize(values.size());
+				normalisedLogValues.resize(values.size());
+				outputs.resize(values.size()); //this should already be the case, but make sure until we decide on an effective error reporting mechanism
 				size_t insertPos = 0;
-				for (size_t i = 0; i < value.size(); ++i)
+				for (size_t i = 0; i < values.size(); ++i)
 				{
-					if (value[i] == value[i] && value[i] != std::numeric_limits<double>::infinity() && value[i] != -std::numeric_limits<double>::infinity())
+					if (normalisedValues[i] == normalisedValues[i] &&
+						normalisedValues[i] != std::numeric_limits<unitless_type>::infinity() &&
+						normalisedValues[i] != -std::numeric_limits<unitless_type>::infinity())
 					{
-						value[insertPos] = value[i];
-						output[insertPos] = output[i];
-						insertPos++;
+						normalisedValues[insertPos] = (values[i] - linearMin) / (linearMax - linearMin);
+						normalisedLogValues[insertPos] = (sci::log10(values[i]) - logMin) / (logMax - logMin);
+						outputs[insertPos] = outputs[i];
+						++insertPos;
 					}
 				}
-				value.resize(insertPos);
-				output.resize(insertPos);
-				//sci::assertThrow(value.size() > 1, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with a values array containing only NaNs and +/- infnity."));
+				normalisedValues.resize(insertPos);
+				normalisedLogValues.resize(insertPos);
+				outputs.resize(insertPos);
 
-				logValue.resize(value.size());
-				for (size_t i = 0; i < value.size(); ++i)
-					logValue[i] = std::log10(value[i]);
+				assert(normalisedValues.size() > 0);
 
-				//scale to 0.0-1.0 range
-				linearMin = value.front();
-				linearMax = value.back();
-				value = (value - linearMin) / (linearMax - linearMin);
-
-				//we have to search for the first non -infinity value for logMin
-				logMin = -std::numeric_limits<double>::infinity();
-				for (double& lv : logValue)
+				//reverse if descending
+				if (descending)
 				{
-					logMin = lv;
-					if (logMin != -std::numeric_limits<double>::infinity())
-						break;
+					std::reverse(normalisedValues.begin(), normalisedValues.end());
+					std::reverse(normalisedLogValues.begin(), normalisedLogValues.end());
+					std::reverse(outputs.begin(), outputs.end());
 				}
-				logMax = logValue.back();
-				logValue = (logValue - logMin) / (logMax - logMin);
 			}
 		private:
-			Scale(double min, double max, bool log, Direction direction)
-			{
-				m_direction = direction;
-				m_log = log;
-				setFixedScale(min, max);
-			}
-			Scale(bool log, Direction direction, double autoscaleEndSpace)
-			{
-				m_direction = direction;
-				m_autoscale = true;
-				m_log = log;
-				m_autoscaleEndSpace = autoscaleEndSpace;
-				contract();
-			}
-			Scale(Direction direction, double autoscaleEndSpace)
-			{
-				m_direction = direction;
-				m_autoscale = true;
-				m_log = false;
-				m_autoscaleEndSpace = autoscaleEndSpace;
-				contract();
-			}
-			double m_minFixed;
-			double m_maxFixed;
-			double m_logMinFixed;
-			double m_logMaxFixed;
-			double m_minPoint;
-			double m_maxPoint;
-			double m_logMinPoint;
-			double m_logMaxPoint;
+			value_type m_minFixed;
+			value_type m_maxFixed;
+			unitless_type m_logMinFixed;
+			unitless_type m_logMaxFixed;
+			value_type m_minPoint;
+			value_type m_maxPoint;
+			unitless_type m_logMinPoint;
+			unitless_type m_logMaxPoint;
 			bool m_log;
 			bool m_autoscale;
-			double m_autoscaleEndSpace;
+			unitless_type m_autoscaleEndSpace;
 			Direction m_direction;
 		};
 
@@ -313,125 +324,150 @@ namespace sci
 		using unitless = sci::graphics::unitless;
 		using perInch = sci::graphics::perInch;
 
-
-		class ColourScale : public Scale
+		template<class T>
+		class ColourScale : public Scale<T>
 		{
 			friend class splot;
 			friend class splot2d;
 			friend class splotlegend;
 		public:
+			using value_type = typename Scale<T>::value_type;
+			using unitless_type = typename Scale<T>::unitless_type;
+
 			ColourScale()
-				:sci::plot::Scale(false, Direction::none, 0.0)
+				:sci::plot::Scale<T>(false, Scale<T>::Direction::none, unitless_type(0.0))
 			{
 				setupdefault();
 			}
 
 			//create a colourscale from rgb colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-			ColourScale(std::span<const double> value, std::span<const rgbcolour> colour, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
-				:sci::plot::Scale(logarithmic, Direction::none, 0.0)//assume autoscaling to start, but change this later if needed
+			ColourScale(std::span<const value_type> values, std::span<const rgbcolour> colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, Scale<T>::unitless_type(0.0))//assume autoscaling to start, but change this later if needed
 			{
-				if (value.size() == colour.size())
+				if (values.size() == colours.size())
 				{
 					//setup continuous colour scale
 					m_discrete = false;
-					setup(value, colour, autostretch, fillOffscaleBottom, fillOffscaleTop);
+					setup(values, colours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 				}
 				else
 				{
 					//setup discrete colour scale
 					m_discrete = true;
-					sci::GridData<double, 1> newValues(colour.size() * 2);
-					std::vector<rgbcolour> newColours(colour.size() * 2);
-					for (size_t i = 0; i < colour.size(); ++i)
+					sci::GridData<value_type, 1> newValues(colours.size() * 2);
+					std::vector<rgbcolour> newColours(colours.size() * 2);
+					for (size_t i = 0; i < colours.size(); ++i)
 					{
-						newColours[i * 2] = colour[i];
-						newColours[i * 2 + 1] = colour[i];
-						newValues[i * 2] = value[i];
-						newValues[i * 2 + 1] = value[i + 1];
+						newColours[i * 2] = colours[i];
+						newColours[i * 2 + 1] = colours[i];
+						newValues[i * 2] = values[i];
+						newValues[i * 2 + 1] = values[i + 1];
 					}
 					setup(newValues, newColours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 				}
 			}
 
 			//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-			ColourScale(std::span<const double> value, std::span<const hlscolour> colour, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
-				:sci::plot::Scale(logarithmic, Direction::none, 0.0)
+			ColourScale(std::span<const value_type> values, std::span<const hlscolour> colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, unitless_type(0.0))
 			{
-				if (value.size() == colour.size())
+				if (values.size() == colours.size())
 				{
 					//setup continuous colour scale
 					m_discrete = false;
-					setup(value, colour, autostretch, fillOffscaleBottom, fillOffscaleTop);
+					setup(values, colours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 				}
 				else
 				{
 					//setup discrete colour scale
 					m_discrete = true;
-					sci::GridData<double, 1> newValues(colour.size() * 2);
-					std::vector<hlscolour> newColours(colour.size() * 2);
-					for (size_t i = 0; i < colour.size(); ++i)
+					sci::GridData<value_type, 1> newValues(colours.size() * 2);
+					std::vector<hlscolour> newColours(colours.size() * 2);
+					for (size_t i = 0; i < colours.size(); ++i)
 					{
-						newColours[i * 2] = colour[i];
-						newColours[i * 2 + 1] = colour[i];
-						newValues[i * 2] = value[i];
-						newValues[i * 2 + 1] = value[i + 1];
+						newColours[i * 2] = colours[i];
+						newColours[i * 2 + 1] = colours[i];
+						newValues[i * 2] = values[i];
+						newValues[i * 2 + 1] = values[i + 1];
 					}
 					setup(newValues, newColours, autostretch, fillOffscaleBottom, fillOffscaleTop);
 				}
 			}
 
 			//note that valuePrelogged is only utilised if this is a log scale
-			rgbcolour getRgbOriginalScale(double value, bool valuePrelogged) const
+			rgbcolour getRgbLinear(value_type value) const
 			{
 				if (m_hls)
-					return getHlsOriginalScale(value, valuePrelogged).convertToRgb();
+					return getHlsLinear(value).convertToRgb();
 
 				double r, g, b, a;
-				interpolate(value, r, g, b, a, valuePrelogged);
+				interpolateLinear(value, r, g, b, a);
 				return rgbcolour(r, g, b, a);
 			}
 
 			//note that valuePrelogged is only utilised if this is a log scale
-			hlscolour getHlsOriginalScale(double value, bool valuePreLogged) const
+			hlscolour getHlsLinear(value_type value) const
 			{
 				if (!m_hls)
-					return getRgbOriginalScale(value, valuePreLogged).convertToHls();
+					return getRgbLinear(value).convertToHls();
 
 				double h, l, s, a;
-				interpolate(value, h, l, s, a, valuePreLogged);
+				interpolateLinear(value, h, l, s, a);
+				return hlscolour(degree(h), l, s, a);
+			}
+
+			//note that valuePrelogged is only utilised if this is a log scale
+			rgbcolour getRgbLog(value_type value, bool valuePrelogged) const
+			{
+				if (m_hls)
+					return getHlsLog(value, valuePrelogged).convertToRgb();
+
+				double r, g, b, a;
+				interpolateLog(value, r, g, b, a, valuePrelogged);
+				return rgbcolour(r, g, b, a);
+			}
+
+			//note that valuePrelogged is only utilised if this is a log scale
+			hlscolour getHlsLog(value_type value, bool valuePreLogged) const
+			{
+				if (!m_hls)
+					return getRgbLog(value, valuePreLogged).convertToHls();
+
+				double h, l, s, a;
+				interpolateLog(value, h, l, s, a, valuePreLogged);
 				return hlscolour(degree(h), l, s, a);
 			}
 
 			rgbcolour getRgbOffscaleBottom() const
 			{
 				if (!m_hls)
-					return rgbcolour(m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]);
+					return rgbcolour(m_colour1s[0], m_colour2s[0], m_colour3s[0], m_alphas[0]);
 				else
-					return hlscolour(degree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]).convertToRgb();
+					return hlscolour(degree(m_colour1s[0]), m_colour2s[0], m_colour3s[0], m_alphas[0]).convertToRgb();
 			}
 
 			rgbcolour getRgbOffscaleTop() const
 			{
 				if (!m_hls)
-					return rgbcolour(m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back());
+					return rgbcolour(m_colour1s.back(), m_colour2s.back(), m_colour3s.back(), m_alphas.back());
 				else
-					return hlscolour(degree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToRgb();
+					return hlscolour(degree(m_colour1s.back()), m_colour2s.back(), m_colour3s.back(), m_alphas.back()).convertToRgb();
 			}
 
 			hlscolour getHlsOffscaleBottom() const
 			{
 				if (!m_hls)
-					return rgbcolour(m_colour1[0], m_colour2[0], m_colour3[0], m_alpha[0]).convertToHls();
+					return rgbcolour(m_colour1s[0], m_colour2s[0], m_colour3s[0], m_alphas[0]).convertToHls();
 				else
-					return hlscolour(degree(m_colour1[0]), m_colour2[0], m_colour3[0], m_alpha[0]);
+					return hlscolour(degree(m_colour1s[0]), m_colour2s[0], m_colour3s[0], m_alphas[0]);
 			}
 
 			hlscolour getHlsOffscaleTop() const
 			{
 				if (!m_hls)
-					return rgbcolour(m_colour1.back(), m_colour2.back(), m_colour3.back(), m_alpha.back()).convertToHls();
+					return rgbcolour(m_colour1s.back(), m_colour2s.back(), m_colour3s.back(), m_alphas.back()).convertToHls();
 				else
-					return hlscolour(degree(m_colour1.back()), m_colour2.back(), m_colour3.back(), m_alpha.back());
+					return hlscolour(degree(m_colour1s.back()), m_colour2s.back(), m_colour3s.back(), m_alphas.back());
 			}
 
 			virtual ~ColourScale()
@@ -442,27 +478,29 @@ namespace sci
 				return m_discrete;
 			}
 
-			std::vector<double> getDiscreteValues() const
+			std::vector<value_type> getLinearDiscreteValues() const
 			{
-				std::vector<double> result(m_value.size() / 2 + 1);
-				if (isLog())
-				{
-					for (size_t i = 0; i < result.size() - 1; ++i)
-						result[i] = m_logValue[i * 2];
-					result.back() = m_logValue.back();
+				std::vector<value_type> result(m_normalisedValues.size() / 2 + 1);
+				value_type min = Scale<T>::getLinearMin();
+				value_type max = Scale<T>::getLinearMax();
+				value_type range = max - min;
+				for (size_t i = 0; i < result.size() - 1; ++i)
+					result[i] = min + m_normalisedValues[i * 2] * range;
+				result.back() = min + m_normalisedValues.back() * range;
+			
+				return result;
+			}
 
-					for (auto& r : result)
-						r = std::pow(10.0, getLogMin() + r * (getLogMax() - getLogMin()));
-				}
-				else
-				{
-					for (size_t i = 0; i < result.size() - 1; ++i)
-						result[i] = m_value[i * 2];
-					result.back() = m_value.back();
+			std::vector<unitless_type> getLogDiscreteValues() const
+			{
+				std::vector<unitless_type> result(m_logValues.size() / 2 + 1);
+				unitless_type min = Scale<T>::getLogMin();
+				unitless_type max = Scale<T>::getLogMax();
+				unitless_type range = max - min;
+				for (size_t i = 0; i < result.size() - 1; ++i)
+					result[i] = min + m_logValues[i * 2] * range;
+				result.back() = min + m_logValues.back() * range;
 
-					for (auto& r : result)
-						r = getLinearMin() + r * (getLinearMax() - getLinearMin());
-				}
 				return result;
 			}
 			bool fillOffscaleBottom() const
@@ -487,90 +525,89 @@ namespace sci
 			void setupdefault()
 			{
 				//assign values as are
-				m_colour1.resize(0);
-				m_colour2.resize(0);
-				m_colour3.resize(0);
-				m_alpha.resize(0);
-				m_colour1.push_back(240.0);
-				m_colour1.push_back(0.0);
-				m_colour2.push_back(0.5);
-				m_colour2.push_back(0.5);
-				m_colour3.push_back(1.0);
-				m_colour3.push_back(1.0);
-				m_alpha.push_back(1.0);
-				m_alpha.push_back(1.0);
-				m_value.resize(0);
-				m_value.push_back(0.0);
-				m_value.push_back(1.0);
+				m_colour1s.resize(0);
+				m_colour2s.resize(0);
+				m_colour3s.resize(0);
+				m_alphas.resize(0);
+				m_colour1s.push_back(240.0);
+				m_colour1s.push_back(0.0);
+				m_colour2s.push_back(0.5);
+				m_colour2s.push_back(0.5);
+				m_colour3s.push_back(1.0);
+				m_colour3s.push_back(1.0);
+				m_alphas.push_back(1.0);
+				m_alphas.push_back(1.0);
+				m_normalisedValues.resize(0);
+				m_normalisedValues.push_back(unitless_type(0.0));
+				m_normalisedValues.push_back(unitless_type(1.0));
 				m_hls = true;
 				m_fillOffscaleBottom = false;
 				m_fillOffscaleTop = false;
 			}
-			void setup(std::span<const double> value, std::span<const rgbcolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+			void setup(std::span<const value_type> values, std::span<const rgbcolour> colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 			{
-				m_value = sci::GridData<double, 1>(value.begin(), value.end());
-				sci::GridData<rgbcolour, 1> colourCopy(colour.begin(), colour.end());
-				double linearMin;
-				double linearMax;
-				double logMin;
-				double logMax;
-				setupInterpolatingScale(m_value, m_logValue, colourCopy, linearMin, linearMax, logMin, logMax);
+				m_normalisedValues = sci::GridData<double, 1>(values.begin(), values.end());
+				sci::GridData<rgbcolour, 1> colourCopy(colours.begin(), colours.end());
+				value_type linearMin;
+				value_type linearMax;
+				unitless_type logMin;
+				unitless_type logMax;
+				Scale<T>::setupInterpolatingScale(values, m_normalisedValues, m_logValues, colourCopy, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
 				{
-					if (isLog())
-						setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+					if (Scale<T>::isLog())
+						Scale<T>::setFixedScale(sci::pow(10, logMin), sci::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
 					else
-						setFixedScale(linearMin, linearMax);
+						Scale<T>::setFixedScale(linearMin, linearMax);
 				}
 
 				//assign colours
-				m_colour1.resize(colour.size());
-				m_colour2.resize(colour.size());
-				m_colour3.resize(colour.size());
-				m_alpha.resize(colour.size());
-				for (size_t i = 0; i < colour.size(); ++i)
+				m_colour1s.resize(colours.size());
+				m_colour2s.resize(colours.size());
+				m_colour3s.resize(colours.size());
+				m_alphas.resize(colours.size());
+				for (size_t i = 0; i < colours.size(); ++i)
 				{
-					m_colour1[i] = colour[i].r();
-					m_colour2[i] = colour[i].g();
-					m_colour3[i] = (double)colour[i].b();
-					m_alpha[i] = (double)colour[i].a();
+					m_colour1s[i] = colours[i].r();
+					m_colour2s[i] = colours[i].g();
+					m_colour3s[i] = (double)colours[i].b();
+					m_alphas[i] = (double)colours[i].a();
 				}
 				m_hls = false;
 				m_fillOffscaleBottom = fillOffscaleBottom;
 				m_fillOffscaleTop = fillOffscaleTop;
 			}
 
-			void setup(std::span<const double>value , std::span<const hlscolour> colour, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+			void setup(std::span<const value_type>values , std::span<const hlscolour> colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
 			{
-				m_value = sci::GridData<double, 1>(value.begin(), value.end());
-				sci::GridData<hlscolour, 1> colourCopy(colour.begin(), colour.end());
-				double linearMin;
-				double linearMax;
-				double logMin;
-				double logMax;
-				setupInterpolatingScale(m_value, m_logValue, colourCopy, linearMin, linearMax, logMin, logMax);
+				sci::GridData<hlscolour, 1> colourCopy(colours.begin(), colours.end());
+				value_type linearMin;
+				value_type linearMax;
+				unitless_type logMin;
+				unitless_type logMax;
+				Scale<T>::setupInterpolatingScale(values, m_normalisedValues, m_logValues, colourCopy, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
 				{
-					if (isLog())
-						setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+					if (Scale<T>::isLog())
+						Scale<T>::setFixedScale(sci::pow(unitless_type(10), logMin), sci::pow(unitless_type(10), logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
 					else
-						setFixedScale(linearMin, linearMax);
+						Scale<T>::setFixedScale(linearMin, linearMax);
 				}
 
-				m_colour1.resize(colour.size());
-				m_colour2.resize(colour.size());
-				m_colour3.resize(colour.size());
-				m_alpha.resize(colour.size());
-				for (size_t i = 0; i < colour.size(); ++i)
+				m_colour1s.resize(colours.size());
+				m_colour2s.resize(colours.size());
+				m_colour3s.resize(colours.size());
+				m_alphas.resize(colours.size());
+				for (size_t i = 0; i < colours.size(); ++i)
 				{
-					m_colour1[i] = colour[i].h().value<degree>();
-					m_colour2[i] = colour[i].l();
-					m_colour3[i] = colour[i].s();
-					m_alpha[i] = colour[i].a();
+					m_colour1s[i] = colours[i].h().value<degree>();
+					m_colour2s[i] = colours[i].l();
+					m_colour3s[i] = colours[i].s();
+					m_alphas[i] = colours[i].a();
 				}
 				m_hls = true;
 				m_fillOffscaleBottom = fillOffscaleBottom;
@@ -580,19 +617,19 @@ namespace sci
 				//if they are all nans then set them all to 0.0;
 				bool allnans = true;
 				bool anynans = false;
-				for (size_t i = 0; i < m_colour1.size(); ++i)
+				for (size_t i = 0; i < m_colour1s.size(); ++i)
 				{
-					if (m_colour1[i] == m_colour1[i]) allnans = false;
+					if (m_colour1s[i] == m_colour1s[i]) allnans = false;
 					else anynans = true;
 				}
 				if (allnans)
 				{
-					m_colour1 = 0.0; //set every value to zero
+					m_colour1s = 0.0; //set every value to zero
 				}
-				else if (anynans && m_colour1.size() == 2)
+				else if (anynans && m_colour1s.size() == 2)
 				{
-					if (m_colour1[0] != m_colour1[0]) m_colour1[0] = m_colour1[1];
-					else m_colour1[1] = m_colour1[0];
+					if (m_colour1s[0] != m_colour1s[0]) m_colour1s[0] = m_colour1s[1];
+					else m_colour1s[1] = m_colour1s[0];
 				}
 				else if (anynans)
 				{
@@ -600,86 +637,83 @@ namespace sci
 					{
 						anynans = false;
 						//loop through interpolating any single nans
-						for (size_t i = 1; i < m_colour1.size() - 1; ++i)
+						for (size_t i = 1; i < m_colour1s.size() - 1; ++i)
 						{
-							if (m_colour1[i] != m_colour1[i])
+							if (m_colour1s[i] != m_colour1s[i])
 							{
-								if (m_colour1[i - 1] == m_colour1[i - 1] && m_colour1[i + 1] == m_colour1[i + 1])
+								if (m_colour1s[i - 1] == m_colour1s[i - 1] && m_colour1s[i + 1] == m_colour1s[i + 1])
 								{
-									m_colour1[i] = m_colour1[i - 1] + (m_value[i] - m_value[i - 1]) / (m_value[i + 1] - m_value[i - 1]) * (m_colour1[i + 1] - m_colour1[i - 1]);
+									m_colour1s[i] = m_colour1s[i - 1] + unitless((m_normalisedValues[i] - m_normalisedValues[i - 1]) / (m_normalisedValues[i + 1] - m_normalisedValues[i - 1])).value<unitless>() * (m_colour1s[i + 1] - m_colour1s[i - 1]);
 								}
 							}
 						}
 						//then set any nans preceded by a non-nan to that non nan
-						for (size_t i = 1; i < m_colour1.size(); ++i)
+						for (size_t i = 1; i < m_colour1s.size(); ++i)
 						{
-							if (m_colour1[i] != m_colour1[i])
+							if (m_colour1s[i] != m_colour1s[i])
 							{
-								if (m_colour1[i - 1] == m_colour1[i - 1])
+								if (m_colour1s[i - 1] == m_colour1s[i - 1])
 								{
-									m_colour1[i] = m_colour1[i - 1];
+									m_colour1s[i] = m_colour1s[i - 1];
 									++i;
 								}
 							}
 						}
 						//then set any nans succeded by a non-nan to that non-nan
-						for (size_t i = m_colour1.size() - 2; i != 0; --i)//note this works due to unsigned size_t 
+						for (size_t i = m_colour1s.size() - 2; i != 0; --i)//note this works due to unsigned size_t 
 						{
-							if (m_colour1[i] != m_colour1[i])
+							if (m_colour1s[i] != m_colour1s[i])
 							{
-								if (m_colour1[i + 1] == m_colour1[i + 1])
+								if (m_colour1s[i + 1] == m_colour1s[i + 1])
 								{
-									m_colour1[i] = m_colour1[i + 1];
+									m_colour1s[i] = m_colour1s[i + 1];
 									--i;
 									if (i == 0) break;
 								}
 							}
 						}
 						//check index 0 separately to other suceeded values
-						if (m_colour1[0] != m_colour1[0])
+						if (m_colour1s[0] != m_colour1s[0])
 						{
-							if (m_colour1[1] == m_colour1[1]) m_colour1[0] = m_colour1[1];
+							if (m_colour1s[1] == m_colour1s[1]) m_colour1s[0] = m_colour1s[1];
 						}
 
 						//check if any nans remain and loop again if so
-						for (size_t i = 0; i < m_colour1.size(); ++i)
+						for (size_t i = 0; i < m_colour1s.size(); ++i)
 						{
-							if (m_colour1[i] != m_colour1[i]) anynans = true;
+							if (m_colour1s[i] != m_colour1s[i]) anynans = true;
 						}
 					}
 				}
 			}
 
-			sci::GridData<double, 1> m_value;
-			sci::GridData<double, 1> m_logValue;
-			sci::GridData<double, 1> m_colour1;
-			sci::GridData<double, 1> m_colour2;
-			sci::GridData<double, 1> m_colour3;
-			sci::GridData<double, 1> m_alpha;
+			sci::GridData<unitless_type, 1> m_normalisedValues;
+			sci::GridData<unitless_type, 1> m_logValues;
+			sci::GridData<double, 1> m_colour1s;
+			sci::GridData<double, 1> m_colour2s;
+			sci::GridData<double, 1> m_colour3s;
+			sci::GridData<double, 1> m_alphas;
 			bool m_hls; //true for hls, false for rgb colour representation
 			bool m_discrete;
 			bool m_fillOffscaleBottom;
 			bool m_fillOffscaleTop;
 
 			//note that valuePrelogged is only utilised if this is a log scale
-			void interpolate(double value, double& c1, double& c2, double& c3, double& a, bool valuePreLogged) const
+			void interpolateLinear(value_type value, double& c1, double& c2, double& c3, double& a) const
 			{
-				if (isLog() && !valuePreLogged)
-					value = std::log10(value);
-
-				bool offscaleBottom = value < getLinearOrLogMin();
-				bool offscaleTop = value > getLinearOrLogMax();
-				bool onMin = value == getLinearOrLogMin();
+				bool offscaleBottom = value < Scale<T>::getLinearMin();
+				bool offscaleTop = value > Scale<T>::getLinearMax();
+				bool onMin = value == Scale<T>::getLinearMin();
 
 
 				if (offscaleBottom)
 				{
 					if (m_fillOffscaleBottom)
 					{
-						c1 = m_colour1[0];
-						c2 = m_colour2[0];
-						c3 = m_colour3[0];
-						a = m_alpha[0];
+						c1 = m_colour1s[0];
+						c2 = m_colour2s[0];
+						c3 = m_colour3s[0];
+						a = m_alphas[0];
 					}
 					else
 					{
@@ -695,10 +729,10 @@ namespace sci
 				{
 					if (m_fillOffscaleTop)
 					{
-						c1 = m_colour1.back();
-						c2 = m_colour2.back();
-						c3 = m_colour3.back();
-						a = m_alpha.back();
+						c1 = m_colour1s.back();
+						c2 = m_colour2s.back();
+						c3 = m_colour3s.back();
+						a = m_alphas.back();
 					}
 					else
 					{
@@ -712,51 +746,114 @@ namespace sci
 
 				if (onMin)
 				{
-					c1 = m_colour1[0];
-					c2 = m_colour2[0];
-					c3 = m_colour3[0];
-					a = m_alpha[0];
+					c1 = m_colour1s[0];
+					c2 = m_colour2s[0];
+					c3 = m_colour3s[0];
+					a = m_alphas[0];
 					return;
 				}
 
 
 				size_t maxIndex = 1;
 				double highWeight;
-				if (isLog())
+				value = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
+
+				while (value > m_normalisedValues[maxIndex])
+					maxIndex++;
+
+				highWeight = unitless((value - m_normalisedValues[maxIndex - 1]) / (m_normalisedValues[maxIndex] - m_normalisedValues[maxIndex - 1])).value<unitless>();
+
+				c1 = m_colour1s[maxIndex] * highWeight + m_colour1s[maxIndex - 1] * (1.0 - highWeight);
+				c2 = m_colour2s[maxIndex] * highWeight + m_colour2s[maxIndex - 1] * (1.0 - highWeight);
+				c3 = m_colour3s[maxIndex] * highWeight + m_colour3s[maxIndex - 1] * (1.0 - highWeight);
+				a = m_alphas[maxIndex] * highWeight + m_alphas[maxIndex - 1] * (1.0 - highWeight);
+			}
+
+			void interpolateLog(unitless_type value, double& c1, double& c2, double& c3, double& a, bool valuePreLogged) const
+			{
+				if (!valuePreLogged)
+					value = sci::log10(value);
+
+				bool offscaleBottom = value < Scale<T>::getLogMin();
+				bool offscaleTop = value > Scale<T>::getLogMax();
+				bool onMin = value == Scale<T>::getLogMin();
+
+
+				if (offscaleBottom)
 				{
-					value = (value - getLogMin()) / (getLogMax() - getLogMin());
-
-					while (value > m_logValue[maxIndex])
-						maxIndex++;
-
-					highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+					if (m_fillOffscaleBottom)
+					{
+						c1 = m_colour1s[0];
+						c2 = m_colour2s[0];
+						c3 = m_colour3s[0];
+						a = m_alphas[0];
+					}
+					else
+					{
+						c1 = std::numeric_limits<double>::quiet_NaN();
+						c2 = std::numeric_limits<double>::quiet_NaN();
+						c3 = std::numeric_limits<double>::quiet_NaN();
+						a = std::numeric_limits<double>::quiet_NaN();
+					}
+					return;
 				}
-				else
+
+				if (offscaleTop)
 				{
-					value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
-
-					while (value > m_value[maxIndex])
-						maxIndex++;
-
-					highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
+					if (m_fillOffscaleTop)
+					{
+						c1 = m_colour1s.back();
+						c2 = m_colour2s.back();
+						c3 = m_colour3s.back();
+						a = m_alphas.back();
+					}
+					else
+					{
+						c1 = std::numeric_limits<double>::quiet_NaN();
+						c2 = std::numeric_limits<double>::quiet_NaN();
+						c3 = std::numeric_limits<double>::quiet_NaN();
+						a = std::numeric_limits<double>::quiet_NaN();
+					}
+					return;
 				}
 
-				c1 = m_colour1[maxIndex] * highWeight + m_colour1[maxIndex - 1] * (1.0 - highWeight);
-				c2 = m_colour2[maxIndex] * highWeight + m_colour2[maxIndex - 1] * (1.0 - highWeight);
-				c3 = m_colour3[maxIndex] * highWeight + m_colour3[maxIndex - 1] * (1.0 - highWeight);
-				a = m_alpha[maxIndex] * highWeight + m_alpha[maxIndex - 1] * (1.0 - highWeight);
+				if (onMin)
+				{
+					c1 = m_colour1s[0];
+					c2 = m_colour2s[0];
+					c3 = m_colour3s[0];
+					a = m_alphas[0];
+					return;
+				}
+
+
+				size_t maxIndex = 1;
+				double highWeight;
+				value = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
+
+				while (value > m_logValues[maxIndex])
+					maxIndex++;
+
+				highWeight = unitless((value - m_logValues[maxIndex - 1]) / (m_logValues[maxIndex] - m_logValues[maxIndex - 1])).value<unitless>();
+				
+
+				c1 = m_colour1s[maxIndex] * highWeight + m_colour1s[maxIndex - 1] * (1.0 - highWeight);
+				c2 = m_colour2s[maxIndex] * highWeight + m_colour2s[maxIndex - 1] * (1.0 - highWeight);
+				c3 = m_colour3s[maxIndex] * highWeight + m_colour3s[maxIndex - 1] * (1.0 - highWeight);
+				a = m_alphas[maxIndex] * highWeight + m_alphas[maxIndex - 1] * (1.0 - highWeight);
 			}
 		};
 
 
-		class SizeScale : public Scale
+
+		class SizeScale : public Scale<double>
 		{
 			friend class splot;
 			friend class splot2d;
 			friend class splotlegend;
 		public:
 			SizeScale(std::span<const double> value = sci::GridData<double, 1>(0), std::span<const double> size = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
-				:sci::plot::Scale(logarithmic, Direction::none, 0.0)
+				:sci::plot::Scale<double>(logarithmic, Direction::none, 0.0)
 			{
 				m_value = sci::GridData<double, 1>(value.begin(), value.end());
 				m_size = sci::GridData<double, 1>(size.begin(), size.end());
@@ -766,7 +863,7 @@ namespace sci
 				double linearMax;
 				double logMin;
 				double logMax;
-				setupInterpolatingScale(m_value, m_logValue, m_size, linearMin, linearMax, logMin, logMax);
+				Scale<double>::setupInterpolatingScale(value, m_value, m_logValue, m_size, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
@@ -782,14 +879,12 @@ namespace sci
 			{};
 
 			//note that valuePrelogged is only utilised if this is a log scale
-			double getsize(double value, bool valuePreLogged) const
+			double getSizeLinear(double value) const
 			{
-				if (isLog() && !valuePreLogged)
-					value = std::log10(value);
 
-				bool offscaleBottom = value < getLinearOrLogMin();
-				bool offscaleTop = value > getLinearOrLogMax();
-				bool onMin = value == getLinearOrLogMin();
+				bool offscaleBottom = value < getLinearMin();
+				bool offscaleTop = value > getLinearMax();
+				bool onMin = value == getLinearMin();
 
 				if (offscaleBottom)
 				{
@@ -812,24 +907,55 @@ namespace sci
 
 				size_t maxIndex = 1;
 				double highWeight;
-				if (isLog())
+				value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
+
+				while (value > m_value[maxIndex])
+					maxIndex++;
+
+				highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
+
+				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
+			}
+
+			//note that valuePrelogged is only utilised if this is a log scale
+			double getSizeLog(double value, bool valuePreLogged) const
+			{
+				if (!valuePreLogged)
+					value = std::log10(value);
+
+				bool offscaleBottom = value < getLogMin();
+				bool offscaleTop = value > getLogMax();
+				bool onMin = value == getLogMin();
+
+				if (offscaleBottom)
 				{
-					value = (value - getLogMin()) / (getLogMax() - getLogMin());
-
-					while (value > m_logValue[maxIndex])
-						maxIndex++;
-
-					highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+					if (m_fillOffscaleBottom)
+						return m_size[0];
+					else
+						return std::numeric_limits<double>::quiet_NaN();
 				}
-				else
+
+				if (offscaleTop)
 				{
-					value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
-
-					while (value > m_value[maxIndex])
-						maxIndex++;
-
-					highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
+					if (m_fillOffscaleTop)
+						return m_size.back();
+					else
+						return std::numeric_limits<double>::quiet_NaN();
 				}
+
+				if (onMin)
+					return m_size[0];
+
+				size_t maxIndex = 1;
+				double highWeight;
+				
+				value = (value - getLogMin()) / (getLogMax() - getLogMin());
+
+				while (value > m_logValue[maxIndex])
+					maxIndex++;
+
+				highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+				
 
 				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 			}
@@ -858,14 +984,14 @@ namespace sci
 		};
 
 
-		class LevelScale : public Scale
+		class LevelScale : public Scale<double>
 		{
 			friend class splot;
 			friend class splot2d;
 			friend class splotlegend;
 		public:
 			LevelScale(std::span<const double> value = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false)
-				:sci::plot::Scale(logarithmic, Direction::none, 0.0)
+				:sci::plot::Scale<double>(logarithmic, Direction::none, 0.0)
 			{
 				m_value = sci::GridData<double, 1>(value.begin(), value.end());
 				sci::GridData<double, 1> dummy = m_value;
@@ -873,7 +999,7 @@ namespace sci
 				double linearMax;
 				double logMin;
 				double logMax;
-				setupInterpolatingScale(m_value, m_logValue, dummy, linearMin, linearMax, logMin, logMax);
+				setupInterpolatingScale(value, m_value, m_logValue, dummy, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
@@ -1035,7 +1161,7 @@ namespace sci
 			virtual bool readyToDraw() const = 0;
 		};
 
-		class Axis : public Scale, public DrawableItem
+		class Axis : public Scale<double>, public DrawableItem
 		{
 			friend class splot;
 			friend class splot2d;
@@ -1177,7 +1303,8 @@ namespace sci
 				return true;
 			}
 
-			Distance alongAxisDistanceFromLinearData(double value) const
+			template<class T>
+			Distance alongAxisDistanceFromLinearData(T value) const
 			{
 				double fraction;
 				if (isLog())
@@ -1187,7 +1314,8 @@ namespace sci
 				return (m_end - m_start) * unitless(fraction);
 			}
 
-			Distance alongAxisDistanceFromLoggedIfNeededData(double value) const
+			template<class T>
+			Distance alongAxisDistanceFromLoggedIfNeededData(T value) const
 			{
 				double fraction;
 				if (isLog())
@@ -1397,7 +1525,7 @@ namespace sci
 
 					//check we are not so close to zero we should just be zero
 					double temp = std::log10(std::abs(plotPosition) / minorInterval);
-					if (!m_log && std::log10(std::abs(plotPosition)/minorInterval) < -double(m_options.m_maxDigits))
+					if (!isLog() && std::log10(std::abs(plotPosition) / minorInterval) < -double(m_options.m_maxDigits))
 						strm << 0;
 					else
 						strm << plotPosition;
@@ -1509,7 +1637,7 @@ namespace sci
 			Point m_end;
 		};
 
-		class CubehelixColourscale : public ColourScale
+		class CubehelixColourscale : public ColourScale<double>
 		{
 		public:
 			CubehelixColourscale(std::span<const double> values, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
@@ -1696,10 +1824,10 @@ namespace sci
 		class HorizontalColourBar : public DrawableItem
 		{
 		public:
-			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale> colourscale, Axis::Options axisOptions = Axis::Options())
+			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<double>> colourscale, Axis::Options axisOptions = Axis::Options())
 				:m_colourscale(colourscale),
-				m_xAxis(new Axis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale::Direction::horizontal)),
-				m_yAxis(new Axis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis::Options::getBlankAxis(), sci::plot::Scale::Direction::horizontal))
+				m_xAxis(new Axis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale<double>::Direction::horizontal)),
+				m_yAxis(new Axis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis::Options::getBlankAxis(), sci::plot::Scale<double>::Direction::horizontal))
 			{
 			}
 			void preDraw() override
@@ -1728,8 +1856,8 @@ namespace sci
 					std::vector<double> cbX(z.shape()[0] + 1);
 
 
-					double min = m_colourscale->getLinearOrLogMin();
-					double max = m_colourscale->getLinearOrLogMax();
+					double min = m_colourscale->isLog() ? m_colourscale->getLogMin() : m_colourscale->getLinearMin();
+					double max = m_colourscale->isLog() ? m_colourscale->getLogMax() : m_colourscale->getLinearMax();
 
 					if (m_colourscale->isLog())
 					{
@@ -1767,7 +1895,7 @@ namespace sci
 				return true;
 			}
 		private:
-			std::shared_ptr<ColourScale> m_colourscale;
+			std::shared_ptr<ColourScale<double>> m_colourscale;
 			std::shared_ptr<Axis> m_xAxis;
 			std::shared_ptr<Axis> m_yAxis;
 
