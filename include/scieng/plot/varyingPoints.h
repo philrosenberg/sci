@@ -51,7 +51,7 @@ namespace sci
 		class PointsSizeVarying : public Data<std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			PointsSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+			PointsSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zs, const std::shared_ptr<Axis> xAxis, const std::shared_ptr<Axis> yAxis, const std::shared_ptr<SizeScale<double>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, sizeScale), transformer, xs, ys, zs ), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
@@ -86,13 +86,13 @@ namespace sci
 		private:
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
-			const std::shared_ptr<SizeScale> m_sizeScale;
+			const std::shared_ptr<SizeScale<double>> m_sizeScale;
 		};
 
 		class PointsColourAndSizeVarying : public Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			PointsColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale<double>> colourScale, const std::shared_ptr<SizeScale> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
+			PointsColourAndSizeVarying(std::span<const double> xs, std::span<const double> ys, std::span<const double> zsColour, std::span<const double> zsSize, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const std::shared_ptr < ColourScale<double>> colourScale, const std::shared_ptr<SizeScale<double>> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
 				: Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale, sizeScale), transformer, xs, ys, zsColour, zsSize ), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
@@ -160,7 +160,7 @@ namespace sci
 		private:
 			Symbol m_symbol;
 			const std::shared_ptr<ColourScale<double>> m_colourScale;
-			const std::shared_ptr<SizeScale> m_sizeScale;
+			const std::shared_ptr<SizeScale<double>> m_sizeScale;
 		};
 	}
 }

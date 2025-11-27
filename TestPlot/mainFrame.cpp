@@ -467,7 +467,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		std::vector<double> z = x;
 
 		std::shared_ptr <sci::plot::ColourScale<double>> colourScale( new sci::plot::ColourScale<double>(std::vector<double>{1.0, 10.0}, std::vector<sci::graphics::RgbColour>{sci::graphics::RgbColour(1.0, 0.0, 0.0), sci::graphics::RgbColour(0.0, 0.0, 1.0)}));
-		std::shared_ptr <sci::plot::SizeScale > sizeScale(new sci::plot::SizeScale(std::vector<double>{1.0, 10.0}, std::vector<double>{1.0, 10.0}));
+		std::shared_ptr <sci::plot::SizeScale<double> > sizeScale(new sci::plot::SizeScale<double>(std::vector<double>{1.0, 10.0}, std::vector<double>{1.0, 10.0}));
 
 		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Varying Symbol Plot. Going left to right, points should transition from small to big and red to blue."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
 		sci::plot::Axis::Options options;

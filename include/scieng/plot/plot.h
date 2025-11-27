@@ -809,33 +809,30 @@ namespace sci
 		};
 
 
-
-		class SizeScale : public Scale<double>
+		template<class T>
+		class SizeScale : public Scale<T>
 		{
-			friend class splot;
-			friend class splot2d;
-			friend class splotlegend;
 		public:
-			SizeScale(std::span<const double> value = sci::GridData<double, 1>(0), std::span<const double> size = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
-				:sci::plot::Scale<double>(logarithmic, Direction::none, 0.0)
+			SizeScale(std::span<const T> value = sci::GridData<T, 1>(0), std::span<const double> size = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
 			{
-				m_value = sci::GridData<double, 1>(value.begin(), value.end());
+				m_value = sci::GridData<T, 1>(value.begin(), value.end());
 				m_size = sci::GridData<double, 1>(size.begin(), size.end());
 				m_fillOffscaleBottom = fillOffscaleBottom;
 				m_fillOffscaleTop = fillOffscaleTop;
-				double linearMin;
-				double linearMax;
-				double logMin;
-				double logMax;
+				T linearMin;
+				T linearMax;
+				typename Scale<T>::unitless_type logMin;
+				typename Scale<T>::unitless_type logMax;
 				Scale<double>::setupInterpolatingScale(value, m_value, m_logValue, m_size, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
 				{
-					if (isLog())
-						setFixedScale(std::pow(10, logMin), std::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
+					if (Scale<T>::isLog())
+						Scale<T>::setFixedScale(sci::pow(10, logMin), sci::pow(10, logMax)); //note the log limits might not be the logs of the linear limits due to -ve numbers
 					else
-						setFixedScale(linearMin, linearMax);
+						Scale<T>::setFixedScale(linearMin, linearMax);
 				}
 			}
 
@@ -846,9 +843,9 @@ namespace sci
 			double getSizeLinear(T value) const
 			{
 
-				bool offscaleBottom = value < getLinearMin();
-				bool offscaleTop = value > getLinearMax();
-				bool onMin = value == getLinearMin();
+				bool offscaleBottom = value < Scale<T>::getLinearMin();
+				bool offscaleTop = value > Scale<T>::getLinearMax();
+				bool onMin = value == Scale<T>::getLinearMin();
 
 				if (offscaleBottom)
 				{
@@ -871,24 +868,21 @@ namespace sci
 
 				size_t maxIndex = 1;
 				double highWeight;
-				value = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
+				value = unitless((value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin())).value<unitless>();
 
 				while (value > m_value[maxIndex])
 					maxIndex++;
 
-				highWeight = (value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1]);
+				highWeight = unitless((value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1])).value<unitless>();
 
 				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 			}
 
 			double getSizeLog(typename Scale<T>::unitless_type value) const
 			{
-				if (!valuePreLogged)
-					value = std::log10(value);
-
-				bool offscaleBottom = value < getLogMin();
-				bool offscaleTop = value > getLogMax();
-				bool onMin = value == getLogMin();
+				bool offscaleBottom = value < Scale<T>::getLogMin();
+				bool offscaleTop = value > Scale<T>::getLogMax();
+				bool onMin = value == Scale<T>::getLogMin();
 
 				if (offscaleBottom)
 				{
@@ -912,12 +906,12 @@ namespace sci
 				size_t maxIndex = 1;
 				double highWeight;
 				
-				value = (value - getLogMin()) / (getLogMax() - getLogMin());
+				value = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 
 				while (value > m_logValue[maxIndex])
 					maxIndex++;
 
-				highWeight = (value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1]);
+				highWeight = unitless((value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1])).value<unitless>();
 				
 
 				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
@@ -939,8 +933,8 @@ namespace sci
 				m_fillOffscaleTop = fill;
 			}
 		private:
-			::sci::GridData<double, 1> m_value;
-			::sci::GridData<double, 1> m_logValue;
+			::sci::GridData<T, 1> m_value;
+			::sci::GridData<typename Scale<T>::unitless_type, 1> m_logValue;
 			::sci::GridData<double, 1> m_size;
 			bool m_fillOffscaleBottom;
 			bool m_fillOffscaleTop;
