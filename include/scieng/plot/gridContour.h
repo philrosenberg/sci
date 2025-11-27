@@ -90,7 +90,7 @@ namespace sci
 								continue;
 							if (zs[i][j] > zMax)
 								continue;
-							renderer.setBrush(m_colourscale->getRgbLog(zs[i][j], true));
+							renderer.setBrush(m_colourscale->getRgbLog(zs[i][j]));
 							renderer.polygon({ PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
 								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
 								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),

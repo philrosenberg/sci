@@ -58,14 +58,7 @@ namespace sci
 				contract();
 			}
 			virtual ~Scale() {}
-			/*value_type getLinearOrLogMin() const
-			{
-				return m_log ? getLogMin() : getLinearMin();
-			}
-			double getLinearOrLogMax() const
-			{
-				return m_log ? getLogMax() : getLinearMax();
-			}*/
+
 			value_type getLinearMin() const
 			{
 				if (!m_autoscale)
@@ -372,7 +365,6 @@ namespace sci
 				}
 			}
 
-			//note that valuePrelogged is only utilised if this is a log scale
 			rgbcolour getRgbLinear(value_type value) const
 			{
 				if (m_hls)
@@ -383,7 +375,6 @@ namespace sci
 				return rgbcolour(r, g, b, a);
 			}
 
-			//note that valuePrelogged is only utilised if this is a log scale
 			hlscolour getHlsLinear(value_type value) const
 			{
 				if (!m_hls)
@@ -394,25 +385,23 @@ namespace sci
 				return hlscolour(degree(h), l, s, a);
 			}
 
-			//note that valuePrelogged is only utilised if this is a log scale
-			rgbcolour getRgbLog(value_type value, bool valuePrelogged) const
+			rgbcolour getRgbLog(value_type value) const
 			{
 				if (m_hls)
-					return getHlsLog(value, valuePrelogged).convertToRgb();
+					return getHlsLog(value).convertToRgb();
 
 				double r, g, b, a;
-				interpolateLog(value, r, g, b, a, valuePrelogged);
+				interpolateLog(value, r, g, b, a);
 				return rgbcolour(r, g, b, a);
 			}
 
-			//note that valuePrelogged is only utilised if this is a log scale
-			hlscolour getHlsLog(value_type value, bool valuePreLogged) const
+			hlscolour getHlsLog(value_type value) const
 			{
 				if (!m_hls)
-					return getRgbLog(value, valuePreLogged).convertToHls();
+					return getRgbLog(value).convertToHls();
 
 				double h, l, s, a;
-				interpolateLog(value, h, l, s, a, valuePreLogged);
+				interpolateLog(value, h, l, s, a);
 				return hlscolour(degree(h), l, s, a);
 			}
 
@@ -676,7 +665,7 @@ namespace sci
 			bool m_fillOffscaleBottom;
 			bool m_fillOffscaleTop;
 
-			//note that valuePrelogged is only utilised if this is a log scale
+			
 			void interpolateLinear(value_type value, double& c1, double& c2, double& c3, double& a) const
 			{
 				bool offscaleBottom = value < Scale<T>::getLinearMin();
@@ -747,11 +736,8 @@ namespace sci
 				a = m_alphas[maxIndex] * highWeight + m_alphas[maxIndex - 1] * (1.0 - highWeight);
 			}
 
-			void interpolateLog(unitless_type value, double& c1, double& c2, double& c3, double& a, bool valuePreLogged) const
+			void interpolateLog(unitless_type value, double& c1, double& c2, double& c3, double& a) const
 			{
-				if (!valuePreLogged)
-					value = sci::log10(value);
-
 				bool offscaleBottom = value < Scale<T>::getLogMin();
 				bool offscaleTop = value > Scale<T>::getLogMax();
 				bool onMin = value == Scale<T>::getLogMin();
@@ -856,8 +842,8 @@ namespace sci
 			~SizeScale()
 			{};
 
-			//note that valuePrelogged is only utilised if this is a log scale
-			double getSizeLinear(double value) const
+			
+			double getSizeLinear(T value) const
 			{
 
 				bool offscaleBottom = value < getLinearMin();
@@ -895,8 +881,7 @@ namespace sci
 				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
 			}
 
-			//note that valuePrelogged is only utilised if this is a log scale
-			double getSizeLog(double value, bool valuePreLogged) const
+			double getSizeLog(typename Scale<T>::unitless_type value) const
 			{
 				if (!valuePreLogged)
 					value = std::log10(value);

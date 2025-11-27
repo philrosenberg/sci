@@ -27,7 +27,7 @@ namespace sci
 					const auto &z = getData<2>(axisSetIndex);
 					for (size_t i = 0; i < getNPoints(); ++i)
 					{
-						renderer.setBrush(m_colourScale->getRgbLog(z[i], true));
+						renderer.setBrush(m_colourScale->getRgbLog(z[i]));
 						renderer.setPen(rgbcolour(), millimetre(0.0));
 						m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), renderer);
 					}
@@ -69,7 +69,7 @@ namespace sci
 					const auto& z = getData<2>(axisSetIndex);
 					for (size_t i = 0; i < getNPoints(); ++i)
 					{
-						double size = m_sizeScale->getSizeLog(z[i], true);
+						double size = m_sizeScale->getSizeLog(z[i]);
 						m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), graphics::unitless(size), renderer);
 					}
 				}
@@ -111,9 +111,9 @@ namespace sci
 						const auto& z2 = getData<3>(axisSetIndex);
 						for (size_t i = 0; i < getNPoints(); ++i)
 						{
-							renderer.setBrush(m_colourScale->getRgbLog(z1[i], true));
+							renderer.setBrush(m_colourScale->getRgbLog(z1[i]));
 							renderer.setPen(rgbcolour(), millimetre(0.0));
-							double size = m_sizeScale->getSizeLog(z2[i], true);
+							double size = m_sizeScale->getSizeLog(z2[i]);
 							m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), graphics::unitless(size), renderer);
 						}
 					}
@@ -122,7 +122,7 @@ namespace sci
 						const auto& z2 = getData<3>(axisSetIndex);
 						for (size_t i = 0; i < getNPoints(); ++i)
 						{
-							renderer.setBrush(m_colourScale->getRgbLog(z1[i], true));
+							renderer.setBrush(m_colourScale->getRgbLog(z1[i]));
 							renderer.setPen(rgbcolour(), millimetre(0.0));
 							double size = m_sizeScale->getSizeLinear(z2[i]);
 							m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), graphics::unitless(size), renderer);
@@ -139,7 +139,7 @@ namespace sci
 						{
 							renderer.setBrush(m_colourScale->getRgbLinear(z1[i]));
 							renderer.setPen(rgbcolour(), millimetre(0.0));
-							double size = m_sizeScale->getSizeLog(z2[i], true);
+							double size = m_sizeScale->getSizeLog(z2[i]);
 							m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), graphics::unitless(size), renderer);
 						}
 					}
