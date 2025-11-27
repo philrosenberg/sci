@@ -10,11 +10,11 @@ namespace sci
 	namespace plot
 	{
 		template<int Dimensions1, int Dimensions2>
-		class Grid : public Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>
+		class Grid : public Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>
 		{
 		public:
-			Grid(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Grid(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 				//sci::assertThrow(ys.size() == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -22,8 +22,8 @@ namespace sci
 				m_colourscale = colourScale;
 			}
 			
-			Grid(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Grid(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 				//sci::assertThrow(ys.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -35,8 +35,8 @@ namespace sci
 				m_colourscale = colourScale;
 			}
 
-			Grid(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Grid(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 				//sci::assertThrow(ys.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
@@ -46,8 +46,8 @@ namespace sci
 				m_colourscale = colourScale;
 			}
 
-			Grid(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Grid(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
 				//sci::assertThrow(xs.shape()[1] == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -58,12 +58,12 @@ namespace sci
 			
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
-				if (! Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template hasData())
+				if (! Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template hasData())
 					return;
 
 				renderer.setPen(rgbcolour(), Length(millimetre(0.0)));
-				const auto& xs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<0>(axisSetIndex);
-				const auto& ys = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<1>(axisSetIndex);
+				const auto& xs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<0>(axisSetIndex);
+				const auto& ys = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<1>(axisSetIndex);
 
 				if (m_colourscale->isLog())
 				{
@@ -80,7 +80,7 @@ namespace sci
 					if (m_colourscale->fillOffscaleTop())
 						zMax = std::numeric_limits<decltype(zMax)>::infinity();
 
-					const auto& zs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
+					const auto& zs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
 					std::array<size_t, 2> shape = zs.shape();
 					for (size_t i = 0; i < shape[0]; ++i)
 					{
@@ -91,11 +91,11 @@ namespace sci
 							if (zs[i][j] > zMax)
 								continue;
 							renderer.setBrush(m_colourscale->getRgbLog(zs[i][j]));
-							renderer.polygon({ PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
+							renderer.polygon({ PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
 						}
 					}
 				}
@@ -114,7 +114,7 @@ namespace sci
 					if (m_colourscale->fillOffscaleTop())
 						zMax = std::numeric_limits<decltype(zMax)>::infinity();
 
-					const auto& zs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
+					const auto& zs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
 					std::array<size_t, 2> shape = zs.shape();
 					for (size_t i = 0; i < shape[0]; ++i)
 					{
@@ -125,11 +125,11 @@ namespace sci
 							if (zs[i][j] > zMax)
 								continue;
 							renderer.setBrush(m_colourscale->getRgbLinear(zs[i][j]));
-							renderer.polygon({ PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
-								PlotableItem::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
+							renderer.polygon({ PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
+								PlotableItem<double, double>::getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
 						}
 					}
 				}
@@ -166,11 +166,11 @@ namespace sci
 		};
 
 		template<int Dimensions1, int Dimensions2>
-		class Contours : public Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>
+		class Contours : public Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>
 		{
 		public:
-			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -180,8 +180,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -191,8 +191,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 			
-			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -202,8 +202,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
+			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<ColourScale<double>> colourScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -213,8 +213,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
+			Contours(std::span<const double> xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -224,8 +224,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
+			Contours(const sci::GridData<double, 2>& xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -235,8 +235,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
+			Contours(std::span<const double> xs, const sci::GridData<double, 2>& ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -246,8 +246,8 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
+			Contours(const sci::GridData<double, 2>& xs, std::span<const double> ys, const sci::GridData<double, 2>& zs, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, std::shared_ptr<LevelScale<double>> levelScale, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), transformer, xs, ys, zs)
 			{
 				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
@@ -271,7 +271,7 @@ namespace sci
 
 				//get the segments of each contour line using the marching squares algorithm.
 				//note that this just gives the edges of the grid boxes that each segment touches
-				const sci::GridData<double, 2>& zs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
+				const sci::GridData<double, 2>& zs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<2>(axisSetIndex);
 				std::array<size_t, 2> shape = zs.shape();
 				std::vector<std::set<Segment>> segmentsPerLevel = marchingSquaresSegments(zs, contourLevels);
 
@@ -369,8 +369,8 @@ namespace sci
 				std::vector<double> ys;
 				std::vector<Point> points;
 				
-				const auto& inputXs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<0>(axisSetIndex);
-				const auto& inputYs = Data<sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<1>(axisSetIndex);
+				const auto& inputXs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<0>(axisSetIndex);
+				const auto& inputYs = Data<double, double, sci::GridData<double, Dimensions1>, sci::GridData<double, Dimensions2>, sci::GridData<double, 2>>::template getData<1>(axisSetIndex);
 				for (size_t i = 0; i < segments.size(); ++i)
 				{
 					getContourLine(inputXs, inputYs, zs, segments[i], xs, ys);
@@ -378,7 +378,7 @@ namespace sci
 					m_lineStyle.setPen(renderer);
 					points.resize(xs.size());
 					for (size_t j = 0; j < points.size(); ++j)
-						points[j] = PlotableItem::getPointFromLoggedIfNeededData(xs[j], ys[j], axisSetIndex);
+						points[j] = PlotableItem<double, double>::getPointFromLoggedIfNeededData(xs[j], ys[j], axisSetIndex);
 					renderer.polyLine(points);
 					
 				}

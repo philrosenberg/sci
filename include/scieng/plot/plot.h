@@ -1099,10 +1099,9 @@ namespace sci
 			virtual bool readyToDraw() const = 0;
 		};
 
-		class Axis : public Scale<double>, public DrawableItem
+		template<class T>
+		class Axis : public Scale<T>, public DrawableItem
 		{
-			friend class splot;
-			friend class splot2d;
 		public:
 			class Options
 			{
@@ -1150,17 +1149,17 @@ namespace sci
 				sci::string(*m_customlabelcreator)(double axisvalue);
 				size_t m_maxDigits;
 			};
-			Axis(double min, double max, bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
-				:Scale(min, max, log, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+			Axis(T min, T max, bool log, Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
+				:Scale<T>(min, max, log, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 			}
-			Axis(bool log, Point start, Point end, Options options = Options(), Direction direction = Direction::none)
-				:Scale(log, direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+			Axis(bool log, Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
+				:Scale<T>(log, direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 
 			}
-			Axis(Point start, Point end, Options options = Options(), Direction direction = Direction::none)
-				:Scale(direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+			Axis(Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
+				:Scale<T>(direction, 0.05), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 
 			}
@@ -1177,24 +1176,24 @@ namespace sci
 				m_options = options;
 			}
 
-			Direction getBestDirection(Renderer& renderer) const
+			Scale<T>::Direction getBestDirection(Renderer& renderer) const
 			{
-				Direction direction = Scale::getDirection();
-				if (Direction::none == direction)
+				typename Scale<T>::Direction direction = Scale<T>::getDirection();
+				if (Scale<T>::Direction::none == direction)
 				{
 					degree angle = renderer.getAngle(m_end - m_start);
 					if (angle < degree(0.0))
 						angle += degree(360.0);
 					if (angle < degree(45.0))
-						direction = Direction::horizontal;
+						direction = Scale<T>::Direction::horizontal;
 					else if (angle < degree(135.0))
-						direction = Direction::vertical;
+						direction = Scale<T>::Direction::vertical;
 					else if (angle < degree(225.0))
-						direction = Direction::horizontal;
+						direction = Scale<T>::Direction::horizontal;
 					else if (angle < degree(315.0))
-						direction = Direction::vertical;
+						direction = Scale<T>::Direction::vertical;
 					else
-						direction = Direction::horizontal;
+						direction = Scale<T>::Direction::horizontal;
 				}
 				return direction;
 			}
@@ -1230,7 +1229,7 @@ namespace sci
 			{
 				sci::graphics::StatePusher statePusher(&renderer);
 				m_options.m_lineStyle.setPen(renderer);
-				if (isLog())
+				if (Scale<T>::isLog())
 					drawLog(renderer, scale);
 				else
 					drawLinear(renderer, scale);
@@ -1241,58 +1240,58 @@ namespace sci
 				return true;
 			}
 
-			template<class T>
 			Distance alongAxisDistanceFromLinearData(T value) const
 			{
-				double fraction;
-				if (isLog())
-					fraction = (std::log10(value) - getLogMin()) / (getLogMax() - getLogMin());
+				typename Scale<T>::unitless_type fraction;
+				if (Scale<T>::isLog())
+					fraction = (sci::log10(value/T(1)) - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 				else
-					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
+					fraction = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
 				return (m_end - m_start) * unitless(fraction);
 			}
 
-			template<class T>
-			Distance alongAxisDistanceFromLoggedIfNeededData(T value) const
+			Distance alongAxisDistanceFromLoggedIfNeededData(typename Scale<T>::unitless_type value) const
 			{
-				double fraction;
-				if (isLog())
-					fraction = (value - getLogMin()) / (getLogMax() - getLogMin());
+				typename Scale<T>::unitless_type fraction;
+				if (Scale<T>::isLog())
+					fraction = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 				else
-					fraction = (value - getLinearMin()) / (getLinearMax() - getLinearMin());
+					fraction = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
 				return (m_end - m_start) * unitless(fraction);
 			}
 
 		private:
 			void drawLinear(Renderer& renderer, perMillimetre scale)
 			{
+				using unitless_type = typename Scale<T>::unitless_type;
+
 				//calculate the min, max and span
-				double min = getLinearMin();
-				double max = getLinearMax();
+				T min = Scale<T>::getLinearMin();
+				T max = Scale<T>::getLinearMax();
 				if (min > max)
 					std::swap(min, max);
-				double span = max - min;
+				T span = max - min;
 
 				//calculate major interval if needed
-				double majorInterval;
+				T majorInterval;
 				size_t nAutoSubticks = 0;
 				if (m_options.m_autoMajorInterval)
 				{
-					double spanMagnitude = std::floor(std::log10(span));
-					double spanNormalised = span / std::pow(10.0, spanMagnitude); //this will be in the range 1-9.99999;
-					if (spanNormalised <= 2.0)
+					unitless_type spanMagnitude = sci::floor(sci::log10(span/T(1.0)));
+					unitless_type spanNormalised = span / sci::pow(unitless_type(10.0), spanMagnitude); //this will be in the range 1-9.99999;
+					if (spanNormalised <= unitless_type(2.0))
 					{
-						majorInterval = 0.2 * std::pow(10.0, spanMagnitude);
+						majorInterval = unitless_type(0.2) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 3;
 					}
-					else if (spanNormalised <= 5.0)
+					else if (spanNormalised <= unitless_type(5.0))
 					{
-						majorInterval = 0.5 * std::pow(10.0, spanMagnitude);
+						majorInterval = unitless_type(0.5) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 4;
 					}
 					else
 					{
-						majorInterval = 1.0 * std::pow(10.0, spanMagnitude);
+						majorInterval = unitless_type(1.0) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 4;
 					}
 				}
@@ -1313,9 +1312,9 @@ namespace sci
 
 				//draw the ticks and labels
 				renderer.setFont(m_options.m_labelFont);
-				double currentMajorPosition = std::floor(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
+				T currentMajorPosition = sci::floor<unitless_type>(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
 
-				double minorInterval = majorInterval / double(nSubticks + 1);
+				T minorInterval = majorInterval / unitless_type(nSubticks + 1);
 				millimetre maxLabelSize(0);
 				while (currentMajorPosition <= max) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 				{
@@ -1327,7 +1326,7 @@ namespace sci
 					}
 					for (size_t i = 0; i < nSubticks; ++i)
 					{
-						double minorPosition = currentMajorPosition + double(i + 1) * minorInterval;
+						T minorPosition = currentMajorPosition + unitless_type(i + 1) * minorInterval;
 						if (minorPosition <= max && minorPosition >= min)
 							drawTick(renderer, scale, minorPosition, true);
 					}
@@ -1344,17 +1343,19 @@ namespace sci
 
 			void drawLog(Renderer& renderer, perMillimetre scale)
 			{
+				using unitless_type = typename Scale<T>::unitless_type;
+
 				//calculate the min, max and span
-				double logMin = getLogMin();
-				double logMax = getLogMax();
+				unitless_type logMin = Scale<T>::getLogMin();
+				unitless_type logMax = Scale<T>::getLogMax();
 				if (logMin > logMax)
 					std::swap(logMin, logMax);
-				double logSpan = logMax - logMin;
+				unitless_type logSpan = logMax - logMin;
 
 				//calculate major interval if needed
-				double majorLogInterval;
+				unitless_type majorLogInterval;
 				if (m_options.m_autoMajorInterval)
-					majorLogInterval = std::ceil(logSpan / 10.0);
+					majorLogInterval = sci::ceil(logSpan / unitless_type(10.0));
 				else
 					majorLogInterval = m_options.m_majorInterval;
 
@@ -1365,42 +1366,44 @@ namespace sci
 				else
 					nSubticks = m_options.m_nSubticks;
 				//If major interval divided by the sub intervals is an integer, then multiply subticks by this number
-				double minorLogInterval = 0;;
-				double testInterval = majorLogInterval / double(nSubticks + 1);
+				unitless_type minorLogInterval(0);;
+				unitless_type testInterval = majorLogInterval / unitless_type(nSubticks + 1);
 				if (nSubticks > 0 && testInterval == ceil(testInterval))
 					minorLogInterval = testInterval;
-				double minorInterval = (std::pow(10.0, majorLogInterval) - 1.0) / double(nSubticks + 1);
+				unitless_type minorIntervalOverMajorPosition = (sci::pow(unitless_type(10.0), majorLogInterval) - unitless_type(1.0)) / unitless_type(nSubticks + 1);
 
 				//draw the ticks and labels
 				renderer.setFont(m_options.m_labelFont);
-				double currentMajorLogPosition = std::floor(logMin / majorLogInterval) * majorLogInterval;
+				unitless_type currentMajorLogPosition = sci::floor(logMin / majorLogInterval) * majorLogInterval;
 				millimetre maxLabelSize(0);
 
+				T linearMin = T(1.0) * sci::pow(unitless_type(10.0), logMin);
 				while (currentMajorLogPosition <= logMax) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 				{
-					double currentMajorPosition = std::pow(10.0, currentMajorLogPosition);
+					T currentMajorPosition = T(1)*sci::pow(unitless_type(10.0), currentMajorLogPosition);
 					if (currentMajorLogPosition >= logMin)
 					{
 						drawTick(renderer, scale, currentMajorPosition, false);
-						millimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, 0.0);
+						millimetre labelSize = drawLabel(renderer, scale, currentMajorPosition, T(0.0));
 						maxLabelSize = std::max(labelSize, maxLabelSize);
 					}
-					if (minorLogInterval != 0.0)
+					if (minorLogInterval != unitless_type(0.0))
 					{
 						for (size_t i = 0; i < nSubticks; ++i)
 						{
-							double currentMinorPosition = std::pow(10.0, currentMajorLogPosition + double(i + 1) * minorLogInterval);
-							if (currentMinorPosition <= getLinearMax() && currentMinorPosition >= getLinearMin())
+							T currentMinorPosition = T(1.0) * sci::pow(unitless_type(10.0), currentMajorLogPosition + unitless_type(i + 1) * minorLogInterval);
+							if (currentMinorPosition <= Scale<T>::getLinearMax() && currentMinorPosition >= linearMin)
 								drawTick(renderer, scale, currentMinorPosition, true);
 						}
 
 					}
 					else
 					{
+						T minorInterval = minorIntervalOverMajorPosition * currentMajorPosition;
 						for (size_t i = 0; i < nSubticks; ++i)
 						{
-							double currentMinorPosition = currentMajorPosition * double((i + 1) * minorInterval + 1.0);
-							if (currentMinorPosition <= getLinearMax() && currentMinorPosition >= getLinearMin())
+							T currentMinorPosition = currentMajorPosition + unitless_type(i + 1) * minorInterval;
+							if (currentMinorPosition <= Scale<T>::getLinearMax() && currentMinorPosition >= linearMin)
 								drawTick(renderer, scale, currentMinorPosition, true);
 						}
 					}
@@ -1415,14 +1418,14 @@ namespace sci
 				drawTitle(renderer, scale, m_options.m_majorTickLength * unitless(1.4) + maxLabelSize);
 			}
 
-			void drawTick(Renderer& renderer, perMillimetre scale, double plotPosition, bool minor)
+			void drawTick(Renderer& renderer, perMillimetre scale, typename Scale<T>::unitless_type plotPosition, bool minor)
 			{
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
 				Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
 				Point p1 = Point(millimetre(0.0), millimetre(0.0));
 				Point p2 = p1;
-				Direction direction = getBestDirection(renderer);
-				if (direction == Direction::horizontal)
+				typename Scale<T>::Direction direction = getBestDirection(renderer);
+				if (direction == Scale<T>::Direction::horizontal)
 				{
 					//set the position of both ends of the tick on the axis initially
 					p1 = pagePosition;
@@ -1433,7 +1436,7 @@ namespace sci
 					if (m_options.m_ticksLeftOrDown)
 						p2 += Distance(millimetre(0.0), length);
 				}
-				else if (direction == Direction::vertical)
+				else if (direction == Scale<T>::Direction::vertical)
 				{
 					//set the position of both ends of the tick on the axis initially
 					p1 = pagePosition;
@@ -1448,8 +1451,9 @@ namespace sci
 					renderer.line(p1, p2);
 			}
 
-			millimetre drawLabel(Renderer& renderer, perMillimetre scale, double plotPosition, double minorInterval) //returns the sise of the label perpedicular to the axis
+			millimetre drawLabel(Renderer& renderer, perMillimetre scale, T plotPosition, T minorInterval) //returns the size of the label perpedicular to the axis
 			{
+				using unitless_type = typename Scale<T>::unitless_type;
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setBrush(m_options.m_labelFont.m_colour);
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
@@ -1462,8 +1466,8 @@ namespace sci
 					strm.precision(m_options.m_maxDigits);
 
 					//check we are not so close to zero we should just be zero
-					double temp = std::log10(std::abs(plotPosition) / minorInterval);
-					if (!isLog() && std::log10(std::abs(plotPosition) / minorInterval) < -double(m_options.m_maxDigits))
+					unitless_type temp = sci::log10(sci::abs(plotPosition) / minorInterval);
+					if (!Scale<T>::isLog() && sci::log10(sci::abs(plotPosition) / minorInterval) < -unitless_type(m_options.m_maxDigits))
 						strm << 0;
 					else
 						strm << plotPosition;
@@ -1488,8 +1492,8 @@ namespace sci
 
 				unitless alignment(0.5);
 				millimetre labelSize(0);
-				Direction direction = getBestDirection(renderer);
-				if (direction == Direction::horizontal)
+				typename Scale<T>::Direction direction = getBestDirection(renderer);
+				if (direction == Scale<T>::Direction::horizontal)
 				{
 					//set the horizontal position and the alignment
 					if (!m_options.m_labelsLeftOrDown)
@@ -1505,7 +1509,7 @@ namespace sci
 
 					labelSize = (renderer.formattedText(label, pagePosition, unitless(0.5), unitless(alignment))).ascent;
 				}
-				else if (direction == Direction::vertical)
+				else if (direction == Scale<T>::Direction::vertical)
 				{
 					//set the horizontal position and the alignment
 					if (m_options.m_labelsLeftOrDown)
@@ -1532,8 +1536,8 @@ namespace sci
 				Point pagePosition = m_start + (m_end - m_start) * unitless(0.5);
 
 				unitless alignment(0.5);
-				Direction direction = getBestDirection(renderer);
-				if (direction == Direction::horizontal)
+				typename Scale<T>::Direction direction = getBestDirection(renderer);
+				if (direction == Scale<T>::Direction::horizontal)
 				{
 					//set the horizontal position and the alignment
 					if (!m_options.m_labelsLeftOrDown)
@@ -1549,7 +1553,7 @@ namespace sci
 
 					renderer.formattedText(m_options.m_title, pagePosition, unitless(0.5), unitless(alignment));
 				}
-				else if (direction == Direction::vertical)
+				else if (direction == Scale<T>::Direction::vertical)
 				{
 					//set the horizontal position and the alignment
 					if (m_options.m_labelsLeftOrDown)
@@ -1752,14 +1756,14 @@ namespace sci
 		};
 
 
-
+		template<class T>
 		class HorizontalColourBar : public DrawableItem
 		{
 		public:
-			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<double>> colourscale, Axis::Options axisOptions = Axis::Options())
+			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<T>> colourscale, Axis<T>::Options axisOptions = Axis<T>::Options())
 				:m_colourscale(colourscale),
-				m_xAxis(new Axis(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale<double>::Direction::horizontal)),
-				m_yAxis(new Axis(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis::Options::getBlankAxis(), sci::plot::Scale<double>::Direction::horizontal))
+				m_xAxis(new Axis<T>(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale<double>::Direction::horizontal)),
+				m_yAxis(new Axis<double>(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis<double>::Options::getBlankAxis(), sci::plot::Scale<double>::Direction::horizontal))
 			{
 			}
 			void preDraw() override
@@ -1767,14 +1771,16 @@ namespace sci
 			}
 			void draw(Renderer& renderer, perMillimetre scale) override
 			{
+				using unitless_type = decltype(T() / T());
+
 				if (m_colourscale->isDiscrete())
 				{
-					sci::GridData<double, 2> cb({ 2, 2 });
+					sci::GridData<T, 2> cb({ 2, 2 });
 					cb[0][0] = m_colourscale->getLinearMin();
 					cb[0][1] = cb[0][0];
 					cb[1][0] = m_colourscale->getLinearMax();
 					cb[1][1] = cb[1][0];
-					std::vector<double> cbX{ cb[0][0], cb[1][0] };
+					std::vector<T> cbX{ cb[0][0], cb[1][0] };
 					std::vector<double> cbY{ 0.0, 1.0 };
 
 					Contours<1, 1> data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
@@ -1784,34 +1790,36 @@ namespace sci
 				}
 				else
 				{
-					sci::GridData<double, 2> z({ 256, 1 });
-					std::vector<double> cbX(z.shape()[0] + 1);
+					sci::GridData<T, 2> z({ 256, 1 });
+					std::vector<T> cbX(z.shape()[0] + 1);
 
 
-					double min = m_colourscale->isLog() ? m_colourscale->getLogMin() : m_colourscale->getLinearMin();
-					double max = m_colourscale->isLog() ? m_colourscale->getLogMax() : m_colourscale->getLinearMax();
 
 					if (m_colourscale->isLog())
 					{
-						double range = max - min;
-						double step = range / (z.shape()[0]);
+						auto min = m_colourscale->getLogMin();
+						auto max = m_colourscale->getLogMax();
+						auto range = max - min;
+						auto step = range / unitless_type(z.shape()[0]);
 
 						for (size_t i = 0; i < cbX.size(); ++i)
-							cbX[i] = std::pow(10, min + i * step);
+							cbX[i] = T(1.0) * sci::pow(unitless_type(10), min + unitless_type(i) * step);
 
 						for (size_t i = 0; i < z.size(); ++i)
-							z[i][0] = std::pow(10.0, (min + (i + 0.5) * step));
+							z[i][0] = T(1.0) * sci::pow(unitless_type(10.0), (min + unitless_type(i + 0.5) * step));
 					}
 					else
 					{
-						double range = max - min;
-						double step = range / (z.size());
+						auto min = m_colourscale->getLinearMin();
+						auto max = m_colourscale->getLinearMax();
+						auto range = max - min;
+						auto step = range / unitless_type(z.size());
 
 						for (size_t i = 0; i < cbX.size(); ++i)
-							cbX[i] = min + i * step;
+							cbX[i] = min + unitless_type(i) * step;
 
 						for (size_t i = 0; i < z.size(); ++i)
-							z[i][0] = (cbX[i] + cbX[i + 1]) / 2.0;
+							z[i][0] = (cbX[i] + cbX[i + 1]) / unitless_type(2.0);
 					}
 
 					std::vector<double> cbY{ 0.0, 1.0 };
@@ -1827,9 +1835,9 @@ namespace sci
 				return true;
 			}
 		private:
-			std::shared_ptr<ColourScale<double>> m_colourscale;
-			std::shared_ptr<Axis> m_xAxis;
-			std::shared_ptr<Axis> m_yAxis;
+			std::shared_ptr<ColourScale<T>> m_colourscale;
+			std::shared_ptr<Axis<T>> m_xAxis;
+			std::shared_ptr<Axis<double>> m_yAxis;
 
 		};
 

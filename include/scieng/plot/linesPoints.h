@@ -9,11 +9,11 @@ namespace sci
 	namespace plot
 	{
 
-		class Lines : public Data<std::vector<double>, std::vector<double>>
+		class Lines : public Data<double, double, std::vector<double>, std::vector<double>>
 		{
 		public:
-			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
+			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
@@ -34,11 +34,11 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-		class Points : public Data<std::vector<double>, std::vector<double>>
+		class Points : public Data<double, double, std::vector<double>, std::vector<double>>
 		{
 		public:
-			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
+			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:

@@ -8,11 +8,11 @@ namespace sci
 {
 	namespace plot
 	{
-		class VerticalBars : public Data<std::vector<double>, std::vector<double>, std::vector<double>>
+		class VerticalBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+			VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -47,7 +47,7 @@ namespace sci
 			virtual void autoscaleAxes(size_t axisSetIndex) override
 			{
 				getYAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				Data<std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			FillStyle m_fillStyle;
@@ -56,11 +56,11 @@ namespace sci
 			double m_zeroLineLogged;
 		};
 
-		class HorizontalBars : public Data<std::vector<double>, std::vector<double>, std::vector<double>>
+		class HorizontalBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			HorizontalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+			HorizontalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -96,7 +96,7 @@ namespace sci
 			virtual void autoscaleAxes(size_t axisSetIndex) override
 			{
 				getXAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				Data<std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			FillStyle m_fillStyle;
@@ -105,11 +105,11 @@ namespace sci
 			double m_zeroLineLogged;
 		};
 
-		class Boxes : public Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+		class Boxes : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			Boxes(std::span<const double> x1s, std::span<const double> x2s, std::span<const double> y1s, std::span<const double> y2s, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
+			Boxes(std::span<const double> x1s, std::span<const double> x2s, std::span<const double> y1s, std::span<const double> y2s, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -145,11 +145,11 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-		class Fill : public Data<std::vector<double>, std::vector<double>>
+		class Fill : public Data<double, double, std::vector<double>, std::vector<double>>
 		{
 		public:
-			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: Data<double, double, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			

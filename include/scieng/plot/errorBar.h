@@ -8,11 +8,11 @@ namespace sci
 {
 	namespace plot
 	{
-		class HorizontalErrorBars : public Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+		class HorizontalErrorBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			HorizontalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
-				:Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), transformer, xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+			HorizontalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
+				:Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), transformer, xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
 				m_stopLength = stopLength;
@@ -46,7 +46,7 @@ namespace sci
 			{
 				if (!m_useForAutoscale)
 					return;
-				Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			LineStyle m_style;
@@ -54,11 +54,11 @@ namespace sci
 			bool m_useForAutoscale;
 		};
 
-		class VerticalErrorBars : public Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+		class VerticalErrorBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
 		{
 		public:
-			VerticalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
-				:Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), transformer, xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+			VerticalErrorBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> plusErrors, std::span<const double> minusErrors, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
+				:Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), transformer, xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
 				m_stopLength = stopLength;
@@ -93,7 +93,7 @@ namespace sci
 			{
 				if (!m_useForAutoscale)
 					return;
-				Data<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			LineStyle m_style;

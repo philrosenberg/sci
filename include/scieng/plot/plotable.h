@@ -20,6 +20,7 @@ namespace sci
 
 		//This class is the base class for all plotable items, it provides the interface for
 		//the items
+		template<class T, class U>
 		class PlotableItem : public DrawableItem
 		{
 		public:
@@ -29,7 +30,7 @@ namespace sci
 				m_xAxis.push_back(nullptr);
 				m_yAxis.push_back(nullptr);
 			}
-			PlotableItem(std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, std::shared_ptr<splotTransformer> transformer)
+			PlotableItem(std::shared_ptr<Axis<T>> xAxis, std::shared_ptr<Axis<U>> yAxis, std::shared_ptr<splotTransformer> transformer)
 				:m_transformer(transformer), m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
 			{
 				m_xAxis.push_back(xAxis);
@@ -72,38 +73,36 @@ namespace sci
 				}
 			}
 
-			template<class T, class U>
 			Point getPointFromLinearData(T x, U y, size_t axisSetIndex) const
 			{
 				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLinearData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLinearData(y);
 			}
 
-			template<class T, class U>
 			Point getPointFromLoggedIfNeededData(T x, U y, size_t axisSetIndex) const
 			{
 				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(y);
 			}
-			std::shared_ptr<Axis> getXAxis(size_t axisSetIndex)
+			std::shared_ptr<Axis<T>> getXAxis(size_t axisSetIndex)
 			{
 				return m_xAxis[axisSetIndex];
 			}
-			std::shared_ptr<Axis> getYAxis(size_t axisSetIndex)
+			std::shared_ptr<Axis<U>> getYAxis(size_t axisSetIndex)
 			{
 				return m_yAxis[axisSetIndex];
 			}
-			std::shared_ptr<const Axis> getXAxis(size_t axisSetIndex) const
+			std::shared_ptr<const Axis<T>> getXAxis(size_t axisSetIndex) const
 			{
 				return m_xAxis[axisSetIndex];
 			}
-			std::shared_ptr<const Axis> getYAxis(size_t axisSetIndex) const
+			std::shared_ptr<const Axis<U>> getYAxis(size_t axisSetIndex) const
 			{
 				return m_yAxis[axisSetIndex];
 			}
 		private:
 			virtual void autoscaleAxes(size_t axisSetIndex) = 0;
 			virtual void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const {}
-			std::vector<std::shared_ptr<Axis>> m_xAxis;
-			std::vector<std::shared_ptr<Axis>> m_yAxis;
+			std::vector<std::shared_ptr<Axis<T>>> m_xAxis;
+			std::vector<std::shared_ptr<Axis<U>>> m_yAxis;
 			std::shared_ptr<splotTransformer> m_transformer;
 			bool m_scaledAxes;
 			Point m_intersection;
@@ -119,8 +118,8 @@ namespace sci
 		//This class is separated from plotable as there may be some cases where the data storage model
 		//does not work and something more custom is needed, so this separates the concerns of rendering
 		//and storage.
-		template<class... CONTAINERS>
-		class Data : public PlotableItem
+		template<class X, class Y, class... CONTAINERS>
+		class Data : public PlotableItem<X, Y>
 		{
 		public:
 			using containersTuple = std::tuple<CONTAINERS...>;
@@ -157,8 +156,8 @@ namespace sci
 			constexpr static int nDimensions = sizeof...(CONTAINERS);
 
 			template< class AXISTUPLE, class... RECEIVEDCONTAINERS>
-			Data(std::shared_ptr<Axis> xAxis, std::shared_ptr<Axis> yAxis, AXISTUPLE axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
-				:PlotableItem(xAxis, yAxis, transformer)
+			Data(std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, AXISTUPLE axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
+				:PlotableItem<X, Y>(xAxis, yAxis, transformer)
 			{
 				static_assert(std::tuple_size<axisTuple>() == nDimensions, "Internal sci::plot::Data error - axisTuple is the wrong size");
 				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the number of dimensions");
