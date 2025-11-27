@@ -18,28 +18,6 @@ namespace sci
 		const int sizescaleErrorCode = 3;
 		const int splot2dErrorCode = 4;
 
-		//pre declarations
-		class splot;
-		class splot2d;
-		class DrawableItem;
-
-		//emptyvector
-		static const std::vector<double> empty1d;
-		static const std::vector<std::vector<double> > empty2d;
-
-		template <class T>
-		void incrementsize(std::vector<T>& v)
-		{
-			v.resize(v.size() + 1);
-		}
-
-		//plot types
-		enum splottype
-		{
-			scatter,
-			shadecont,
-			bar
-		};
 
 		template<class T>
 		class Scale
