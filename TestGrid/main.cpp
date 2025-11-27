@@ -265,8 +265,15 @@ int main()
 		std::cout << "testing operator ==\n";
 		output2d(grid2 == 3.0);
 
-		std::cout << "testing operator +=";
+		std::cout << "testing operator +=\n";
 		output2d(grid2 += 1.0);
+
+		std::cout << "testing maths with scalars and grids in either order and with more than two terms\n";
+		output2d(grid2 + 2.0);
+		output2d(grid2 * 2.0);
+		output2d(2.0 + grid2);
+		output2d(2.0 * grid2);
+		output2d(1.0 + grid2 * 2.0);
 	}
 
 

@@ -200,7 +200,8 @@ namespace sci
 		using  const_reference_type = typename const_iterator::value_type;
 		using value_type = typename iterator::value_type;
 
-		constexpr gridpairtransform_view() = default;
+		constexpr gridpairtransform_view() requires(NDIMS1 == NDIMS2 || NDIMS1 == 0 || NDIMS2 == 0)
+		{ }
 		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM, GRID1, GRID2> const& rhs) = default;
 		constexpr gridpairtransform_view(gridpairtransform_view<TRANSFORM, GRID1, GRID2>&& rhs) = default;
 		constexpr gridpairtransform_view& operator=(gridpairtransform_view<TRANSFORM, GRID1, GRID2> const& rhs) = default;
@@ -242,68 +243,54 @@ namespace sci
 		{
 			return std::size(m_grid1);
 		}
-		/*reference_type operator[](const difference_type& index) requires(NDIMS == 1)
+
+		//operator[] with array indexing, causing values to be calculated
+		const_reference_type operator[](const std::array<size_t, NDIMS>& index) const
 		{
-			return reference_type(*(begin() + index));
-		}*/
+			if constexpr (NDIMS == 0)
+				return const_reference_type(*begin());
+			if constexpr (NDIMS == 1)
+				return operator[](index[0]);
+			if constexpr (NDIMS1 > 0)
+				return const_reference_type(*(begin() + m_grid1.getStrides().getOffset(index)));
+			if constexpr (NDIMS2 > 0)
+				return const_reference_type(*(begin() + m_grid2.getStrides().getOffset(index)));
+		}
+
+		//operator[] for single indices of 1-D arrays, causing values to be calculated
 		const_reference_type operator[](const difference_type& index) const requires(NDIMS == 1)
 		{
 			return const_reference_type(*(begin() + index));
 		}
-		/*reference_type operator[](const std::array<size_t, NDIMS>& index)
-		{
-			return reference_type(*(begin() + m_strides.getOffset(index)));
-		}*/
-		const_reference_type operator[](const std::array<size_t, NDIMS>& index) const
-		{
-			return const_reference_type(*(begin() + m_grid1.getStrides().getOffset(index)));
-		}
-		/* auto operator[](const difference_type& index) requires(NDIMS != 1);
-		{
-			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
-			{
-				auto sub1 = m_grid1[index];
-				auto sub2 = m_grid2[index];
-				return make_gridpairtransform_view < TRANSFORM, decltype(sub1)>(sub1, sub2);
-			}
-			else if constexpr (NDIMS1 > 0)
-			{
-				auto sub1 = m_grid1[index];
-				return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(sub1, m_grid2);
-			}
-			else if constexpr (NDIMS2 > 0)
-			{
-				auto sub2 = m_grid2[index];
-				return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, sub2);
-			}
-			//else //operator[] for two scalars probably is nonsensical
-			//{
-			//	return gridpair_view<decltype(m_grid1), 0, decltype(m_grid2), 0>(m_grid1, m_grid2);
-			//}
-		}*/
 		
+		//operator[] for single indices of multi-D arrays, creating slices. Remember that the two
+		//dimensions must be equal or one of them must be zero. This means any case including a
+		//1-D grid will always be caught by the above case (if either grid is 1-D the other must
+		//be 1-D or 0-D, so NDIMS==1)
+
+		//operator[] where both grids are multi-D
 		const auto operator[](const difference_type& index) const requires(NDIMS1 > 1 && NDIMS2 > 1)
 		{
+			//this is the case for multi-d views
 			auto sub1 = m_grid1[index];
 			auto sub2 = m_grid2[index];
 			return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(sub2)>(sub1, sub2);
 		}
 
-		const auto operator[](const difference_type& index) const requires(NDIMS1 > 1 && NDIMS2 < 2)
+		//operator[] where grid1 is multi-D
+		const auto operator[](const difference_type& index) const requires(NDIMS1 > 1 && !(NDIMS2 > 1))
 		{
 			auto sub1 = m_grid1[index];
 			return gridpairtransform_view<TRANSFORM, decltype(sub1), decltype(m_grid2)>(m_grid1[index], m_grid2);
 		}
 
-		const auto operator[](const difference_type& index) const requires(NDIMS2 > 1 && NDIMS1 < 2)
+		//operator[] where grid2 is multi-D
+		const auto operator[](const difference_type& index) const requires(NDIMS2 > 1 && !(NDIMS1 > 1))
 		{
 			auto sub2 = m_grid2[index];
 			return gridpairtransform_view<TRANSFORM, decltype(m_grid1), decltype(sub2)>(m_grid1, m_grid2[index]);
 		}
-		const auto operator[](const difference_type& index) const requires(NDIMS == 0)
-		{
 
-		}
 		std::array<size_t, NDIMS> shape() const
 		{
 			if constexpr (NDIMS1 > NDIMS2)
@@ -486,6 +473,10 @@ namespace sci
 	//template<TRANSFORM_TYPE, TRANSFORM, class GRID1>
 	//using gridtransform_view = gridpairtransform_view<TRANSFORM_TYPE, TRANSFORM, GRID1, uint8_t, decltype(&discardSecond<GRID1::value_type, uint8_t>)>;
 
+	//in the operator functions below a lambda is included which fixed an internal compiler error on MSVC
+	//I think this was actually to do with poor requires conditions in the gridtrandform_view and they might
+	//be able to be removed now this has been improved
+
 	template<class T, class U>
 	auto operator+(const T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
 	{
@@ -507,6 +498,8 @@ namespace sci
 		auto transform = [](const typename TV::value_type& x, const typename UV::value_type& y) { return minus(x, y); };
 		return make_gridpairtransform_view<transform>(av, bv);
 	}
+
+
 
 	template<class T, class U>
 	auto operator*(const T& a, const U& b) requires(bool(IsGrid<T> || IsGrid<U>))
