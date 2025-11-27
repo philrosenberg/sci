@@ -206,7 +206,7 @@ namespace sci
 					return static_cast<const base_type1&>(this->first) == static_cast<const base_type1&>(right.first);
 
 				//NDIMS2 > 0 || NDIMS == 0
-				return static_cast<const base_type2&>(this->second) != static_cast<const base_type2&>(right.second);
+				return static_cast<const base_type2&>(this->second) == static_cast<const base_type2&>(right.second);
 			}
 			bool operator!=(const Iterator& right) const noexcept
 			{
