@@ -593,18 +593,24 @@ namespace sci
 				//check sizes match
 				std::array<size_t, ndims> thisShape = shape();
 				const std::array<size_t, GRID::ndims> sourceShape = source.shape();
-				if constexpr (ndims == 1)
-					assert(source.size() == 1);
-				else
+				
+				if (size() > 0) //need to check for this as in this case all shape elements will be zero
 				{
-					if (size() > 0)
+					for (size_t i = 0; i < sourceShape.size(); ++i)
 					{
-						assert(members::getTopStride() == source.size());
-						for (size_t i = 0; i < sourceShape.size(); ++i)
-							assert(sourceShape[i] == thisShape[i + 1]);
+						assert(sourceShape[i] == thisShape[i + 1]);
+						if (sourceShape[i] != thisShape[i + 1])
+							throw(std::out_of_range("Attempted to insert data into sci::GridData with an incompatible shape. Inserted shape must be the same as destination shape with the first dimension omitted"));
 					}
 				}
+				size_t offset = index * members::getTopStride();
+				iterator pos = begin() + index * members::getTopStride();
+				members::m_data.insert(pos, source.begin(), source.begin() + source.size());
+				++thisShape[0];
+				setShape(thisShape);
 
+				//now add this to begin to get the insert point, add 1 to the first element of shape and setshape
+				/*
 				//insert the data
 				if (size() == 0 && index == 0)
 				{
@@ -619,7 +625,7 @@ namespace sci
 					members::m_data.insert(pos, source.begin(), source.begin() + source.size());
 					++thisShape[0];
 				}
-				setShape(thisShape);
+				setShape(thisShape);*/
 			}
 		}
 		//insert an element at index with value source. If NDIMS > 1 then
@@ -848,7 +854,7 @@ namespace sci
 		}
 		template<IsGridDims<NDIMS> GRID>
 		GridData<value_type, NDIMS, Allocator>& operator=(const GRID& rhs)
-			requires std::convertible_to<GRID::data_type, data_type>
+			requires std::convertible_to<typename GRID::data_type, data_type>
 		{
 			reshape(rhs.shape());
 			auto iter = begin();

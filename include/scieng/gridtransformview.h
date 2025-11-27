@@ -20,7 +20,7 @@ namespace sci
 		static const size_t NDIMS = std::max(NDIMS1, NDIMS2);
 		static const size_t ndims = NDIMS;
 
-		template<auto TRANSFORM>
+		//template<auto TRANSFORM>
 		class Iterator : public std::pair<typename GRID1::iterator, typename GRID2::iterator>
 		{
 		public:
@@ -64,6 +64,12 @@ namespace sci
 			{
 				return pointer(&(*this));
 			}
+
+			//When we increment or move an iterator then we generally only increment the
+			//elements which have dimensionality greater than zero.
+			//However, if both elements have dimensionality of zero, then we do increment.
+			//This is to ensure that incrementing an iterator will eventually hit end
+
 			// Prefix increment
 			Iterator& operator++()
 			{
@@ -71,6 +77,11 @@ namespace sci
 					++static_cast<base_type1&>(this->first);
 				if constexpr (NDIMS2 > 0)
 					++static_cast<base_type2&>(this->second);
+				if constexpr(NDIMS == 0)
+				{
+					++static_cast<base_type1&>(this->first);
+					++static_cast<base_type2&>(this->second);
+				}
 				return (*this);
 			}
 			// Postfix increment
@@ -81,6 +92,11 @@ namespace sci
 					static_cast<base_type1&>(this->first)++;
 				if constexpr (NDIMS2 > 0)
 					static_cast<base_type2&>(this->second)++;
+				if constexpr(NDIMS == 0)
+				{
+					static_cast<base_type1&>(this->first)++;
+					static_cast<base_type2&>(this->second)++;
+				}
 				return temp;
 			}
 			// Prefix decrement
@@ -90,6 +106,11 @@ namespace sci
 					--static_cast<base_type1&>(this->first);
 				if constexpr (NDIMS2 > 0)
 					--static_cast<base_type2&>(this->second);
+				if constexpr(NDIMS == 0)
+				{
+					--static_cast<base_type1&>(this->first);
+					--static_cast<base_type2&>(this->second);
+				}
 				return (*this);
 			}
 			// Postfix decrement
@@ -100,6 +121,11 @@ namespace sci
 					static_cast<base_type1&>(this->first)--;
 				if constexpr (NDIMS2 > 0)
 					static_cast<base_type2&>(this->second)--;
+				if constexpr(NDIMS == 0)
+				{
+					static_cast<base_type1&>(this->first)--;
+					static_cast<base_type2&>(this->second)--;
+				}
 				return temp;
 			}
 			Iterator& operator+=(const difference_type offset)
@@ -108,6 +134,11 @@ namespace sci
 					static_cast<base_type1&>(this->first) += offset;
 				if constexpr (NDIMS2 > 0)
 					static_cast<base_type2&>(this->second) += offset;
+				if constexpr(NDIMS == 0)
+				{
+					static_cast<base_type1&>(this->first) += offset;
+					static_cast<base_type2&>(this->second) += offset;
+				}
 				return *this;
 			}
 
@@ -140,28 +171,42 @@ namespace sci
 				return iter - offset;
 			}
 
-			difference_type operator-(const Iterator& right) const noexcept
+			difference_type operator-(const Iterator& right) const //would have liked to make this noexcept, but if it is then how do I deal with the situation that throws below?
 			{
-				if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
+				if constexpr ((NDIMS1 > 0 && NDIMS2 > 0) || NDIMS == 0)
 				{
 					difference_type firstDifference = this->first - right.first;
 					difference_type secondDifference = this->second - right.second;
 					assert(firstDifference == secondDifference);
+					if(firstDifference != secondDifference)
+						throw(std::out_of_range("A gridpairtransform_view::Iterator found two halves of the iterator that do not match when subtracting one iterator from another"));
 					return firstDifference;
 				}
-				else if constexpr (NDIMS1 >0)
+				if constexpr (NDIMS1 > 0)
 					return this->first - right.first;
-				else 
-					return this->second - right.second;
+				//NDIMS2 > 0
+				return this->second - right.second;
 			}
 
 			value_type operator[](const difference_type offset) const noexcept
 			{
-				return *(*this + offset);
+				return value_type();
+				//return *(*this + offset);
 			}
 			bool operator==(const Iterator& right) const noexcept
 			{
-				return (static_cast<const base_type1&>(this->first) == static_cast<const base_type1&>(right.first));
+				//This logic works providing we do not mix up iterators from different conainers, but as that is
+				//undefined behaviour anyway, I don't think we should worry about it. Also we must have these
+				//operators to be reandom access iterators
+				
+				//If one of these elements is a scalar then it will always match as per the logic above, so we
+				//must either check both or check that the element we test is not a scalar or both are scalars
+
+				if (NDIMS1 > 0)
+					return static_cast<const base_type1&>(this->first) == static_cast<const base_type1&>(right.first);
+
+				//NDIMS2 > 0 || NDIMS == 0
+				return static_cast<const base_type2&>(this->second) != static_cast<const base_type2&>(right.second);
 			}
 			bool operator!=(const Iterator& right) const noexcept
 			{
@@ -170,33 +215,40 @@ namespace sci
 
 			bool operator<(const Iterator& right) const noexcept
 			{
-				return static_cast<const base_type1&>(this->first) < static_cast<const base_type1>(right.second);
-			}
+				//This logic works providing we do not mix up iterators from different conainers, but as that is
+				//undefined behaviour anyway, I don't think we should worry about it. Also we must have these
+				//operators to be reandom access iterators
 
-			bool operator>(const Iterator& right) const noexcept
-			{
-				return right < *this;
-			}
-
-			bool operator<=(const Iterator& right) const noexcept
-			{
-				return !(right < *this);
+				//we need to take care to check for scalars
+				if constexpr ((NDIMS1 > 0 && NDIMS2 > 0) || NDIMS == 0)
+					return static_cast<const base_type1&>(this->first) < static_cast<const base_type1>(right.first);
+				if constexpr (NDIMS1 > 0) //NDIMS2==0
+					return static_cast<const base_type1&>(this->first) < static_cast<const base_type1>(right.first);
+				//NDIMS2 > 0 NDIMS1 == 0
+				return static_cast<const base_type2&>(this->second) < static_cast<const base_type2>(right.second);
 			}
 
 			bool operator>=(const Iterator& right) const noexcept
 			{
 				return !(*this < right);
 			}
+
+			bool operator>(const Iterator& right) const noexcept
+			{
+				return right <= *this;
+			}
+
+			bool operator<=(const Iterator& right) const noexcept
+			{
+				return !(right < *this);
+			}
 		};
 
-		using iterator = Iterator<TRANSFORM>;
+		using iterator = Iterator;
 		using const_iterator = iterator;
-		//using reference_type = iterator::reference;
-		//using const_reference_type = iterator::const_reference;
 		using size_type = typename iterator::size_type;
 		using difference_type = typename iterator::difference_type;
 		using sentinel = iterator;
-		//using  reference_type = typename iterator::value_type;
 		using  const_reference_type = typename const_iterator::value_type;
 		using value_type = typename iterator::value_type;
 
@@ -209,19 +261,35 @@ namespace sci
 		constexpr gridpairtransform_view(GRID1 grid1, GRID2 grid2) requires(NDIMS1==NDIMS2 || NDIMS1 == 0 || NDIMS2 == 0)
 			:m_grid1(grid1), m_grid2(grid2)
 		{
-			if constexpr (NDIMS1 > NDIMS2)
-				m_strides = GridPremultipliedStridesReference<NDIMS1>(grid1.getStrides());
-			else
-				m_strides = GridPremultipliedStridesReference<NDIMS2>(grid2.getStrides());
-
-			for(size_t i=0; i<std::min(NDIMS1, NDIMS2); ++i)
-				assert(grid1.shape()[i] == grid2.shape()[i]);
+			if constexpr (NDIMS1 > 0 && NDIMS2 > 0)
+			{
+				for (size_t i = 0; i < NDIMS; ++i)
+				{
+					assert(grid1.shape()[i] == grid2.shape()[i]);
+					if (grid1.shape()[i] != grid2.shape()[i])
+						throw(std::out_of_range("An attempt was made to create a gridpairtransform_view with two inputs of different shape, where neither was a scalar"));
+				}
+			}
+			if constexpr (NDIMS1 > 0)
+				m_strides = GridPremultipliedStridesReference<NDIMS>(grid1.getStrides());
+			else if constexpr (NDIMS1 > 0)
+				m_strides = GridPremultipliedStridesReference<NDIMS>(grid2.getStrides());
+			//we can leave the default construction of m_strides in NDIMS is 0
 		}
 		~gridpairtransform_view() = default;
 
 		iterator begin() const
 		{
-			return iterator(std::begin(m_grid1), std::begin(m_grid2));
+			//note, there is a requirement that for an empty container
+			//begin() == end(). Which absolutely makes sense. But if
+			//we have a scalar and an empty grid, this will not be the
+			//case if we just call begin on both elements
+			if constexpr ((NDIMS1 > 0 && NDIMS2 > 0) || NDIMS == 0)
+				return iterator(std::begin(m_grid1), std::begin(m_grid2));
+			if constexpr (NDIMS1 > 0)
+				return std::size(m_grid1) > 0 ? iterator(std::begin(m_grid1), std::begin(m_grid2)) : iterator(std::end(m_grid1), std::end(m_grid2));
+			//NDIMS2 > 0
+			return std::size(m_grid2) > 0 ? iterator(std::begin(m_grid1), std::begin(m_grid2)) : iterator(std::end(m_grid1), std::end(m_grid2));
 		}
 		iterator cbegin() const
 		{
@@ -241,7 +309,9 @@ namespace sci
 		}
 		auto size() const
 		{
-			return std::size(m_grid1);
+			if constexpr (NDIMS1 > 0)
+				return std::size(m_grid1);
+			return std::size(m_grid2);
 		}
 
 		//operator[] with array indexing, causing values to be calculated

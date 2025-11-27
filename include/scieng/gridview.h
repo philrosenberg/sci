@@ -57,10 +57,10 @@ namespace sci
 			:ptr(ptrIn)
 		{}
 		constexpr GridPremultipliedStridesPointer() = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
-		GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
-		GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
+		GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<NDIMS> const& rhs) = default;
+		GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<NDIMS>&& rhs) = default;
 		~GridPremultipliedStridesPointer() = default;
 		const size_t* ptr;
 	};
@@ -69,10 +69,10 @@ namespace sci
 	{
 	public:
 		constexpr GridPremultipliedStridesPointer() = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<1> const& rhs) = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<1>&& rhs) = default;
-		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<1> const& rhs) = default;
-		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<1>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<1> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<1>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<1> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<1>&& rhs) = default;
 		~GridPremultipliedStridesPointer() = default;
 	};
 	template<>
@@ -80,10 +80,10 @@ namespace sci
 	{
 	public:
 		constexpr GridPremultipliedStridesPointer() = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<0> const& rhs) = default;
-		constexpr GridPremultipliedStridesPointer(typename GridPremultipliedStridesPointer<0>&& rhs) = default;
-		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<0> const& rhs) = default;
-		constexpr GridPremultipliedStridesPointer& operator=(typename GridPremultipliedStridesPointer<0>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<0> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer(GridPremultipliedStridesPointer<0>&& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<0> const& rhs) = default;
+		constexpr GridPremultipliedStridesPointer& operator=(GridPremultipliedStridesPointer<0>&& rhs) = default;
 		~GridPremultipliedStridesPointer() = default;
 	};
 
@@ -271,6 +271,32 @@ namespace sci
 
 	}
 
+	template<class RANGE, size_t NDIMS>
+	struct GridViewTypeDefs
+	{
+		using iterator = std::ranges::iterator_t<std::remove_reference_t<RANGE>>;
+		using const_iterator = iterator;
+		using reference_type = std::ranges::range_reference_t<RANGE>;
+		using rvalue_reference_type = std::ranges::range_rvalue_reference_t<std::remove_reference_t<RANGE>>;
+		using size_type = std::ranges::range_size_t<std::remove_reference_t<RANGE>>;
+		using difference_type = std::ranges::range_difference_t<std::remove_reference_t<RANGE>>;
+		using sentinel = std::ranges::sentinel_t<std::remove_reference_t<RANGE>>;
+		using value_type = std::iterator_traits<iterator>::value_type;
+	};
+
+	template<class RANGE>
+	struct GridViewTypeDefs<RANGE, 0>
+	{
+		using iterator = std::add_pointer_t<std::remove_reference_t<RANGE>>;
+		using const_iterator = iterator;
+		using reference_type = std::add_lvalue_reference_t<std::remove_reference_t<RANGE>>;
+		using rvalue_reference_type = std::add_rvalue_reference_t<std::remove_reference_t<RANGE>>;
+		using size_type = size_t;
+		using difference_type = size_t;
+		using sentinel = iterator;
+		using value_type = RANGE;
+	};
+
 
 	template<class RANGE, size_t NDIMS>
 	requires (std::ranges::random_access_range<RANGE> || (!std::ranges::range<RANGE> && NDIMS == 0) ) // either RANGE is a random access range or a scalar (i.e. Range isn't a range and NDIMS=0)
@@ -424,40 +450,16 @@ namespace sci
 			using size_type = size_t;
 			//using type = (RANGE*);
 		};*/
-		template<size_t NDIMS>
-		struct TypeDefs
-		{
-			using iterator = std::ranges::iterator_t<std::remove_reference_t<RANGE>>;
-			using const_iterator = iterator;
-			using reference_type = std::ranges::range_reference_t<RANGE>;
-			using rvalue_reference_type = std::ranges::range_rvalue_reference_t<std::remove_reference_t<RANGE>>;
-			using size_type = std::ranges::range_size_t<std::remove_reference_t<RANGE>>;
-			using difference_type = std::ranges::range_difference_t<std::remove_reference_t<RANGE>>;
-			using sentinel = std::ranges::sentinel_t<std::remove_reference_t<RANGE>>;
-			using value_type = std::iterator_traits<iterator>::value_type;
-		};
+		
 
-		template<>
-		struct TypeDefs<0>
-		{
-			using iterator = std::add_pointer_t<std::remove_reference_t<RANGE>>;
-			using const_iterator = iterator;
-			using reference_type = std::add_lvalue_reference_t<std::remove_reference_t<RANGE>>;
-			using rvalue_reference_type = std::add_rvalue_reference_t<std::remove_reference_t<RANGE>>;
-			using size_type = size_t;
-			using difference_type = size_t;
-			using sentinel = iterator;
-			using value_type = RANGE;
-		};
-
-		using iterator = TypeDefs<NDIMS>::iterator;
-		using const_iterator = TypeDefs<NDIMS>::const_iterator;
-		using reference_type = TypeDefs<NDIMS>::reference_type;
-		using rvalue_reference_type = TypeDefs<NDIMS>::rvalue_reference_type;
-		using size_type = TypeDefs<NDIMS>::size_type;
-		using difference_type = TypeDefs<NDIMS>::difference_type;
-		using sentinel = TypeDefs<NDIMS>::sentinel;
-		using value_type = TypeDefs<NDIMS>::value_type;
+		using iterator = GridViewTypeDefs<RANGE, NDIMS>::iterator;
+		using const_iterator = GridViewTypeDefs<RANGE, NDIMS>::const_iterator;
+		using reference_type = GridViewTypeDefs<RANGE, NDIMS>::reference_type;
+		using rvalue_reference_type = GridViewTypeDefs<RANGE, NDIMS>::rvalue_reference_type;
+		using size_type = GridViewTypeDefs<RANGE, NDIMS>::size_type;
+		using difference_type = GridViewTypeDefs<RANGE, NDIMS>::difference_type;
+		using sentinel = GridViewTypeDefs<RANGE, NDIMS>::sentinel;
+		using value_type = GridViewTypeDefs<RANGE, NDIMS>::value_type;
 		//using iterator = typename IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::type;
 		//using const_iterator = iterator;
 		
@@ -474,7 +476,7 @@ namespace sci
 		constexpr grid_view operator=(grid_view<RANGE, NDIMS>&& rhs) = delete; //deleted to avoid accidentally pointing the view at a different grid, when the intention was assigning the elements of the view. Use construction or retarget instead
 		template<IsGridDims<NDIMS> GRID>
 		constexpr grid_view operator=(const GRID &rhs)
-			requires std::convertible_to<GRID::value_type, value_type>
+			requires std::convertible_to<typename GRID::value_type, value_type>
 		{
 			return assign(rhs.getView());
 		}
@@ -717,7 +719,9 @@ namespace sci
 	template<size_t NDIMS>
 	struct grid_fn
 	{
-		grid_fn() = default;
+		grid_fn()
+			:m_strides(GridPremultipliedStridesReference<NDIMS>())
+		{}
 		grid_fn(const GridPremultipliedStridesReference<NDIMS>& strides)
 			:m_strides(strides)
 		{}
@@ -730,7 +734,6 @@ namespace sci
 			else
 				return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range)};
 		}
-		template <size_t NDIMS>
 		auto operator()(const GridPremultipliedStridesReference<NDIMS>& strides) const
 		{
 			//This operator() returns a grid_fn which uses strides. This in turn can get piped

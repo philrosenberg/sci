@@ -8,7 +8,7 @@
 
 void testJustGrid();
 
-
+#ifdef _WIN32
 //These are concepts to help debugging should there be a problem with the requires statements
 template <class _It>
 concept _part__Indirectly_readable_impl = requires(const _It __i) {
@@ -34,7 +34,7 @@ concept part_indirectly_writable = requires(_It && __i, _Ty && __t) {
 	const_cast<const std::iter_reference_t<_It>&&>(*__i) = static_cast<_Ty&&>(__t);
 	//const_cast<const std::iter_reference_t<_It>&&>(*static_cast<_It&&>(__i)) = static_cast<_Ty&&>(__t);
 };
-
+#endif
 
 using gd = sci::GridData<double, 2>;
 static_assert((bool)std::ranges::random_access_range<gd>, "sci::grid_view failed the test for being a random access range");
@@ -123,11 +123,9 @@ int main()
 		//dest.assign(viewOfSource.begin(), viewOfSource.end());
 
 		sci::GridData < double, 2> d2;
-		sci::GridData<double, 1> d1{ 1., 2., 3., 4., 5. };
-		sci::GridData<double, 1> d1_2{ 11., 12., 13., 14., 15. };
-		auto d1_3 = d1 + d1 + 2;
-		output1d(d1_3);
-		d2.push_back(d1_3);
+		sci::GridData<double, 1> d1{1., 2., 3., 4., 5.};
+		sci::GridData<double, 1> d1_2{11., 12., 13., 14., 15.};
+		d2.push_back(d1);
 	}
 	//testing grid_view
 	{
@@ -274,6 +272,24 @@ int main()
 		output2d(2.0 + grid2);
 		output2d(2.0 * grid2);
 		output2d(1.0 + grid2 * 2.0);
+		
+		//check that we can iterate through a transforme
+		auto transformIteratorTest = 1.0 + grid2;
+		auto iter = transformIteratorTest.begin();
+		auto end = transformIteratorTest.end();
+		++iter;
+		bool atEnd = iter == end;
+		for (; iter != end; ++iter)
+			double testDereference = *iter;
+		sci::GridData<double, 2> gridConstructorTest(1.0 + grid2);
+
+
+		sci::GridData<double, 2> gridToPushBackTo({ 2,2 }, 1.0);
+		gridToPushBackTo.push_back(sci::GridData<double, 1>{2.0, 2.0} + 0.5); //pushing back a transform
+		gridToPushBackTo.push_back(0.5 + sci::GridData<double, 1>{3.0, 3.0}); //pushing back a transform
+		gridToPushBackTo.push_back(sci::GridData<double, 1>{4.0, 4.0} + sci::GridData<double, 1>{2.0, 2.0}); //pushing back a transform
+		gridToPushBackTo.push_back(sci::GridData<double, 2>({ 2,2 }, 10.0));
+		output2d(gridToPushBackTo);
 	}
 
 
