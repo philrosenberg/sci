@@ -1575,91 +1575,81 @@ namespace sci
 			Point m_end;
 		};
 
-		class CubehelixColourscale : public ColourScale<double>
+		template<class T>
+		class CubehelixColourscale : public ColourScale<T>
 		{
 		public:
-			CubehelixColourscale(std::span<const double> values, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
-				: ColourScale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
+			CubehelixColourscale(std::span<const T> values, degree startHue, degree hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+				: ColourScale<T>(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
 					logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 			{
 
 			}
-			CubehelixColourscale(double minValue, double maxValue, size_t nPoints, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
-				: ColourScale(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
+			CubehelixColourscale(T minValue, T maxValue, size_t nPoints, degree startHue, degree hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+				: ColourScale<T>(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
 					getCubehelixColours(minValue, maxValue, nPoints, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
 					logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 			{
 
 			}
-			CubehelixColourscale(std::span<const double> values, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
-				: ColourScale(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, 180, 540, 0.8, 0.2, 1.0, 1.0, discrete),
+			CubehelixColourscale(std::span<const T> values, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+				: ColourScale<T>(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, degree(180), degree(540), 0.8, 0.2, 1.0, 1.0, discrete),
 					logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 			{
 
 			}
-			CubehelixColourscale(double minValue, double maxValue, size_t nPoints, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
-				: ColourScale(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
-					getCubehelixColours(minValue, maxValue, nPoints, logarithmic, 180, 540, 0.8, 0.2, 1.0, 1.0, discrete),
+			CubehelixColourscale(T minValue, T maxValue, size_t nPoints, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
+				: ColourScale<T>(getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic),
+					getCubehelixColours(minValue, maxValue, nPoints, logarithmic, degree(180), degree(540), 0.8, 0.2, 1.0, 1.0, discrete),
 					logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
 			{
 
 			}
-			static std::vector<rgbcolour> getCubehelixColours(double minValue, double maxValue, size_t nPoints, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
+			static std::vector<rgbcolour> getCubehelixColours(T minValue, T maxValue, size_t nPoints, bool logarithmic, degree startHue, degree hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
 			{
-				if (logarithmic)
-				{
-					minValue = std::log10(minValue);
-					maxValue = std::log10(maxValue);
-				}
-				sci::GridData<double, 1> values(nPoints);
-				for (size_t i = 0; i < nPoints; ++i)
-				{
-					double f = (double)i / double(nPoints - 1);
-					values[i] = minValue * (1 - f) + maxValue * f;
-				}
+				sci::GridData<T, 1> values = getEvenlyDistributedValues(minValue, maxValue, nPoints, logarithmic);
+				
 				//call the other get colours funtion with the derived values. Note we always set logaritmic to false in this call as we have already logged the values.
 				return getCubehelixColours(values, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete);
 			}
-			static std::vector<rgbcolour> getCubehelixColours(std::span<const double> values, bool logarithmic, double startHue, double hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
+			static std::vector<rgbcolour> getCubehelixColours(std::span<const T> values, bool logarithmic, degree startHue, degree hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool discrete)
 			{
-				//if the scale is logarithmic, call this fuction again, but with logged values
-				if (logarithmic)
-				{
-					std::vector<double> logValues(values.size());
-					for (size_t i = 0; i < values.size(); ++i)
-						logValues[i] = std::log10(values[i]);
-					return getCubehelixColours(logValues, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete);
-				}
-
-
 				if (discrete)
 				{
-					sci::GridData<double, 1> newValues(values.size() - 1);
-
-					for (size_t i = 0; i < newValues.size(); ++i)
-						newValues[i] = (values[i] + values[i + 1]) / 2.0;
-					return getCubehelixColours(newValues, false, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, false);
+					sci::GridData<T, 1> newValues(values.size()*2 -2);
+					newValues[0] = values[0];
+					for (size_t i = 1; i < values.size(); ++i)
+					{
+						newValues[i * 2] = values[i];
+						newValues[i * 2 + 1] = values[i];
+					}
+					newValues.back() = values.back();
+					return getCubehelixColours(newValues, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, false);
 				}
+
 				//make the hue consistent with the start parameter used in D. A. Green 2011
-				startHue -= std::floor(startHue / 360.0) * 360.0;
-				startHue /= 120;
-				startHue += 1;
+				startHue -= sci::floor(startHue / degree(360.0)) * degree(360.0);
+				startHue /= degree(120);
+				startHue += degree(1);
 
 				//create a vector to hold the colours
 				std::vector<rgbcolour> colours(values.size());
 
 				//calculate each colour
-				double valuesRange = values.back() - values.front();
+				T valuesRange = values.back() - values.front();
 				double brightnessRange = endBrightness - startBrightness;
 				for (size_t i = 0; i < colours.size(); ++i)
 				{
-					double brightness = startBrightness + (values[i] - values[0]) / valuesRange * brightnessRange;
-					double angle = (2.0 * M_PI) * (startHue / 3.0 + 1.0 + hueRotation / 360.0 * brightness);
+					double fraction = unitless((values[i] - values[0]) / valuesRange).value<unitless>();
+					double brightness = startBrightness + fraction * brightnessRange;
+					degree angle = (startHue / unitless(3.0) + degree(1.0) + hueRotation / degree(360.0) * unitless(brightness));
+					double cosAngle = sci::cos(angle).value<unitless>();
+					double sinAngle = sci::sin(angle).value<unitless>();
 					double gammaBrightness = std::pow(brightness, gamma);
 					double amplitude = saturation * gammaBrightness * (1 - gammaBrightness) / 2.0;
-					double red = gammaBrightness + amplitude * (-0.14861 * std::cos(angle) + 1.78277 * std::sin(angle));
-					double green = gammaBrightness + amplitude * (-0.29227 * std::cos(angle) - 0.90649 * std::sin(angle));
-					double blue = gammaBrightness + amplitude * (1.97294 * std::cos(angle));
+					double red = gammaBrightness + amplitude * (-0.14861 * cosAngle + 1.78277 * sinAngle);
+					double green = gammaBrightness + amplitude * (-0.29227 * cosAngle - 0.90649 * sinAngle);
+					double blue = gammaBrightness + amplitude * (1.97294 * cosAngle);
 					colours[i] = rgbcolour(red, green, blue);
 				}
 				//std::fstream fout;
@@ -1670,25 +1660,29 @@ namespace sci
 				return colours;
 			}
 		private:
-			static sci::GridData<double, 1> getEvenlyDistributedValues(double minValue, double maxValue, size_t nPoints, bool logarithmic)
+			static sci::GridData<T, 1> getEvenlyDistributedValues(T minValue, T maxValue, size_t nPoints, bool logarithmic)
 			{
+				using unitless_type = decltype(T() / T());
+				sci::GridData<T, 1> values(nPoints);
 				if (logarithmic)
 				{
-					minValue = std::log10(minValue);
-					maxValue = std::log10(maxValue);
-					sci::GridData<double, 1> values(nPoints);
+					unitless_type minValueLog = sci::log10(minValue / T(1.0));
+					unitless_type maxValueLog = sci::log10(maxValue / T(1.0));
+
 					for (size_t i = 0; i < nPoints; ++i)
 					{
-						double f = (double)i / double(nPoints - 1);
-						values[i] = std::pow(10, minValue * (1 - f) + maxValue * f);
+						unitless_type f = unitless_type(i) / unitless_type(nPoints - 1);
+						unitless_type logValue = minValue * (unitless_type(1.0) - f) + maxValue * f;
+						values[i] = T(1.0) * sci::pow(unitless_type(10), logValue);
 					}
-					return values;
 				}
-				sci::GridData<double, 1> values(nPoints);
-				for (size_t i = 0; i < nPoints; ++i)
+				else
 				{
-					double f = (double)i / double(nPoints - 1);
-					values[i] = minValue * (1 - f) + maxValue * f;
+					for (size_t i = 0; i < nPoints; ++i)
+					{
+						unitless_type f = unitless_type(i) / unitless_type(nPoints - 1);
+						values[i] = minValue * (unitless_type(1.0) - f) + maxValue * f;
+					}
 				}
 				return values;
 			}
