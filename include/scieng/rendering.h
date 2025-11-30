@@ -5,67 +5,28 @@
 #include<array>
 #include<cmath>
 #include<map>
+#include<span>
+#include<bitset>
 namespace sci
 {
-	template<class LENGTHTYPE>
-	struct Box
-	{
-		using lengthtype = LENGTHTYPE;
-		LENGTHTYPE xMin;
-		LENGTHTYPE xMax;
-		LENGTHTYPE yMin;
-		LENGTHTYPE yMax;
-	};
-
-	template<class LENGTHTYPE>
 	struct Point
 	{
-		using lengthtype = LENGTHTYPE;
-		LENGTHTYPE x;
-		LENGTHTYPE y;
+		float x;
+		float y;
 	};
 
-	enum class Coverage
+	struct Box
 	{
-		full,
-		none,
-		partialSingleHorizontalIntersection,
-		partialSingleVerticalIntersection,
-		partialComplex
+		Point tl;
+		Point br;
 	};
 
-	template<class LENGTHTYPE>
-	class Shape
-	{
-	public:
-		using lengthtype = LENGTHTYPE;
-		virtual Box<LENGTHTYPE> getBoundingBox(Point<LENGTHTYPE> point) const =0;
-		virtual Coverage getCoverage(Box<LENGTHTYPE> box) const = 0;
-		virtual bool getMoreThanHalfCovered(Box<LENGTHTYPE> box) const = 0;
-	};
+	const std::array<Point, 4> coveragePoints{ Point { 0.3f, 0.4f },
+		Point { 0.6f, 0.3f },
+		Point { 0.7f, 0.6f },
+		Point { 0.4f, 0.7f } };
 
-	template<class LENGTHTYPE = double>
-	class Rectangle : public Shape<LENGTHTYPE>
-	{
-	public:
-		Box<LENGTHTYPE> getBoundingBox(Point<LENGTHTYPE> point) const final
-		{
-			Box<LENGTHTYPE> result;
-			result.xMin = point.x - m_width / 2.0;
-			result.xMax = point.x + m_width / 2.0;
-			result.yMin = point.x - m_height / 2.0;
-			result.yMax = point.x + m_height / 2.0;
-			return result;
-		}
-		
-		Coverage getCoverage(Box<LENGTHTYPE> box) const final
-		{
-
-		}
-	private:
-		LENGTHTYPE m_width;
-		LENGTHTYPE m_height;
-	};
+	
 
 	struct Colour
 	{
@@ -75,10 +36,194 @@ namespace sci
 		float a;
 	};
 
+	struct ColourOpaque
+	{
+		float r;
+		float g;
+		float b;
+	};
+
+	void alphaBlend(ColourOpaque& base, const Colour& top)
+	{
+		base.r = base.r * (1.0f - top.a) + top.r * top.a;
+		base.g = base.g * (1.0f - top.a) + top.g * top.a;
+		base.b = base.b * (1.0f - top.a) + top.b * top.a;
+	}
+
+	struct Coverage
+	{
+		Coverage() {}
+		Coverage(uint8_t coverageType, float coverageFraction, Colour coverageColour)
+			:type(coverageType), fraction(coverageFraction), colour(coverageColour)
+		{ }
+		uint8_t type;
+		float fraction;
+		Colour colour;
+	};
+
+	uint8_t countBits(uint8_t x)
+	{
+		//https://stackoverflow.com/questions/4244274/how-do-i-count-the-number-of-zero-bits-in-an-integer
+		x = x - ((x >> 1) & 0x55);
+		x = (x & 0x33) + ((x >> 2) & 0x33);
+		x = (x + (x >> 4)) & 0x0f;
+		return x;
+	}
+
+	void alphaBlend(ColourOpaque& base, Coverage coverage1, Coverage coverage2)
+	{
+		float bothCoverage;
+		uint8_t minCoveredPoints = countBits(coverage1.type);
+		uint8_t maxCoveredPoints = countBits(coverage2.type);
+		if (minCoveredPoints > maxCoveredPoints)
+			std::swap(minCoveredPoints, maxCoveredPoints);
+
+		if (maxCoveredPoints == 0 || minCoveredPoints == 0)
+			bothCoverage = 0.0f;
+
+		else
+		{
+			uint8_t nAllCoveredPoints = countBits(coverage1.type & coverage2.type);
+			bothCoverage = std::min(coverage1.fraction, coverage2.fraction) * float(nAllCoveredPoints) / float(minCoveredPoints);
+		}
+		coverage1.fraction -= bothCoverage;
+		coverage2.fraction -= bothCoverage;
+		
+		float baseWeight = 1.0f - coverage1.fraction - coverage2.fraction - bothCoverage
+			+ coverage1.fraction * (1.0f - coverage1.colour.a)
+			+ coverage2.fraction * (1.0f - coverage2.colour.a)
+			+ bothCoverage * (1.0f - coverage1.colour.a) * (1.0f - coverage2.colour.a);
+		float colour1Weight = coverage1.fraction * coverage1.colour.a
+			+ bothCoverage * coverage1.colour.a * (1 - coverage2.colour.a);
+		float colour2Weight = coverage2.fraction * coverage2.colour.a
+			+ bothCoverage * coverage2.colour.a;
+
+		base.r = base.r * baseWeight + coverage1.colour.r * colour1Weight + coverage2.colour.r * colour2Weight;
+		base.g = base.g * baseWeight + coverage1.colour.g * colour1Weight + coverage2.colour.g * colour2Weight;
+		base.b = base.b * baseWeight + coverage1.colour.b * colour1Weight + coverage2.colour.b * colour2Weight;
+	}
+
 	inline Colour blend(Colour lower, Colour upper)
 	{
 
 	}
+
+	class Shape
+	{
+	public:
+		virtual Box getBoundingBox() const =0;
+		//virtual Coverage getCoverage(Box box) const = 0;
+		//virtual bool getMoreThanHalfCovered(Box box) const = 0;
+	};
+
+	class Rectangle : public Shape
+	{
+	public:
+		Rectangle(Point corner, float width, float height, Colour colour)
+			:m_corner(corner), m_width(width), m_height(height), m_colour(colour)
+		{
+			if (m_width < 0.0f)
+			{
+				m_corner.x += m_width;
+				m_width *= -1.0f;
+			}
+			if (m_height < 0.0f)
+			{
+				m_corner.y += m_height;
+				m_height *= -1.0f;
+			}
+		}
+		Box getBoundingBox() const final
+		{
+			Box result;
+			result.tl = m_corner;
+			result.br = m_corner;
+			result.br.x += m_width;
+			result.br.y += m_height;
+			return result;
+		}
+		
+		void renderScanLine(std::span<ColourOpaque> line, float lineIndex, std::vector<bool> &partials)
+		{
+			float verticalFraction = 1.0f - std::min(1.0f, std::max(0.0f, m_corner.y - lineIndex)) - std::min(1.0f, std::max(0.0f, lineIndex + 1.0f - m_corner.y - m_height));
+			if (verticalFraction == 0.0f)
+				return;
+			//get the start and end for pixels fully within the x bounds
+			long startIndex = std::max(0l, long(m_corner.x)+1);
+			long endIndex = std::min(long(std::size(line)), long(m_corner.x + m_width));
+			if (verticalFraction == 1.0)
+			{
+				for (size_t i = startIndex; i < endIndex; ++i)
+					alphaBlend(line[i], m_colour);
+				long edge1 = startIndex - 1;
+				long edge2 = endIndex;
+				if (edge1 >= 0 && edge1 < long(std::size(line)))
+					partials[edge1] = true;
+				if (edge2 >= 0 && edge2 < long(std::size(line)))
+					partials[edge2] = true;
+			}
+			else
+			{
+				startIndex = startIndex == 0 ? startIndex :startIndex - 1;
+				endIndex = endIndex == long(std::size(line)) ? endIndex : endIndex + 1;
+				for (size_t i = startIndex; i < endIndex; ++i)
+					partials[i] = true;
+			}
+		}
+
+		Coverage getCoverage(float x, float y)
+		{
+			Point relativeCorner(m_corner.x - x, m_corner.y - y);
+			float verticalFraction = 1.0f - std::max(std::min(1.0f, relativeCorner.y), 0.0f) - std::max(std::min(1.0f, 1.0f - relativeCorner.y - m_height), 0.0f);
+			float horizontalFraction = 1.0f - std::max(std::min(1.0f, relativeCorner.x), 0.0f) - std::max(std::min(1.0f, 1.0f - relativeCorner.x - m_width), 0.0f);
+
+			uint8_t coverageShapeX = 0;
+			if (0.0f >= relativeCorner.x && 0.0f <= relativeCorner.x + m_width)
+				coverageShapeX |= 0x09;
+			if (1.0f >= relativeCorner.x && 1.0f <= relativeCorner.x + m_width)
+				coverageShapeX |= 0x06;
+
+			uint8_t internalPointMask = 0x10;
+			for (const auto& p : coveragePoints)
+			{
+				if (p.x > relativeCorner.x && p.x < relativeCorner.x + m_width)
+					coverageShapeX |= internalPointMask;
+				internalPointMask <<= 1;
+			}
+
+			uint8_t coverageShapeY = 0;
+			if (0.0f >= relativeCorner.y && 0.0f <= relativeCorner.y + m_height)
+				coverageShapeY |= 0x03;
+			if (1.0f >= relativeCorner.y && 1.0f <= relativeCorner.y + m_height)
+				coverageShapeY |= 0x0c;
+
+			internalPointMask = 0x10;
+			for (const auto& p : coveragePoints)
+			{
+				if (p.y > relativeCorner.y && p.y < relativeCorner.y + m_height)
+					coverageShapeY |= internalPointMask;
+				internalPointMask <<= 1;
+			}
+
+			return Coverage(coverageShapeX & coverageShapeY, verticalFraction * horizontalFraction, m_colour);
+		}
+
+
+		
+	private:
+		void TransformToBasis(Point &point)
+		{
+			point.x -= m_corner.x;
+			point.x /= m_height;
+			point.y -= m_corner.y;
+			point.y /= m_width;
+		}
+
+		Point m_corner;
+		float m_width;
+		float m_height;
+		Colour m_colour;
+	};
 	
 	template<class LENGTHTYPE, size_t SUBPIXELACCURACY>
 	class BitmapCanvas
@@ -109,7 +254,7 @@ namespace sci
 	private:
 		struct PixelRenderInfo
 		{
-			Shape<LENGTHTYPE>* shape;
+			Shape* shape;
 			Coverage coverage;
 			Colour colour;
 		};
@@ -148,7 +293,7 @@ namespace sci
 			//render - do that now
 			for (auto& pixelRenderInfoVector : m_delayedPixelRenderInfo)
 			{
-				renderShapeToPixelDelayed();
+				//renderShapeToPixelDelayed();
 			}
 		}
 		template<class SHAPEITER>
@@ -160,6 +305,7 @@ namespace sci
 
 			size_t row = pixelRenderInfo.pixelIndex / m_nColumns;
 			size_t column = pixelRenderInfo.pixelIndex % m_nColumns;
+			//create a box the size of a pixel
 			boundingBoxType pixelBox;
 			pixelBox.xMin = unitlessType(column) * pixelSize;
 			pixelBox.xMax = unitlessType(column + 1) * pixelSize;
