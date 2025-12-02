@@ -2,8 +2,18 @@
 
 int main()
 {
-    sci::BitmapCanvas<double, 0> canvas;
-    canvas.create(500, 500, sci::Colour{ 1.0, 1.0, 1.0, 0.0 }, 1.0);
+    //create a canvas showing tow rectangles exactly butted against each other
+    //vertically and aligned on their left edge. The upper one is smaller
+    //There should be no seam between then and the left edge should be continuous with no defects
+    sci::BitmapCanvas canvas;
+    canvas.create(500, 500, sci::ColourOpaque{ 1.0, 1.0, 1.0 });
+    sci::Rectangle rectangle1(sci::Point(125.5, 125.5), 250, 250, sci::Colour(1.0f, 0.0f, 0.5f));
+    sci::Rectangle rectangle2(sci::Point(125.5, 115.5), 125, 10, sci::Colour(1.0f, 0.0f, 0.5f));
+    canvas.addRectangle(rectangle1);
+    canvas.addRectangle(rectangle2);
+    canvas.renderScene();
+    canvas.writePpm(sU("test.ppm"));
+
 
     for (size_t i = 0; i < 4; ++i)
     {
