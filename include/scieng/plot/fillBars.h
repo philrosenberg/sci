@@ -17,8 +17,11 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 			using data::getYAxis;
-			VerticalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = 0.0)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+
+			template<class XCONTAINER, class YCONTAINER>
+			VerticalBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = Y(0.0))
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+				:data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -62,6 +65,13 @@ namespace sci
 			decltype(Y()/Y()) m_zeroLineLogged;
 		};
 
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeVerticalBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = Y(0.0))
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<VerticalBars<X, Y>>(xs, ys, widths, xAxis, yAxis, lineStyle, fillStyle, zeroLine);
+		}
+
 		template<class X, class Y>
 		class HorizontalBars : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Y>>
 		{
@@ -71,8 +81,11 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 			using data::getXAxis;
-			HorizontalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = 0.0)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+
+			template<class XCONTAINER, class YCONTAINER>
+			HorizontalBars(const XCONTAINER& xs, const YCONTAINER& ys, const YCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = X(0.0))
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+				:data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -117,6 +130,14 @@ namespace sci
 			decltype(X()/X()) m_zeroLineLogged;
 		};
 
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeHorizontalBars(const XCONTAINER& xs, const YCONTAINER& ys, const YCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = X(0.0))
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<HorizontalBars<X, Y>>(xs, ys, widths, xAxis, yAxis, lineStyle, fillStyle, zeroLine);
+		}
+
 		template<class X, class Y>
 		class Boxes : public Data<X, Y, std::vector<X>, std::vector<X>, std::vector<Y>, std::vector<Y>>
 		{
@@ -125,7 +146,10 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Boxes(std::span<const X> x1s, std::span<const X> x2s, std::span<const Y> y1s, std::span<const Y> y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle)
+
+			template<class XCONTAINER, class YCONTAINER>
+			Boxes(const XCONTAINER& x1s, const XCONTAINER& x2s, const YCONTAINER& y1s, const YCONTAINER& y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle)
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
 				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), x1s, x2s, y1s, y2s)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
@@ -162,6 +186,13 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeBoxes(const XCONTAINER& x1s, const XCONTAINER& x2s, const YCONTAINER& y1s, const YCONTAINER& y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<Boxes<X, Y>>(x1s, x2s, y1s, y2s, xAxis, yAxis, lineStyle, fillStyle);
+		}
+
 		template<class X, class Y>
 		class Fill : public Data<X, Y, std::vector<X>, std::vector<Y>>
 		{
@@ -170,8 +201,11 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Fill(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+
+			template<class XCONTAINER, class YCONTAINER>
+			Fill(const XCONTAINER xs, const YCONTAINER ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine)
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			
@@ -196,6 +230,13 @@ namespace sci
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;
 		};
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeFill(const XCONTAINER xs, const YCONTAINER ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<Fill<X, Y>>(xs, ys, xAxis, yAxis, fillStyle, outlineStyle);
+		}
 	}
 }
 

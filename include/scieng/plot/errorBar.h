@@ -16,13 +16,17 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			HorizontalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> plusErrors, std::span<const X> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+
+			template<class XCONTAINER, class YCONTAINER>
+			HorizontalErrorBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& plusErrors, const XCONTAINER& minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
 				:data(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
 				m_stopLength = stopLength;
 				m_useForAutoscale = useForAutoscale;
 			}
+
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
 				if (!hasData())
@@ -59,6 +63,14 @@ namespace sci
 			bool m_useForAutoscale;
 		};
 
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeHorizontalErrorBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& plusErrors, const XCONTAINER& minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<HorizontalErrorBars<X, Y>>(xs, ys, plusErrors, minusErrors, xAxis, yAxis, stopLength, style, useForAutoscale);
+		}
+
 		template<class X, class Y>
 		class VerticalErrorBars : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Y>, std::vector<Y>>
 		{
@@ -67,7 +79,9 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			VerticalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> plusErrors, std::span<const Y> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+
+			template<class XCONTAINER, class YCONTAINER>
+			VerticalErrorBars(XCONTAINER xs, YCONTAINER ys, YCONTAINER plusErrors, YCONTAINER minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
 				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
@@ -110,6 +124,14 @@ namespace sci
 			Length m_stopLength;
 			bool m_useForAutoscale;
 		};
+
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeVerticalErrorBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& plusErrors, const XCONTAINER& minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<VerticalErrorBars<X, Y>>(xs, ys, plusErrors, minusErrors, xAxis, yAxis, stopLength, style, useForAutoscale);
+		}
 	}
 }
 

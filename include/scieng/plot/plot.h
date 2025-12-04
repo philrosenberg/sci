@@ -41,6 +41,13 @@ namespace sci
 				m_log = log;
 				setFixedScale(min, max);
 			}
+
+			Scale(value_type min, value_type max, Direction direction)
+			{
+				m_direction = direction;
+				m_log = false;
+				setFixedScale(min, max);
+			}
 			Scale(bool log, Direction direction, unitless_type autoscaleEndSpace)
 			{
 				m_direction = direction;
@@ -196,59 +203,65 @@ namespace sci
 			//from the linear values.
 			//It then normalises the scales from 0-1 and puts the limits in the in/max variable
 			//the logMin will be the smallest non -infinity value
-			template<class U>
-			static void setupInterpolatingScale(const std::span<const value_type> values, sci::GridData<unitless_type, 1>& normalisedValues, sci::GridData<unitless_type, 1>& normalisedLogValues, sci::GridData<U, 1>& outputs, value_type& linearMin, value_type& linearMax, unitless_type& logMin, unitless_type& logMax)
+			template<class U, class DATACONTAINER>
+			static void setupInterpolatingScale(const DATACONTAINER &values, sci::GridData<unitless_type, 1>& normalisedValues, sci::GridData<unitless_type, 1>& normalisedLogValues, sci::GridData<U, 1>& outputs, value_type& linearMin, value_type& linearMax, unitless_type& logMin, unitless_type& logMax)
+				requires(std::input_iterator<typename DATACONTAINER::const_iterator> && std::convertible_to<typename DATACONTAINER::value_type, T>)
 			{
 				assert(values.size() > 1);
 				assert(values.size() == outputs.size());
 				//sci::assertThrow(value.size() > 1 && value.size() == output.size(), sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::Scale::setupInterpolatingScale called with invalid sizes for the values or colours array."));
 				//check values are ascending or descending, and get the max/min at the same time
+				
+				normalisedValues.assign(values.begin(), values.end());
+				
 				bool ascending = true;
 				bool descending = true;
 				linearMax = -std::numeric_limits<value_type>::infinity();
 				linearMin = std::numeric_limits<value_type>::infinity();
 				value_type linearMinGtZero = std::numeric_limits<value_type>::infinity();
 
-				if (values[0] > linearMax && values[0] != std::numeric_limits<value_type>::infinity())
-					linearMax = values[0];
-				if (values[0] < linearMin && values[0] != -std::numeric_limits<value_type>::infinity())
-					linearMin = values[0];
-				if (values[0] < linearMinGtZero && values[0] > value_type(0))
-					linearMinGtZero = values[0];
+				if (normalisedValues[0] > linearMax && normalisedValues[0] != std::numeric_limits<value_type>::infinity())
+					linearMax = normalisedValues[0];
+				if (normalisedValues[0] < linearMin && normalisedValues[0] != -std::numeric_limits<value_type>::infinity())
+					linearMin = normalisedValues[0];
+				if (normalisedValues[0] < linearMinGtZero && normalisedValues[0] > value_type(0))
+					linearMinGtZero = normalisedValues[0];
 
-				for (size_t i = 1; i < values.size(); ++i)
+				for (size_t i = 1; i < normalisedValues.size(); ++i)
 				{
-					ascending &= values[i] >= values[i - 1];
-					descending &= values[i] <= values[i - 1];
-					if (values[i] > linearMax && values[i] != std::numeric_limits<value_type>::infinity())
-						linearMax = values[i];
-					if (values[i] < linearMin && values[i] != -std::numeric_limits<value_type>::infinity())
-						linearMin = values[i];
-					if (values[i] < linearMinGtZero && values[i] > value_type(0))
-						linearMinGtZero = values[i];
+					ascending &= normalisedValues[i] >= normalisedValues[i - 1];
+					descending &= normalisedValues[i] <= normalisedValues[i - 1];
+					if (normalisedValues[i] > linearMax && normalisedValues[i] != std::numeric_limits<value_type>::infinity())
+						linearMax = normalisedValues[i];
+					if (normalisedValues[i] < linearMin && normalisedValues[i] != -std::numeric_limits<value_type>::infinity())
+						linearMin = normalisedValues[i];
+					if (normalisedValues[i] < linearMinGtZero && normalisedValues[i] > value_type(0))
+						linearMinGtZero = normalisedValues[i];
 				}
 				logMin = sci::log10(linearMinGtZero);
 				logMax = sci::log10(linearMax);
 				bool monotonic = ascending || descending;
 				assert(monotonic);
 
+				if(descending)
+					std::reverse(normalisedValues.begin(), normalisedValues.end());
+
 
 				//sci::assertThrow(monotonic, sci::err(sci::SERR_PLOT, colourscaleErrorCode, "sci::plot::ColourScale::setup called with values which are neither monotonically ascending nor monotonically descending."));
 
 				//assign the normalised data fitlering nans and infinities from the linear data
 				//we accept that there could be -infinities in the log data
-				normalisedValues.resize(values.size());
-				normalisedLogValues.resize(values.size());
-				outputs.resize(values.size()); //this should already be the case, but make sure until we decide on an effective error reporting mechanism
+				normalisedLogValues.resize(normalisedValues.size());
+				outputs.resize(normalisedValues.size()); //this should already be the case, but make sure until we decide on an effective error reporting mechanism
 				size_t insertPos = 0;
-				for (size_t i = 0; i < values.size(); ++i)
+				for (size_t i = 0; i < normalisedValues.size(); ++i)
 				{
 					if (normalisedValues[i] == normalisedValues[i] &&
 						normalisedValues[i] != std::numeric_limits<unitless_type>::infinity() &&
 						normalisedValues[i] != -std::numeric_limits<unitless_type>::infinity())
 					{
-						normalisedValues[insertPos] = (values[i] - linearMin) / (linearMax - linearMin);
-						normalisedLogValues[insertPos] = (sci::log10(values[i]) - logMin) / (logMax - logMin);
+						normalisedLogValues[insertPos] = (sci::log10(normalisedValues[i]) - logMin) / (logMax - logMin);
+						normalisedValues[insertPos] = (normalisedValues[i] - linearMin) / (linearMax - linearMin);
 						outputs[insertPos] = outputs[i];
 						++insertPos;
 					}
@@ -259,13 +272,6 @@ namespace sci
 
 				assert(normalisedValues.size() > 0);
 
-				//reverse if descending
-				if (descending)
-				{
-					std::reverse(normalisedValues.begin(), normalisedValues.end());
-					std::reverse(normalisedLogValues.begin(), normalisedLogValues.end());
-					std::reverse(outputs.begin(), outputs.end());
-				}
 			}
 		private:
 			value_type m_minFixed;
@@ -312,7 +318,12 @@ namespace sci
 			}
 
 			//create a colourscale from rgb colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-			ColourScale(std::span<const value_type> values, std::span<const rgbcolour> colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+			template<class DATACONTAINER, class COLOURSCONTAINER>
+			ColourScale(const DATACONTAINER &values, COLOURSCONTAINER colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				requires(std::same_as<rgbcolour, typename COLOURSCONTAINER::value_type>
+					&& std::input_iterator<typename DATACONTAINER::const_iterator>
+					&& std::input_iterator<typename COLOURSCONTAINER::const_iterator>
+					&& std::convertible_to<typename DATACONTAINER::value_type, T>)
 				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, Scale<T>::unitless_type(0.0))//assume autoscaling to start, but change this later if needed
 			{
 				if (values.size() == colours.size())
@@ -339,7 +350,12 @@ namespace sci
 			}
 
 			//create a colourscale from hls colours. Use the same number of values in the value and colour vectors to create a continuous colour scale or one more in the value vector to create a discrete colour scale
-			ColourScale(std::span<const value_type> values, std::span<const hlscolour> colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+			template<class DATACONTAINER, class COLOURSCONTAINER>
+			ColourScale(const DATACONTAINER& values, const COLOURSCONTAINER& colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				requires(std::same_as<hlscolour, typename COLOURSCONTAINER::value_type>
+					&& std::input_iterator<typename DATACONTAINER::const_iterator>
+					&& std::input_iterator<typename COLOURSCONTAINER::const_iterator>
+					&& std::convertible_to<typename DATACONTAINER::value_type, T>)
 				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, unitless_type(0.0))
 			{
 				if (values.size() == colours.size())
@@ -511,7 +527,10 @@ namespace sci
 				m_fillOffscaleBottom = false;
 				m_fillOffscaleTop = false;
 			}
-			void setup(std::span<const value_type> values, std::span<const rgbcolour> colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+
+			template<class DATACONTAINER, class COLOURSCONTAINER>
+			void setup(const DATACONTAINER& values, const COLOURSCONTAINER& colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+				requires(std::same_as<rgbcolour, typename COLOURSCONTAINER::value_type>)
 			{
 				m_normalisedValues = sci::GridData<double, 1>(values.begin(), values.end());
 				sci::GridData<rgbcolour, 1> colourCopy(colours.begin(), colours.end());
@@ -531,23 +550,21 @@ namespace sci
 				}
 
 				//assign colours
-				m_colour1s.resize(colours.size());
-				m_colour2s.resize(colours.size());
-				m_colour3s.resize(colours.size());
-				m_alphas.resize(colours.size());
-				for (size_t i = 0; i < colours.size(); ++i)
+				for (const auto& c : colourCopy)
 				{
-					m_colour1s[i] = colours[i].r();
-					m_colour2s[i] = colours[i].g();
-					m_colour3s[i] = (double)colours[i].b();
-					m_alphas[i] = (double)colours[i].a();
+					m_colour1s.push_back(c.r());
+					m_colour2s.push_back(c.g());
+					m_colour3s.push_back(c.b());
+					m_alphas.push_back(c.a());
 				}
 				m_hls = false;
 				m_fillOffscaleBottom = fillOffscaleBottom;
 				m_fillOffscaleTop = fillOffscaleTop;
 			}
 
-			void setup(std::span<const value_type>values , std::span<const hlscolour> colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+			template<class DATACONTAINER, class COLOURSCONTAINER>
+			void setup(const DATACONTAINER& values, const COLOURSCONTAINER& colours, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop)
+				requires(std::same_as<hlscolour, typename COLOURSCONTAINER::value_type>)
 			{
 				sci::GridData<hlscolour, 1> colourCopy(colours.begin(), colours.end());
 				value_type linearMin;
@@ -565,16 +582,12 @@ namespace sci
 						Scale<T>::setFixedScale(linearMin, linearMax);
 				}
 
-				m_colour1s.resize(colours.size());
-				m_colour2s.resize(colours.size());
-				m_colour3s.resize(colours.size());
-				m_alphas.resize(colours.size());
-				for (size_t i = 0; i < colours.size(); ++i)
+				for (const auto & c : colourCopy)
 				{
-					m_colour1s[i] = colours[i].h().value<degree>();
-					m_colour2s[i] = colours[i].l();
-					m_colour3s[i] = colours[i].s();
-					m_alphas[i] = colours[i].a();
+					m_colour1s.push_back(c.h().value<degree>());
+					m_colour2s.push_back(c.l());
+					m_colour3s.push_back(c.s());
+					m_alphas.push_back(c.a());
 				}
 				m_hls = true;
 				m_fillOffscaleBottom = fillOffscaleBottom;
@@ -808,23 +821,58 @@ namespace sci
 			}
 		};
 
+		template<class T, class DATACONTAINER, class COLOURCONTAINER>
+		auto makeColourScale(const DATACONTAINER& values, const COLOURCONTAINER& colours, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+			requires(std::input_iterator<typename DATACONTAINER::const_iterator>
+				&& std::input_iterator<typename COLOURCONTAINER::const_iterator>
+				&& std::convertible_to<typename DATACONTAINER::value_type, T>
+				&& (std::same_as<typename COLOURCONTAINER::value_type, rgbcolour> || std::same_as<typename COLOURCONTAINER::value_type, hlscolour>))
+		{
+			return std::make_shared<ColourScale<T>>(values, colours, logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop);
+		}
+
+		template<class T>
+		auto makeColourScale()
+		{
+			return std::make_shared<ColourScale<T>>();
+		}
+
 
 		template<class T>
 		class SizeScale : public Scale<T>
 		{
 		public:
-			SizeScale(std::span<const T> value = sci::GridData<T, 1>(0), std::span<const double> size = sci::GridData<double, 1>(0), bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
-				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
+			SizeScale()
+				:sci::plot::Scale<T>(false, Scale<T>::Direction::none, 0.0)
 			{
-				m_value = sci::GridData<T, 1>(value.begin(), value.end());
-				m_size = sci::GridData<double, 1>(size.begin(), size.end());
+				m_values = sci::GridData<T, 1>{ T(0), T(1) };
+				m_sizes = sci::GridData<double, 1>{ 0.0, 1.0 };
 				m_fillOffscaleBottom = fillOffscaleBottom;
 				m_fillOffscaleTop = fillOffscaleTop;
 				T linearMin;
 				T linearMax;
 				typename Scale<T>::unitless_type logMin;
 				typename Scale<T>::unitless_type logMax;
-				Scale<double>::setupInterpolatingScale(value, m_value, m_logValue, m_size, linearMin, linearMax, logMin, logMax);
+				Scale<double>::setupInterpolatingScale(m_values, m_values, m_logValues, m_sizes, linearMin, linearMax, logMin, logMax);
+				Scale<T>::setFixedScale(linearMin, linearMax);
+			}
+			template<class DATACONTAINER, class SIZECONTAINER>
+			SizeScale(const DATACONTAINER values, const SIZECONTAINER& sizes, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+				requires(std::input_iterator<typename DATACONTAINER::const_iterator>
+					&& std::input_iterator<typename SIZECONTAINER::const_iterator>
+					&& std::convertible_to<typename DATACONTAINER::value_type, T>
+					&& std::convertible_to<typename SIZECONTAINER::value_type, double>)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
+			{
+				m_values = sci::GridData<T, 1>(values.begin(), values.end());
+				m_sizes = sci::GridData<double, 1>(sizes.begin(), sizes.end());
+				m_fillOffscaleBottom = fillOffscaleBottom;
+				m_fillOffscaleTop = fillOffscaleTop;
+				T linearMin;
+				T linearMax;
+				typename Scale<T>::unitless_type logMin;
+				typename Scale<T>::unitless_type logMax;
+				Scale<double>::setupInterpolatingScale(values, m_values, m_logValues, m_sizes, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
@@ -850,7 +898,7 @@ namespace sci
 				if (offscaleBottom)
 				{
 					if (m_fillOffscaleBottom)
-						return m_size[0];
+						return m_sizes[0];
 					else
 						return std::numeric_limits<double>::quiet_NaN();
 				}
@@ -858,24 +906,24 @@ namespace sci
 				if (offscaleTop)
 				{
 					if (m_fillOffscaleTop)
-						return m_size.back();
+						return m_sizes.back();
 					else
 						return std::numeric_limits<double>::quiet_NaN();
 				}
 
 				if (onMin)
-					return m_size[0];
+					return m_sizes[0];
 
 				size_t maxIndex = 1;
 				double highWeight;
 				value = unitless((value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin())).value<unitless>();
 
-				while (value > m_value[maxIndex])
+				while (value > m_values[maxIndex])
 					maxIndex++;
 
-				highWeight = unitless((value - m_value[maxIndex - 1]) / (m_value[maxIndex] - m_value[maxIndex - 1])).value<unitless>();
+				highWeight = unitless((value - m_values[maxIndex - 1]) / (m_values[maxIndex] - m_values[maxIndex - 1])).value<unitless>();
 
-				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
+				return m_sizes[maxIndex] * highWeight + m_sizes[maxIndex - 1] * (1.0 - highWeight);
 			}
 
 			double getSizeLog(typename Scale<T>::unitless_type value) const
@@ -887,7 +935,7 @@ namespace sci
 				if (offscaleBottom)
 				{
 					if (m_fillOffscaleBottom)
-						return m_size[0];
+						return m_sizes[0];
 					else
 						return std::numeric_limits<double>::quiet_NaN();
 				}
@@ -895,26 +943,26 @@ namespace sci
 				if (offscaleTop)
 				{
 					if (m_fillOffscaleTop)
-						return m_size.back();
+						return m_sizes.back();
 					else
 						return std::numeric_limits<double>::quiet_NaN();
 				}
 
 				if (onMin)
-					return m_size[0];
+					return m_sizes[0];
 
 				size_t maxIndex = 1;
 				double highWeight;
 				
 				value = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 
-				while (value > m_logValue[maxIndex])
+				while (value > m_logValues[maxIndex])
 					maxIndex++;
 
-				highWeight = unitless((value - m_logValue[maxIndex - 1]) / (m_logValue[maxIndex] - m_logValue[maxIndex - 1])).value<unitless>();
+				highWeight = unitless((value - m_logValues[maxIndex - 1]) / (m_logValues[maxIndex] - m_logValues[maxIndex - 1])).value<unitless>();
 				
 
-				return m_size[maxIndex] * highWeight + m_size[maxIndex - 1] * (1.0 - highWeight);
+				return m_sizes[maxIndex] * highWeight + m_sizes[maxIndex - 1] * (1.0 - highWeight);
 			}
 			bool fillOffscaleBottom() const
 			{
@@ -933,27 +981,58 @@ namespace sci
 				m_fillOffscaleTop = fill;
 			}
 		private:
-			::sci::GridData<T, 1> m_value;
-			::sci::GridData<typename Scale<T>::unitless_type, 1> m_logValue;
-			::sci::GridData<double, 1> m_size;
+			::sci::GridData<T, 1> m_values;
+			::sci::GridData<typename Scale<T>::unitless_type, 1> m_logValues;
+			::sci::GridData<double, 1> m_sizes;
 			bool m_fillOffscaleBottom;
 			bool m_fillOffscaleTop;
 		};
+
+		template<class T, class DATACONTAINER, class SIZECONTAINER>
+		auto makeSizeScale(const DATACONTAINER values, const SIZECONTAINER& sizes, bool logarithmic = false, bool autostretch = false, bool fillOffscaleBottom = false, bool fillOffscaleTop = false)
+			requires(std::input_iterator<typename DATACONTAINER::const_iterator>
+			&& std::input_iterator<typename SIZECONTAINER::const_iterator>
+			&& std::convertible_to<typename DATACONTAINER::value_type, T>
+			&& std::convertible_to<typename SIZECONTAINER::value_type, double>)
+		{
+			return std::make_shared<SizeScale<T>>(values, sizes, logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop);
+		}
+
+		template<class T>
+		auto makeSizeScale()
+		{
+			return std::make_shared<SizeScale<T>>();
+		}
 
 		template<class T>
 		class LevelScale : public Scale<T>
 		{
 		public:
-			LevelScale(std::span<const T> value = sci::GridData<T, 1>(0), bool logarithmic = false, bool autostretch = false)
-				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
+			LevelScale()
+				:sci::plot::Scale<T>(false, Scale<T>::Direction::none, 0.0)
 			{
-				m_values = sci::GridData<T, 1>(value.begin(), value.end());
+				m_values = sci::GridData<T, 1>{ T(0), T(1) };
 				sci::GridData<double, 1> dummy = m_values;
 				T linearMin;
 				T linearMax;
 				typename Scale<T>::unitless_type logMin;
 				typename Scale<T>::unitless_type logMax;
-				Scale<T>::setupInterpolatingScale(value, m_values, m_logValues, dummy, linearMin, linearMax, logMin, logMax);
+				Scale<double>::setupInterpolatingScale(m_values, m_values, m_logValues, dummy, linearMin, linearMax, logMin, logMax);
+				Scale<T>::setFixedScale(linearMin, linearMax);
+			}
+			template<class DATACONTAINER>
+			LevelScale(const DATACONTAINER& values, bool logarithmic = false, bool autostretch = false)
+				requires(std::input_iterator<typename DATACONTAINER::const_iterator>
+					&& std::convertible_to<typename DATACONTAINER::value_type, T>)
+				:sci::plot::Scale<T>(logarithmic, Scale<T>::Direction::none, 0.0)
+			{
+				m_values = sci::GridData<T, 1>(values.begin(), values.end());
+				sci::GridData<double, 1> dummy = m_values;
+				T linearMin;
+				T linearMax;
+				typename Scale<T>::unitless_type logMin;
+				typename Scale<T>::unitless_type logMax;
+				Scale<T>::setupInterpolatingScale(values, m_values, m_logValues, dummy, linearMin, linearMax, logMin, logMax);
 
 				//if this is a fixed scale set the limits
 				if (!autostretch)
@@ -979,6 +1058,20 @@ namespace sci
 			sci::GridData<T, 1> m_values;
 			sci::GridData<typename Scale<T>::unitless_type, 1> m_logValues;
 		};
+
+
+		template<class T>
+		auto makeLevelScale()
+		{
+			return make_shared<LevelScale<T>>();
+		}
+		template<class T, class DATACONTAINER>
+		auto makeLevelScale(const DATACONTAINER& values, bool logarithmic = false, bool autostretch = false)
+			requires(std::input_iterator<typename DATACONTAINER::const_iterator>
+		&& std::convertible_to<typename DATACONTAINER::value_type, T>)
+		{
+			return make_shared<LevelScale<T>>(values, logarithmic, autostretch);
+		}
 
 		class LineStyle
 		{
@@ -1103,6 +1196,7 @@ namespace sci
 		class Axis : public Scale<T>, public DrawableItem
 		{
 		public:
+			using data_type = T;
 			class Options
 			{
 			public:
@@ -1151,6 +1245,10 @@ namespace sci
 			};
 			Axis(T min, T max, bool log, Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
 				:Scale<T>(min, max, log, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
+			{
+			}
+			Axis(T min, T max, Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
+				:Scale<T>(min, max, direction), m_options(options), m_start(start), m_end(end), m_hasChanged(true)
 			{
 			}
 			Axis(bool log, Point start, Point end, Options options = Options(), Scale<T>::Direction direction = Scale<T>::Direction::none)
@@ -1691,6 +1789,30 @@ namespace sci
 				return values;
 			}
 		};
+
+		template<class DATA_TYPE>
+		auto makeAxis(DATA_TYPE min, DATA_TYPE max, bool log, Point start, Point end, typename Axis<DATA_TYPE>::Options options = Options(), typename Scale<DATA_TYPE>::Direction direction = Scale<DATA_TYPE>::Direction::none)
+		{
+			return std::make_shared<Axis<DATA_TYPE>>(min, max, log, start, end, options, direction);
+		}
+
+		template<class DATA_TYPE>
+		auto makeAxis(DATA_TYPE min, DATA_TYPE max, Point start, Point end, typename Axis<DATA_TYPE>::Options options = Options(), typename Scale<DATA_TYPE>::Direction direction = Scale<DATA_TYPE>::Direction::none)
+		{
+			return std::make_shared<Axis<DATA_TYPE>>(min, max, start, end, options, direction);
+		}
+
+		template<class DATA_TYPE>
+		auto makeAxis(bool log, Point start, Point end, typename Axis<DATA_TYPE>::Options options = Options(), typename Scale<DATA_TYPE>::Direction direction = Scale<DATA_TYPE>::Direction::none)
+		{
+			return std::make_shared<Axis<DATA_TYPE>>(log, start, end, options, direction);
+		}
+
+		template<class DATA_TYPE>
+		auto makeAxis(Point start, Point end, typename Axis<DATA_TYPE>::Options options = Options(), typename Scale<DATA_TYPE>::Direction direction = Scale<DATA_TYPE>::Direction::none)
+		{
+			return std::make_shared<Axis<DATA_TYPE>>(start, end, options, direction);
+		}
 	}
 }
 

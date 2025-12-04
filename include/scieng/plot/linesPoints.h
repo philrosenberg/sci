@@ -17,7 +17,9 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 
-			Line(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
+			template<class XCONTAINER, class YCONTAINER>
+			Line(const XCONTAINER &xs, const YCONTAINER &ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_lineStyle(lineStyle)
 			{
 			}
@@ -39,7 +41,12 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makeLine(const XCONTAINER &xs, const YCONTAINER &ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<Line<X, Y>>(xs, ys, xAxis, yAxis, lineStyle);
+		}
 
 		template<class X, class Y>
 		class Points : public Data<X, Y, std::vector<X>, std::vector<Y>>
@@ -49,7 +56,9 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Points(std::span<const X> x, std::span<const Y> y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour)
+			template<class XCONTAINER, class YCONTAINER>
+			Points(const XCONTAINER &x, const YCONTAINER y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour)
+				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
 				: data(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
@@ -73,6 +82,13 @@ namespace sci
 				}
 			}
 		};
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		auto makePoints(const XCONTAINER& xs, const YCONTAINER& ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour)
+			requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
+		{
+			return std::make_shared<Points<X, Y>>(xs, ys, xAxis, yAxis, symbol, colour);
+		}
 	}
 }
 

@@ -16,7 +16,10 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsColourVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z>> colourScale, const Symbol& symbol)
+			
+			template<class XCONTAINER, class YCONTAINER, class ZCONTAINER>
+			PointsColourVarying(const XCONTAINER xs, const YCONTAINER &ys, ZCONTAINER zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z>> colourScale, const Symbol& symbol)
+				requires XYZPlotable<XCONTAINER, YCONTAINER, ZCONTAINER, X, Y, Z>
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
@@ -53,6 +56,13 @@ namespace sci
 			const std::shared_ptr<ColourScale<Z>> m_colourScale;
 		};
 
+		template<class XCONTAINER, class YCONTAINER, class ZCONTAINER, class X, class Y, class Z>
+		auto makePointsColourVarying(const XCONTAINER xs, const YCONTAINER& ys, ZCONTAINER zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z>> colourScale, const Symbol& symbol)
+			requires XYZPlotable<XCONTAINER, YCONTAINER, ZCONTAINER, X, Y, Z>
+		{
+			return make_shared<PointsColourVarying<X, Y, Z>>(xs, ys, zs, xAxis, yAxis, colourScale, symbol);
+		}
+
 		template<class X, class Y, class Z>
 		class PointsSizeVarying : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Z>>
 		{
@@ -61,7 +71,10 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<Z>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr<SizeScale<Z>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour)
+
+			template<class XCONTAINER, class YCONTAINER, class ZCONTAINER>
+			PointsSizeVarying(const XCONTAINER& xs, const YCONTAINER& ys, const ZCONTAINER& zs, const std::shared_ptr<Axis<Z>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr<SizeScale<Z>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour)
+				requires XYZPlotable<XCONTAINER, YCONTAINER, ZCONTAINER, X, Y, Z>
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, sizeScale), xs, ys, zs ), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
@@ -99,6 +112,13 @@ namespace sci
 			const std::shared_ptr<SizeScale<Z>> m_sizeScale;
 		};
 
+		template<class XCONTAINER, class YCONTAINER, class ZCONTAINER, class X, class Y, class Z>
+		auto makePointsSizeVarying(const XCONTAINER xs, const YCONTAINER& ys, ZCONTAINER zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr<SizeScale<Z>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour)
+			requires XYZPlotable<XCONTAINER, YCONTAINER, ZCONTAINER, X, Y, Z>
+		{
+			return make_shared<PointsSizeVarying<X, Y, Z>>(xs, ys, zs, xAxis, yAxis, sizeScale, symbol, colour);
+		}
+
 		template<class X, class Y, class Z1, class Z2>
 		class PointsColourAndSizeVarying : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Z1>, std::vector<Z2>>
 		{
@@ -107,7 +127,12 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsColourAndSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z1> zsColour, std::span<const Z2> zsSize, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z1>> colourScale, const std::shared_ptr<SizeScale<Z2>> sizeScale, const Symbol& symbol)
+
+			template<class XCONTAINER, class YCONTAINER, class Z1CONTAINER, class Z2CONTAINER>
+			PointsColourAndSizeVarying(const XCONTAINER& xs, const YCONTAINER ys, const Z1CONTAINER& zsColour, const Z2CONTAINER& zsSize, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z1>> colourScale, const std::shared_ptr<SizeScale<Z2>> sizeScale, const Symbol& symbol)
+				requires XYZPlotable<XCONTAINER, YCONTAINER, Z1CONTAINER, X, Y, Z1>
+				&& std::input_iterator<typename Z2CONTAINER::const_iterator>
+				&& std::convertible_to<typename Z2CONTAINER::value_type, Z2>
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale, sizeScale), xs, ys, zsColour, zsSize ), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
@@ -177,6 +202,16 @@ namespace sci
 			const std::shared_ptr<ColourScale<Z1>> m_colourScale;
 			const std::shared_ptr<SizeScale<Z2>> m_sizeScale;
 		};
+
+
+		template<class XCONTAINER, class YCONTAINER, class Z1CONTAINER, class Z2CONTAINER, class X, class Y, class Z1, class Z2>
+		auto makePointsColourAndSizeVarying(const XCONTAINER& xs, const YCONTAINER ys, const Z1CONTAINER& zsColour, const Z2CONTAINER& zsSize, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z1>> colourScale, const std::shared_ptr<SizeScale<Z2>> sizeScale, const Symbol& symbol)
+			requires XYZPlotable<XCONTAINER, YCONTAINER, Z1CONTAINER, X, Y, Z1>
+			&& std::input_iterator<typename Z2CONTAINER::const_iterator>
+			&& std::convertible_to<typename Z2CONTAINER::value_type, Z2>
+		{
+			return make_shared<PointsColourAndSizeVarying<X, Y, Z1, Z2>>(xs, ys, zsColour, zsSize, xAxis, yAxis, colourScale, sizeScale, symbol);
+		}
 	}
 }
 

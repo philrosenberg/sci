@@ -4,6 +4,7 @@
 #include<vector>
 #include<string>
 #include<memory>
+#include<iterator>
 
 
 #include"../grid.h"
@@ -30,10 +31,11 @@ namespace sci
 				m_yAxis.push_back(nullptr);
 			}
 			PlotableItem(std::shared_ptr<Axis<T>> xAxis, std::shared_ptr<Axis<U>> yAxis)
-				:m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
+				:m_scaledAxes(false)
 			{
 				m_xAxis.push_back(xAxis);
 				m_yAxis.push_back(yAxis);
+				m_intersections.push_back(Point(xAxis->getStart().getX(), yAxis->getStart().getY()));
 				//a note about intersection
 				//In theory, two axes do not need to be horizontal and vertical and their start points do not need to be the same.
 				//In this case, you might follow a line from the start of each axis, parallel to the other and the intersection point
@@ -65,7 +67,7 @@ namespace sci
 				for (size_t i = 0; i < m_xAxis.size(); ++i)
 				{
 					Point endCorner(m_xAxis[i]->getEnd().getX(), m_yAxis[i]->getEnd().getY());
-					sci::graphics::Clipper clipper = renderer.addClippingRegion(m_intersection, endCorner);
+					sci::graphics::Clipper clipper = renderer.addClippingRegion(m_intersections[i], endCorner);
 
 					//plot the data
 					plotData(i, renderer, scale);
@@ -74,12 +76,12 @@ namespace sci
 
 			Point getPointFromLinearData(T x, U y, size_t axisSetIndex) const
 			{
-				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLinearData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLinearData(y);
+				return m_intersections[axisSetIndex] + m_xAxis[axisSetIndex]->alongAxisDistanceFromLinearData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLinearData(y);
 			}
 
 			Point getPointFromLoggedIfNeededData(T x, U y, size_t axisSetIndex) const
 			{
-				return m_intersection + m_xAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(y);
+				return m_intersections[axisSetIndex] + m_xAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis[axisSetIndex]->alongAxisDistanceFromLoggedIfNeededData(y);
 			}
 			std::shared_ptr<Axis<T>> getXAxis(size_t axisSetIndex)
 			{
@@ -103,7 +105,7 @@ namespace sci
 			std::vector<std::shared_ptr<Axis<T>>> m_xAxis;
 			std::vector<std::shared_ptr<Axis<U>>> m_yAxis;
 			bool m_scaledAxes;
-			Point m_intersection;
+			std::vector<Point> m_intersections;
 		};
 
 		//This class can be used as a base class for most plotable data sets. It holds multiple 1d or 2d
@@ -246,6 +248,22 @@ namespace sci
 			containersTuple m_dataLogged;
 			std::vector<axisTuple> m_axes;
 		};
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		concept XYPlotable =
+			std::input_iterator<typename XCONTAINER::const_iterator>
+			&& std::input_iterator<typename YCONTAINER::const_iterator>
+			&& std::convertible_to<typename XCONTAINER::value_type, X>
+			&& std::convertible_to<typename YCONTAINER::value_type, Y>;
+
+		template<class XCONTAINER, class YCONTAINER, class ZCONTAINER, class X, class Y, class Z>
+		concept XYZPlotable =
+			std::input_iterator<typename XCONTAINER::const_iterator>
+			&& std::input_iterator<typename YCONTAINER::const_iterator>
+			&& std::input_iterator<typename ZCONTAINER::const_iterator>
+			&& std::convertible_to<typename XCONTAINER::value_type, X>
+			&& std::convertible_to<typename YCONTAINER::value_type, Y>
+			&& std::convertible_to<typename ZCONTAINER::value_type, Z>;
 	}
 }
 
