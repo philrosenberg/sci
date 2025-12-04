@@ -7,14 +7,14 @@ int main()
     // Horizontal line y = 0.5  ->  half below has area 0.5
     {
         float a = 0.0f, b = 1.0f, c = -0.5f;
-        auto f = sci::clipPixelArbitraryLine(0.0f, 0.0f, a, b, c, sci::Colour());
+        auto f = sci::clipPixelArbitraryLine(0.0f, 1.0f, 0.0f, a, b, c, sci::Colour());
         assert(std::abs(f.fraction - 0.5) < 1e-6);
         assert(f.shape == (sci::coverageShapeBottomLeft | sci::coverageShapeBottomRight | sci::coverageShapePoints[2] | sci::coverageShapePoints[3]));
     }
     // Diagonal line x + y - 1 = 0 -> area of bottom right triangle with x+y >= 1 is 1/2
     {
         float a = 1.0f, b = 1.0f, c = -1.0f;
-        auto f = sci::clipPixelArbitraryLine(0.0f, 0.0f, a, b, c, sci::Colour());
+        auto f = sci::clipPixelArbitraryLine(0.0f, 1.0f, 0.0f, a, b, c, sci::Colour());
         assert(std::abs(f.fraction - 0.5) < 1e-6);
         //top right and bottom left are on the line and should be omitted as we are clipping left/top
         assert(f.shape == (sci::coverageShapeBottomRight | sci::coverageShapePoints[2] | sci::coverageShapePoints[3]));
@@ -22,21 +22,21 @@ int main()
     // right half x >= 0.3  -> area 0.7
     {
         float a = 1.0f, b = 0.0f, c = -0.3f;
-        auto f = sci::clipPixelArbitraryLine(0.0f, 0.0f, a, b, c, sci::Colour());
+        auto f = sci::clipPixelArbitraryLine(0.0f, 1.0f, 0.0f, a, b, c, sci::Colour());
         assert(std::abs(f.fraction - 0.7) < 1e-6);
         assert(f.shape == (sci::coverageShapeTopRight | sci::coverageShapeBottomRight | sci::coverageShapePoints[1] | sci::coverageShapePoints[2] | sci::coverageShapePoints[3]));
     }
     // Entire plane on negative side
     {
         float a = 0.0f, b = 0.0f, c = -1.0f;
-        auto f = sci::clipPixelArbitraryLine(0.0f, 0.0f, a, b, c, sci::Colour());
+        auto f = sci::clipPixelArbitraryLine(0.0f, 1.0f, 0.0f, a, b, c, sci::Colour());
         assert(std::abs(f.fraction -0.0) < 1e-6);
         assert(f.shape == sci::coverageShapeNone);
     }
     // Entire plane on positive side?
     {
         float a = 0.0f, b = 0.0f, c = 1.0f;
-        auto f = sci::clipPixelArbitraryLine(0.0f, 0.0f, a, b, c, sci::Colour());
+        auto f = sci::clipPixelArbitraryLine(0.0f, 1.0f, 0.0f, a, b, c, sci::Colour());
         assert(std::abs(f.fraction - 1.0) < 1e-6);
         assert(f.shape == sci::coverageShapeAll);
     }
@@ -97,14 +97,17 @@ int main()
         direction *= -1.0f;
         y += 10.0f;
     }
-
-    triangleCanvas.addTriangle(sci::Triangle(sci::Point(20.5f, 200.0f),
+    sci::Triangle arbitraryTriangle(sci::Point(20.5f, 200.0f),
         sci::Point(90.0f, 280.0f),
         sci::Point(170.1f, 250.0f),
-        sci::Colour(1.0f, 0.0f, 0.5f)));
+        sci::Colour(1.0f, 0.0f, 0.5f));
+    triangleCanvas.addTriangle(arbitraryTriangle);
+    
+    arbitraryTriangle.getCoverage(250.0f, 64.0f);
 
     triangleCanvas.renderScene();
     triangleCanvas.writePpm(sU("triangle.ppm"));
+
 
 
     for (size_t i = 0; i < 4; ++i)

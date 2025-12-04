@@ -180,18 +180,18 @@ namespace sci
 
 	// Compute area fraction of unit square {0<=x<=1,0<=y<=1} on side a*x + b*y + c <= 0
 	// Returns a value in [0,1].
-	inline Coverage clipPixelArbitraryLine(float row, float column, float a, float b, float c, const Colour& colour)
+	inline Coverage clipPixelArbitraryLine(float top, float bottom, float column, float a, float b, float c, const Colour& colour)
 	{
 		//set xs and ys as the corners of a unit square, counter clockwise order
 		const std::array<float, 4> xs = { 0.0f, 1.0f, 1.0f, 0.0f };
-		const std::array<float, 4> ys = { 0.0f, 0.0f, 1.0f, 1.0f };
+		const std::array<float, 4> ys = { 0.0f, 0.0f, bottom - top, bottom-top };
 
 		//calculate mx + c - y for each point. It is zero on the line
 		//negative on one side and positive on the other
 		std::array<float, 4> f;
 		for (int i = 0; i < 4; ++i)
 		{
-			f[i] = a * (xs[i] + column) + b * (ys[i] + row) + c;
+			f[i] = a * (xs[i] + column) + b * (ys[i] + top) + c;
 		}
 
 		// 3) For each edge i -> j = (i+1)&3 compute intersection param t (if any)
@@ -272,11 +272,14 @@ namespace sci
 
 		float shapeGradient = std::abs(a) > std::abs(b) ? a : b;
 		uint8_t shape = 0x00;
-		for (size_t i = 0; i < 4; ++i)
-		{
-			bool in = f[i] > 0.0f || (f[i] == 0.0f && shapeGradient < 0.0f);
-			shape |= (uint8_t(in) << i);
-		}
+		//corners
+		bool bottomIn = bottom == std::floor(bottom);
+		bool topIn = top == std::floor(top);
+		shape |= (topIn && (f[0] > 0.0f || (f[0] == 0.0f && shapeGradient < 0.0f))) * coverageShapeTopLeft;
+		shape |= (topIn && (f[1] > 0.0f || (f[1] == 0.0f && shapeGradient < 0.0f))) * coverageShapeTopRight;
+		shape |= (bottomIn && (f[2] > 0.0f || (f[2] == 0.0f && shapeGradient < 0.0f))) * coverageShapeBottomRight;
+		shape |= (bottomIn && (f[3] > 0.0f || (f[3] == 0.0f && shapeGradient < 0.0f))) * coverageShapeBottomLeft;
+		//inner points
 		for (size_t i = 0; i < 4; ++i)
 		{
 			float f = a * coveragePoints[i].x + b * coveragePoints[i].y + c;
@@ -534,13 +537,12 @@ namespace sci
 
 			bool fullLeft = column > std::max(topLeft, bottomLeft);
 			bool fullRight = column + 1.0f < std::min(topRight, bottomRight);
-			bool fullBase = (row - m_y) * (row + 1.0f - m_y) >= 0.0f;
+			bool fullBase = (bottom - top == 1.0f);
 			if (fullLeft && fullRight &&fullBase)
 				return Coverage(0xff, 1.0f, m_colour);
 
 			Coverage leftCoverage(0xff, 1.0f, m_colour);
 			Coverage rightCoverage(0xff, 1.0f, m_colour);
-			Coverage baseCoverage(0xff, 1.0f, m_colour);
 
 			if (!fullLeft)
 			{
@@ -549,7 +551,7 @@ namespace sci
 				float a = shallow ? -1.0f * sign : m_m1 * sign;
 				float b = shallow ? m_mInv1 * sign : -1.0f * sign;
 				float c = shallow ? -m_c1 * m_mInv1 * sign : m_c1 * sign;
-				leftCoverage = clipPixelArbitraryLine(row, column, a, b, c, m_colour);
+				leftCoverage = clipPixelArbitraryLine(top, bottom, column, a, b, c, m_colour);
 			}
 			if (!fullRight)
 			{
@@ -558,20 +560,18 @@ namespace sci
 				float a = shallow ? -1.0f * sign : m_m2 * sign;
 				float b = shallow ? m_mInv2 * sign : -1.0f * sign;
 				float c = shallow ? -m_c2 * m_mInv2 : m_c2 * sign;
-				rightCoverage = clipPixelArbitraryLine(row, column, a, b, c, m_colour);
+				rightCoverage = clipPixelArbitraryLine(top, bottom, column, a, b, c, m_colour);
 			}
-			if (!fullBase)
+			if (!fullBase && fullLeft && fullRight) //clipPixelArbitraryline does top and bottom clipping, so only do this if we didn't call this
 			{
-				if (m_y < m_point.y)
-					baseCoverage = clipPixelTop(row, m_y, m_colour);
-				else
-					baseCoverage = clipPixelBottom(row, m_y, m_colour);
+				Coverage topCoverage = clipPixelTop(row, top, m_colour);
+				Coverage bottomCoverage = clipPixelBottom(row, bottom, m_colour);
+				//we know the uncovered regions of each of the coverages do not overlap, so we optimise calculation of the covered region
+				return Coverage(topCoverage.shape & bottomCoverage.shape, 1.0f - ((1.0f - topCoverage.fraction) + (1.0f - bottomCoverage.fraction)), m_colour);
 			}
 
-			Coverage lrCoverage = splitOverlap(leftCoverage, rightCoverage);
-			Coverage coverage = splitOverlap(baseCoverage, lrCoverage);
-			coverage.colour = m_colour;
-			return coverage;
+			//we know the uncovered regions of each of the coverages do not overlap, so we optimise calculation of the covered region
+			return Coverage(leftCoverage.shape & rightCoverage.shape, 1.0f-((1.0f-leftCoverage.fraction)+(1.0f-rightCoverage.fraction)),m_colour);
 		}
 
 
