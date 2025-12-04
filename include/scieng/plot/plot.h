@@ -1890,7 +1890,7 @@ namespace sci
 		class HorizontalColourBar : public DrawableItem
 		{
 		public:
-			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<T>> colourscale, Axis<T>::Options axisOptions = Axis<T>::Options())
+			HorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<T>> colourscale, typename Axis<T>::Options axisOptions = Axis<T>::Options())
 				:m_colourscale(colourscale),
 				m_xAxis(new Axis<T>(m_colourscale->getLinearMin(), m_colourscale->getLinearMax(), m_colourscale->isLog(), bottomLeft, Point(topRight.getX(), bottomLeft.getY()), axisOptions, sci::plot::Scale<double>::Direction::horizontal)),
 				m_yAxis(new Axis<double>(0.0, 1.0, false, bottomLeft, Point(bottomLeft.getX(), topRight.getY()), Axis<double>::Options::getBlankAxis(), sci::plot::Scale<double>::Direction::horizontal))
@@ -1970,6 +1970,12 @@ namespace sci
 			std::shared_ptr<Axis<double>> m_yAxis;
 
 		};
+
+		template<class T>
+		auto makeHorizontalColourBar(Point bottomLeft, Point topRight, std::shared_ptr<ColourScale<T>> colourscale, typename Axis<T>::Options axisOptions = Axis<T>::Options())
+		{
+			return std::make_shared< HorizontalColourBar<T>>(bottomLeft, topRight, colourscale, axisOptions);
+		}
 
 		class Label : public DrawableItem
 		{
@@ -2207,6 +2213,14 @@ namespace sci
 			wxSize m_previousSize;
 
 		};
+
+
+		std::shared_ptr<Label> makeLabel(sci::string text, Point position, unitless horizontalAlignment = unitless(0.0),
+			unitless verticalAlignment = unitless(0.0), Renderer::Font font = Renderer::Font(),
+			degree rotation = degree(0.0), Length minTextSize = textPoint(5.0))
+		{
+			return std::make_shared<Label>(text, position, horizontalAlignment, verticalAlignment, font, rotation, minTextSize);
+		}
 	}
 }
 

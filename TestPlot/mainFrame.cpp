@@ -178,8 +178,8 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	std::shared_ptr<sci::plot::Contours<1, 2, double, double, double>> contour3(new sci::plot::Contours<1, 2, double, double, double>(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
 	std::shared_ptr<sci::plot::Contours<2, 2, double, double, double>> contour4(new sci::plot::Contours<2, 2, double, double, double>(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
 
-	std::shared_ptr< sci::plot::HorizontalColourBar<double>> colourbarContour(new sci::plot::HorizontalColourBar<double>(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis<double>::Options(sU("Discrete Colourbar used by Shade"))));
-	std::shared_ptr< sci::plot::HorizontalColourBar<double>> colourbarGrid(new sci::plot::HorizontalColourBar<double>(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis<double>::Options(sU("Continuous Colourbar used by Grid"))));
+	auto colourbarContour = sci::plot::makeHorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis<double>::Options(sU("Discrete Colourbar used by Shade")));
+	auto colourbarGrid = sci::plot::makeHorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis<double>::Options(sU("Continuous Colourbar used by Grid")));
 	
 	//do a test with a NullRenderer - this makes debugging much easier
 	sci::graphics::NullRenderer nullRenderer;
@@ -945,22 +945,22 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	sci::graphics::Distance(millimetre(1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)) };
 
 	auto lineData1 = sci::plot::makeLine(x, y, xAxis1, yAxis1, sci::plot::LineStyle());
-	std::shared_ptr<sci::plot::Points<double, double>> pointData1(new sci::plot::Points<double, double>(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	auto pointData1 = sci::plot::makePoints(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8));
 	lineData1->draw(renderer, perInch(96));
 	pointData1->draw(renderer, perInch(96));
 
 	auto lineData2 = sci::plot::makeLine(x, y, xAxis2, yAxis2, sci::plot::LineStyle());
-	std::shared_ptr<sci::plot::Points<double, double>> pointData2(new sci::plot::Points<double, double>(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	auto pointData2 = sci::plot::makePoints(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8));
 	lineData2->draw(renderer, perInch(96));
 	pointData2->draw(renderer, perInch(96));
 
 	auto lineData3 = sci::plot::makeLine(x, y, xAxis3, yAxis3, sci::plot::LineStyle());
-	std::shared_ptr<sci::plot::Points<double, double>> pointData3(new sci::plot::Points<double, double>(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	auto pointData3 = sci::plot::makePoints(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8));
 	lineData3->draw(renderer, perInch(96));
 	pointData3->draw(renderer, perInch(96));
 
 	auto lineData4 = sci::plot::makeLine(x, y, xAxis4, yAxis4, sci::plot::LineStyle());
-	std::shared_ptr<sci::plot::Points<double, double>> pointData4(new sci::plot::Points<double, double>(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
+	auto pointData4 = sci::plot::makePoints(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8));
 	lineData4->draw(renderer, perInch(96));
 	pointData4->draw(renderer, perInch(96));
 }
