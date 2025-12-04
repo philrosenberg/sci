@@ -16,8 +16,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			HorizontalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> plusErrors, std::span<const X> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
-				:data(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), transformer, xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+			HorizontalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> plusErrors, std::span<const X> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+				:data(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
 				m_stopLength = stopLength;
@@ -67,8 +67,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			VerticalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> plusErrors, std::span<const Y> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true, std::shared_ptr<splotTransformer> transformer = nullptr)
-				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), transformer, xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+			VerticalErrorBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> plusErrors, std::span<const Y> minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
+				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
 			{
 				m_style = style;
 				m_stopLength = stopLength;

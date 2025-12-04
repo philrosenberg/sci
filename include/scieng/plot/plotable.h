@@ -16,7 +16,6 @@ namespace sci
 	namespace plot
 	{
 		const int plotDataErrorCode = 1;
-		class splotTransformer;
 
 		//This class is the base class for all plotable items, it provides the interface for
 		//the items
@@ -25,13 +24,13 @@ namespace sci
 		{
 		public:
 			PlotableItem()
-				:m_transformer(nullptr), m_scaledAxes(false)
+				:m_scaledAxes(false)
 			{
 				m_xAxis.push_back(nullptr);
 				m_yAxis.push_back(nullptr);
 			}
-			PlotableItem(std::shared_ptr<Axis<T>> xAxis, std::shared_ptr<Axis<U>> yAxis, std::shared_ptr<splotTransformer> transformer)
-				:m_transformer(transformer), m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
+			PlotableItem(std::shared_ptr<Axis<T>> xAxis, std::shared_ptr<Axis<U>> yAxis)
+				:m_scaledAxes(false), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
 			{
 				m_xAxis.push_back(xAxis);
 				m_yAxis.push_back(yAxis);
@@ -103,7 +102,6 @@ namespace sci
 			virtual void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const {}
 			std::vector<std::shared_ptr<Axis<T>>> m_xAxis;
 			std::vector<std::shared_ptr<Axis<U>>> m_yAxis;
-			std::shared_ptr<splotTransformer> m_transformer;
 			bool m_scaledAxes;
 			Point m_intersection;
 		};
@@ -156,8 +154,8 @@ namespace sci
 			constexpr static int nDimensions = sizeof...(CONTAINERS);
 
 			template< class AXISTUPLE, class... RECEIVEDCONTAINERS>
-			Data(std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, AXISTUPLE axes, std::shared_ptr<splotTransformer> transformer, RECEIVEDCONTAINERS... data)
-				:PlotableItem<X, Y>(xAxis, yAxis, transformer)
+			Data(std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, AXISTUPLE axes, RECEIVEDCONTAINERS... data)
+				:PlotableItem<X, Y>(xAxis, yAxis)
 			{
 				static_assert(std::tuple_size<axisTuple>() == nDimensions, "Internal sci::plot::Data error - axisTuple is the wrong size");
 				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the number of dimensions");

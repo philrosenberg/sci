@@ -16,8 +16,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsColourVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z>> colourScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), transformer, xs, ys, zs), m_symbol(symbol), m_colourScale(colourScale)
+			PointsColourVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<X>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z>> colourScale, const Symbol& symbol)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs), m_symbol(symbol), m_colourScale(colourScale)
 			{
 			}
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
@@ -61,8 +61,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<Z>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr<SizeScale<Z>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, sizeScale), transformer, xs, ys, zs ), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
+			PointsSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z> zs, const std::shared_ptr<Axis<Z>> xAxis, const std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr<SizeScale<Z>> sizeScale, const Symbol& symbol, sci::graphics::RgbColour colour)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, sizeScale), xs, ys, zs ), m_symbol(symbol), m_sizeScale(sizeScale), m_colour(colour)
 			{
 			}
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
@@ -107,8 +107,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			PointsColourAndSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z1> zsColour, std::span<const Z2> zsSize, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z1>> colourScale, const std::shared_ptr<SizeScale<Z2>> sizeScale, const Symbol& symbol, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale, sizeScale), transformer, xs, ys, zsColour, zsSize ), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
+			PointsColourAndSizeVarying(std::span<const X> xs, std::span<const Y> ys, std::span<const Z1> zsColour, std::span<const Z2> zsSize, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const std::shared_ptr < ColourScale<Z1>> colourScale, const std::shared_ptr<SizeScale<Z2>> sizeScale, const Symbol& symbol)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale, sizeScale), xs, ys, zsColour, zsSize ), m_symbol(symbol), m_colourScale(colourScale), m_sizeScale(sizeScale)
 			{
 			}
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override

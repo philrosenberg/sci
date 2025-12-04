@@ -17,8 +17,8 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 
-			Lines(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
+			Lines(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
@@ -47,8 +47,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Points(std::span<const X> x, std::span<const Y> y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
+			Points(std::span<const X> x, std::span<const Y> y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour)
+				: data(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:

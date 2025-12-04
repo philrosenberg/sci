@@ -102,9 +102,6 @@
     <ClInclude Include="..\include\scieng\plot\plotable.h">
       <Filter>Header Files\plot</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\scieng\plot\splottest.h">
-      <Filter>Header Files\plot</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\scieng\plot\transforms.h">
       <Filter>Header Files\plot</Filter>
     </ClInclude>

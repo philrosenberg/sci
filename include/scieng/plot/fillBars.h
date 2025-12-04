@@ -17,8 +17,8 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 			using data::getYAxis;
-			VerticalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+			VerticalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = 0.0)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -71,8 +71,8 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 			using data::getXAxis;
-			HorizontalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+			HorizontalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = 0.0)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -125,8 +125,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Boxes(std::span<const X> x1s, std::span<const X> x2s, std::span<const Y> y1s, std::span<const Y> y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
+			Boxes(std::span<const X> x1s, std::span<const X> x2s, std::span<const Y> y1s, std::span<const Y> y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), x1s, x2s, y1s, y2s)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -170,8 +170,8 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Fill(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+			Fill(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			
