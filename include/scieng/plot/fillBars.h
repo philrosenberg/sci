@@ -8,11 +8,17 @@ namespace sci
 {
 	namespace plot
 	{
-		class VerticalBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>
+		template<class X, class Y>
+		class VerticalBars : public Data<X, Y, std::vector<X>, std::vector<X>, std::vector<Y>>
 		{
 		public:
-			VerticalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+			using data = Data<X, Y, std::vector<X>, std::vector<X>, std::vector<Y>>;
+			using data::hasData;
+			using data::getNPoints;
+			using data::getPointFromLoggedIfNeededData;
+			using data::getYAxis;
+			VerticalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const X> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -20,7 +26,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 				m_fillStyle = fillStyle;
 				m_zeroLineLinear = zeroLine;
-				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
+				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(Y()/Y())>::quiet_NaN();
 			}
 
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
@@ -31,11 +37,11 @@ namespace sci
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				double zeroLine = getYAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
+				Y zeroLine = getYAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const std::vector<double>& minXs = getData<0>(axisSetIndex);
-				const std::vector<double>& maxXs = getData<1>(axisSetIndex);
-				const std::vector<double>& ys = getData<2>(axisSetIndex);
+				const std::vector<X>& minXs = data::getData<0>(axisSetIndex);
+				const std::vector<X>& maxXs = data::getData<1>(axisSetIndex);
+				const std::vector<Y>& ys = data::getData<2>(axisSetIndex);
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
@@ -47,20 +53,26 @@ namespace sci
 			virtual void autoscaleAxes(size_t axisSetIndex) override
 			{
 				getYAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				data::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;
-			double m_zeroLineLinear;
-			double m_zeroLineLogged;
+			Y m_zeroLineLinear;
+			decltype(Y()/Y()) m_zeroLineLogged;
 		};
 
-		class HorizontalBars : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>
+		template<class X, class Y>
+		class HorizontalBars : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Y>>
 		{
 		public:
-			HorizontalBars(std::span<const double> xs, std::span<const double> ys, std::span<const double> widths, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, double zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+			using data = Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Y>>;
+			using data::hasData;
+			using data::getNPoints;
+			using data::getPointFromLoggedIfNeededData;
+			using data::getXAxis;
+			HorizontalBars(std::span<const X> xs, std::span<const Y> ys, std::span<const Y> widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = 0.0, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), transformer, xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -68,7 +80,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 				m_fillStyle = fillStyle;
 				m_zeroLineLinear = zeroLine;
-				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<double>::quiet_NaN();
+				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(X()/X())>::quiet_NaN();
 			}
 
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
@@ -79,11 +91,11 @@ namespace sci
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				double zeroLine = getXAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
+				X zeroLine = getXAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const std::vector<double>& xs = getData<0>(axisSetIndex);
-				const std::vector<double>& minYs = getData<1>(axisSetIndex);
-				const std::vector<double>& maxYs = getData<2>(axisSetIndex);
+				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
+				const std::vector<Y>& minYs = data::getData<1>(axisSetIndex);
+				const std::vector<Y>& maxYs = data::getData<2>(axisSetIndex);
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
@@ -96,20 +108,25 @@ namespace sci
 			virtual void autoscaleAxes(size_t axisSetIndex) override
 			{
 				getXAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>>::autoscaleAxes(axisSetIndex);
+				data::autoscaleAxes(axisSetIndex);
 			}
 		private:
 			FillStyle m_fillStyle;
 			LineStyle m_lineStyle;
-			double m_zeroLineLinear;
-			double m_zeroLineLogged;
+			X m_zeroLineLinear;
+			decltype(X()/X()) m_zeroLineLogged;
 		};
 
-		class Boxes : public Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+		template<class X, class Y>
+		class Boxes : public Data<X, Y, std::vector<X>, std::vector<X>, std::vector<Y>, std::vector<Y>>
 		{
 		public:
-			Boxes(std::span<const double> x1s, std::span<const double> x2s, std::span<const double> y1s, std::span<const double> y2s, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<double, double, std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
+			using data = Data<X, Y, std::vector<X>, std::vector<X>, std::vector<Y>, std::vector<Y>>;
+			using data::hasData;
+			using data::getNPoints;
+			using data::getPointFromLoggedIfNeededData;
+			Boxes(std::span<const X> x1s, std::span<const X> x2s, std::span<const Y> y1s, std::span<const Y> y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis, yAxis), transformer, x1s, x2s, y1s, y2s)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -127,10 +144,10 @@ namespace sci
 				renderer.setBrush(m_fillStyle.getColour());
 
 
-				const std::vector<double>& x1s = getData<0>(axisSetIndex);
-				const std::vector<double>& x2s = getData<1>(axisSetIndex);
-				const std::vector<double>& y1s = getData<2>(axisSetIndex);
-				const std::vector<double>& y2s = getData<3>(axisSetIndex);
+				const std::vector<X>& x1s = data::getData<0>(axisSetIndex);
+				const std::vector<X>& x2s = data::getData<1>(axisSetIndex);
+				const std::vector<Y>& y1s = data::getData<2>(axisSetIndex);
+				const std::vector<Y>& y2s = data::getData<3>(axisSetIndex);
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
@@ -145,11 +162,16 @@ namespace sci
 			LineStyle m_lineStyle;
 		};
 
-		class Fill : public Data<double, double, std::vector<double>, std::vector<double>>
+		template<class X, class Y>
+		class Fill : public Data<X, Y, std::vector<X>, std::vector<Y>>
 		{
 		public:
-			Fill(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<double, double, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
+			using data = Data<X, Y, std::vector<X>, std::vector<Y>>;
+			using data::hasData;
+			using data::getNPoints;
+			using data::getPointFromLoggedIfNeededData;
+			Fill(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_fillStyle(fillStyle), m_lineStyle(outlineStyle)
 			{
 			}
 			
@@ -160,12 +182,13 @@ namespace sci
 				m_lineStyle.setPen(renderer);
 				m_fillStyle.setBrush(renderer);
 
+				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
+				const std::vector<X>& ys = data::getData<1>(axisSetIndex);
+
 				std::vector<Point> points(getNPoints());
-				const std::vector<double>& x = getData<0>(axisSetIndex);
-				const std::vector<double>& y = getData<1>(axisSetIndex);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex);
+					points[i] = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
 				}
 				renderer.polygon(points);
 			}

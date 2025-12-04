@@ -17,8 +17,8 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 
-			Lines(std::span<const double> xs, std::span<const double> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<X, Y, std::vector<X>, std::vector<Y>>(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
+			Lines(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), transformer, xs, ys), m_lineStyle(lineStyle)
 			{
 			}
 		private:
@@ -28,22 +28,27 @@ namespace sci
 					return;
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(getNPoints());
-				const std::vector<double>& x = data::getData<0>(axisSetIndex);
-				const std::vector<double>& y = data::getData<1>(axisSetIndex);
+				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
+				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex);
+					points[i] = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
 				}
 				renderer.polyLine(points);
 			}
 			LineStyle m_lineStyle;
 		};
 
-		class Points : public Data<double, double, std::vector<double>, std::vector<double>>
+		template<class X, class Y>
+		class Points : public Data<X, Y, std::vector<X>, std::vector<Y>>
 		{
 		public:
-			Points(std::span<const double> x, std::span<const double> y, std::shared_ptr<Axis<double>> xAxis, std::shared_ptr<Axis<double>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
-				: Data<double, double, std::vector<double>, std::vector<double>>(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
+			using data = Data<X, Y, std::vector<X>, std::vector<Y>>;
+			using data::hasData;
+			using data::getNPoints;
+			using data::getPointFromLoggedIfNeededData;
+			Points(std::span<const X> x, std::span<const Y> y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour, std::shared_ptr<splotTransformer> transformer = nullptr)
+				: data(xAxis, yAxis, std::make_tuple( xAxis, yAxis ), transformer, x, y), m_symbol(symbol), m_colour(colour)
 			{
 			}
 		private:
@@ -58,11 +63,11 @@ namespace sci
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), millimetre(0.0));
 
-				const std::vector<double>& x = getData<0>(axisSetIndex);
-				const std::vector<double>& y = getData<1>(axisSetIndex);
+				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
+				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
-					m_symbol.draw(getPointFromLoggedIfNeededData(x[i], y[i], axisSetIndex), renderer);
+					m_symbol.draw(getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex), renderer);
 				}
 			}
 		};

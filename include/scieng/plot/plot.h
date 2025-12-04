@@ -1783,7 +1783,7 @@ namespace sci
 					std::vector<T> cbX{ cb[0][0], cb[1][0] };
 					std::vector<double> cbY{ 0.0, 1.0 };
 
-					Contours<1, 1> data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
+					Contours<1, 1,double, double, T> data(cbX, cbY, cb, m_xAxis, m_yAxis, m_colourscale, noLine);
 
 					data.draw(renderer, scale);
 					m_xAxis->draw(renderer, scale);
@@ -1824,7 +1824,7 @@ namespace sci
 
 					std::vector<double> cbY{ 0.0, 1.0 };
 
-					Grid<1, 1> data(cbX, cbY, z, m_xAxis, m_yAxis, m_colourscale);
+					Grid<1, 1, double, double, T> data(cbX, cbY, z, m_xAxis, m_yAxis, m_colourscale);
 
 					data.draw(renderer, scale);
 					m_xAxis->draw(renderer, scale);
