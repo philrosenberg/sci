@@ -102,9 +102,26 @@ int main()
         sci::Point(170.1f, 250.0f),
         sci::Colour(1.0f, 0.0f, 0.5f));
     triangleCanvas.addTriangle(arbitraryTriangle);
-    
-    arbitraryTriangle.getCoverage(250.0f, 64.0f);
 
+    //test a hexagon made of 6 triangles to see if they all tessalate properly
+    sci::Point centreHex(150.0f, 200.0f);
+    float h = 20.0f;
+    float w1 = h / 2.0f;
+    float w2 = h * 1.5f;
+    sci::Point hex1(centreHex.x - w1, centreHex.y - h);
+    sci::Point hex2(centreHex.x + w1, centreHex.y - h);
+    sci::Point hex3(centreHex.x + w2, centreHex.y);
+    sci::Point hex4(centreHex.x + w1, centreHex.y + h);
+    sci::Point hex5(centreHex.x - w1, centreHex.y + h);
+    sci::Point hex6(centreHex.x - w2, centreHex.y);
+
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex1, hex2, sci::Colour(1.0f, 0.0f, 0.5f)));
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex2, hex3, sci::Colour(1.0f, 0.0f, 0.5f)));
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex3, hex4, sci::Colour(1.0f, 0.0f, 0.5f)));
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex4, hex5, sci::Colour(1.0f, 0.0f, 0.5f)));
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex5, hex6, sci::Colour(1.0f, 0.0f, 0.5f)));
+    triangleCanvas.addTriangle(sci::Triangle(centreHex, hex6, hex1, sci::Colour(1.0f, 0.0f, 0.5f)));
+    
     triangleCanvas.renderScene();
     triangleCanvas.writePpm(sU("triangle.ppm"));
 

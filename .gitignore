@@ -21,3 +21,6 @@ install
 **.VC.opendb
 **.VC.db
 .vs
+TestRender/test.ppm
+TestRender/triangle.ppm
+
