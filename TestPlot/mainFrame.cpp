@@ -511,9 +511,9 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		for (size_t i = 0; i < y1.size(); ++i)
 			y3[i] = (y1[i]+y2[i])/2.0;
 
-		std::shared_ptr<sci::plot::Lines<double, double>> line1(new sci::plot::Lines<double, double>(x, y1, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0))));
-		std::shared_ptr<sci::plot::Lines<double, double>> line2(new sci::plot::Lines<double, double>(x, y2, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0, 0, 0), sU(".       -_\t   "))));
-		std::shared_ptr<sci::plot::Lines<double, double>> line3(new sci::plot::Lines<double, double>(x, y3, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0.8, 0, 0.2), { millimetre(0.5), millimetre(3.5), millimetre(3.0), millimetre(3.0) })));
+		std::shared_ptr<sci::plot::Line<double, double>> line1(new sci::plot::Line<double, double>(x, y1, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0))));
+		std::shared_ptr<sci::plot::Line<double, double>> line2(new sci::plot::Line<double, double>(x, y2, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0, 0, 0), sU(".       -_\t   "))));
+		std::shared_ptr<sci::plot::Line<double, double>> line3(new sci::plot::Line<double, double>(x, y3, xAxis, yAxis, sci::plot::LineStyle(millimetre(1.0), RgbColour(0.8, 0, 0.2), { millimetre(0.5), millimetre(3.5), millimetre(3.0), millimetre(3.0) })));
 
 		canvas->addItem(box);
 		canvas->addItem(xAxis);
@@ -944,22 +944,22 @@ void PlotLineTestPanel::OnPaint(wxPaintEvent& event)
 	std::vector<sci::graphics::Distance> squareSymbol{ sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)), sci::graphics::Distance(millimetre(1.0), millimetre(-1.0)),
 	sci::graphics::Distance(millimetre(1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(1.0)), sci::graphics::Distance(millimetre(-1.0), millimetre(-1.0)) };
 
-	std::shared_ptr<sci::plot::Lines<double, double>> lineData1(new sci::plot::Lines<double, double>(x, y, xAxis1, yAxis1, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Line<double, double>> lineData1(new sci::plot::Line<double, double>(x, y, xAxis1, yAxis1, sci::plot::LineStyle()));
 	std::shared_ptr<sci::plot::Points<double, double>> pointData1(new sci::plot::Points<double, double>(x, y, xAxis1, yAxis1, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData1->draw(renderer, perInch(96));
 	pointData1->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::Lines<double, double>> lineData2(new sci::plot::Lines<double, double>(x, y, xAxis2, yAxis2, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Line<double, double>> lineData2(new sci::plot::Line<double, double>(x, y, xAxis2, yAxis2, sci::plot::LineStyle()));
 	std::shared_ptr<sci::plot::Points<double, double>> pointData2(new sci::plot::Points<double, double>(x, y, xAxis2, yAxis2, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData2->draw(renderer, perInch(96));
 	pointData2->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::Lines<double, double>> lineData3(new sci::plot::Lines<double, double>(x, y, xAxis3, yAxis3, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Line<double, double>> lineData3(new sci::plot::Line<double, double>(x, y, xAxis3, yAxis3, sci::plot::LineStyle()));
 	std::shared_ptr<sci::plot::Points<double, double>> pointData3(new sci::plot::Points<double, double>(x, y, xAxis3, yAxis3, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData3->draw(renderer, perInch(96));
 	pointData3->draw(renderer, perInch(96));
 
-	std::shared_ptr<sci::plot::Lines<double, double>> lineData4(new sci::plot::Lines<double, double>(x, y, xAxis4, yAxis4, sci::plot::LineStyle()));
+	std::shared_ptr<sci::plot::Line<double, double>> lineData4(new sci::plot::Line<double, double>(x, y, xAxis4, yAxis4, sci::plot::LineStyle()));
 	std::shared_ptr<sci::plot::Points<double, double>> pointData4(new sci::plot::Points<double, double>(x, y, xAxis4, yAxis4, sci::plot::Symbol(squareSymbol), RgbColour(0.5, 0.0, 0.8)));
 	lineData4->draw(renderer, perInch(96));
 	pointData4->draw(renderer, perInch(96));

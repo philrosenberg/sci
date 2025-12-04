@@ -9,7 +9,7 @@ namespace sci
 	namespace plot
 	{
 		template<class X, class Y>
-		class Lines : public Data<X, Y, std::vector<X>, std::vector<Y>>
+		class Line : public Data<X, Y, std::vector<X>, std::vector<Y>>
 		{
 		public:
 			using data = Data<X, Y, std::vector<X>, std::vector<Y>>;
@@ -17,7 +17,7 @@ namespace sci
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
 
-			Lines(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
+			Line(std::span<const X> xs, std::span<const Y> ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis), xs, ys), m_lineStyle(lineStyle)
 			{
 			}
@@ -38,6 +38,8 @@ namespace sci
 			}
 			LineStyle m_lineStyle;
 		};
+
+
 
 		template<class X, class Y>
 		class Points : public Data<X, Y, std::vector<X>, std::vector<Y>>
