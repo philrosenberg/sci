@@ -1877,6 +1877,14 @@ namespace sci
 			rgbcolour m_titlecolour;
 		};
 
+		std::shared_ptr<PlotFrame> makePlotFrame(const Point topLeft, const Point bottomRight, const FillStyle& fillStyle = FillStyle(), const LineStyle& lineStyle = noLine,
+			sci::string title = sU(""), Length titleSize = Length(textPoint(12.0)), Length titleDistance = Length(textPoint(12.0)),
+			sci::string titleFont = sU(""), int32_t titleStyle = 0, rgbcolour titleColour = rgbcolour(0, 0, 0))
+		{
+			return std::make_shared<PlotFrame>(topLeft, bottomRight, fillStyle, lineStyle, title, titleSize,
+				titleDistance, titleFont, titleStyle, titleColour);
+		}
+
 
 		template<class T>
 		class HorizontalColourBar : public DrawableItem

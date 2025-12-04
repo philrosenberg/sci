@@ -62,7 +62,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	frame->SetClientSize(800, 800);
 	auto canvas = frame->getPanel()->getCanvas();
 
-	std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::plot::Point(unitless(0.02), unitless(0.08)), sci::plot::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(sci::graphics::RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(sci::graphics::millimetre(1.0)), title, sci::graphics::Length(sci::graphics::textPoint(12.0)), sci::plot::Length(sci::graphics::textPoint(30.0))));
+	auto box =  sci::plot::makePlotFrame(sci::plot::Point(unitless(0.02), unitless(0.08)), sci::plot::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(sci::graphics::RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(sci::graphics::millimetre(1.0)), title, sci::graphics::Length(sci::graphics::textPoint(12.0)), sci::plot::Length(sci::graphics::textPoint(30.0)));
 	std::vector<unitless> limits{ unitless(0.1), unitless(0.1 + 0.8 / 4.0), unitless(0.1 + 2.0 * 0.8 / 4.0), unitless(0.1 + 3.0 * 0.8 / 4.0), unitless(0.1 + 0.8) };
 	sci::plot::Axis<double>::Options options;
 	auto xAxis1 = sci::plot::makeAxis<double>(0.0, 1.0, false, sci::graphics::Point(limits[0],unitless(0.9)), sci::graphics::Point(limits[1], unitless(0.9)),  options.setTitle(sU("x-1d y-1d")));
@@ -293,7 +293,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 1: This plot should have an x and y axis running from 0.0-1.0 inside\na 0.8 level grey box with a 1 mm wide outline and no data."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 1: This plot should have an x and y axis running from 0.0-1.0 inside\na 0.8 level grey box with a 1 mm wide outline and no data."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		auto xAxis = sci::plot::makeAxis<double>(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x")));
 		auto yAxis = sci::plot::makeAxis<double>(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y")));
@@ -312,7 +312,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have square data sci::graphics::Points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 2: This plot should be identical to Plot 1, but have square data sci::graphics::Points at [0.1,0.2],[0.5,0.4],[0.8,0.6]"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
 		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
@@ -342,7 +342,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
 		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
@@ -371,7 +371,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		std::array<double, 3> xs{ 0.1, 0.5, 0.8 };
 		std::array<double, 3> ys{ 0.2, 0.4, 0.6 };
@@ -400,7 +400,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 3: This plot should be identical to Plot 2, but have autoscaled axes, which\nshould range from 0.065-0.835 and 0.18-0.62"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		std::array<double, 3> xs1{ 0.2, 1.0, 1.6 };
 		std::array<double, 3> ys1{ 0.2, 0.4, 0.6 };
@@ -434,7 +434,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should be identical to Plot 3, but have autoscaled axes, where\nthe errors bars contribute to the autoscaling"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		std::array<double, 5> xs1{ 0.1, 0.5, 0.4, 0.2, 0.1 };
 		std::array<double, 5> ys1{ 0.2, 0.4, 0.6, 0.4, 0.5 };
@@ -469,7 +469,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		auto colourScale = sci::plot::makeColourScale<double>(std::vector<double>{1.0, 10.0}, std::vector<sci::graphics::RgbColour>{sci::graphics::RgbColour(1.0, 0.0, 0.0), sci::graphics::RgbColour(0.0, 0.0, 1.0)});
 		auto sizeScale = sci::plot::makeSizeScale<double>(std::vector<double>{1.0, 10.0}, std::vector<double>{1.0, 10.0});
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Varying Symbol Plot. Going left to right, points should transition from small to big and red to blue."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::graphics::Point(unitless(0.02), unitless(0.08)), sci::graphics::Point(unitless(0.92), unitless(0.98)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Varying Symbol Plot. Going left to right, points should transition from small to big and red to blue."), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		auto xAxis = sci::plot::makeAxis<double>(0.0, 11.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x")));
 		auto yAxis = sci::plot::makeAxis<double>(0.0, 4.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("y")));
@@ -494,7 +494,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 		frame->SetClientSize(1200, 400);
 		auto canvas = frame->getPanel()->getCanvas();
 
-		std::shared_ptr<sci::plot::PlotFrame> box(new sci::plot::PlotFrame(sci::plot::Point(unitless(0.03), unitless(0.15)), sci::graphics::Point(unitless(0.98), unitless(0.9)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should show an exponentially decreasing sin and cos wave and their average on a window with a size of 1200 x 400.\n The cos wave should have dot dash markings and the sum should have identical dot dash markings and be a wine red colour"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0))));
+		auto box = sci::plot::makePlotFrame(sci::plot::Point(unitless(0.03), unitless(0.15)), sci::graphics::Point(unitless(0.98), unitless(0.9)), sci::plot::FillStyle(RgbColour(0.8, 0.8, 0.8)), sci::plot::LineStyle(millimetre(1.0)), sU("Plot 4: This plot should show an exponentially decreasing sin and cos wave and their average on a window with a size of 1200 x 400.\n The cos wave should have dot dash markings and the sum should have identical dot dash markings and be a wine red colour"), sci::graphics::Length(textPoint(12.0)), sci::graphics::Length(textPoint(30.0)));
 		sci::plot::Axis<double>::Options options;
 		auto xAxis = sci::plot::makeAxis<double>(0.0, 2500, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.98), unitless(0.85)), options.setTitle(sU("x")));
 		auto yAxis = sci::plot::makeAxis<double>(-1.0, 1.0, false, sci::graphics::Point(unitless(0.06), unitless(0.85)), sci::graphics::Point(unitless(0.06), unitless(0.15)), options.setTitle(sU("y")));
