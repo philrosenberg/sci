@@ -9,10 +9,10 @@ namespace sci
 	namespace plot
 	{
 		template<class X, class Y>
-		class Line : public Data<X, Y, std::vector<X>, std::vector<Y>>
+		class Line : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, std::vector<X>, std::vector<Y>>;
+			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>>;
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
@@ -30,8 +30,8 @@ namespace sci
 					return;
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(getNPoints());
-				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
-				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
+				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
+				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
 				for (size_t i = 0; i < points.size(); ++i)
 				{
 					points[i] = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
@@ -49,10 +49,10 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class Points : public Data<X, Y, std::vector<X>, std::vector<Y>>
+		class Points : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, std::vector<X>, std::vector<Y>>;
+			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>>;
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
@@ -74,8 +74,8 @@ namespace sci
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), millimetre(0.0));
 
-				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
-				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
+				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
+				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
 					m_symbol.draw(getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex), renderer);

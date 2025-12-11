@@ -9,10 +9,10 @@ namespace sci
 	namespace plot
 	{
 		template<class X, class Y>
-		class HorizontalErrorBars : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<X>, std::vector<X>>
+		class HorizontalErrorBars : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<X, 1>, GridData<X, 1>>
 		{
 		public:
-			using data = Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<X>, std::vector<X>>;
+			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<X, 1>, GridData<X, 1>>;
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
@@ -35,10 +35,10 @@ namespace sci
 				renderer.setPen(m_style.getColour(), m_style.getWidth(), m_style.getPattern());
 
 				//note that we render in two halves so that if any of the error bars are negative we stil hit the x, y point
-				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
-				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
-				const std::vector<X>& minXs = data::getData<2>(axisSetIndex);
-				const std::vector<X>& maxXs = data::getData<3>(axisSetIndex);
+				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
+				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
+				const GridData<X, 1>& minXs = data::getData<2>(axisSetIndex);
+				const GridData<X, 1>& maxXs = data::getData<3>(axisSetIndex);
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{
 					Point pCentre = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
@@ -72,10 +72,10 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class VerticalErrorBars : public Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<Y>, std::vector<Y>>
+		class VerticalErrorBars : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, std::vector<X>, std::vector<Y>, std::vector<X>, std::vector<X>>;
+			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>, GridData<Y, 1>>;
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
@@ -96,10 +96,10 @@ namespace sci
 
 				renderer.setPen(m_style.getColour(), m_style.getWidth(), m_style.getPattern());
 
-				const std::vector<X>& xs = data::getData<0>(axisSetIndex);
-				const std::vector<Y>& ys = data::getData<1>(axisSetIndex);
-				const std::vector<Y>& minYs = data::getData<2>(axisSetIndex);
-				const std::vector<Y>& maxYs = data::getData<3>(axisSetIndex);
+				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
+				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
+				const GridData<Y, 1>& minYs = data::getData<2>(axisSetIndex);
+				const GridData<Y, 1>& maxYs = data::getData<3>(axisSetIndex);
 
 				for (size_t i = 0; i < getNPoints(); ++i)
 				{

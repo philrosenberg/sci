@@ -9,7 +9,7 @@ namespace sci
 {
 	namespace plot
 	{
-		template<int Dimensions1, int Dimensions2, class X, class Y, class Z>
+		template<int Dimensions1, int Dimensions2, class X, class Y, class Z> requires((Dimensions1 == 1 || Dimensions1 == 2) && (Dimensions2 == 1 || Dimensions2 == 2))
 		class Grid : public Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
 		{
 		public:
@@ -17,8 +17,11 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Grid(std::span<const X> xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
-				requires(Dimensions1 == 1 && Dimensions2 == 1)
+
+			//x and y should be 1d or 2d to match the dimensions passed in
+			template<class XCONTAINER, class YCONTAINER, class ZGRID>
+			Grid(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
+				requires(XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
@@ -26,43 +29,7 @@ namespace sci
 
 				m_colourscale = colourScale;
 			}
-			
-			Grid(const sci::GridData<X, 2>& xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
-				requires(Dimensions1 == 2 && Dimensions2 == 2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
-				//sci::assertThrow(ys.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
 
-				//sci::assertThrow(xs.shape()[1] == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
-				//sci::assertThrow(ys.shape()[1] == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
-
-
-				m_colourscale = colourScale;
-			}
-
-			Grid(std::span<const X> xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
-				requires(Dimensions1 == 1 && Dimensions2 == 2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.size() == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
-				//sci::assertThrow(ys.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
-				//sci::assertThrow(ys.shape()[1] == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
-
-
-				m_colourscale = colourScale;
-			}
-
-			Grid(const sci::GridData<X, 2>& xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
-				requires(Dimensions1 == 2 && Dimensions2 == 1)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape()[0] == zs.shape()[0] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
-				//sci::assertThrow(xs.shape()[1] == zs.shape()[1] + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with xs with a size 1 larger than zs."));
-				//sci::assertThrow(ys.size() == zs[1].size() + 1, sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor must be called with ys with a size 1 larger than zs."));
-
-				m_colourscale = colourScale;
-			}
 			
 			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
 			{
@@ -184,7 +151,16 @@ namespace sci
 			}
 		};
 
-		template<int Dimensions1, int Dimensions2, class X, class Y, class Z>
+		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
+		auto makeGrid(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale)
+		{
+			constexpr int Dimensions1 = getPlotableNDims<XCONTAINER, X>();
+			constexpr int Dimensions2 = getPlotableNDims<YCONTAINER, Y>();
+			static_assert (XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>, "Attempted to create a sci::plot::Grid with data that is not plotable.");
+			return std::make_shared<Grid<Dimensions1, Dimensions2, X, Y, Z>>(xs, ys, zs, xAxis, yAxis, colourScale);
+		}
+
+		template<int Dimensions1, int Dimensions2, class X, class Y, class Z> requires((Dimensions1 == 1 || Dimensions1 == 2) && (Dimensions2 == 1 || Dimensions2 == 2))
 		class Contours : public Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
 		{
 		public:
@@ -192,8 +168,10 @@ namespace sci
 			using data::hasData;
 			using data::getNPoints;
 			using data::getPointFromLoggedIfNeededData;
-			Contours(std::span<const X> xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 1 && Dimensions2 == 1)
+
+			template<class XCONTAINER, class YCONTAINER, class ZGRID>
+			Contours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
+				requires(XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
@@ -204,83 +182,12 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			Contours(const sci::GridData<X, 2>& xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 2 && Dimensions2 ==2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = colourScale;
-				m_levelScale = nullptr;
-				m_lineStyle = lineStyle;
-			}
-			
-			Contours(std::span<const X> xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 1 && Dimensions2 == 2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = colourScale;
-				m_levelScale = nullptr;
-				m_lineStyle = lineStyle;
-			}
-
-			Contours(const sci::GridData<X, 2>& xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 2 && Dimensions2 == 1)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = colourScale;
-				m_levelScale = nullptr;
-				m_lineStyle = lineStyle;
-			}
-
-			Contours(std::span<const X> xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 1 && Dimensions2 == 1)
+			template<class XCONTAINER, class YCONTAINER, class ZGRID>
+			Contours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
+				requires(XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), xs, ys, zs)
 			{
 				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = nullptr;
-				m_levelScale = levelScale;
-				m_lineStyle = lineStyle;
-			}
-
-			Contours(const sci::GridData<X, 2>& xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 2 && Dimensions2 == 2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = nullptr;
-				m_levelScale = levelScale;
-				m_lineStyle = lineStyle;
-			}
-
-			Contours(std::span<const X> xs, const sci::GridData<Y, 2>& ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 1 && Dimensions2 == 2)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.size() == zs.shape()[0], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
-				//sci::assertThrow(ys.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
-
-				m_colourscale = nullptr;
-				m_levelScale = levelScale;
-				m_lineStyle = lineStyle;
-			}
-
-			Contours(const sci::GridData<X, 2>& xs, std::span<const Y> ys, const sci::GridData<Z, 2>& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
-				requires(Dimensions1 == 2 && Dimensions2 == 1)
-				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), xs, ys, zs)
-			{
-				//sci::assertThrow(xs.shape() == zs.shape(), sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with xs and zs of different lengths."));
 				//sci::assertThrow(ys.size() == zs.shape()[1], sci::err(sci::SERR_PLOT, plotDataErrorCode, "GridData constructor called with ys and zs of different lengths."));
 
 				m_colourscale = nullptr;
@@ -883,6 +790,26 @@ namespace sci
 			std::shared_ptr<LevelScale<Z>> m_levelScale;
 			LineStyle m_lineStyle;
 		};
+
+
+
+		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
+		auto makeContours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
+		{
+			constexpr int Dimensions1 = getPlotableNDims<XCONTAINER, X>();
+			constexpr int Dimensions2 = getPlotableNDims<YCONTAINER, Y>();
+			static_assert (XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>, "Attempted to create a sci::plot::Contours with data that is not plotable.");
+			return std::make_shared<Contours<Dimensions1, Dimensions2, X, Y, Z>>(xs, ys, zs, xAxis, yAxis, colourScale, lineStyle);
+		}
+
+		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
+		auto makeContours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
+		{
+			constexpr int Dimensions1 = getPlotableNDims<XCONTAINER, X>();
+			constexpr int Dimensions2 = getPlotableNDims<YCONTAINER, Y>();
+			static_assert (XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>, "Attempted to create a sci::plot::Contours with data that is not plotable.");
+			return std::make_shared<Contours<Dimensions1, Dimensions2, X, Y, Z>>(xs, ys, zs, xAxis, yAxis, levelScale, lineStyle);
+		}
 	}
 }
 

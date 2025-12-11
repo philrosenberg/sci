@@ -163,20 +163,26 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 	auto colourScaleContinuous = sci::plot::makeColourScale<double>(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	
-	std::shared_ptr<sci::plot::Grid<1, 1, double, double, double>> grid1(new sci::plot::Grid<1, 1, double, double, double>(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid<2, 1, double, double, double>> grid2(new sci::plot::Grid<2, 1, double, double, double>(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid<1, 2, double, double, double>> grid3(new sci::plot::Grid<1, 2, double, double, double>(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous));
-	std::shared_ptr<sci::plot::Grid<2, 2, double, double, double>> grid4(new sci::plot::Grid<2, 2, double, double, double>(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous));
+	static_assert(sci::plot::Has2DShape<sci::GridData<double, 2>>, "A GridData<double,2> with a double axis should have 2d shape");
+	static_assert(sci::plot::ArrayPlotable<std::vector<double>, double>, "A vector<double> with a double axis should be ArrayPlottable");
+	static_assert(sci::plot::GridPlotable<sci::GridData<double, 2>, double>, "A GridData<double,2> with a double axis should be GridPlottable");
+	static_assert(!sci::plot::GridPlotable<std::vector<double>, double>, "A vector<double> with a double axis should not be GridPlottable");
+	static_assert(!sci::plot::ArrayPlotable<sci::GridData<double, 2>, double>, "A GridData<double,2> with a double axis should not be ArrayPlottable");
+	
+	auto grid1 = sci::plot::makeGrid(x1d, y1d, zGrid, xAxis1, yAxis3, colourScaleContinuous);
+	auto grid2 = sci::plot::makeGrid(x2d, y1d, zGrid, xAxis2, yAxis3, colourScaleContinuous);
+	auto grid3 = sci::plot::makeGrid(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous);
+	auto grid4 = sci::plot::makeGrid(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous);
 
-	std::shared_ptr<sci::plot::Contours<1, 1, double, double, double>> shade1(new sci::plot::Contours<1, 1, double, double, double>(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours<2, 1, double, double, double>> shade2(new sci::plot::Contours<2, 1, double, double, double>(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours<1, 2, double, double, double>> shade3(new sci::plot::Contours<1, 2, double, double, double>(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine));
-	std::shared_ptr<sci::plot::Contours<2, 2, double, double, double>> shade4(new sci::plot::Contours<2, 2, double, double, double>(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine));
+	auto shade1 = sci::plot::makeContours(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	auto shade2 = sci::plot::makeContours(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	auto shade3 = sci::plot::makeContours(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	auto shade4 = sci::plot::makeContours(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine);
 
-	std::shared_ptr<sci::plot::Contours<1, 1, double, double, double>> contour1(new sci::plot::Contours<1, 1, double, double, double>(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours<2, 1, double, double, double>> contour2(new sci::plot::Contours<2, 1, double, double, double>(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours<1, 2, double, double, double>> contour3(new sci::plot::Contours<1, 2, double, double, double>(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle));
-	std::shared_ptr<sci::plot::Contours<2, 2, double, double, double>> contour4(new sci::plot::Contours<2, 2, double, double, double>(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle));
+	auto contour1 = sci::plot::makeContours(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle);
+	auto contour2 = sci::plot::makeContours(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle);
+	auto contour3 = sci::plot::makeContours(x1d, y2d, zCont, xAxis3, yAxis1, levelScale, contourStyle);
+	auto contour4 = sci::plot::makeContours(x2d, y2d, zCont, xAxis4, yAxis1, levelScale, contourStyle);
 
 	auto colourbarContour = sci::plot::makeHorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22)), sci::graphics::Point(limits[4], unitless(0.19)), colourScaleDiscrete, sci::plot::Axis<double>::Options(sU("Discrete Colourbar used by Shade")));
 	auto colourbarGrid = sci::plot::makeHorizontalColourBar(sci::graphics::Point(limits[0], unitless(0.22 - 0.09)), sci::graphics::Point(limits[4], unitless(0.19-0.09)), colourScaleContinuous, sci::plot::Axis<double>::Options(sU("Continuous Colourbar used by Grid")));

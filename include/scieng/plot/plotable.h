@@ -18,6 +18,97 @@ namespace sci
 	{
 		const int plotDataErrorCode = 1;
 
+
+		template<class T>
+		concept Has2DShape = requires(T t)
+		{
+			t.shape()[0];
+			t.shape()[1];
+		};
+
+		template<class T>
+		concept Has2DExtent = requires(T t)
+		{
+			t.extent()[0];
+			t.extent()[1];
+		};
+
+		template<class T>
+		concept Has2DDimensions = requires(T t)
+		{
+			t.dimensions()[0];
+			t.dimensions()[1];
+		};
+
+		template<class CONTAINER2D, class DATATYPE>
+		concept GridPlotable =
+			std::input_iterator<typename CONTAINER2D::const_iterator>
+			&& std::convertible_to<typename CONTAINER2D::value_type, DATATYPE>
+			&& (Has2DExtent< CONTAINER2D> || Has2DShape<CONTAINER2D> || Has2DDimensions<CONTAINER2D>);
+
+		template<class CONTAINER1D, class DATATYPE>
+		concept ArrayPlotable =
+			std::ranges::range<CONTAINER1D>
+			&& std::input_iterator<typename CONTAINER1D::const_iterator>
+			&& std::convertible_to<typename CONTAINER1D::value_type, DATATYPE>
+			&& !(Has2DExtent< CONTAINER1D> || Has2DShape<CONTAINER1D> || Has2DDimensions<CONTAINER1D>);
+
+		template<class XCONTAINER, class YCONTAINER, class X, class Y>
+		concept XYPlotable =
+			ArrayPlotable<XCONTAINER, X>
+			&& ArrayPlotable<YCONTAINER, Y>;
+
+		template<int XDIMS, int YDIMS, int ZDIMS, class XCONTAINER, class YCONTAINER, class ZCONTAINER, class X, class Y, class Z>
+		concept XYZPlotable =
+			((XDIMS == 1 && ArrayPlotable<XCONTAINER, X>) || (XDIMS == 2 && GridPlotable<XCONTAINER, X>))
+			&& ((YDIMS == 1 && ArrayPlotable<YCONTAINER, Y>) || (YDIMS == 2 && GridPlotable<YCONTAINER, Y>))
+			&& ((ZDIMS == 1 && ArrayPlotable<ZCONTAINER, Z>) || (ZDIMS == 2 && GridPlotable<ZCONTAINER, Z>));
+
+		template<class CONTAINER, class DATA>
+		constexpr int getPlotableNDims()
+			requires(ArrayPlotable<CONTAINER, DATA> || GridPlotable<CONTAINER, DATA>)
+		{
+			if constexpr (ArrayPlotable<CONTAINER, DATA>)
+				return 1;
+			return 2;
+		}
+
+		template<class T, class...Others> requires(sizeof...(Others) == 0)
+		constexpr bool AreAllGridData_v()
+		{
+			return IsGridData<T>;
+		}
+
+		template<class T, class...Others> requires(sizeof...(Others) > 0)
+		constexpr bool AreAllGridData_v()
+		{
+			return IsGridData<T> && AreAllGridData_v<Others...>();
+		}
+
+		template <class T, class...Others>
+		class AreAllGridData
+		{
+			const bool value = AreAllGridData_v<T, Others...>();
+		};
+
+		template<class T>
+		inline constexpr bool testN()
+		{
+			return false;
+		}
+
+		template< class T >
+		inline constexpr bool testN()
+			requires (IsGridDims<T, 2>)
+		{
+			return true;
+		}
+
+		inline void test()
+		{
+			static_assert(testN<sci::GridData<double, 2>>(), "failed test");
+		}
+
 		//This class is the base class for all plotable items, it provides the interface for
 		//the items
 		template<class T, class U>
@@ -118,7 +209,7 @@ namespace sci
 		//This class is separated from plotable as there may be some cases where the data storage model
 		//does not work and something more custom is needed, so this separates the concerns of rendering
 		//and storage.
-		template<class X, class Y, class... CONTAINERS>
+		template<class X, class Y, class... CONTAINERS> requires(AreAllGridData_v<CONTAINERS...>())
 		class Data : public PlotableItem<X, Y>
 		{
 		public:
@@ -204,27 +295,57 @@ namespace sci
 				return m_axes[setIndex];
 			}
 		private:
+			template<class T, class... REMAINING>
+			void copyLinear(const T& next, REMAINING... remaining)
+			{
+				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
+				using destinationType = std::remove_cvref_t<decltype(std::get<index>(m_data))>;
 
-			template<class... REMAINING>
-			void copyLinear(const auto &next, REMAINING... remaining)
-			{
-				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
-				auto& linear = std::get<index>(m_data);
-				linear.assign(next.begin(), next.end());
-				if constexpr ( index != nDimensions - 1)
-					copyLinear(remaining...);
-			}
-			template<class... REMAINING>
-			void copyLinear(const sci::GridData<double, 2>& next, REMAINING... remaining)
-			{
-				//Need to specialize this for grids as there is no assign method for
-				// multi dimensional grids
-				constexpr int index = nDimensions - sizeof...(REMAINING) - 1;
-				auto& linear = std::get<index>(m_data);
-				linear = next;
+				verifyCopyable<T, destinationType>();//this gives better error messages than a within function static_assert
+
+				if constexpr (std::is_convertible_v<T, destinationType>)
+					std::get<index>(m_data) = next;
+				else if constexpr( IsGridDims<destinationType, 1>)
+				{
+					std::get<index>(m_data).assign(next.begin(), next.end());
+				}
+				else if constexpr(IsGridDims<destinationType, 2>)
+				{
+					std::array<size_t, 2> shape{ 0,0 };
+					if constexpr(Has2DExtent<T>)
+					{
+						auto e = next.extent;
+						shape = { e[0], e[1] };
+					}
+					else if constexpr (Has2DShape<T>)
+					{
+						auto s = next.shape;
+						shape = { s[0], s[1] };
+					}
+					else if constexpr (Has2DDimensions<T>)
+					{
+						auto d = next.dimensions;
+						shape = { d[0], d[1] };
+					}
+					auto& linear = std::get<index>(m_data);
+					linear.reshape(shape);
+					for (size_t i = 0; i < shape[0]; ++i)
+						for (size_t j = 0; j < shape[1]; ++j)
+							linear[i][j] = next[i][j];
+				}
+
 				if constexpr (index != nDimensions - 1)
 					copyLinear(remaining...);
 			}
+
+			template<class T, class U>
+			static void verifyCopyable()
+			{
+				//this gives better error reporting asI can see the types
+				static_assert(std::is_convertible_v<T, U> || IsGridDims<U, 1> || IsGridDims < U, 1>, "The contents of type T cannot be assigned to the contents of type U.");
+
+			}
+
 			template<int index>
 			void calculateLog()
 			{
@@ -236,6 +357,7 @@ namespace sci
 				if constexpr (index != nDimensions - 1)
 					calculateLog<index + 1>();
 			}
+
 			template <int index>
 			void autoscaleAxesRecursive(size_t setIndex)
 			{
@@ -244,26 +366,11 @@ namespace sci
 				if constexpr (index != nDimensions - 1)
 					autoscaleAxesRecursive<index + 1>(setIndex);
 			}
+
 			containersTuple m_data;
 			containersTuple m_dataLogged;
 			std::vector<axisTuple> m_axes;
 		};
-
-		template<class XCONTAINER, class YCONTAINER, class X, class Y>
-		concept XYPlotable =
-			std::input_iterator<typename XCONTAINER::const_iterator>
-			&& std::input_iterator<typename YCONTAINER::const_iterator>
-			&& std::convertible_to<typename XCONTAINER::value_type, X>
-			&& std::convertible_to<typename YCONTAINER::value_type, Y>;
-
-		template<class XCONTAINER, class YCONTAINER, class ZCONTAINER, class X, class Y, class Z>
-		concept XYZPlotable =
-			std::input_iterator<typename XCONTAINER::const_iterator>
-			&& std::input_iterator<typename YCONTAINER::const_iterator>
-			&& std::input_iterator<typename ZCONTAINER::const_iterator>
-			&& std::convertible_to<typename XCONTAINER::value_type, X>
-			&& std::convertible_to<typename YCONTAINER::value_type, Y>
-			&& std::convertible_to<typename ZCONTAINER::value_type, Z>;
 	}
 }
 
