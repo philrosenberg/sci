@@ -930,6 +930,15 @@ namespace sci
 	};
 
 
+
+	template <class T>
+	concept IsGridData =
+		requires(std::remove_cvref_t < T > t)
+	{
+		{ GridData<typename T::value_type, T::ndims>() }->std::same_as<std::remove_cvref_t < T >>;
+	};
+
+
 	/*struct plus_assign
 	{
 		template <class T, class U>

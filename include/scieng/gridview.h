@@ -28,12 +28,10 @@ namespace sci
 		t.getView();
 		typename T::value_type;
 	};
+
 	template<class T, size_t NDIMS>
-	concept IsGridDims = IsGrid<T> &&
-		requires(std::remove_cvref_t < T > t)
-	{
-		t.ndims == NDIMS;
-	};
+	concept IsGridDims = IsGrid<T> && (T::ndims == NDIMS);
+
 	/*template<class T, size_t NDIMS, class VALUE_TYPE>
 	concept IsGridDimsVt = IsGridDims<T, NDIMS> &&
 		std::is_convertible_v< std::remove_cvref_t <T::value_type>, VALUE_TYPE>;
