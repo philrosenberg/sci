@@ -42,6 +42,7 @@
 
 namespace sci
 {
+#ifdef _WIN32
 	inline UINT getWindowsCodePage()
 	{
 		char* localeTemp = std::setlocale(LC_ALL, nullptr);
@@ -59,6 +60,7 @@ namespace sci
 			return CP_ACP;
 		return result;
 	}
+#endif
 
 	//**************************************************
 	//codepageTo functions
@@ -93,6 +95,12 @@ namespace sci
 		WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
 		return buffer;
 	}
+#else
+	inline std::string codepageFrom(const std::wstring& str, char replacementCharacter = '?')
+	{
+		std::u8string temp = utf8From(str);
+		return std::string(temp.begin(), temp.end());
+	}
 #endif
 
 	inline std::string codepageFrom(const std::u8string& str, char replacementCharacter = '?')
@@ -100,7 +108,8 @@ namespace sci
 #ifdef _WIN32
 		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf8From(string);
+		std::u8string temp = utf8From(str);
+		return std::string(temp.begin(), temp.end());
 #endif
 	}
 
@@ -109,7 +118,8 @@ namespace sci
 #ifdef _WIN32
 		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf8From(string);
+		std::u8string temp = utf8From(str);
+		return std::string(temp.begin(), temp.end());
 #endif
 	}
 
@@ -118,7 +128,8 @@ namespace sci
 #ifdef _WIN32
 		return codepageFrom(nativeUnicodeFrom(str), replacementCharacter);
 #else
-		return utf8From(string);
+		std::u8string temp = utf8From(str);
+		return std::string(temp.begin(), temp.end());
 #endif
 	}
 
@@ -130,7 +141,7 @@ namespace sci
 	//*************************************
 	//toCodepage functions
 	//*************************************
-
+#
 	inline std::string toCodepage(const std::wstring& str, char replacementCharacter = '?')
 	{
 		return codepageFrom(str, replacementCharacter);

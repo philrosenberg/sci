@@ -100,8 +100,8 @@ namespace sci
 	template<class TOSTRING, class FROMSTRING>
 	TOSTRING stringConvert(const FROMSTRING& string)
 	{
-		sci::string intermediate = toSci(string);
-		return fromSci(intermediate);
+		//sci::string intermediate = toSci(string);
+		return fromSci<TOSTRING>(string);
 	}
 }
 
@@ -272,14 +272,14 @@ inline std::ostream& operator << (std::ostream& stream, const sci::string& str)
 
 inline std::ostream& operator << (std::ostream& stream, const sci::char_t* str)
 {
-	return static_cast<std::wostream&>(stream << sci::toUtf8(sci::string(str)));
+	return static_cast<std::ostream&>(stream << sci::toUtf8(sci::string(str)));
 }
 
 inline std::istream& operator >> (std::istream& stream, sci::string& str)
 {
 	std::string temp;
 	std::istream& result = static_cast<std::istream&>(stream >> temp);
-	str = sci::fromUtf8(temp);
+	str = sci::fromNativeUnicode<sci::string>(temp);
 	return result;
 }
 #endif

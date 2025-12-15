@@ -359,7 +359,11 @@ namespace sci
 		return utf32From(temp);
 	}
 #else
-	inline std::u32string& utf32From(const std::string& string)
+	inline std::u32string utf32From(const std::wstring& string)
+	{
+		return std::u32string(string.begin(), string.end());
+	}
+	inline std::u32string utf32From(const std::string& string)
 	{
 		std::u8string temp(string.begin(), string.end());
 		return utf32From(temp);
@@ -390,7 +394,12 @@ namespace sci
 		return std::u16string(string.begin(), string.end());
 	}
 #else
-	inline std::u16string& utf16From(const std::string& string)
+	inline std::u16string utf16From(const std::wstring& string)
+	{
+		std::u32string temp(string.begin(), string.end());
+		return utf16From(temp);
+	}
+	inline std::u16string utf16From(const std::string& string)
 	{
 		std::u8string temp(string.begin(), string.end());
 		return utf16From(temp);
@@ -422,7 +431,12 @@ namespace sci
 		return utf8From(temp);
 	}
 #else
-	inline std::u8string& utf8From(const std::string& string)
+	inline std::u8string utf8From(const std::wstring& string)
+	{
+		std::u32string temp(string.begin(), string.end());
+		return utf8From(temp);
+	}
+	inline std::u8string utf8From(const std::string& string)
 	{
 		return std::u8string(string.begin(), string.end());
 	}
@@ -452,20 +466,20 @@ namespace sci
 		return string;
 	}
 #else
-	inline std::wstring nativeUnicodeFrom(const std::u8string& string)
+	inline std::string nativeUnicodeFrom(const std::u8string& string)
 	{
 		std::u8string temp = utf8From(string);
-		return std::wstring(temp.begin(), temp.end());
+		return std::string(temp.begin(), temp.end());
 	}
-	inline std::wstring nativeUnicodeFrom(const std::u16string& string)
+	inline std::string nativeUnicodeFrom(const std::u16string& string)
 	{
 		std::u8string temp = utf8From(string);
-		return std::wstring(temp.begin(), temp.end());
+		return std::string(temp.begin(), temp.end());
 	}
-	inline std::wstring nativeUnicodeFrom(const std::u32string& string)
+	inline std::string nativeUnicodeFrom(const std::u32string& string)
 	{
 		std::u8string temp = utf8From(string);
-		return std::wstring(temp.begin(), temp.end());
+		return std::string(temp.begin(), temp.end());
 	}
 	inline const std::string& nativeUnicodeFrom(const std::string& string)
 	{
