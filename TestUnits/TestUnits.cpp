@@ -77,21 +77,24 @@ int main()
 
 
 
-	static_assert(sci::ExponentTraits<2>::validSi); //2 is a valid SI exponent "hecto"
-	static_assert(sci::ExponentTraits<-2>::validSi); //-2 is a valid SI exponent "centi"
-	static_assert(sci::ExponentTraits<3>::validSi); //3 is a valid SI exponent "Mega"
-	static_assert(sci::ExponentTraits<-3>::validSi); //-3 is a valid SI exponent "milli"
-	static_assert(sci::ExponentTraits<6>::validSi); //6 is a valid SI exponent
-	static_assert(sci::ExponentTraits<-6>::validSi); //-6 is a valid SI exponent
-	static_assert(sci::ExponentTraits<9>::validSi); //9 is a valid SI exponent
-	static_assert(sci::ExponentTraits<-9>::validSi); //-9 is a valid SI exponent
-	static_assert(sci::ExponentTraits<12>::validSi); //12 is a valid SI exponent
-	static_assert(sci::ExponentTraits<-12>::validSi); //-12 is a valid SI exponent
-	static_assert(sci::ExponentTraits<15>::validSi); //15 is a valid SI exponent
-	static_assert(sci::ExponentTraits<-15>::validSi); //-15 is a valid SI exponent
-	static_assert(!sci::ExponentTraits<4>::validSi); //4 is not a valid SI exponent
+	static_assert(sci::IsValidSiExponent<0>); //0 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<1>); //1 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-1>); //-1 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<2>); //2 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-2>); //-2 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<3>); //3 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-3>); //-3 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<6>); //6 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-6>); //-6 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<9>); //9 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-9>); //-9 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<12>); //12 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-12>); //-12 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<15>); //15 is a valid SI exponent
+	static_assert(sci::IsValidSiExponent<-15>); //-15 is a valid SI exponent
+	static_assert(!sci::IsValidSiExponent<4>); //4 is not a valid SI exponent
 
-	std::string milliString = sci::ExponentTraits<-3>::getName<std::string>();
+	std::string milliString = sci::getExponentName<sci::milli, std::string>();
 	//std::string invalidString = sci::ExponentTraits<4>::getName<std::string>(); //should generate error
 	//int invalidString2 = sci::ExponentTraits<-3>::getName<int>(); //should generate error
 

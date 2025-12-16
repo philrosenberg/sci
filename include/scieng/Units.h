@@ -7,34 +7,10 @@
 
 //version 1.0.0
 
-//if you intend utilising windows codepage text (i.e. not unicode), then you may
-//wish to #define the following in your code before #invlude<units.h>
-//#define ALTERNATE_MICRO "u"
-//CP-1253 "Western Latin" characters for unicode symbols
-//you may wish to create your own versions of these #defines
-//if you are not in a region using CP-1253 or you want to
-//use your own unicode alternatives
-#if (defined _WIN32 && !defined UNITS_H_NOT_CP1253) || defined UNITS_H_FORCE_CP1253
-#define UNITS_H_USING_CP1253
-#define UNITS_H_STR8(STR) (STR)
-#define ALTERNATE_MICRO "\xe6"
-#define ALTERNATE_OMEGA "\xea"
-#define ALTERNATE_PER_MILLE "0/00"
-#define ALTERNATE_BASIS_POINT "0/000"
-#define ALTERNATE_DEGREE "\xf8"
-#define ALTERNATE_ARCMINUTE "'"
-#define ALTERNATE_ARCSECOND "\""
-#define ALTERNATE_ANGSTROM_SHORT "\x8e"
-#define ALTERNATE_ANGSTROM_LONG "\x8e" "ngstrom"
-#define ALTERNATE_RANKINE "\xf8" "Ra"
-#else
-#define UNITS_H_USING_UNICODE
-#define UNITS_H_STR8(STR) ((char*)u8##STR)
-#endif
-
 #include<vector>
 #include<limits>
-#include<string>
+#include"string.h"
+#include"codepage.h"
 #include"Traits.h"
 namespace sci
 {
@@ -60,69 +36,192 @@ namespace sci
 	const int64_t zepto = -21;
 	const int64_t yocto = -24;
 
-	namespace unitsPrivate
-	{
-		template<int64_t EXPONENT>
-		constexpr inline bool isMetricExponent()
-		{
-			return (EXPONENT > -4 && EXPONENT < 4) || (EXPONENT > -25 && EXPONENT < 25 && EXPONENT % 3 == 0);
-		}
-	}
-	template<int64_t EXPONENT>
-	struct ExponentTraits
-	{
-		constexpr static bool validSi = false;
-		//we can't just put false in the static_assert. Some compilers see there is no dependence on the
-		//template parameter and expand the static_assert even when this template is never instantiated
-		template<class STRING> static STRING getName(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
-		template<class STRING> static STRING getPrefix(){ static_assert(unitsPrivate::isMetricExponent<EXPONENT>(), "Cannot get a string for an exponent not represented by the standard metric prefixes"); }
-	};
+	template<int64_t exponent>
+	concept IsValidSiExponent = (exponent == yotta || exponent == zetta || exponent == exa || exponent == peta
+		|| exponent == tera || exponent == giga || exponent == mega || exponent == kilo
+		|| exponent == hecto || exponent == deca || exponent == 0 || exponent == deci
+		|| exponent == centi || exponent == milli || exponent == micro || exponent == nano
+		|| exponent == pico || exponent == femto || exponent == atto || exponent == zepto
+		|| exponent == yocto);
 
-#define MAKE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION)\
-template<>\
-struct ExponentTraits<VALUE>\
-{\
-	constexpr static bool validSi = true;\
-	template<class STRING> static STRING getName(){ static_assert(sizeof(STRING)==-1, "sci::ExponentTraits<VALUE>::getName<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string"); }\
-	template<> static std::string getName<std::string>() { return UNITS_H_STR8(LONG_NAME); }\
-	template<> static std::wstring getName<std::wstring>() { return L##LONG_NAME; }\
-	template<> static std::basic_string<char8_t> getName<std::basic_string<char8_t>>() { return u8##LONG_NAME; }\
-	template<> static std::u16string getName<std::u16string>() { return u##LONG_NAME; }\
-	template<> static std::u32string getName<std::u32string>() { return U#LONG_NAME; }\
-	template<class STRING> static STRING getPrefix(){ static_assert(sizeof(STRING)==-1, "sci::ExponentTraits<VALUE>::getPrefix<STRING> must have STRING be a std::string, std::wstring, std::basic_string<char8>, std::u16string or std::u32string");}\
-	template<> static std::string getPrefix<std::string>() { return UNITS_H_STR8(ABBREVIATION); }\
-	template<> static std::wstring getPrefix<std::wstring>() { return L##ABBREVIATION; }\
-	template<> static std::basic_string<char8_t> getPrefix<std::basic_string<char8_t>>() { return u8##ABBREVIATION; }\
-	template<> static std::u16string getPrefix<std::u16string>() { return u##ABBREVIATION; }\
-	template<> static std::u32string getPrefix<std::u32string>() { return U##ABBREVIATION; }\
-};
-	//this allows expansion of the alternate abbreviation before ##,. e.g giving L"u" rather than LALTERNATE_MICRO
-#define MAKE_ALTERNATE_EXPONENT_TRAITS(VALUE, LONG_NAME, ABBREVIATION) MAKE_EXPONENT_TRAITS(-6, "micro", ABBREVIATION)
-	MAKE_EXPONENT_TRAITS(24, "yotta", "Y");
-	MAKE_EXPONENT_TRAITS(21, "zetta", "Z");
-	MAKE_EXPONENT_TRAITS(18, "exa", "E");
-	MAKE_EXPONENT_TRAITS(15, "peta", "P");
-	MAKE_EXPONENT_TRAITS(12, "tera", "T");
-	MAKE_EXPONENT_TRAITS(9, "giga", "G");
-	MAKE_EXPONENT_TRAITS(6, "mega", "M");
-	MAKE_EXPONENT_TRAITS(3, "kilo", "k");
-	MAKE_EXPONENT_TRAITS(2, "hecto", "h");
-	MAKE_EXPONENT_TRAITS(1, "deca", "da");
-	MAKE_EXPONENT_TRAITS(0, "", "");
-	MAKE_EXPONENT_TRAITS(-1, "deci", "d");
-	MAKE_EXPONENT_TRAITS(-2, "centi", "c");
-	MAKE_EXPONENT_TRAITS(-3, "milli", "m");
-#ifdef ALTERNATE_MICRO
-	MAKE_ALTERNATE_EXPONENT_TRAITS(-6, "micro", ALTERNATE_MICRO);
-#else
-	MAKE_EXPONENT_TRAITS(-6, "micro", "\u03bc");
-#endif
-	MAKE_EXPONENT_TRAITS(-9, "nano", "n");
-	MAKE_EXPONENT_TRAITS(-12, "pico", "p");
-	MAKE_EXPONENT_TRAITS(-15, "femto", "f");
-	MAKE_EXPONENT_TRAITS(-18, "atto", "a");
-	MAKE_EXPONENT_TRAITS(-21, "zepto", "z");
-	MAKE_EXPONENT_TRAITS(-24, "yocto", "y");
+	template<int64_t exponent, class STRING>
+	STRING getExponentName()
+		requires(IsValidSiExponent<exponent>)
+	{
+		if constexpr (exponent == yotta)
+			return fromSci<STRING>(sU("yotta"));
+		if constexpr (exponent == zetta)
+			return fromSci<STRING>(sU("zetta"));
+		if constexpr (exponent == exa)
+			return fromSci<STRING>(sU("exa"));
+		if constexpr (exponent == peta)
+			return fromSci<STRING>(sU("peta"));
+		if constexpr (exponent == tera)
+			return fromSci<STRING>(sU("tera"));
+		if constexpr (exponent == giga)
+			return fromSci<STRING>(sU("giga"));
+		if constexpr (exponent == mega)
+			return fromSci<STRING>(sU("mega"));
+		if constexpr (exponent == kilo)
+			return fromSci<STRING>(sU("kilo"));
+		if constexpr (exponent == hecto)
+			return fromSci<STRING>(sU("hecto"));
+		if constexpr (exponent == deca)
+			return fromSci<STRING>(sU("deca"));
+		if constexpr (exponent == 0)
+			return fromSci<STRING>(sU(""));
+		if constexpr (exponent == deci)
+			return fromSci<STRING>(sU("deci"));
+		if constexpr (exponent == centi)
+			return fromSci<STRING>(sU("centi"));
+		if constexpr (exponent == milli)
+			return fromSci<STRING>(sU("milli"));
+		if constexpr (exponent == micro)
+			return fromSci<STRING>(sU("micro"));
+		if constexpr (exponent == nano)
+			return fromSci<STRING>(sU("nano"));
+		if constexpr (exponent == pico)
+			return fromSci<STRING>(sU("pico"));
+		if constexpr (exponent == femto)
+			return fromSci<STRING>(sU("femto"));
+		if constexpr (exponent == atto)
+			return fromSci<STRING>(sU("atto"));
+		if constexpr (exponent == zepto)
+			return fromSci<STRING>(sU("zepto"));
+		if constexpr (exponent == yocto)
+			return fromSci<STRING>(sU("yocto"));
+	}
+
+	template<int64_t exponent, class STRING>
+	STRING getExponentPrefix()
+		requires(IsValidSiExponent<exponent>)
+	{
+		if constexpr (exponent == yotta)
+			return fromSci<STRING>(sU("Y"));
+		if constexpr (exponent == zetta)
+			return fromSci<STRING>(sU("Z"));
+		if constexpr (exponent == exa)
+			return fromSci<STRING>(sU("E"));
+		if constexpr (exponent == peta)
+			return fromSci<STRING>(sU("P"));
+		if constexpr (exponent == tera)
+			return fromSci<STRING>(sU("T"));
+		if constexpr (exponent == giga)
+			return fromSci<STRING>(sU("G"));
+		if constexpr (exponent == mega)
+			return fromSci<STRING>(sU("M"));
+		if constexpr (exponent == kilo)
+			return fromSci<STRING>(sU("k"));
+		if constexpr (exponent == hecto)
+			return fromSci<STRING>(sU("h"));
+		if constexpr (exponent == deca)
+			return fromSci<STRING>(sU("da"));
+		if constexpr (exponent == 0)
+			return fromSci<STRING>(sU(""));
+		if constexpr (exponent == deci)
+			return fromSci<STRING>(sU("d"));
+		if constexpr (exponent == centi)
+			return fromSci<STRING>(sU("c"));
+		if constexpr (exponent == milli)
+			return fromSci<STRING>(sU("m"));
+		if constexpr (exponent == micro)
+			return fromSci<STRING>(sU("\u03bc"));
+		if constexpr (exponent == nano)
+			return fromSci<STRING>(sU("n"));
+		if constexpr (exponent == pico)
+			return fromSci<STRING>(sU("p"));
+		if constexpr (exponent == femto)
+			return fromSci<STRING>(sU("f"));
+		if constexpr (exponent == atto)
+			return fromSci<STRING>(sU("a"));
+		if constexpr (exponent == zepto)
+			return fromSci<STRING>(sU("z"));
+		if constexpr (exponent == yocto)
+			return fromSci<STRING>(sU("y"));
+	}
+
+	template<int64_t exponent, class STRING>
+	STRING getExponentPrefixAscii()
+		requires(IsValidSiExponent<exponent>)
+	{
+		if constexpr (exponent == yotta)
+			return fromSci<STRING>(sU("Y"));
+		if constexpr (exponent == zetta)
+			return fromSci<STRING>(sU("Z"));
+		if constexpr (exponent == exa)
+			return fromSci<STRING>(sU("E"));
+		if constexpr (exponent == peta)
+			return fromSci<STRING>(sU("P"));
+		if constexpr (exponent == tera)
+			return fromSci<STRING>(sU("T"));
+		if constexpr (exponent == giga)
+			return fromSci<STRING>(sU("G"));
+		if constexpr (exponent == mega)
+			return fromSci<STRING>(sU("M"));
+		if constexpr (exponent == kilo)
+			return fromSci<STRING>(sU("k"));
+		if constexpr (exponent == hecto)
+			return fromSci<STRING>(sU("h"));
+		if constexpr (exponent == deca)
+			return fromSci<STRING>(sU("da"));
+		if constexpr (exponent == 0)
+			return fromSci<STRING>(sU(""));
+		if constexpr (exponent == deci)
+			return fromSci<STRING>(sU("d"));
+		if constexpr (exponent == centi)
+			return fromSci<STRING>(sU("c"));
+		if constexpr (exponent == milli)
+			return fromSci<STRING>(sU("m"));
+		if constexpr (exponent == micro)
+			return fromSci<STRING>(sU("u"));
+		if constexpr (exponent == nano)
+			return fromSci<STRING>(sU("n"));
+		if constexpr (exponent == pico)
+			return fromSci<STRING>(sU("p"));
+		if constexpr (exponent == femto)
+			return fromSci<STRING>(sU("f"));
+		if constexpr (exponent == atto)
+			return fromSci<STRING>(sU("a"));
+		if constexpr (exponent == zepto)
+			return fromSci<STRING>(sU("z"));
+		if constexpr (exponent == yocto)
+			return fromSci<STRING>(sU("y"));
+	}
+
+
+	std::string asciifyUnitsString(std::u32string string)
+	{
+		std::string result;
+		result.reserve(string.length());
+		for (size_t i = 0; i < string.length(); ++i)
+		{
+			if (string[i] == u'\u00e5')
+				result.push_back('A');
+			else if (string[i] == u'\u03bc')
+				result.push_back('u');
+			else if (string[i] == u'\u2030')
+				result.append("0/00");
+			else if (string[i] == u'\u2031')
+				result.append("0/000");
+			else if (string[i] == u'\u00b0')
+				if (string.length() > i + 2 && string[i + 1] == L'R' && string[i + 2] == L'a')
+				{//do nothing if this is degrees rankine, just copy the upcoming Ra
+				}
+				else
+					result.append("deg");
+			else if (string[i] == u'\u8242')
+				result.push_back('\'');
+			else if (string[i] == u'\u8243')
+				result.push_back('"');
+			else if (string[i] == u'\u2126')
+				result.append("Ohm");
+			else result.push_back(char(string[i]));
+		}
+		auto iter = string.begin();
+
+		return result;
+	}
+
 
 	namespace unitsPrivate
 	{
@@ -202,6 +301,7 @@ struct ExponentTraits<VALUE>\
 				return unitNumberToText<STRING>(powerNumerator);
 			return unitNumberToText<STRING>(powerNumerator) + STRING({ STRING::value_type(47) }) + unitNumberToText<STRING>(powerDenominator);
 		}
+
 		template<class STRING, int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR>
 		STRING powerToTextLong()
 		{
@@ -254,9 +354,21 @@ struct ExponentTraits<VALUE>\
 				return STRING();
 
 			if (POWER_NUMERATOR == POWER_DENOMINATOR)
-				return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit;
+				return getExponentPrefix<EXPONENT, STRING>() + unit;
 
-			return ExponentTraits<EXPONENT>::template getPrefix<STRING>() + unit + powerPrefix + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>() + powerSuffix;
+			return getExponentPrefix<EXPONENT, STRING>() + unit + powerPrefix + powerToTextShort<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>() + powerSuffix;
+		}
+
+		template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT>
+		std::string makeShortNameAscii(const std::string& unit, const std::string& powerPrefix, const std::string& powerSuffix)
+		{
+			if (POWER_NUMERATOR == 0)
+				return std::string();
+
+			if (POWER_NUMERATOR == POWER_DENOMINATOR)
+				return getExponentPrefixAscii<EXPONENT>() + unit;
+
+			return getExponentPrefixAscii<EXPONENT>() + unit + powerPrefix + powerToTextShort<std::string, POWER_NUMERATOR, POWER_DENOMINATOR>() + powerSuffix;
 		}
 
 		//build a string showing the unit. Note that exponent must be before multiplying by power
@@ -283,16 +395,22 @@ struct ExponentTraits<VALUE>\
 				return STRING();
 
 			if (POWER_NUMERATOR == POWER_DENOMINATOR)
-				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit;
+				return getExponentName<EXPONENT, STRING>() + per + unit;
 			if (POWER_NUMERATOR < 0 && POWER_DENOMINATOR >= 0)
-				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, POWER_DENOMINATOR>();
+				return getExponentName<EXPONENT, STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, POWER_DENOMINATOR>();
 			if (POWER_NUMERATOR >= 0 && POWER_DENOMINATOR < 0)
-				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, -POWER_DENOMINATOR>();
+				return getExponentName<EXPONENT, STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, -POWER_DENOMINATOR>();
 			if (POWER_NUMERATOR < 0 && POWER_DENOMINATOR < 0)
-				return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, -POWER_DENOMINATOR>();
-			return ExponentTraits<EXPONENT>::template getName<STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
+				return getExponentName<EXPONENT, STRING>() + per + unit + powerToTextLong<STRING, -POWER_NUMERATOR, -POWER_DENOMINATOR>();
+			return getExponentName<EXPONENT, STRING>() + per + unit + powerToTextLong<STRING, POWER_NUMERATOR, POWER_DENOMINATOR>();
 		}
 
+		template<int8_t POWER_NUMERATOR, int8_t POWER_DENOMINATOR, int64_t EXPONENT>
+		std::string makeLongNameAscii(const std::string& unit)
+		{
+			//There are no non-ascii characters in the long names, so just call makeLongName
+			return makeLongName<POWER_NUMERATOR, POWER_DENOMINATOR, EXPONENT, std::string>(unit);
+		}
 
 
 		//This function encodes the power variable for the EncodedUnit class
@@ -733,6 +851,24 @@ struct ExponentTraits<VALUE>\
 		{
 			return ENCODEDUNIT::template getLongRepresentation<POW_NUMERATOR* EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR, STRING>();
 		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return ENCODEDUNIT::getShortRepresentationAscii<POW_NUMERATOR, POW_DENOMINATOR>(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return ENCODEDUNIT::getShortRepresentationAscii<POW_NUMERATOR * EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+		}
+		static std::string getLongRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return ENCODEDUNIT::template getLongRepresentationAscii<POW_NUMERATOR, POW_DENOMINATOR>();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return ENCODEDUNIT::template getLongRepresentationAscii<POW_NUMERATOR * EXTRA_POWER_NUMERATOR, POW_DENOMINATOR* EXTRA_POWER_DENOMINATOR>();
+		}
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
 		{
@@ -822,6 +958,25 @@ struct ExponentTraits<VALUE>\
 		{
 			return ENCODEDUNIT1::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR,STRING>() + STRING{ STRING::value_type(32) } + ENCODEDUNIT2::template getLongRepresentation<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, STRING>();
 		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return ENCODEDUNIT1::getShortRepresentationAscii(exponentPrefix, exponentSuffix) + " " + ENCODEDUNIT2::getShortRepresentationAscii(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return ENCODEDUNIT1::getShortRepresentationAscii<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix) + " " + ENCODEDUNIT2::getShortRepresentationAscii<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>(exponentPrefix, exponentSuffix);
+		}
+		static std::string getLongRepresentationAscii()
+		{
+			//for all sensible encodings a space is represented by value of 32, so we don't need to do any encoding conversion
+			return ENCODEDUNIT1::template getLongRepresentationAscii() + " " + ENCODEDUNIT2::template getLongRepresentationAscii();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return ENCODEDUNIT1::template getLongRepresentationAscii<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>() + " " + ENCODEDUNIT2::template getLongRepresentationAscii<EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR>();
+		}
 
 		template<class VALUE_TYPE>
 		struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
@@ -870,7 +1025,7 @@ struct ExponentTraits<VALUE>\
 	//so for a mm^2 you would use metre<2,-3>
 
 	//This is a macro used to shorthand the definition of functions in each of the SI units
-#define NAMEDEF(SHORTNAME, LONGNAME)\
+#define NAMEDEFUNICODE(SHORTNAME, LONGNAME)\
 	template<class STRING>\
 	static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
 	{\
@@ -894,34 +1049,64 @@ struct ExponentTraits<VALUE>\
 	template<class STRING>\
 	static STRING getShortName()\
 	{\
-		if constexpr (std::is_same<STRING, std::string>::value)\
-			return UNITS_H_STR8(SHORTNAME);\
-		if constexpr (std::is_same<STRING, std::wstring>::value)\
-			return L##SHORTNAME;\
-		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+		if constexpr (std::is_same<STRING, std::u8string>::value)\
 			return u8##SHORTNAME;\
-		if constexpr (std::is_same<STRING, std::u16string>::value)\
+		else if constexpr (std::is_same<STRING, std::u16string>::value)\
 			return u##SHORTNAME;\
-		if constexpr (std::is_same<STRING, std::u32string>::value)\
+		else if constexpr (std::is_same<STRING, std::u32string>::value)\
 			return U##SHORTNAME;\
+		else\
+			return fromSci<STRING> (sU(SHORTNAME));\
 	}\
 	template<class STRING>\
 	static STRING getLongName()\
 	{\
-		if constexpr (std::is_same<STRING, std::string>::value)\
-			return UNITS_H_STR8(LONGNAME);\
-		if constexpr (std::is_same<STRING, std::wstring>::value)\
-			return L##LONGNAME;\
-		if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
+		if constexpr (std::is_same<STRING, std::u8string>::value)\
 			return u8##LONGNAME;\
-		if constexpr (std::is_same<STRING, std::u16string>::value)\
+		else if constexpr (std::is_same<STRING, std::u16string>::value)\
 			return u##LONGNAME;\
-		if constexpr (std::is_same<STRING, std::u32string>::value)\
+		else if constexpr (std::is_same<STRING, std::u32string>::value)\
 			return U##LONGNAME;\
+		else\
+			return fromSci<STRING> (sU(LONGNAME));\
 	}
 
-	//to allow macro expansion of the names before passing them to NAMEDEF where ## is applied
-#define ALTERNATE_NAMEDEF(SHORTNAME, LONGNAME) NAMEDEF(SHORTNAME, LONGNAME)
+#define NAMEDEFASCII(SHORTNAME, LONGNAME)\
+	static std::string getShortRepresentationAscii(const std::string &exponentPrefix = std::string(), const std::string &exponentSuffix = std::string())\
+	{\
+		return getShortRepresentationAscii<1,1>(exponentPrefix, exponentSuffix);\
+	}\
+	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>\
+	static std::string getShortRepresentationAscii(const std::string &exponentPrefix, const std::string &exponentSuffix)\
+	{\
+		return unitsPrivate::makeShortNameAscii<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortNameAscii(), exponentPrefix, exponentSuffix);\
+	}\
+	static std::string getLongRepresentationAscii()\
+	{\
+		return getLongRepresentationAscii<1,1>();\
+	}\
+	template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>\
+	static std::string getLongRepresentationAscii()\
+	{\
+		return unitsPrivate::makeLongName<POWER*EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongNameAscii());\
+	}\
+	static std::string getShortNameAscii()\
+	{\
+		return SHORTNAME;\
+	}\
+	static std::string getLongNameAscii()\
+	{\
+		return LONGNAME;\
+	}
+
+#define NAMEDEF(SHORTNAME, LONGNAME)\
+	NAMEDEFUNICODE(SHORTNAME, LONGNAME)\
+	NAMEDEFASCII(SHORTNAME, LONGNAME)
+
+#define NAMEDEFASCIISUB(SHORTNAME, LONGNAME, SHORTNAMEASCII, LONGNAMEASCII)\
+	NAMEDEFUNICODE(SHORTNAME, LONGNAME)\
+	NAMEDEFASCII(SHORTNAMEASCII, LONGNAMEASCII)
+
 
 	struct Unitless : public unitsPrivate::EncodedUnitWholePower<0, 0, false>
 	{
@@ -1040,20 +1225,14 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getShortName()
 		{
-			if constexpr (std::is_same<STRING, std::string>::value)
-#ifdef ALTERNATE_PER_MILLE
-				return ALTERNATE_PER_MILLE;
-#else
-				return "\u2030";
-#endif
-			if constexpr (std::is_same<STRING, std::wstring>::value)
-				return L"\u2030";
 			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
 				return u8"\u2030";
-			if constexpr (std::is_same<STRING, std::u16string>::value)
+			else if constexpr (std::is_same<STRING, std::u16string>::value)
 				return u"\u2030";
-			if constexpr (std::is_same<STRING, std::u32string>::value)
+			else if constexpr (std::is_same<STRING, std::u32string>::value)
 				return U"\u2030";
+			else
+				return fromSci<STRING>(sU("\u2030"));
 		}
 		template<class STRING>
 		static STRING getLongName()
@@ -1098,20 +1277,14 @@ struct ExponentTraits<VALUE>\
 		template<class STRING>
 		static STRING getShortName()
 		{
-			if constexpr (std::is_same<STRING, std::string>::value)
-#ifdef ALTERNATE_BASIS_POINT
-				return ALTERNATE_BASIS_POINT;
-#else
-				return UNITS_H_STR8("\u2031");
-#endif
-			if constexpr (std::is_same<STRING, std::wstring>::value)
-				return L"\u2031";
-			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+			if constexpr (std::is_same<STRING, std::u8string>::value)
 				return u8"\u2031";
-			if constexpr (std::is_same<STRING, std::u16string>::value)
+			else if constexpr (std::is_same<STRING, std::u16string>::value)
 				return u"\u2031";
-			if constexpr (std::is_same<STRING, std::u32string>::value)
+			else if constexpr (std::is_same<STRING, std::u32string>::value)
 				return U"\u2031";
+			else
+				return fromSci<STRING>(sU("\u2031"));
 		}
 		template<class STRING>
 		static STRING getLongName()
@@ -1120,7 +1293,7 @@ struct ExponentTraits<VALUE>\
 				return "basis point";
 			if constexpr (std::is_same<STRING, std::wstring>::value)
 				return L"basis point";
-			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)
+			if constexpr (std::is_same<STRING, std::u8string>::value)
 				return u8"basis point";
 			if constexpr (std::is_same<STRING, std::u16string>::value)
 				return u"basis point";
@@ -1272,11 +1445,7 @@ struct ExponentTraits<VALUE>\
 	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Ampere<-POWER>>
 	{
 		static constexpr int8_t power = POWER;
-#ifdef ALTERNATE_OMEGA
-		ALTERNATE_NAMEDEF(ALTERNATE_OMEGA, "ohm")
-#else
-		NAMEDEF("\u2126", "ohm")
-#endif
+		NAMEDEFASCIISUB("\u2126", "ohm", "ohm", "ohm")
 	};
 
 
@@ -1355,7 +1524,7 @@ struct ExponentTraits<VALUE>\
 	//Note that these don't derive from EncodedUnits, but they conform to the same
 	//template as EncodedUnit, so can be used by Physical as a template parameter.
 
-#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_DIVIDER, SHORTNAME, LONGNAME)\
+#define MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_DIVIDER, SHORTNAME, LONGNAME, SHORTNAMEASCII, LONGNAMEASCII)\
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>\
 	class CLASS_NAME\
 	{\
@@ -1395,54 +1564,8 @@ struct ExponentTraits<VALUE>\
 				return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN)) / VALUE_TYPE(BASE_TO_SCALED_DIVIDER);\
 			}\
 		};\
-		template<class STRING>\
-		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())\
-		{\
-			return getShortRepresentation<1,1>(exponentPrefix, exponentSuffix);\
-		}\
-		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-		static STRING getShortRepresentation(const STRING &exponentPrefix, const STRING &exponentSuffix)\
-		{\
-			return unitsPrivate::makeShortName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getShortName<STRING>(), exponentPrefix, exponentSuffix);\
-		}\
-		template<class STRING>\
-		static STRING getLongRepresentation()\
-		{\
-			return getLongRepresentation<1,1,STRING>();\
-		}\
-		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR, class STRING>\
-		static STRING getLongRepresentation()\
-		{\
-			return unitsPrivate::makeLongName<POWER * EXTRA_POWER_NUMERATOR, EXTRA_POWER_DENOMINATOR, EXPONENT>(getLongName<STRING>());\
-		}\
-		template<class STRING>\
-		static STRING getShortName()\
-		{\
-			if constexpr (std::is_same<STRING, std::string>::value)\
-				return UNITS_H_STR8(SHORTNAME);\
-			if constexpr (std::is_same<STRING, std::wstring>::value)\
-				return L##SHORTNAME;\
-			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
-				return u8##SHORTNAME;\
-			if constexpr (std::is_same<STRING, std::u16string>::value)\
-				return u##SHORTNAME;\
-			if constexpr (std::is_same<STRING, std::u32string>::value)\
-				return U##SHORTNAME;\
-		}\
-		template<class STRING>\
-		static STRING getLongName()\
-		{\
-			if constexpr (std::is_same<STRING, std::string>::value)\
-				return UNITS_H_STR8(LONGNAME);\
-			if constexpr (std::is_same<STRING, std::wstring>::value)\
-				return L##LONGNAME;\
-			if constexpr (std::is_same<STRING, std::basic_string<char8_t>>::value)\
-				return u8##LONGNAME;\
-			if constexpr (std::is_same<STRING, std::u16string>::value)\
-				return u##LONGNAME;\
-			if constexpr (std::is_same<STRING, std::u32string>::value)\
-				return U##LONGNAME;\
-		}\
+		NAMEDEFUNICODE(SHORTNAME, LONGNAME)\
+		NAMEDEFASCII(SHORTNAMEASCII, LONGNAMEASCII)\
 		static constexpr bool isUnitless()\
 		{\
 			return basePowersNumerators == 0;\
@@ -1454,9 +1577,6 @@ struct ExponentTraits<VALUE>\
 		}\
 	};
 
-	//needed to avoid ## being applied before alternate shortname is macro expanded
-	#define MAKE_ALTERNATE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME) MAKE_SCALED_UNIT(CLASS_NAME, BASE_CLASS, BASE_CLASS_POWER, BASE_TO_SCALED_MULTIPLIER, SHORTNAME, LONGNAME)
-
 	namespace unitsPrivate
 	{
 #ifdef M_PI
@@ -1466,91 +1586,61 @@ struct ExponentTraits<VALUE>\
 #endif
 	}
 
-	//angle units
-#ifdef ALTERNATE_DEGREE
-	MAKE_ALTERNATE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0 , ALTERNATE_DEGREE, "degree")
-#else
-	MAKE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0, "\u00b0", "degree")
-#endif
-#ifdef ALTERNATE_ARCMINUTE
-	MAKE_ALTERNATE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0 , ALTERNATE_ARCMINUTE, "arcminute")
-#else
-	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0, "\u8242", "arcminute")
-#endif
-#ifdef ALTERNATE_ARCSECOND
-		MAKE_ALTERNATE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, ALTERNATE_ARCSECOND, "arcsecond")
-#else
-	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, "\u8243", "arcsecond")
-#endif
-	MAKE_SCALED_UNIT(Turn, Radian, 1, unitsPrivate::pi / 0.5, "tr", "turn")
-	MAKE_SCALED_UNIT(Quadrant, Radian, 1, unitsPrivate::pi / 2.0, "quadrant", "quadrant")
-	MAKE_SCALED_UNIT(Sextant, Radian, 1, unitsPrivate::pi / 3.0, "sextant", "sextant")
-	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, unitsPrivate::pi / 30.0, "hexacontade", "hexacontade")
-	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, unitsPrivate::pi / 128.0, "binary degree", "binary degree")
-	MAKE_SCALED_UNIT(Gradian, Radian, 1, unitsPrivate::pi / 200.0, "gon", "gradian")
+	MAKE_SCALED_UNIT(Degree, Radian, 1, unitsPrivate::pi / 180.0, "\u00b0", "degree", "deg", "degree")
+	MAKE_SCALED_UNIT(ArcMinute, Radian, 1, unitsPrivate::pi / 10800.0, "\u8242", "arcminute", "'", "arcminute")
+	MAKE_SCALED_UNIT(ArcSecond, Radian, 1, unitsPrivate::pi / 648000.0, "\u8243", "arcsecond", "\"", "arcsecond")
+	MAKE_SCALED_UNIT(Turn, Radian, 1, unitsPrivate::pi / 0.5, "tr", "turn", "tr", "turn")
+	MAKE_SCALED_UNIT(Quadrant, Radian, 1, unitsPrivate::pi / 2.0, "quadrant", "quadrant", "quadrant", "quadrant")
+	MAKE_SCALED_UNIT(Sextant, Radian, 1, unitsPrivate::pi / 3.0, "sextant", "sextant", "sextant", "sextant")
+	MAKE_SCALED_UNIT(Hexacontade, Radian, 1, unitsPrivate::pi / 30.0, "hexacontade", "hexacontade", "hexacontade", "hexacontade")
+	MAKE_SCALED_UNIT(BinaryDegree, Radian, 1, unitsPrivate::pi / 128.0, "binary degree", "binary degree", "binary degree", "binary degree")
+	MAKE_SCALED_UNIT(Gradian, Radian, 1, unitsPrivate::pi / 200.0, "gon", "gradian", "gon", "gradian")
+	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, "\u00b0Ra", "rankine", "Ra", "rankine")
 
-	//Farenheit equivalent of kelvin unit
-#ifdef ALTERNATE_RANKINE
-	MAKE_ALTERNATE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, ALTERNATE_RANKINE, "rankine")
-#else
-	MAKE_SCALED_UNIT(Rankine, Kelvin, 1, 1.0 / 1.8, "\u00b0Ra", "rankine")
-#endif
 
 	//alternative metric and scientific units
-#ifdef ALTERNATE_ANGSTROM_SHORT
-#ifdef ALTERNATE_ANGSTROM_LONG
-		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, ALTERNATE_ANGSTROM_SHORT, ALTERNATE_ANGSTROM_LONG)
-#else
-		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, ALTERNATE_ANGSTROM_SHORT, "\u00e5ngstrom")
-#endif
-#else
-#ifdef ALTERNATE_ANGSTROM_LONG
-		MAKE_ALTERNATE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", ALTERNATE_ANGSTROM_LONG)
-#else
-	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", "\u00e5ngstrom")
-#endif
-#endif
-	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, "AU", "astronomical unit")
-	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, "ly", "lightyear")
-	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, "pc", "parsec")
-	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, "NM", "nautical mile")
-	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, "ha", "hectare")
-	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, "t", "tonne")
-	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, "L", "litre")
-	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, "AMU", "atomic mass unit")
-	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, "sidereal day", "sidereal day")
-	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, "e", "elementary charge")
-	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, "eV", "electron volt")
+	MAKE_SCALED_UNIT(Angstrom, Metre, 1, 1e-10, "\u212B", "\u00e5ngstrom", "A", "Angstrom")
+	MAKE_SCALED_UNIT(AstronomicalUnit, Metre, 1, 149597870700.0, "AU", "astronomical unit", "AU", "astronomical unit")
+	MAKE_SCALED_UNIT(LightYear, Metre, 1, 9460730472580800.0, "ly", "lightyear", "ly", "lightyear")
+	MAKE_SCALED_UNIT(Parsec, Metre, 1, 3.085677581e16, "pc", "parsec", "pc", "parsec")
+	MAKE_SCALED_UNIT(NauticalMile, Metre, 1, 1852.0, "NM", "nautical mile", "NM", "nautical mile")
+	MAKE_SCALED_UNIT(Hectare, Metre, 2, 1e-4, "ha", "hectare", "ha", "hectare")
+	MAKE_SCALED_UNIT(Tonne, Gram, 1, 1e6, "t", "tonne", "t", "tonne")
+	MAKE_SCALED_UNIT(Litre, Metre, 3, 0.001, "L", "litre", "L", "litre")
+	MAKE_SCALED_UNIT(AtomicMassUnit, Gram, 1, 1.66053904e-24, "AMU", "atomic mass unit", "AMU", "atomic mass unit")
+	MAKE_SCALED_UNIT(SiderealDay, Second, 1, 86164.09053083288, "sidereal day", "sidereal day", "sidereal day", "sidereal day")
+	MAKE_SCALED_UNIT(ElementaryCharge, Coulomb, 1, 1.602176634e-19, "e", "elementary charge", "e", "elementary charge")
+	MAKE_SCALED_UNIT(Electronvolt, Joule, 1, 1.602176634e-19, "eV", "electron volt", "eV", "electron volt")
 
 	//time units
-	MAKE_SCALED_UNIT(Minute, Second, 1, 60.0, "min", "minute")
-	MAKE_SCALED_UNIT(Hour, Second, 1, 3600.0, "hr", "hour")
-	MAKE_SCALED_UNIT(Day, Second, 1, 86400.0, "day", "day")
+	MAKE_SCALED_UNIT(Minute, Second, 1, 60.0, "min", "minute", "min", "minute")
+	MAKE_SCALED_UNIT(Hour, Second, 1, 3600.0, "hr", "hour", "hr", "hour")
+	MAKE_SCALED_UNIT(Day, Second, 1, 86400.0, "day", "day", "day", "day")
 
 	//imperial units
 	//length units are all based on the international yard which is exactly 0.9144 m
-	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, "mi", "mile")
-	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, "fur", "furlong")
-	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, "ch", "chain")
-	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, "rd", "rod")
-	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, "ftm", "fathom")
-	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, "yd", "yard")
-	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, "'", "foot")
-	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, "\"", "inch")
-	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, "ac", "acre")
-	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, "imp gal", "imperial gallon")
-	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, "US gal", "US gallon")
-	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, "imp fl oz", "imperial fluid ounce")
-	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, "US fl oz", "US fluid ounce")
-	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, "imp pt", "imperial pint")
-	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, "US pt", "US pint")
-	MAKE_SCALED_UNIT(TextPoint, Metre, 1, 0.9144 / (36.0 * 72.0), "pt", "point")
+	MAKE_SCALED_UNIT(Mile, Metre, 1, 1760.0 * 0.9144, "mi", "mile", "mi", "mile")
+	MAKE_SCALED_UNIT(Furlong, Metre, 1, 220.0 * 0.9144, "fur", "furlong", "fur", "furlong")
+	MAKE_SCALED_UNIT(Chain, Metre, 1, 22.0 * 0.9144, "ch", "chain", "ch", "chain")
+	MAKE_SCALED_UNIT(Rod, Metre, 1, 5.5 * 0.9144, "rd", "rod", "rd", "rod")
+	MAKE_SCALED_UNIT(Fathom, Metre, 1, 2.0 * 0.9144, "ftm", "fathom", "ftm", "fathom")
+	MAKE_SCALED_UNIT(Yard, Metre, 1, 0.9144, "yd", "yard", "yd", "yard")
+	MAKE_SCALED_UNIT(Foot, Metre, 1, 0.9144 / 3.0, "'", "foot", "'", "foot")
+	MAKE_SCALED_UNIT(Inch, Metre, 1, 0.9144 / 36.0, "\"", "inch", "\"", "inch")
+	MAKE_SCALED_UNIT(Acre, Metre, 2, 4840 * 0.9144 * 0.9144, "ac", "acre", "ac", "acre")
+	MAKE_SCALED_UNIT(GallonImperial, Metre, 3, 0.00454609, "imp gal", "imperial gallon", "imp gal", "imperial gallon")
+	MAKE_SCALED_UNIT(GallonUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0, "US gal", "US gallon", "US gal", "US gallon")
+	MAKE_SCALED_UNIT(FluidOunceImperial, Metre, 3, 2.84130625e-5, "imp fl oz", "imperial fluid ounce", "imp fl oz", "imperial fluid ounce")
+	MAKE_SCALED_UNIT(FluidOunceUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 160.0, "US fl oz", "US fluid ounce", "US fl oz", "US fluid ounce")
+	MAKE_SCALED_UNIT(PintImperial, Metre, 3, 0.00454609 / 8.0, "imp pt", "imperial pint", "imp pt", "imperial pint")
+	MAKE_SCALED_UNIT(PintUs, Metre, 3, 0.9144 * 0.9144 * 0.9144 * 231.0 / 46656.0 / 8.0, "US pt", "US pint", "US pt", "US pint")
+	MAKE_SCALED_UNIT(TextPoint, Metre, 1, 0.9144 / (36.0 * 72.0), "pt", "point", "pt", "point")
 	//weight units are defined from the definition of a pound being 453.59237 g
-	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, "t", "ton")
-	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, "cwt", "hundredweight")
-	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, "st", "stone")
-	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, "lb", "pound")
-	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, "oz", "ounce")
+	MAKE_SCALED_UNIT(Ton, Gram, 1, 2240.0 * 453.59237, "t", "ton", "t", "ton")
+	MAKE_SCALED_UNIT(Hundredweight, Gram, 1, 112.0 * 453.59237, "cwt", "hundredweight", "cwt", "hundredweight")
+	MAKE_SCALED_UNIT(Stone, Gram, 1, 14.0 * 453.59237, "st", "stone", "st", "stone")
+	MAKE_SCALED_UNIT(Pound, Gram, 1, 453.59237, "lb", "pound", "lb", "pound")
+	MAKE_SCALED_UNIT(Ounce, Gram, 1, 453.59237 / 16.0, "oz", "ounce", "oz", "ounce")
 	
 
 
@@ -1559,7 +1649,7 @@ struct ExponentTraits<VALUE>\
 	{
 	public:
 		using valueType = VALUE_TYPE;
-		using  unit = typename ENCODED_UNIT;
+		using  unit = ENCODED_UNIT;
 
 #pragma warning(push)
 #pragma warning(disable : 26495)
@@ -1652,7 +1742,7 @@ struct ExponentTraits<VALUE>\
 		template<class OTHER>
 		static constexpr bool compatibleWith()
 		{
-			return unitsPrivate::unitCompatible<unit, OTHER::unit>();
+			return unitsPrivate::unitCompatible<unit, typename OTHER::unit>();
 		}
 	private:
 		VALUE_TYPE m_v;
@@ -1964,7 +2054,7 @@ struct ExponentTraits<VALUE>\
 		static_assert(T::unit::isUnitless(), "We can only raise a physical value to a non-integer power if it is dimensionless, try pow<POWER>(base) instead.");
 		//We don't need to play with the units at all and the impact of the exponent of the
 		//power is put in the result value - so it has the same exponent as the base
-		typedef sci::Promoted<typename T::valueType, typename U::valueType>::type promotedType;
+		typedef typename sci::Promoted<typename T::valueType, typename U::valueType>::type promotedType;
 		promotedType powerVal = power.template value<Unitless>();
 		promotedType baseVal = base.template value<T>();
 		return Physical<typename T::unit, promotedType>(std::pow(baseVal, powerVal) * std::pow(promotedType(10), promotedType(T::unit::exponentNumerator)/ promotedType(T::unit::exponentDenominator)* (powerVal - promotedType(1.0))));
