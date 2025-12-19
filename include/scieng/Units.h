@@ -10,7 +10,6 @@
 #include<vector>
 #include<limits>
 #include"string.h"
-#include"codepage.h"
 #include"Traits.h"
 namespace sci
 {
@@ -50,45 +49,45 @@ namespace sci
 	{
 		if constexpr (exponent == yotta)
 			return fromSci<STRING>(sU("yotta"));
-		if constexpr (exponent == zetta)
+		else if constexpr (exponent == zetta)
 			return fromSci<STRING>(sU("zetta"));
-		if constexpr (exponent == exa)
+		else if constexpr (exponent == exa)
 			return fromSci<STRING>(sU("exa"));
-		if constexpr (exponent == peta)
+		else if constexpr (exponent == peta)
 			return fromSci<STRING>(sU("peta"));
-		if constexpr (exponent == tera)
+		else if constexpr (exponent == tera)
 			return fromSci<STRING>(sU("tera"));
-		if constexpr (exponent == giga)
+		else if constexpr (exponent == giga)
 			return fromSci<STRING>(sU("giga"));
-		if constexpr (exponent == mega)
+		else if constexpr (exponent == mega)
 			return fromSci<STRING>(sU("mega"));
-		if constexpr (exponent == kilo)
+		else if constexpr (exponent == kilo)
 			return fromSci<STRING>(sU("kilo"));
-		if constexpr (exponent == hecto)
+		else if constexpr (exponent == hecto)
 			return fromSci<STRING>(sU("hecto"));
-		if constexpr (exponent == deca)
+		else if constexpr (exponent == deca)
 			return fromSci<STRING>(sU("deca"));
-		if constexpr (exponent == 0)
+		else if constexpr (exponent == 0)
 			return fromSci<STRING>(sU(""));
-		if constexpr (exponent == deci)
+		else if constexpr (exponent == deci)
 			return fromSci<STRING>(sU("deci"));
-		if constexpr (exponent == centi)
+		else if constexpr (exponent == centi)
 			return fromSci<STRING>(sU("centi"));
-		if constexpr (exponent == milli)
+		else if constexpr (exponent == milli)
 			return fromSci<STRING>(sU("milli"));
-		if constexpr (exponent == micro)
+		else if constexpr (exponent == micro)
 			return fromSci<STRING>(sU("micro"));
-		if constexpr (exponent == nano)
+		else if constexpr (exponent == nano)
 			return fromSci<STRING>(sU("nano"));
-		if constexpr (exponent == pico)
+		else if constexpr (exponent == pico)
 			return fromSci<STRING>(sU("pico"));
-		if constexpr (exponent == femto)
+		else if constexpr (exponent == femto)
 			return fromSci<STRING>(sU("femto"));
-		if constexpr (exponent == atto)
+		else if constexpr (exponent == atto)
 			return fromSci<STRING>(sU("atto"));
-		if constexpr (exponent == zepto)
+		else if constexpr (exponent == zepto)
 			return fromSci<STRING>(sU("zepto"));
-		if constexpr (exponent == yocto)
+		else if constexpr (exponent == yocto)
 			return fromSci<STRING>(sU("yocto"));
 	}
 
@@ -189,7 +188,7 @@ namespace sci
 	}
 
 
-	std::string asciifyUnitsString(std::u32string string)
+	inline std::string asciifyUnitsString(std::u32string string)
 	{
 		std::string result;
 		result.reserve(string.length());
@@ -547,24 +546,28 @@ namespace sci
 				return std::numeric_limits<VALUE_TYPE>::quiet_NaN();
 			if (value == VALUE_TYPE(0.0))
 				return VALUE_TYPE(0.0);
-			if (value == VALUE_TYPE(1.0))
-				return VALUE_TYPE(1.0);
-			if (value != value)
-				return value;
+			//if (value == VALUE_TYPE(1.0))
+			//	return VALUE_TYPE(1.0);
+			//if (value != value)
+			//	return value;
 
 			VALUE_TYPE twoToTheN = 1;
 			VALUE_TYPE a = value;
 			while (a > VALUE_TYPE(4))
 			{
-				a /= VALUE_TYPE(4);
+				a *= VALUE_TYPE(0.25);
 				twoToTheN *= 2;
 			}
 			while (a < VALUE_TYPE(1))
 			{
 				a *= VALUE_TYPE(4);
-				twoToTheN /= 2;
+				twoToTheN *= 0.5;
 			}
 			VALUE_TYPE currentGuess = (VALUE_TYPE(0.5) + VALUE_TYPE(0.5) * a) * twoToTheN;
+			//the below code is much slower than the above (plus it isn't correct, but I just wanted to test speed)
+			//int power;
+			//VALUE_TYPE a = std::frexp(value, &power);
+			//VALUE_TYPE currentGuess = (VALUE_TYPE(0.5) + VALUE_TYPE(0.5) * a) * pow(VALUE_TYPE(2), power);
 
 			if constexpr (std::is_same<VALUE_TYPE, double>::value && std::numeric_limits<double>::is_iec559)
 			{
@@ -1142,6 +1145,32 @@ namespace sci
 		{
 			return STRING();
 		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return getShortRepresentationAscii<1, 1>(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return getShortNameAscii();
+		}
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongRepresentationAscii<1, 1>();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongNameAscii();
+		}
+		static std::string getShortNameAscii()
+		{
+			return std::string();
+		}
+		static std::string getLongNameAscii()
+		{
+			return std::string();
+		}
 	};
 
 	struct Percent : public unitsPrivate::EncodedUnitWholePower<0, -2, false>
@@ -1196,6 +1225,32 @@ namespace sci
 			if constexpr (std::is_same<STRING, std::u32string>::value)
 				return U"percent";
 		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return getShortRepresentationAscii<1, 1>(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return getShortNameAscii();
+		}
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongRepresentationAscii<1, 1>();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongNameAscii();
+		}
+		static std::string getShortNameAscii()
+		{
+			return std::string("%");
+		}
+		static std::string getLongNameAscii()
+		{
+			return std::string("percent");
+		}
 	};
 
 	struct PerMille : public unitsPrivate::EncodedUnitWholePower<0, -3, false>
@@ -1248,6 +1303,32 @@ namespace sci
 			if constexpr (std::is_same<STRING, std::u32string>::value)
 				return U"per mille";
 		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return getShortRepresentationAscii<1, 1>(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return getShortNameAscii();
+		}
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongRepresentationAscii<1, 1>();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongNameAscii();
+		}
+		static std::string getShortNameAscii()
+		{
+			return std::string("0/00");
+		}
+		static std::string getLongNameAscii()
+		{
+			return std::string("per mille");
+		}
 	};
 
 	struct BasisPoint : public unitsPrivate::EncodedUnitWholePower<0, -4, false>
@@ -1299,6 +1380,32 @@ namespace sci
 				return u"basis point";
 			if constexpr (std::is_same<STRING, std::u32string>::value)
 				return U"basis point";
+		}
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix = std::string(), const std::string& exponentSuffix = std::string())
+		{
+			return getShortRepresentationAscii<1, 1>(exponentPrefix, exponentSuffix);
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getShortRepresentationAscii(const std::string& exponentPrefix, const std::string& exponentSuffix)
+		{
+			return getShortNameAscii();
+		}
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongRepresentationAscii<1, 1>();
+		}
+		template<int8_t EXTRA_POWER_NUMERATOR, int8_t EXTRA_POWER_DENOMINATOR>
+		static std::string getLongRepresentationAscii()
+		{
+			return getLongNameAscii();
+		}
+		static std::string getShortNameAscii()
+		{
+			return std::string("0/000");
+		}
+		static std::string getLongNameAscii()
+		{
+			return std::string("basis point");
 		}
 	};
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include"../include/scieng/Units.h"
 #include"../include/scieng/Time.h"
+#include"../include/scieng/codepage.h"
 #include<assert.h>
 
 typedef sci::Physical<sci::Metre<>, double> dMetre;
@@ -25,6 +26,7 @@ typedef sci::Physical < sci::Gram<>, double> dGram;
 typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
 typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
 typedef sci::Physical<sci::Inch<>, double> dInch;
+typedef sci::Physical<sci::Percent, double> dPercent;
 
 #include<array>
 template<int ...INTS>
@@ -57,6 +59,12 @@ float sumstd()
 		sum += std::sqrt((float)i);
 	return sum;
 }
+
+template <int N>
+concept canGetExponentName = requires()
+{
+	sci::getExponentName<N, std::string>();
+};
 
 int main()
 {
@@ -95,6 +103,7 @@ int main()
 	static_assert(!sci::IsValidSiExponent<4>); //4 is not a valid SI exponent
 
 	std::string milliString = sci::getExponentName<sci::milli, std::string>();
+	static_assert(!canGetExponentName<4>);
 	//std::string invalidString = sci::ExponentTraits<4>::getName<std::string>(); //should generate error
 	//int invalidString2 = sci::ExponentTraits<-3>::getName<int>(); //should generate error
 
@@ -146,9 +155,11 @@ int main()
 	std::wcout << bigAreaOther << " = " << bigAreaOther2 << " = " << bigAreaOther3 << " = " << bigAreaOther4 << "\n";
 
 	std::wcout << "2e+12 m2 = 2 Mm2 = 2e+12 m2 = 2e+06 km2\n";
-	std::wcout << "Above 3 lines must match";
+	std::wcout << "Above 3 lines must match\n";
 
-
+	std::wcout << dPercent(50.0) << "\n";
+	std::wcout << dPercent(50.0) * dPercent(50.0) << "\n";
+	std::wcout << dPercent(dPercent(50.0)* dPercent(50.0)) << "\n";
 
 	int seed;
 	std::cout << "double epsilon " << std::numeric_limits<double>::epsilon() << "\n";
@@ -185,28 +196,28 @@ int main()
 	for (size_t i = 0; i < n; ++i)
 		sum += (float)rand() / (float)RAND_MAX * max;
 	auto end = clock();
-	std::cout << "Sum " << sum << " duration " << end - start << std::endl;
+	std::cout << "Adding " << n << " random floats: Sum " << sum << " duration " << end - start << std::endl;
 
 	sum = 0;
 	start = clock();
 	for (size_t i = 0; i < n; ++i)
 		sum += (float)rand() / (float)RAND_MAX * max;
 	end = clock();
-	std::cout << "Sum " << sum << " duration " << end - start << std::endl;
+	std::cout << "Adding " << n << " random floats again: Sum " << sum << " duration " << end - start << std::endl;
 
 	sum = 0;
 	start = clock();
 	for (size_t i = 0; i < n; ++i)
 		sum += sci::unitsPrivate::sqrt((float)rand() / (float)RAND_MAX * max);
 	end = clock();
-	std::cout << "Sum sci::sqrt " << sum << " duration " << end - start << std::endl;
+	std::cout << "Adding " << n << " random sci::unitsPrivate::sqrt(float)s: Sum " << sum << " duration " << end - start << std::endl;
 
 	sum = 0;
 	start = clock();
 	for (size_t i = 0; i < n; ++i)
 		sum += std::sqrt((float)rand() / (float)RAND_MAX * max);
 	end = clock();
-	std::cout << "Sum std::sqrt " << sum << " duration " << end - start << std::endl;
+	std::cout << "Adding " << n << " random std::sqrt(float)s: Sum " << sum << " duration " << end - start << std::endl;
 
 	//sum = 0;
 	//start = clock();
