@@ -133,12 +133,21 @@ namespace sci
 		utf32String.push_back(char16_t(codePoint));
 	}
 
+	template<class STRING>
+	concept canAppendCodePoint = requires(STRING& s)
+	{
+		appendCodepoint(s, std::declval<uint32_t>());
+	};
+
 	//*******************
 	//utf32To
 	//*******************
 	template<class STRING>
 	inline STRING utf32NativeTo(const std::u32string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		STRING result;
 		for (auto& c : string)
 			appendCodepoint(result, (uint32_t)c);
@@ -147,6 +156,9 @@ namespace sci
 	template<class STRING>
 	inline STRING utf32To(const std::u32string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		STRING result;
 		std::u32string bomSwapped = bom32;
 		swapEndian(bomSwapped[0]);
@@ -169,6 +181,9 @@ namespace sci
 	template<class STRING>
 	inline STRING utf16NativeTo(const std::u16string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		STRING result;
 		result.reserve(string.length() * 2);
 		uint32_t codePoint;
@@ -197,6 +212,9 @@ namespace sci
 	template<class STRING>
 	inline STRING utf16To(const std::u16string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		if (string.length() == 0)
 			return STRING();
 
@@ -225,6 +243,9 @@ namespace sci
 	template<class STRING>
 	STRING utf8To(const std::u8string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		STRING result;
 		//result.push_back(char16_t(0xFEFF));//BOM
 
@@ -322,12 +343,18 @@ namespace sci
 	template<class STRING>
 	STRING nativeUnicodeTo(const std::wstring& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		return utf16To<STRING>(std::u16string(string.begin(), string.end()));
 	}
 #else
 	template<class STRING>
 	STRING nativeUnicodeTo(const std::string& string)
 	{
+		static_assert(canAppendCodePoint<STRING>, "Attempted to convert a unicode string to a type where a codepoint"
+			" cannot be appended. If the destination type is std::string you probably need to #include<scieng/codepage.h>. "
+			"If it is some other non-std string you should overload the appendCodePoint function for that string type.");
 		return utf8To<STRING>(std::u8string(string.begin(), string.end()));
 	}
 #endif
@@ -659,7 +686,7 @@ namespace sci
 	}
 #else
 	template<class STRING>
-	STRING fromNativeUnicode(const std::string& string)
+	inline STRING fromNativeUnicode(const std::string& string)
 	{
 		return nativeUnicodeTo<STRING>(string);
 	}

@@ -2,19 +2,14 @@
 #define SVECTOR_PLOTELEMENTS_H
 
 #include<vector>
-#include<string>
 #include<memory>
-
-#include"../string.h"
-#include"../graphics.h"
 #include<span>
-#include"plot.h"
+#include"styles.h"
 
 namespace sci
 {
 	namespace plot
 	{
-
 		class Symbol
 		{
 		public:
@@ -62,28 +57,6 @@ namespace sci
 
 		private:
 			std::vector<sci::graphics::Distance> m_symbol;
-		};
-
-		class FillStyle
-		{
-		public:
-			FillStyle(const sci::graphics::RgbColour& colour = sci::graphics::RgbColour(0.0, 0.0, 0.0))
-			{
-				m_colour = colour;
-			}
-
-			sci::graphics::RgbColour getColour() const
-			{
-				return m_colour;
-			}
-			void setBrush(sci::graphics::Renderer& renderer) const
-			{
-				renderer.setBrush(m_colour);
-			}
-
-		private:
-			sci::graphics::RgbColour m_colour;
-			LineStyle m_lineStyle;
 		};
 	}
 }

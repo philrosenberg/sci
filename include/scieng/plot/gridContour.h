@@ -10,13 +10,13 @@ namespace sci
 	namespace plot
 	{
 		template<int Dimensions1, int Dimensions2, class X, class Y, class Z> requires((Dimensions1 == 1 || Dimensions1 == 2) && (Dimensions2 == 1 || Dimensions2 == 2))
-		class Grid : public Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
+		class Grid : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<ColourScale<Z>>>,
+			sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
 		{
 		public:
-			using data = Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<ColourScale<Z>>>, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>;
 
 			//x and y should be 1d or 2d to match the dimensions passed in
 			template<class XCONTAINER, class YCONTAINER, class ZGRID>
@@ -31,124 +31,30 @@ namespace sci
 			}
 
 			
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
+				renderer.setPen(rgbcolour(), Length(sci::plot::millimetre(0.0)));
 
-				renderer.setPen(rgbcolour(), Length(millimetre(0.0)));
-				const auto& xs = data::getData<0>(axisSetIndex);
-				const auto& ys = data::getData<1>(axisSetIndex);
-
-				if (m_colourscale->isLog())
+				std::array<size_t, 2> shape = this->getShape<2>();
+				for (size_t i = 0; i < shape[0]; ++i)
 				{
-					//get the limits of the clourscale - this will get either the linear or logged min
-					//as appropriate
-					auto colourscaleMin = m_colourscale->getLogMin();
-					auto colourscaleMax = m_colourscale->getLogMax();
-
-					//either limit the data we plot to within the colourscale or off the limits as appropriate
-					auto zMin = colourscaleMin;
-					auto zMax = colourscaleMax;
-					if (m_colourscale->fillOffscaleBottom())
-						zMin = -std::numeric_limits<decltype(zMin)>::infinity();
-					if (m_colourscale->fillOffscaleTop())
-						zMax = std::numeric_limits<decltype(zMax)>::infinity();
-
-					const auto& zs = data::getData<2>(axisSetIndex);
-					std::array<size_t, 2> shape = zs.shape();
-					for (size_t i = 0; i < shape[0]; ++i)
+					for (size_t j = 0; j < shape[1]; ++j)
 					{
-						for (size_t j = 0; j < shape[1]; ++j)
-						{
-							if (zs[i][j] < zMin)
-								continue;
-							if (zs[i][j] > zMax)
-								continue;
-							renderer.setBrush(m_colourscale->getRgbLog(zs[i][j]));
-							renderer.polygon({ getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
-						}
+						if (this->isOffScale<2>(i, j, scales))
+							continue;
+						renderer.setBrush(this->getTransformed<2>(i, j, scales));
+						renderer.polygon({ this->getPoint<0,1>(i, j, axisSet),
+							this->getPoint<0,1>(i + 1, j, axisSet),
+							this->getPoint<0,1>(i + 1, j + 1, axisSet),
+							this->getPoint<0,1>(i, j + 1, axisSet),
+							this->getPoint<0,1>(i, j, axisSet) });
 					}
 				}
-				else
-				{
-					//get the limits of the clourscale - this will get either the linear or logged min
-					//as appropriate
-					auto colourscaleMin = m_colourscale->getLinearMin();
-					auto colourscaleMax = m_colourscale->getLinearMax();
 
-					//either limit the data we plot to within the colourscale or off the limits as appropriate
-					auto zMin = colourscaleMin;
-					auto zMax = colourscaleMax;
-					if (m_colourscale->fillOffscaleBottom())
-						zMin = -std::numeric_limits<decltype(zMin)>::infinity();
-					if (m_colourscale->fillOffscaleTop())
-						zMax = std::numeric_limits<decltype(zMax)>::infinity();
-
-					const auto& zs = data::getData<2>(axisSetIndex);
-					std::array<size_t, 2> shape = zs.shape();
-					for (size_t i = 0; i < shape[0]; ++i)
-					{
-						for (size_t j = 0; j < shape[1]; ++j)
-						{
-							if (zs[i][j] < zMin)
-								continue;
-							if (zs[i][j] > zMax)
-								continue;
-							renderer.setBrush(m_colourscale->getRgbLinear(zs[i][j]));
-							renderer.polygon({ getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i + 1, j), getY(ys, i + 1, j), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i + 1, j + 1), getY(ys, i + 1, j + 1), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i, j + 1), getY(ys, i, j + 1), axisSetIndex),
-								getPointFromLoggedIfNeededData(getX(xs, i, j), getY(ys, i, j), axisSetIndex) });
-						}
-					}
-				}
 				
 			}
 		private:
 			std::shared_ptr<ColourScale<Z>> m_colourscale;
-
-			//allows access to x and y equivalently whether they are 1d or 2d
-			template<class T>
-			constexpr static T getX(const std::vector<T>& x, size_t index, size_t)
-			{
-				return x[index];
-			}
-
-			template<class T>
-			constexpr static T getX(const sci::GridData<T, 1>& x, size_t index, size_t)
-			{
-				return x[index];
-			}
-
-			template<class T>
-			constexpr static T getX(const sci::GridData<T, 2>& x, size_t index1, size_t index2)
-			{
-				return x[index1][index2];
-			}
-
-			template<class T>
-			constexpr static T getY(const std::vector<T>& y, size_t , size_t index)
-			{
-				return y[index];
-			}
-
-			template<class T>
-			constexpr static T getY(const sci::GridData<T, 1>& y, size_t, size_t index)
-			{
-				return y[index];
-			}
-
-			template<class T>
-			constexpr static T getY(const sci::GridData<T, 2>& y, size_t index1, size_t index2)
-			{
-				return y[index1][index2];
-			}
 		};
 
 		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
@@ -161,15 +67,16 @@ namespace sci
 		}
 
 		template<int Dimensions1, int Dimensions2, class X, class Y, class Z> requires((Dimensions1 == 1 || Dimensions1 == 2) && (Dimensions2 == 1 || Dimensions2 == 2))
-		class Contours : public Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
+		class Contours : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<LevelScale<Z, float>>>,
+			sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>
 		{
 		public:
-			using data = Data<X, Y, sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<LevelScale<Z, float>>>,
+				sci::GridData<X, Dimensions1>, sci::GridData<Y, Dimensions2>, sci::GridData<Z, 2>>;
 
-			template<class XCONTAINER, class YCONTAINER, class ZGRID>
+			/*template<class XCONTAINER, class YCONTAINER, class ZGRID>
 			Contours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
 				requires(XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs)
@@ -180,10 +87,10 @@ namespace sci
 				m_colourscale = colourScale;
 				m_levelScale = nullptr;
 				m_lineStyle = lineStyle;
-			}
+			}*/
 
 			template<class XCONTAINER, class YCONTAINER, class ZGRID>
-			Contours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
+			Contours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z, float>> levelScale, const LineStyle& lineStyle)
 				requires(XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>)
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, levelScale), xs, ys, zs)
 			{
@@ -195,7 +102,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				sci::GridData<Z, 1> contourLevels;
 				if (m_levelScale)
@@ -209,9 +116,7 @@ namespace sci
 
 				//get the segments of each contour line using the marching squares algorithm.
 				//note that this just gives the edges of the grid boxes that each segment touches
-				const sci::GridData<Z, 2>& zs = data::getData<2>(axisSetIndex);
-				std::array<size_t, 2> shape = zs.shape();
-				std::vector<std::set<Segment>> segmentsPerLevel = marchingSquaresSegments(zs, contourLevels);
+				std::vector<std::set<Segment>> segmentsPerLevel = marchingSquaresSegments(scales);
 
 				//render the fill
 
@@ -287,10 +192,13 @@ namespace sci
 					}
 				}*/
 
-
+				//***************************************
 				//render the contours
-				// 
+				//*************************************
+				
+				//concatenate the segments into lines
 				//this is destructive - it moves segments from the segmentsPerLevel variable to the segments variable
+				std::array<size_t, 2> shape = this->getShape<2>();
 				std::vector<std::vector<Segment>> segments;
 				for (size_t i = 0; i < segmentsPerLevel.size(); ++i)
 				{
@@ -300,25 +208,13 @@ namespace sci
 					}
 				}
 
-
-
-				//now work out where the contours cross each grid box edge
-				std::vector<X> xs;
-				std::vector<Y> ys;
-				std::vector<Point> points;
+				//now work out where the contours cross each grid box edge and plot
 				
-				const auto& inputXs = data::getData<0>(axisSetIndex);
-				const auto& inputYs = data::getData<1>(axisSetIndex);
+				m_lineStyle.setPen(renderer);
 				for (size_t i = 0; i < segments.size(); ++i)
 				{
-					getContourLine(inputXs, inputYs, zs, segments[i], xs, ys);
-
-					m_lineStyle.setPen(renderer);
-					points.resize(xs.size());
-					for (size_t j = 0; j < points.size(); ++j)
-						points[j] = getPointFromLoggedIfNeededData(xs[j], ys[j], axisSetIndex);
+					std::vector<Point> points = getContourLine(segments[i], axisSet, scales);
 					renderer.polyLine(points);
-					
 				}
 
 			}
@@ -329,7 +225,7 @@ namespace sci
 				size_t index1;
 				size_t index2;
 				uint8_t intersectionType;
-				Z level;
+				size_t level;
 				bool operator==(const Segment& other) const
 				{
 					return index1 == other.index1 && index2 == other.index2 && intersectionType == other.intersectionType;
@@ -346,7 +242,8 @@ namespace sci
 				}
 			};
 
-			static uint8_t getIntersectionType(size_t i, size_t j, const sci::GridData<Z, 2>& grid, Z contourLevel)
+			template<class T>
+			static constexpr uint8_t getIntersectionType(size_t i, size_t j, const sci::GridData<T, 2>& grid, T contourLevel)
 			{
 				uint8_t intersectionType = 0;
 				if (grid[i][j] > contourLevel)
@@ -363,6 +260,35 @@ namespace sci
 				if (5 == intersectionType && (grid[i + 1][j + 1] + grid[i + 1][j] + grid[i][j] + grid[i][j + 1]) / 4.0 <= contourLevel)
 					intersectionType = 16;
 				else if (10 == intersectionType && (grid[i + 1][j + 1] + grid[i + 1][j] + grid[i][j] + grid[i][j + 1]) / 4.0 <= contourLevel)
+					intersectionType = 17;
+				return intersectionType;
+			}
+
+			constexpr auto sumCorners(size_t i, size_t j, const data::scalesTuple& scales) const
+			{
+				return this->getTransformed<2>(i + 1, j + 1, scales)
+					+ this->getTransformed<2>(i + 1, j, scales)
+					+ this->getTransformed<2>(i, j, scales)
+					+ this->getTransformed<2>(i, j + 1, scales);
+			}
+
+			constexpr uint8_t getIntersectionType(size_t i, size_t j, size_t contourLevel, const data::scalesTuple&scales) const
+			{
+				uint8_t intersectionType = 0;
+				if (this->getTransformed<2>(i, j, scales) > float(contourLevel))
+					intersectionType = intersectionType | 0x01;
+				if (this->getTransformed<2>(i + 1, j, scales) > float(contourLevel))
+					intersectionType = intersectionType | 0x02;
+				if (this->getTransformed<2>(i + 1, j + 1, scales) > float(contourLevel))
+					intersectionType = intersectionType | 0x04;
+				if (this->getTransformed<2>(i, j + 1, scales) > float(contourLevel))
+					intersectionType = intersectionType | 0x08;
+
+
+				//disambiguate saddle points
+				if (5 == intersectionType && sumCorners(i, j, scales) * 0.25 <= float(contourLevel))
+					intersectionType = 16;
+				else if (10 == intersectionType && sumCorners(i, j, scales) * 0.25 <= float(contourLevel))
 					intersectionType = 17;
 				return intersectionType;
 			}
@@ -551,16 +477,51 @@ namespace sci
 						{
 							uint8_t intersectionType = disambiguateContours(getIntersectionType(i, j, grid, contourLevels[k]));
 							if (intersectionType != 0 && intersectionType != 15 && intersectionType != 5 && intersectionType != 10)
-								segments[k].insert(Segment{ i, j, intersectionType, contourLevels[k] });
+								segments[k].insert(Segment{ i, j, intersectionType, k });
 							else if (5 == intersectionType || 16 == intersectionType)
 							{
-								segments[k].insert(Segment{ i, j, 2, contourLevels[k] });
-								segments[k].insert(Segment{ i, j, 7, contourLevels[k] });
+								segments[k].insert(Segment{ i, j, 2, k });
+								segments[k].insert(Segment{ i, j, 7, k });
 							}
 							else if (10 == intersectionType || 17 == intersectionType)
 							{
-								segments[k].insert(Segment{ i, j, 1, contourLevels[k] });
-								segments[k].insert(Segment{ i, j, 4, contourLevels[k] });
+								segments[k].insert(Segment{ i, j, 1, k });
+								segments[k].insert(Segment{ i, j, 4, k });
+							}
+						}
+					}
+				}
+				return segments;
+			}
+
+			//creates a set of contour segments for each countour level. The sets are in order from the first to last level.
+			//Because we use a set, the segments are in ascending order using the < operator defined in the set class
+			std::vector<std::set<Segment>> marchingSquaresSegments(const data::scalesTuple& scales) const
+			{
+				size_t nLevels = m_levelScale->getNLevels();
+
+				std::array<size_t, 2> shape = this->getShape<2>();
+
+				//get all the intesections of grids with contours using the marching squares algorithm
+				std::vector<std::set<Segment>> segments(nLevels);
+				for (size_t i = 0; i < shape[0] - 1; ++i)
+				{
+					for (size_t j = 0; j < shape[1] - 1; ++j)
+					{
+						for (size_t k = 0; k < nLevels; ++k)
+						{
+							uint8_t intersectionType = disambiguateContours(getIntersectionType(i, j, k, scales));
+							if (intersectionType != 0 && intersectionType != 15 && intersectionType != 5 && intersectionType != 10)
+								segments[k].insert(Segment{ i, j, intersectionType, k});
+							else if (5 == intersectionType || 16 == intersectionType)
+							{
+								segments[k].insert(Segment{ i, j, 2, k });
+								segments[k].insert(Segment{ i, j, 7, k });
+							}
+							else if (10 == intersectionType || 17 == intersectionType)
+							{
+								segments[k].insert(Segment{ i, j, 1, k });
+								segments[k].insert(Segment{ i, j, 4, k });
 							}
 						}
 					}
@@ -612,198 +573,131 @@ namespace sci
 				return result;
 			}
 
-			template <bool isDim1, class T>
-			static std::array<std::array<T, 2>, 2> getCornerValues(size_t index1, size_t index2, const std::vector<T>& v)
+			Point getLeftIntersection(size_t index1, size_t index2, size_t contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
 			{
-				if constexpr (isDim1)
-					return{ std::array<T, 2>{v[index1], v[index1]},
-							std::array<T, 2>{v[index1 + 1], v[index1 + 1]} };
-				else
-					return{ std::array<T, 2>{v[index2], v[index2 + 1]},
-							std::array<T, 2>{v[index2], v[index2 + 1]} };
+				Point p0 = this->getPoint<0, 1>(index1, index2, axes);
+				Point p1 = this->getPoint<0, 1>(index1, index2 + 1, axes);
+				float weight = this->getWeight<2>(contourLevel, index1, index2, index1, index2 + 1, scales);
+				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			template <bool isDim1, class T>
-			static std::array<std::array<T, 2>, 2> getCornerValues(size_t index1, size_t index2, const sci::GridData<T, 1>& v)
+			Point getTopIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
 			{
-				if constexpr (isDim1)
-					return{ std::array<T, 2>{v[index1], v[index1]},
-							std::array<T, 2>{v[index1 + 1], v[index1 + 1]} };
-				else
-					return{ std::array<T, 2>{v[index2], v[index2 + 1]},
-							std::array<T, 2>{v[index2], v[index2 + 1]} };
+				Point p0 = this->getPoint<0, 1>(index1, index2 + 1, axes);
+				Point p1 = this->getPoint<0, 1>(index1 + 1, index2 + 1, axes);
+				float weight = this->getWeight<2>(contourLevel, index1, index2 + 1, index1 + 1, index2 + 1, scales);
+				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			template <bool isDim1, class T>
-			static std::array<std::array<T, 2>, 2> getCornerValues(size_t index1, size_t index2, const sci::GridData<T, 2>& g)
+			Point getRightIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales)const
 			{
-				//isDim1 is only there to match the function above and isn't used
-				return{ std::array<T, 2>{g[index1][index2], g[index1][index2 + 1]},
-						std::array<T, 2>{g[index1 + 1][index2], g[index1 + 1][index2 + 1]} };
-
+				Point p0 = this->getPoint<0, 1>(index1 + 1, index2 + 1, axes);
+				Point p1 = this->getPoint<0, 1>(index1 + 1, index2, axes);
+				float weight = this->getWeight<2>(contourLevel, index1 + 1, index2 + 1, index1 + 1, index2, scales);
+				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			template <class DATAX, class DATAY, class DATAZ>
-			static void getJoiningPoint(const DATAX& allXs, const DATAY& allYs, const DATAZ& allZs,
-				const Segment& segment1, const Segment& segment2, X& x, Y& y)
+			Point getBottomIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple &scales) const
 			{
-				std::array<std::array<X, 2>, 2> xs = getCornerValues<true>(segment1.index1, segment1.index2, allXs);
-				std::array<std::array<Y, 2>, 2> ys = getCornerValues<false>(segment1.index1, segment1.index2, allYs);
-				std::array<std::array<Z, 2>, 2> zs = getCornerValues<true>(segment1.index1, segment1.index2, allZs);
-				const Z& contourLevel = segment1.level;
-				if (segment2.index1 == segment1.index1 + 1) //right
-				{
-					auto weight = (contourLevel - zs[1][0]) / (contourLevel - zs[1][1]);
-					x = xs[1][0] + weight * (xs[1][1] - xs[1][0]);
-					y = ys[1][0] + weight * (ys[1][1] - ys[1][0]);
-				}
-				else if (segment2.index1 == segment1.index1 - 1) //left
-				{
-					auto weight = (contourLevel - zs[0][0]) / (contourLevel - zs[0][1]);
-					x = xs[0][0] + weight * (xs[0][1] - xs[0][0]);
-					y = ys[0][0] + weight * (ys[0][1] - ys[0][0]);
-				}
-				else if (segment2.index2 == segment1.index2 + 1) //top
-				{
-					auto weight = (contourLevel - zs[0][1]) / (contourLevel - zs[1][1]);
-					x = xs[0][1] + weight * (xs[1][1] - xs[0][1]);
-					y = ys[0][1] + weight * (ys[1][1] - ys[0][1]);
-				}
-				else if (segment2.index2 == segment1.index2 - 1) //bottom
-				{
-					auto weight = (contourLevel - zs[0][0]) / (contourLevel - zs[1][0]);
-					x = xs[0][0] + weight * (xs[1][0] - xs[0][0]);
-					y = ys[0][0] + weight * (ys[1][0] - ys[0][0]);
-				}
-				else
-					throw("some contouring error happened that indicates a bug");
+				Point p0 = this->getPoint<0, 1>(index1 + 1, index2, axes);
+				Point p1 = this->getPoint<0, 1>(index1, index2, axes);
+				float weight = this->getWeight<2>(contourLevel, index1 + 1, index2, index1, index2, scales);
+				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			template <class DATAX, class DATAY, class DATAZ>
-			static void getSegment1NonJoiningPoint(const DATAX& allXs, const DATAY& allYs, const DATAZ& allZs,
-				const Segment& segment1, const Segment& segment2, X& x, Y& y)
+			Point getJoiningPoint(const Segment& segment1, const Segment& segment2, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
 			{
-				std::array<std::array<X, 2>, 2> xs = getCornerValues<true>(segment1.index1, segment1.index2, allXs);
-				std::array<std::array<Y, 2>, 2> ys = getCornerValues<false>(segment1.index1, segment1.index2, allYs);
-				std::array<std::array<Z, 2>, 2> zs = getCornerValues<true>(segment1.index1, segment1.index2, allZs);
-				const Z& contourLevel = segment1.level;
+				size_t contourLevel = segment1.level;
+				if ((segment2.index1 == segment1.index1 + 1)) //right join
+					return getRightIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
+				else if (segment2.index1 == segment1.index1 - 1) //left join
+					return getLeftIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
+				else if (segment2.index2 == segment1.index2 + 1) //top join
+					return getTopIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
+				else if (segment2.index2 == segment1.index2 - 1) //bottom join
+					return getBottomIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
+				throw("Attempted to get the non-joining point of two contour segments that are not joined.");
+			}
+
+			Point getSegment1NonJoiningPoint(const Segment& segment1, const Segment& segment2, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			{
+				size_t contourLevel = segment1.level;
 				if ((segment2.index1 == segment1.index1 + 1)) //right join, get left
-				{
-					auto weight = (contourLevel - zs[0][0]) / (zs[0][1] - zs[0][0]);
-					x = xs[0][0] + weight * (xs[0][1] - xs[0][0]);
-					y = ys[0][0] + weight * (ys[0][1] - ys[0][0]);
-				}
+					return getLeftIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
 				else if (segment2.index1 == segment1.index1 - 1) //left join, get right
-				{
-					auto weight = (contourLevel - zs[1][0]) / (zs[1][1] - zs[1][0]);
-					x = xs[1][0] + weight * (xs[1][1] - xs[1][0]);
-					y = ys[1][0] + weight * (ys[1][1] - ys[1][0]);
-				}
+					return getRightIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
 				else if (segment2.index2 == segment1.index2 + 1) //top join, get bottom
-				{
-					auto weight = (contourLevel - zs[0][0]) / (zs[1][0] - zs[0][0]);
-					x = xs[0][0] + weight * (xs[1][0] - xs[0][0]);
-					y = ys[0][0] + weight * (ys[1][0] - ys[0][0]);
-				}
+					return getBottomIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
 				else if (segment2.index2 == segment1.index2 - 1) //bottom join, get top
-				{
-					auto weight = (contourLevel - zs[0][1]) / (zs[1][1] - zs[0][1]);
-					x = xs[0][1] + weight * (xs[1][1] - xs[0][1]);
-					y = ys[0][1] + weight * (ys[1][1] - ys[0][1]);
-				}
+					return getTopIntersection(segment1.index1, segment1.index2, contourLevel, axes, scales);
+				throw("Attempted to get a joining point of two contour segments that are not joined.");
 			}
 
-			template <class DATAX, class DATAY, class DATAZ>
-			static void getBothPoints(const DATAX& allXs, const DATAY& allYs, const DATAZ& allZs,
-				const Segment& segment1, std::vector<X>& x, std::vector<Y>& y)
+			void getBothPoints(const Segment& segment, std::vector<Point>& points, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
 			{
-				std::array<std::array<X, 2>, 2> xs = getCornerValues<true>(segment1.index1, segment1.index2, allXs);
-				std::array<std::array<Y, 2>, 2> ys = getCornerValues<false>(segment1.index1, segment1.index2, allYs);
-				std::array<std::array<Z, 2>, 2> zs = getCornerValues<true>(segment1.index1, segment1.index2, allZs);
-				x.resize(0);
-				y.resize(0);
-				x.resize(2);
-				y.resize(2);
-				auto xIter = x.begin();
-				auto yIter = y.begin();
-				const Z& contourLevel = segment1.level;
-				if (hasRight(segment1.intersectionType)) //right
+				points.resize(2);
+				auto iter = points.begin();
+				size_t contourLevel = segment.level;
+				if (hasLeft(segment.intersectionType)) //left
 				{
-					auto weight = (contourLevel - zs[1][0]) / (zs[1][1] - zs[1][0]);
-					*xIter = xs[1][0] + weight * (xs[1][1] - xs[1][0]);
-					*yIter = ys[1][0] + weight * (ys[1][1] - ys[1][0]);
-					++xIter;
-					++yIter;
+					*iter = getLeftIntersection(segment.index1, segment.index2, contourLevel, axes, scales);
+					++iter;
 				}
-				if (hasLeft(segment1.intersectionType)) //left
+				if (hasTop(segment.intersectionType)) //top
 				{
-					auto weight = (contourLevel - zs[0][0]) / (zs[0][1] - zs[0][0]);
-					*xIter = xs[0][0] + weight * (xs[0][1] - xs[0][0]);
-					*yIter = ys[0][0] + weight * (ys[0][1] - ys[0][0]);
-					++xIter;
-					++yIter;
+					*iter = getTopIntersection(segment.index1, segment.index2, contourLevel, axes, scales);
+					++iter;
 				}
-				if (hasTop(segment1.intersectionType)) //top
+				if (hasRight(segment.intersectionType)) //right
 				{
-					auto weight = (contourLevel - zs[0][1]) / (zs[1][1] - zs[0][1]);
-					*xIter = xs[0][1] + weight * (xs[1][1] - xs[0][1]);
-					*yIter = ys[0][1] + weight * (ys[1][1] - ys[0][1]);
-					++xIter;
-					++yIter;
+					*iter = getRightIntersection(segment.index1, segment.index2, contourLevel, axes, scales);
+					++iter;
 				}
-				if (hasBottom(segment1.intersectionType)) //bottom
+				if (hasBottom(segment.intersectionType)) //bottom
 				{
-					auto weight = (contourLevel - zs[0][0]) / (zs[1][0] - zs[0][0]);
-					*xIter = xs[0][0] + weight * (xs[1][0] - xs[0][0]);
-					*yIter = ys[0][0] + weight * (ys[1][0] - ys[0][0]);
-					++xIter;
-					++yIter;
+					*iter = getBottomIntersection(segment.index1, segment.index2, contourLevel, axes, scales);
+					++iter;
 				}
 			}
 
-			template <class DATAX, class DATAY, class DATAZ>
-			static void getContourLine(const DATAX& allXs, const DATAY& allYs, const DATAZ& allZs,
-				const std::vector<Segment>& segments, std::vector<X>& xs, std::vector<Y>& ys)
+			std::vector<Point> getContourLine(const std::vector<Segment>& segments, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
 			{
 				if (segments.size() == 0)
-				{
-					xs.resize(0);
-					ys.resize(0);
-					return;
-				}
-				xs.resize(segments.size() + 1);
-				ys.resize(segments.size() + 1);
+					return std::vector<Point>(0);
+				
+				std::vector<Point> result(segments.size() + 1);
+
 				if (segments.size() == 1)
-					getBothPoints(allXs, allYs, allZs, segments[0], xs, ys);
+					getBothPoints(segments[0], result, axes, scales);
 				else
 				{
 					for (size_t j = 0; j < segments.size() - 1; ++j)
-						getJoiningPoint(allXs, allYs, allZs, segments[j], segments[j + 1], xs[j + 1], ys[j + 1]); //this omits the last and first point
+						result[j+1] =  getJoiningPoint(segments[j], segments[j + 1], axes, scales); //this omits the last and first point
 					//sort the last and first point
-					getSegment1NonJoiningPoint(allXs, allYs, allZs, segments[0], segments[1], xs[0], ys[0]);
-					getSegment1NonJoiningPoint(allXs, allYs, allZs, segments.back(), segments[segments.size() - 2], xs.back(), ys.back());
+					result[0] = getSegment1NonJoiningPoint(segments[0], segments[1], axes, scales);
+					result.back() = getSegment1NonJoiningPoint(segments.back(), segments[segments.size() - 2], axes, scales);
 				}
+				return result;
 			}
 
-
 			std::shared_ptr<ColourScale<Z>> m_colourscale;
-			std::shared_ptr<LevelScale<Z>> m_levelScale;
+			std::shared_ptr<LevelScale<Z, float>> m_levelScale;
 			LineStyle m_lineStyle;
 		};
 
 
 
-		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
+		/*template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
 		auto makeContours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<ColourScale<Z>> colourScale, const LineStyle& lineStyle)
 		{
 			constexpr int Dimensions1 = getPlotableNDims<XCONTAINER, X>();
 			constexpr int Dimensions2 = getPlotableNDims<YCONTAINER, Y>();
 			static_assert (XYZPlotable<Dimensions1, Dimensions2, 2, XCONTAINER, YCONTAINER, ZGRID, X, Y, Z>, "Attempted to create a sci::plot::Contours with data that is not plotable.");
 			return std::make_shared<Contours<Dimensions1, Dimensions2, X, Y, Z>>(xs, ys, zs, xAxis, yAxis, colourScale, lineStyle);
-		}
+		}*/
 
 		template<class X, class Y, class Z, class XCONTAINER, class YCONTAINER, class ZGRID>
-		auto makeContours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z>> levelScale, const LineStyle& lineStyle)
+		auto makeContours(const XCONTAINER& xs, const YCONTAINER& ys, const ZGRID& zs, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, std::shared_ptr<LevelScale<Z, float>> levelScale, const LineStyle& lineStyle)
 		{
 			constexpr int Dimensions1 = getPlotableNDims<XCONTAINER, X>();
 			constexpr int Dimensions2 = getPlotableNDims<YCONTAINER, Y>();

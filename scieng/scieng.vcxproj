@@ -137,6 +137,7 @@
     <ClInclude Include="..\include\scieng\iostream.h" />
     <ClInclude Include="..\include\scieng\math.h" />
     <ClInclude Include="..\include\scieng\plot.h" />
+    <ClInclude Include="..\include\scieng\plot\colourbar.h" />
     <ClInclude Include="..\include\scieng\plot\elements.h" />
     <ClInclude Include="..\include\scieng\plot\errorBar.h" />
     <ClInclude Include="..\include\scieng\plot\fillBars.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="..\include\scieng\plot\physical.h" />
     <ClInclude Include="..\include\scieng\plot\plot.h" />
     <ClInclude Include="..\include\scieng\plot\plotable.h" />
+    <ClInclude Include="..\include\scieng\plot\styles.h" />
     <ClInclude Include="..\include\scieng\plot\transforms.h" />
     <ClInclude Include="..\include\scieng\plot\varyingPoints.h" />
     <ClInclude Include="..\include\scieng\Ranges.h" />

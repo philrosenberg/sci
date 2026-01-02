@@ -288,7 +288,7 @@ int main()
 		gridToPushBackTo.push_back(sci::GridData<double, 1>{2.0, 2.0} + 0.5); //pushing back a transform
 		gridToPushBackTo.push_back(0.5 + sci::GridData<double, 1>{3.0, 3.0}); //pushing back a transform
 		gridToPushBackTo.push_back(sci::GridData<double, 1>{4.0, 4.0} + sci::GridData<double, 1>{2.0, 2.0}); //pushing back a transform
-		gridToPushBackTo.push_back(sci::GridData<double, 2>({ 2,2 }, 10.0));
+		//gridToPushBackTo.push_back(sci::GridData<double, 2>({ 2,2 }, 10.0)); //should not compile
 		output2d(gridToPushBackTo);
 	}
 

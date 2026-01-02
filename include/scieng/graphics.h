@@ -15,6 +15,7 @@
 #include<map>
 #include<optional>
 #include<span>
+#include<memory>
 
 namespace sci
 {
@@ -663,6 +664,15 @@ namespace sci
 			}
 		};
 
+		constexpr Distance operator*(const unitless& scale, const Distance &distance)
+		{
+			return distance * scale;
+		}
+
+		constexpr Distance operator*(const std::array<unitless, 2>& scale, const Distance& distance)
+		{
+			return distance * scale;
+		}
 
 		//A Point is a 2D vector representing a position.
 		//It should not be used to represent a size.
@@ -737,17 +747,32 @@ namespace sci
 		{
 		public:
 			virtual ~Clipper();
+			Clipper()
+				:m_renderer(nullptr)
+			{ }
+			Clipper& operator=(Clipper&& other)
+			{
+				if (&other == this)
+					return *this;
+				m_renderer = other.m_renderer;
+				other.m_renderer = nullptr;
+				return *this;
+			}
+			Clipper(Clipper&& other)
+			{
+				if (&other == this)
+					return;
+				m_renderer = other.m_renderer;
+				other.m_renderer = nullptr;
+			}
 		private:
 			friend class Renderer;
 			Clipper(Renderer* renderer)
 			{
 				m_renderer = renderer;
 			}
-			Clipper(Clipper&& other)
-			{
-				m_renderer = other.m_renderer;
-				other.m_renderer = nullptr;
-			}
+			Clipper(const Clipper&) = delete;
+			Clipper& operator=(const Clipper&) = delete;
 			Renderer* m_renderer;
 		};
 
@@ -997,7 +1022,7 @@ namespace sci
 				//check the whole string if needed
 				//returns npos if no matching close bracket was found or the character indicated at openingBracketPosition
 				//is none of ( { [
-				constexpr static size_t findClosingBracket(sci::string str, size_t openingBracketPosition, size_t maxLength = sci::string::npos)
+				static size_t findClosingBracket(const sci::string &str, size_t openingBracketPosition, size_t maxLength = sci::string::npos)
 				{
 					const sci::string::basic_string::value_type openingBracket = str[openingBracketPosition];
 					sci::string::basic_string::value_type closingBracket;

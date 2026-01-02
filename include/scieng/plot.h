@@ -5,3 +5,4 @@
 #include"plot/gridContour.h"
 #include"plot/errorBar.h"
 #include"plot/fillBars.h"
+#include"plot/colourbar.h"

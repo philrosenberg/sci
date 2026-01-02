@@ -153,7 +153,7 @@ namespace sci
 					font.SetFamily(getWxFontFamily(backupFamily));
 				}
 				m_fontSize = size.getLength(unitless(m_width) / m_scale, unitless(m_height) / m_scale);
-				font.SetFractionalPointSize(m_fontSize.value<textPoint>());
+				font.SetPointSize(sci::round<textPoint>(m_fontSize).value<textPoint>());
 				font.SetWeight(bold ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL);
 				font.SetStyle(italic ? wxFONTSTYLE_ITALIC : wxFONTSTYLE_NORMAL);
 				font.SetUnderlined(underline);
@@ -239,7 +239,7 @@ namespace sci
 			{
 				m_fontSize *= scale;
 				auto font = m_dc->GetFont();
-				font.SetFractionalPointSize(m_fontSize.value<textPoint>());
+				font.SetPointSize(sci::round<textPoint>(m_fontSize).value<textPoint>());
 				m_dc->SetFont(font);
 			}
 			virtual void polyLine(const std::vector<Point>& points)
@@ -412,7 +412,7 @@ namespace sci
 			{
 				//override this function, but this is the kind of thing to do
 				wxPaintDC dc(this);
-				wxDcRenderer renderer(&dc, GetClientSize(), perInch(FromDIP(96)));
+				wxDcRenderer renderer(&dc, GetClientSize(), perInch(wxWindow::FromDIP(96)));
 			}
 			virtual void OnErase(wxEraseEvent& event)
 			{
@@ -431,7 +431,7 @@ namespace sci
 		{
 		public:
 			wxGraphicsFrame(wxFrame* parent)
-				: wxFrame(parent, wxID_ANY, "Graphics frame", wxDefaultPosition, FromDIP(wxSize(800, 600)))
+				: wxFrame(parent, wxID_ANY, "Graphics frame", wxDefaultPosition, wxWindow::FromDIP(wxSize(800, 600)))
 			{
 				m_panel = new PANEL(this);
 			}

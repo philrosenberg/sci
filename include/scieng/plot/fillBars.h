@@ -9,14 +9,14 @@ namespace sci
 	namespace plot
 	{
 		template<class X, class Y>
-		class VerticalBars : public Data<X, Y, GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>>
+		class VerticalBars : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
-			using data::getYAxis;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>>;
 
 			template<class XCONTAINER, class YCONTAINER>
 			VerticalBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = Y(0.0))
@@ -32,31 +32,24 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(Y()/Y())>::quiet_NaN();
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
-
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				Y zeroLine = getYAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
+				Y zeroLine = axisSet.isLog(1) ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const GridData<X, 1>& minXs = data::getData<0>(axisSetIndex);
-				const GridData<X, 1>& maxXs = data::getData<1>(axisSetIndex);
-				const GridData<Y, 1>& ys = data::getData<2>(axisSetIndex);
-
-				for (size_t i = 0; i < getNPoints(); ++i)
+				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
 				{
-					Point p1 = getPointFromLoggedIfNeededData(minXs[i], zeroLine, axisSetIndex);
-					Point p2 = getPointFromLoggedIfNeededData(maxXs[i], ys[i], axisSetIndex);
+					Point p1 = this->getPointYFixed<0>(zeroLine, i, axisSet);
+					Point p2 = this->getPoint<1, 2>(i, axisSet);
 					renderer.rectangle(p1, p2);
 				}
 			}
-			virtual void autoscaleAxes(size_t axisSetIndex) override
+			virtual void autoscaleAxes() override
 			{
-				getYAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				data::autoscaleAxes(axisSetIndex);
+				this->expandAxis<2>(m_zeroLineLinear);
+				data::autoscaleAxes();
 			}
 		private:
 			FillStyle m_fillStyle;
@@ -73,19 +66,19 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class HorizontalBars : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>
+		class HorizontalBars : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
-			using data::getXAxis;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>;
 
 			template<class XCONTAINER, class YCONTAINER>
 			HorizontalBars(const XCONTAINER& xs, const YCONTAINER& ys, const YCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = X(0.0))
 				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
-				:data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -96,32 +89,25 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(X()/X())>::quiet_NaN();
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
-
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				X zeroLine = getXAxis(axisSetIndex)->isLog() ? m_zeroLineLogged : m_zeroLineLinear;
+				X zeroLine = axisSet.isLog(0) ? m_zeroLineLogged : m_zeroLineLinear;
 
-				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
-				const GridData<Y, 1>& minYs = data::getData<1>(axisSetIndex);
-				const GridData<Y, 1>& maxYs = data::getData<2>(axisSetIndex);
-
-				for (size_t i = 0; i < getNPoints(); ++i)
+				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
 				{
-					Point p1 = getPointFromLoggedIfNeededData(zeroLine, minYs[i], axisSetIndex);
-					Point p2 = getPointFromLoggedIfNeededData(xs[i], maxYs[i], axisSetIndex);
+					Point p1 = this->getPointXFixed<1>(zeroLine, i, axisSet);
+					Point p2 = this->getPoint<0, 2>(i, axisSet);
 					renderer.rectangle(p1, p2);
 				}
 			}
 
-			virtual void autoscaleAxes(size_t axisSetIndex) override
+			virtual void autoscaleAxes() override
 			{
-				getXAxis(axisSetIndex)->expand(m_zeroLineLinear);
-				data::autoscaleAxes(axisSetIndex);
+				this->expandAxis<0>(m_zeroLineLinear);
+				data::autoscaleAxes();
 			}
 		private:
 			FillStyle m_fillStyle;
@@ -139,13 +125,14 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class Boxes : public Data<X, Y, GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>
+		class Boxes : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<X, 1>, GridData<Y, 1>, GridData<Y, 1>>;
 
 			template<class XCONTAINER, class YCONTAINER>
 			Boxes(const XCONTAINER& x1s, const XCONTAINER& x2s, const YCONTAINER& y1s, const YCONTAINER& y2s, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<X>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle)
@@ -159,24 +146,15 @@ namespace sci
 				m_fillStyle = fillStyle;
 			}
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
-
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-
-				const GridData<X, 1>& x1s = data::getData<0>(axisSetIndex);
-				const GridData<X, 1>& x2s = data::getData<1>(axisSetIndex);
-				const GridData<Y, 1>& y1s = data::getData<2>(axisSetIndex);
-				const GridData<Y, 1>& y2s = data::getData<3>(axisSetIndex);
-
-				for (size_t i = 0; i < getNPoints(); ++i)
+				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
 				{
-					Point p1 = getPointFromLoggedIfNeededData(x1s[i], y1s[i], axisSetIndex);
-					Point p2 = getPointFromLoggedIfNeededData(x2s[i], y2s[i], axisSetIndex);
+					Point p1 = this->getPoint<0, 2>(i, axisSet);
+					Point p2 = this->getPoint<1, 3>(i, axisSet);
 					renderer.rectangle(p1, p2);
 				}
 			}
@@ -194,13 +172,14 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class Fill : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>>
+		class Fill : public Data<X, Y,
+			std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y,
+				std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<Y, 1>>;
 
 			template<class XCONTAINER, class YCONTAINER>
 			Fill(const XCONTAINER xs, const YCONTAINER ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const FillStyle& fillStyle = FillStyle(), const LineStyle& outlineStyle = noLine)
@@ -209,20 +188,15 @@ namespace sci
 			{
 			}
 			
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
 				m_lineStyle.setPen(renderer);
 				m_fillStyle.setBrush(renderer);
 
-				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
-				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
-
-				std::vector<Point> points(getNPoints());
+				std::vector<Point> points(this->getNPoints<0>());
 				for (size_t i = 0; i < points.size(); ++i)
 				{
-					points[i] = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
+					points[i] = this->getPoint<0,1>(i, axisSet);
 				}
 				renderer.polygon(points);
 			}

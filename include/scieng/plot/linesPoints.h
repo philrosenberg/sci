@@ -2,6 +2,7 @@
 #define SVECTOR_PLOTLINEPOINT_H
 
 #include "plotable.h"
+#include "elements.h"
 
 
 namespace sci
@@ -9,13 +10,12 @@ namespace sci
 	namespace plot
 	{
 		template<class X, class Y>
-		class Line : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>>
+		class Line : public Data<X, Y, std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y, std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<Y, 1>>;
 
 			template<class XCONTAINER, class YCONTAINER>
 			Line(const XCONTAINER &xs, const YCONTAINER &ys, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle)
@@ -24,18 +24,14 @@ namespace sci
 			{
 			}
 		private:
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
 				m_lineStyle.setPen(renderer);
-				std::vector<Point> points(getNPoints());
-				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
-				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
+				std::vector<Point> points(this->getNPoints<0>());
+
 				for (size_t i = 0; i < points.size(); ++i)
-				{
-					points[i] = getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex);
-				}
+					points[i] = this->getPoint<0,1>(i, axisSet);
+
 				renderer.polyLine(points);
 			}
 			LineStyle m_lineStyle;
@@ -49,13 +45,13 @@ namespace sci
 		}
 
 		template<class X, class Y>
-		class Points : public Data<X, Y, GridData<X, 1>, GridData<Y, 1>>
+		class Points : public Data<X, Y, std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+			GridData<X, 1>, GridData<Y, 1>>
 		{
 		public:
-			using data = Data<X, Y, GridData<X, 1>, GridData<Y, 1>>;
-			using data::hasData;
-			using data::getNPoints;
-			using data::getPointFromLoggedIfNeededData;
+			using data = Data<X, Y, std::tuple<std::shared_ptr<Axis<X>>, std::shared_ptr<Axis<Y>>>,
+				GridData<X, 1>, GridData<Y, 1>>;
+
 			template<class XCONTAINER, class YCONTAINER>
 			Points(const XCONTAINER &x, const YCONTAINER y, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const Symbol& symbol, sci::graphics::RgbColour colour)
 				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
@@ -66,20 +62,13 @@ namespace sci
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
 
-			void plotData(size_t axisSetIndex, Renderer& renderer, perMillimetre scale) const override
+			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
-				if (!hasData())
-					return;
-
 				renderer.setBrush(m_colour);
-				renderer.setPen(sci::graphics::RgbColour(), millimetre(0.0));
+				renderer.setPen(sci::graphics::RgbColour(), sci::plot::millimetre(0.0));
 
-				const GridData<X, 1>& xs = data::getData<0>(axisSetIndex);
-				const GridData<Y, 1>& ys = data::getData<1>(axisSetIndex);
-				for (size_t i = 0; i < getNPoints(); ++i)
-				{
-					m_symbol.draw(getPointFromLoggedIfNeededData(xs[i], ys[i], axisSetIndex), renderer);
-				}
+				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
+					m_symbol.draw(this->getPoint<0,1>(i, axisSet), renderer);
 			}
 		};
 

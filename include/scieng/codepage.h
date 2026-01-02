@@ -212,27 +212,27 @@ namespace sci
 	//***************************************
 #ifdef _WIN32 //These functions use the template in unicode.h on non-Windoows
 	template<>
-	std::string fromUtf8<std::string>(const std::u8string& string)
+	inline std::string fromUtf8<std::string>(const std::u8string& string)
 	{
 		return toCodepage(string);
 	}
 	template<>
-	std::string fromUtf16<std::string>(const std::u16string& string)
+	inline std::string fromUtf16<std::string>(const std::u16string& string)
 	{
 		return toCodepage(string);
 	}
 	template<>
-	std::string fromUtf32<std::string>(const std::u32string& string)
+	inline std::string fromUtf32<std::string>(const std::u32string& string)
 	{
 		return toCodepage(string);
 	}
 	template<>
-	std::string fromSci<std::string>(const sci::string& string)
+	inline std::string fromSci<std::string>(const sci::string& string)
 	{
 		return toCodepage(string);
 	}
 	template<>
-	std::string fromNativeUnicode<std::string>(const std::wstring& string)
+	inline std::string fromNativeUnicode<std::string>(const std::wstring& string)
 	{
 		return toCodepage(string);
 	}

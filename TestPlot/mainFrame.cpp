@@ -3,6 +3,7 @@
 #include"../include/scieng/wxplot.h"
 #include"../include/scieng/string.h"
 #include"../include/scieng/math.h"
+#include"../include/scieng/plot/colourbar.h"
 #include<wx/scrolwin.h>
 
 const int mainFrame::ID_FILE_EXIT = ::wxNewId();
@@ -52,6 +53,35 @@ class PlotPanel : public wxPanel
 {
 
 };
+
+void basicContourTest()
+{
+	sci::plot::Axis<double>::Options options;
+	auto xAxis = sci::plot::makeAxis<double>(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), options.setTitle(sU("x-1d y-1d")));
+	auto yAxis = sci::plot::makeAxis<double>(0.0, 1.0, false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), options.setTitle(sU("Contour")));
+	sci::GridData<double, 2> zs1(std::array<size_t, 2>{2, 2});
+	zs1[0][0] = 0.0;
+	zs1[0][1] = 1.0;
+	zs1[1][0] = 0.0;
+	zs1[1][1] = 1.0;
+	sci::GridData<double, 2> zs2(std::array<size_t, 2>{2, 2});
+	zs2[0][0] = 0.0;
+	zs2[0][1] = 0.0;
+	zs2[1][0] = 1.0;
+	zs2[1][1] = 1.0;
+	std::array<double, 2> xs{ 0.0,1.0 };
+	std::array<double, 2> ys{ 0.0,1.0 };
+
+	auto levelScale = sci::plot::makeLevelScale<double, float>(std::array<double,1>{0.5}, false, false);
+	auto contourData1 = sci::plot::makeContours(xs, ys, zs1, xAxis, yAxis, levelScale, sci::plot::LineStyle());
+	auto contourData2 = sci::plot::makeContours(xs, ys, zs2, xAxis, yAxis, levelScale, sci::plot::LineStyle());
+
+	sci::graphics::NullRenderer renderer;
+	contourData1->preDraw();
+	contourData1->draw(renderer, perMillimetre(1));//should give a horizontal line at y=0.5
+	contourData2->preDraw();
+	contourData2->draw(renderer, perMillimetre(1));//should give a vertical line at x=0.5
+}
 
 void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scaleEnd, bool log, bool autoscale, bool fillOffscaleBottom, bool fillOffscaleTop)
 {
@@ -159,7 +189,7 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	auto colourScaleDiscrete = sci::plot::makeColourScale<double>(valuesDiscrete, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	sci::plot::LineStyle contourStyle(millimetre(0.5));
 
-	auto levelScale = sci::plot::makeLevelScale<double>(valuesDiscrete, log, autoscale);
+	auto levelScale = sci::plot::makeLevelScale<double, float>(valuesDiscrete, log, autoscale);
 
 	auto colourScaleContinuous = sci::plot::makeColourScale<double>(valuesContinuous, colours, log, autoscale, fillOffscaleBottom, fillOffscaleTop);
 	
@@ -174,10 +204,10 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	auto grid3 = sci::plot::makeGrid(x1d, y2d, zGrid, xAxis3, yAxis3, colourScaleContinuous);
 	auto grid4 = sci::plot::makeGrid(x2d, y2d, zGrid, xAxis4, yAxis3, colourScaleContinuous);
 
-	auto shade1 = sci::plot::makeContours(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine);
-	auto shade2 = sci::plot::makeContours(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine);
-	auto shade3 = sci::plot::makeContours(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine);
-	auto shade4 = sci::plot::makeContours(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	//auto shade1 = sci::plot::makeContours(x1d, y1d, zCont, xAxis1, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	//auto shade2 = sci::plot::makeContours(x2d, y1d, zCont, xAxis2, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	//auto shade3 = sci::plot::makeContours(x1d, y2d, zCont, xAxis3, yAxis2, colourScaleDiscrete, sci::plot::noLine);
+	//auto shade4 = sci::plot::makeContours(x2d, y2d, zCont, xAxis4, yAxis2, colourScaleDiscrete, sci::plot::noLine);
 
 	auto contour1 = sci::plot::makeContours(x1d, y1d, zCont, xAxis1, yAxis1, levelScale, contourStyle);
 	auto contour2 = sci::plot::makeContours(x2d, y1d, zCont, xAxis2, yAxis1, levelScale, contourStyle);
@@ -197,10 +227,10 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 		grid2->preDraw();
 		grid3->preDraw();
 		grid4->preDraw();
-		shade1->preDraw();
-		shade2->preDraw();
-		shade3->preDraw();
-		shade4->preDraw();
+		//shade1->preDraw();
+		//shade2->preDraw();
+		//shade3->preDraw();
+		//shade4->preDraw();
 		contour1->preDraw();
 		contour2->preDraw();
 		contour3->preDraw();
@@ -220,10 +250,10 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 		grid2->readyToDraw() &&
 		grid3->readyToDraw() &&
 		grid4->readyToDraw() &&
-		shade1->readyToDraw() &&
-		shade2->readyToDraw() &&
-		shade3->readyToDraw() &&
-		shade4->readyToDraw() &&
+		//shade1->readyToDraw() &&
+		//shade2->readyToDraw() &&
+		//shade3->readyToDraw() &&
+		//shade4->readyToDraw() &&
 		contour1->readyToDraw() &&
 		contour2->readyToDraw() &&
 		contour3->readyToDraw() &&
@@ -246,10 +276,10 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	grid2->draw(nullRenderer, perMillimetre(1));
 	grid3->draw(nullRenderer, perMillimetre(1));
 	grid4->draw(nullRenderer, perMillimetre(1));
-	shade1->draw(nullRenderer, perMillimetre(1));
-	shade2->draw(nullRenderer, perMillimetre(1));
-	shade3->draw(nullRenderer, perMillimetre(1));
-	shade4->draw(nullRenderer, perMillimetre(1));
+	//shade1->draw(nullRenderer, perMillimetre(1));
+	//shade2->draw(nullRenderer, perMillimetre(1));
+	//shade3->draw(nullRenderer, perMillimetre(1));
+	//shade4->draw(nullRenderer, perMillimetre(1));
 	contour1->draw(nullRenderer, perMillimetre(1));
 	contour2->draw(nullRenderer, perMillimetre(1));
 	contour3->draw(nullRenderer, perMillimetre(1));
@@ -269,10 +299,10 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 	canvas->addItem(grid2);
 	canvas->addItem(grid3);
 	canvas->addItem(grid4);
-	canvas->addItem(shade1);
-	canvas->addItem(shade2);
-	canvas->addItem(shade3);
-	canvas->addItem(shade4);
+	//canvas->addItem(shade1);
+	//canvas->addItem(shade2);
+	//canvas->addItem(shade3);
+	//canvas->addItem(shade4);
 	canvas->addItem(contour1);
 	canvas->addItem(contour2);
 	canvas->addItem(contour3);
@@ -292,6 +322,9 @@ void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scal
 
 void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 {
+
+	basicContourTest();
+
 	{
 		//create a frame with empty axes running from 0-1
 		//this just tests that drawing axes works
