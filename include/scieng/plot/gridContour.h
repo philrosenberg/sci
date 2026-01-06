@@ -31,7 +31,7 @@ namespace sci
 			}
 
 			
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(rgbcolour(), Length(sci::plot::millimetre(0.0)));
 
@@ -102,7 +102,7 @@ namespace sci
 				m_lineStyle = lineStyle;
 			}
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				sci::GridData<Z, 1> contourLevels;
 				if (m_levelScale)
@@ -573,7 +573,7 @@ namespace sci
 				return result;
 			}
 
-			Point getLeftIntersection(size_t index1, size_t index2, size_t contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			Point getLeftIntersection(size_t index1, size_t index2, size_t contourLevel, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				Point p0 = this->getPoint<0, 1>(index1, index2, axes);
 				Point p1 = this->getPoint<0, 1>(index1, index2 + 1, axes);
@@ -581,7 +581,7 @@ namespace sci
 				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			Point getTopIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			Point getTopIntersection(size_t index1, size_t index2, float contourLevel, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				Point p0 = this->getPoint<0, 1>(index1, index2 + 1, axes);
 				Point p1 = this->getPoint<0, 1>(index1 + 1, index2 + 1, axes);
@@ -589,7 +589,7 @@ namespace sci
 				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			Point getRightIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales)const
+			Point getRightIntersection(size_t index1, size_t index2, float contourLevel, const data::spacialAxesSet& axes, const data::scalesTuple& scales)const
 			{
 				Point p0 = this->getPoint<0, 1>(index1 + 1, index2 + 1, axes);
 				Point p1 = this->getPoint<0, 1>(index1 + 1, index2, axes);
@@ -597,7 +597,7 @@ namespace sci
 				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			Point getBottomIntersection(size_t index1, size_t index2, float contourLevel, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple &scales) const
+			Point getBottomIntersection(size_t index1, size_t index2, float contourLevel, const data::spacialAxesSet& axes, const data::scalesTuple &scales) const
 			{
 				Point p0 = this->getPoint<0, 1>(index1 + 1, index2, axes);
 				Point p1 = this->getPoint<0, 1>(index1, index2, axes);
@@ -605,7 +605,7 @@ namespace sci
 				return p0 + (p1 - p0) * unitless(weight);
 			}
 
-			Point getJoiningPoint(const Segment& segment1, const Segment& segment2, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			Point getJoiningPoint(const Segment& segment1, const Segment& segment2, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				size_t contourLevel = segment1.level;
 				if ((segment2.index1 == segment1.index1 + 1)) //right join
@@ -619,7 +619,7 @@ namespace sci
 				throw("Attempted to get the non-joining point of two contour segments that are not joined.");
 			}
 
-			Point getSegment1NonJoiningPoint(const Segment& segment1, const Segment& segment2, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			Point getSegment1NonJoiningPoint(const Segment& segment1, const Segment& segment2, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				size_t contourLevel = segment1.level;
 				if ((segment2.index1 == segment1.index1 + 1)) //right join, get left
@@ -633,7 +633,7 @@ namespace sci
 				throw("Attempted to get a joining point of two contour segments that are not joined.");
 			}
 
-			void getBothPoints(const Segment& segment, std::vector<Point>& points, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			void getBothPoints(const Segment& segment, std::vector<Point>& points, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				points.resize(2);
 				auto iter = points.begin();
@@ -660,7 +660,7 @@ namespace sci
 				}
 			}
 
-			std::vector<Point> getContourLine(const std::vector<Segment>& segments, const SpacialAxesSet<X, Y>& axes, const data::scalesTuple& scales) const
+			std::vector<Point> getContourLine(const std::vector<Segment>& segments, const data::spacialAxesSet& axes, const data::scalesTuple& scales) const
 			{
 				if (segments.size() == 0)
 					return std::vector<Point>(0);

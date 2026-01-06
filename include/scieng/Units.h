@@ -2346,7 +2346,7 @@ namespace sci
 	//floor a Physical - the first template parameter is the unit that
 	//you want the Physical to be converted to before doing the floor.
 	//The result will be in this unit.
-	template< class UNIT, IsPhysical T>
+	/*template< class UNIT, IsPhysical T>
 	Physical< typename UNIT::unit, typename T::valueType> floor(const T& value)
 	{
 		return Physical<typename UNIT::unit, typename T::valueType>(std::floor(value.template value<typename UNIT::unit>()));
@@ -2368,6 +2368,27 @@ namespace sci
 	Physical<typename UNIT::unit, typename T::valueType> round(const T& value)
 	{
 		return Physical<typename UNIT::unit, typename T::valueType>(std::round(value.template value<typename UNIT::unit>()));
+	}*/
+
+	//floor a Physical
+	template<IsPhysical T>
+	T floor(const T& value)
+	{
+		return T(std::floor(value.template value<T>()));
+	}
+
+	//ceil a Physical
+	template<IsPhysical T>
+	T ceil(const T& value)
+	{
+		return T(std::ceil(value.template value<T>()));
+	}
+
+	//round a Physical
+	template<IsPhysical T>
+	T round(const T& value)
+	{
+		return T(std::round(value.template value<T>()));
 	}
 
 

@@ -28,7 +28,7 @@ namespace sci
 				m_useForAutoscale = useForAutoscale;
 			}
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(m_style.getColour(), m_style.getWidth(), m_style.getPattern());
 
@@ -84,7 +84,7 @@ namespace sci
 				m_useForAutoscale = useForAutoscale;
 			}
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(m_style.getColour(), m_style.getWidth(), m_style.getPattern());
 

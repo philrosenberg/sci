@@ -32,16 +32,14 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(Y()/Y())>::quiet_NaN();
 			}
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				Y zeroLine = axisSet.isLog(1) ? m_zeroLineLogged : m_zeroLineLinear;
-
 				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
 				{
-					Point p1 = this->getPointYFixed<0>(zeroLine, i, axisSet);
+					Point p1 = this->getPointYFixed<0>(m_zeroLineLinear, m_zeroLineLogged, i, axisSet);
 					Point p2 = this->getPoint<1, 2>(i, axisSet);
 					renderer.rectangle(p1, p2);
 				}
@@ -89,16 +87,14 @@ namespace sci
 				m_zeroLineLogged = zeroLine > 0.0 ? std::log(zeroLine) : std::numeric_limits<decltype(X()/X())>::quiet_NaN();
 			}
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(m_lineStyle.getColour(), m_lineStyle.getWidth(), m_lineStyle.getPattern());
 				renderer.setBrush(m_fillStyle.getColour());
 
-				X zeroLine = axisSet.isLog(0) ? m_zeroLineLogged : m_zeroLineLinear;
-
 				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
 				{
-					Point p1 = this->getPointXFixed<1>(zeroLine, i, axisSet);
+					Point p1 = this->getPointXFixed<1>(m_zeroLineLinear, m_zeroLineLogged, i, axisSet);
 					Point p2 = this->getPoint<0, 2>(i, axisSet);
 					renderer.rectangle(p1, p2);
 				}
@@ -188,7 +184,7 @@ namespace sci
 			{
 			}
 			
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				m_lineStyle.setPen(renderer);
 				m_fillStyle.setBrush(renderer);

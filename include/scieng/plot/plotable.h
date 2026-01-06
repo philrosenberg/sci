@@ -153,9 +153,11 @@ namespace sci
 		};
 
 		template <class X, class Y>
-		class XYAxisSet : public SpacialAxesSet<X, Y>
+		class XYAxisSet : public SpacialAxesSet<X, Y, decltype(sci::log10(X())), decltype(sci::log10(Y()))>
 		{
 		public:
+			using LOGX = decltype(sci::log10(X()));
+			using LOGY = decltype(sci::log10(Y()));
 			XYAxisSet(std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis)
 				:m_xAxis(xAxis), m_yAxis(yAxis), m_intersection(xAxis->getStart().getX(), yAxis->getStart().getY())
 			{
@@ -169,9 +171,9 @@ namespace sci
 				//Instead, we find the intersection as the point up from the start of the x axis and across from the start of the y
 				//axis. This point can be represented by a Point and hence will scale properly
 			}
-			constexpr Point getPoint(const X& x, const Y& y) const override
+			constexpr Point getPoint(const X& x, const Y& y, const LOGX& logX, const LOGY& logY) const override
 			{
-				return m_intersection + m_xAxis->alongAxisDistanceFromLoggedIfNeededData(x) + m_yAxis->alongAxisDistanceFromLoggedIfNeededData(y);
+				return m_intersection + m_xAxis->alongAxisDistanceFromLoggedIfNeededData(x, logX) + m_yAxis->alongAxisDistanceFromLoggedIfNeededData(y, logY);
 			}
 			constexpr void setClippingRegion(Renderer& renderer, perMillimetre scale, sci::graphics::Clipper &clipper) const override
 			{
@@ -321,7 +323,7 @@ namespace sci
 		//{
 		//	using type = std::tuple_element_t<N, TUPLETOTRANSFORM>*;
 		//	using next = PointerTransform<N + 1, TUPLETOTRANSFORM>;
-		//  using size = std::tuple_size_v<TUPLETOTRANSFORM> - N;
+		//  static const size_t size = std::tuple_size_v<TUPLETOTRANSFORM> - N;
 		//}
 		//
 		//using MyTuple = std::tuple<double, int, float>
@@ -378,13 +380,24 @@ namespace sci
 		//does not work and something more custom is needed, so this separates the concerns of rendering
 		//and storage.
 		template<class X, class Y, class SCALESTUPLE, class... CONTAINERS> requires(AreAllGridData_v<CONTAINERS...>())
-		class Data : public PlotableItem<SpacialAxesSet<X, Y>, SCALESTUPLE>
+		class Data : public PlotableItem<SpacialAxesSet<X, Y, decltype(sci::log10(X())), decltype(sci::log10(Y()))>, SCALESTUPLE>
 		{
+		private:
+			template<class SCALESTUPLETOEXTRACTFROM, class CONTAINERSTUPLETOGETDIMSFROM> requires(std::tuple_size_v<SCALESTUPLETOEXTRACTFROM> == std::tuple_size_v<CONTAINERSTUPLETOGETDIMSFROM>)
+			struct UnitlessExtract
+			{
+				using type = sci::GridData<typename std::tuple_element_t<0, SCALESTUPLETOEXTRACTFROM>::element_type::unitless_type,
+					std::tuple_element_t<0, CONTAINERSTUPLETOGETDIMSFROM>::ndims>;
+				using next = UnitlessExtract<TailTuple_t<1, SCALESTUPLETOEXTRACTFROM>, TailTuple_t<1, CONTAINERSTUPLETOGETDIMSFROM>>;
+				static const size_t size = std::tuple_size_v<SCALESTUPLETOEXTRACTFROM>;
+			};
 		public:
 			using containersTuple = std::tuple<CONTAINERS...>;
+			using logTuple = TransformedTuple_t<UnitlessExtract<SCALESTUPLE, containersTuple>>;
 			constexpr static int nDimensions = sizeof...(CONTAINERS);
+			using spacialAxesSet = SpacialAxesSet < X, Y, decltype(sci::log10(X())), decltype(sci::log10(Y()))>;
 		private:
-			using parent = PlotableItem<SpacialAxesSet<X, Y>, SCALESTUPLE>;
+			using parent = PlotableItem<spacialAxesSet, SCALESTUPLE>;
 			//The following next two functions get a tuple of shared_ptrs to Scales, with each scale template parameter being the
 			//value_type of the containers in containersTuple. The values of all the pointers is null. This function will
 			//probably never get called in real code. They exists so that declytpe can be called on the result to define the type of
@@ -404,37 +417,49 @@ namespace sci
 		private:
 			//a generic 1d/2d get data function
 			template<int SET, bool PREFERFIRST>
-			constexpr auto getData(size_t index1, size_t index2, bool log) const
+			constexpr auto getLoggedData(size_t index1, size_t index2) const
 			{
 				if constexpr (NDims<ContainerType<SET>>::value == 2)
-				{
-					if (log)
-						return std::get<SET>(m_dataLogged)[index1][index2];
-					else
-						return std::get<SET>(m_data)[index1][index2];
-				}
+					return std::get<SET>(m_dataLogged)[index1][index2];
 				else
 				{
 					size_t index = PREFERFIRST ? index1 : index2;
-					if (log)
-						return std::get<SET>(m_dataLogged)[index];
-					else
-						return std::get<SET>(m_data)[index];
+					return std::get<SET>(m_dataLogged)[index];
+				}
+			}
+			//a generic 1d/2d get data function
+			template<int SET, bool PREFERFIRST>
+			constexpr auto getLinearData(size_t index1, size_t index2) const
+			{
+				if constexpr (NDims<ContainerType<SET>>::value == 2)
+					return std::get<SET>(m_data)[index1][index2];
+				else
+				{
+					size_t index = PREFERFIRST ? index1 : index2;
+					return std::get<SET>(m_data)[index];
 				}
 			}
 
 			//get data when it's 1d
 			template<int SET>
-			constexpr auto getData(size_t index, bool log) const
+			constexpr auto getLoggedData(size_t index) const
 				requires (SET >= 0 && NDims<ContainerType<SET>>::value == 1)
 			{
-				return getData<SET, true>(index, 0, log);
+				return getLoggedData<SET, true>(index, 0);
+			}
+
+			//get data when it's 1d
+			template<int SET>
+			constexpr auto getLinearData(size_t index) const
+				requires (SET >= 0 && NDims<ContainerType<SET>>::value == 1)
+			{
+				return getLinearData<SET, true>(index, 0);
 			}
 		public:
 
 			template<class... RECEIVEDCONTAINERS>
 			Data(std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, SCALESTUPLE scales, RECEIVEDCONTAINERS... data)
-				:PlotableItem<SpacialAxesSet<X, Y>, SCALESTUPLE>(xAxis, yAxis, scales)
+				:PlotableItem<spacialAxesSet, SCALESTUPLE>(xAxis, yAxis, scales)
 			{
 				static_assert(std::tuple_size<scalesTuple>() == nDimensions, "Internal sci::plot::Data error - scalesTuple is the wrong size");
 				static_assert(sizeof...(RECEIVEDCONTAINERS) == nDimensions, "The number of containers passed in to sci::plot::Data must match the number of dimensions");
@@ -469,13 +494,13 @@ namespace sci
 
 			//get the point as plotted on axesSet from the index element of the datasets at indices XSET and YSET
 			template<int XSET, int YSET>
-			constexpr Point getPoint(size_t index, const SpacialAxesSet<X, Y>& axesSet) const
+			constexpr Point getPoint(size_t index, const spacialAxesSet& axesSet) const
 				requires(XSET >= 0 && YSET >= 0
 				&& NDims<ContainerType<XSET>>::value == 1
 				&& NDims<ContainerType<YSET>>::value == 1)
 			{
-				return axesSet.getPoint(getData<XSET>(index, axesSet.isLog(0)),
-					getData<YSET>(index, axesSet.isLog(1)));
+				return axesSet.getPoint(getLinearData<XSET>(index), getLinearData<YSET>(index),
+					getLoggedData<XSET>(index), getLoggedData<YSET>(index));
 			}
 
 			//get the point as plotted on axesSet from the ith/jth element of the datasets at indices XSET and YSET
@@ -483,33 +508,33 @@ namespace sci
 			//if the dataset at YSET is 1d, the index2 element is used for this dataset
 			//if either dataset is 2d then the index1,index2 element is used
 			template<int XSET, int YSET>
-			constexpr Point getPoint(size_t index1, size_t index2, const SpacialAxesSet<X, Y>& axesSet) const
+			constexpr Point getPoint(size_t index1, size_t index2, const spacialAxesSet& axesSet) const
 				requires(XSET >= 0 && YSET >= 0)
 			{
-				return axesSet.getPoint(getData<XSET, true>(index1, index2, axesSet.isLog(0)),
-					getData<YSET, false>(index1, index2, axesSet.isLog(1)));
+				return axesSet.getPoint(getLinearData<XSET, true>(index1, index2), getLinearData<YSET, false>(index1, index2),
+					getLoggedData<XSET, true>(index1, index2), getLoggedData<YSET, false>(index1, index2));
 			}
 
 			template<int YSET, class XTYPE>
-			constexpr Point getPointXFixed(XTYPE replacementData, size_t index, const SpacialAxesSet<X, Y>& axesSet) const
+			constexpr Point getPointXFixed(XTYPE x, decltype(sci::log10(XTYPE())) loggedX, size_t index, const spacialAxesSet& axesSet) const
 				requires(YSET >= 0)
 			{
-				return axesSet.getPoint(replacementData,
-					getData<YSET, true>(index, 0, axesSet.isLog(1)));
+				return axesSet.getPoint(x, getLinearData<YSET>(index),
+					loggedX, getLoggedData<YSET>(index));
 			}
 
 			template<int XSET, class YTYPE>
-			constexpr Point getPointYFixed(YTYPE replacementData, size_t index, const SpacialAxesSet<X, Y>& axesSet) const
+			constexpr Point getPointYFixed(YTYPE y, decltype(sci::log10(YTYPE())) loggedY, size_t index, const spacialAxesSet& axesSet) const
 				requires (XSET >= 0)
 			{
-				return axesSet.getPoint(getData<XSET, true>(index, 0, axesSet.isLog(0)),
-					replacementData);
+				return axesSet.getPoint(getLinearData<XSET>(index), y, 
+					 getLoggedData<XSET>(index), loggedY);
 			}
 
 			template<class XTYPE, class YTYPE>
-			constexpr Point getPointFixed(XTYPE x, YTYPE y, const SpacialAxesSet<X, Y>& axesSet) const
+			constexpr Point getPointFixed(XTYPE x, YTYPE y, decltype(sci::log10(XTYPE())) loggedX, decltype(sci::log10(YTYPE())) loggedY, const spacialAxesSet& axesSet) const
 			{
-				return axesSet.getPoint(x, y);
+				return axesSet.getPoint(x, y, loggedX, loggedY);
 			}
 
 			template<int SET>
@@ -517,14 +542,20 @@ namespace sci
 				requires(SET >= 0 && NDims<ContainerType<SET>>::value == 1)
 			{
 				const auto& scale = std::get<SET>(scales);
-				return scale->getTransformed(getData<SET>(index, scale->isLog()));
+				if (scale->isLog())
+					return scale->getTransformed(getLoggedData<SET>(index));
+				else
+					return scale->getTransformed(getLinearData<SET>(index));
 			}
 			template<int SET>
 			constexpr auto getTransformed(size_t index1, size_t index2, const scalesTuple& scales) const
 				requires(SET >= 0 && NDims<ContainerType<SET>>::value == 2)
 			{
 				const auto& scale = std::get<SET>(scales);
-				return scale->getTransformed(getData<SET, true>(index1, index2, scale->isLog()));
+				if (scale->isLog())
+					return scale->getTransformed(getLoggedData<SET, true>(index1, index2));
+				else
+					return scale->getTransformed(getLinearData<SET, true>(index1, index2));
 			}
 
 			//This function must only be called when the data us plotted against a level scale.
@@ -538,14 +569,14 @@ namespace sci
 				const auto& scale = std::get<SET>(scales);
 				if (scale->isLog())
 				{
-					auto v1 = getData<SET>(point1Index, true);
-					auto v2 = getData<SET>(point2Index, true);
+					auto v1 = getLoggedData<SET>(point1Index);
+					auto v2 = getLoggedData<SET>(point2Index);
 					return (scale->getLevelLogged(level) - v1) / (v2 - v1);
 				}
 				else
 				{
-					auto v1 = getData<SET>(point1Index, false);
-					auto v2 = getData<SET>(point2Index, false);
+					auto v1 = getLinearData<SET>(point1Index);
+					auto v2 = getLinearData<SET>(point2Index);
 					return (scale->getLevelLinear(level) - v1) / (v2 - v1);
 				}
 			}
@@ -561,14 +592,14 @@ namespace sci
 				const auto& scale = std::get<SET>(scales);
 				if (scale->isLog())
 				{
-					auto v1 = getData<SET, true>(point1Index1, point1Index2, true);
-					auto v2 = getData<SET, false>(point2Index1, point2Index2, true);
+					auto v1 = getLoggedData<SET, true>(point1Index1, point1Index2);
+					auto v2 = getLoggedData<SET, false>(point2Index1, point2Index2);
 					return (scale->getLevelLogged(level) - v1) / (v2 - v1);
 				}
 				else
 				{
-					auto v1 = getData<SET, true>(point1Index1, point1Index2, false);
-					auto v2 = getData<SET, false>(point2Index1, point2Index2, false);
+					auto v1 = getLinearData<SET, true>(point1Index1, point1Index2);
+					auto v2 = getLinearData<SET, false>(point2Index1, point2Index2);
 					return (scale->getLevelLinear(level) - v1) / (v2 - v1);
 				}
 			}
@@ -580,17 +611,17 @@ namespace sci
 				const auto& scale = std::get<SET>(scales);
 				if (scale->isLog())
 				{
-					if (getData<SET>(index, scale->isLog()) < scale->getLogMin())
+					if (getLoggedData<SET>(index) < scale->getLogMin())
 						return true;
-					if (getData<SET>(index, scale->isLog()) > scale->getLogMax())
+					if (getLoggedData<SET>(index) > scale->getLogMax())
 						return true;
 					return false;
 				}
 				else
 				{
-					if (getData<SET>(index, false) < scale->getMin())
+					if (getLinearData<SET>(index) < scale->getMin())
 						return true;
-					if (getData<SET>(index, false) > scale->getMax())
+					if (getLinearData<SET>(index) > scale->getMax())
 						return true;
 					return false;
 				}
@@ -603,17 +634,17 @@ namespace sci
 				const auto& scale = std::get<SET>(scales);
 				if (scale->isLog())
 				{
-					if (getData<SET, true>(index1, index2, scale->isLog()) < scale->getLogMin())
+					if (getLoggedData<SET, true>(index1, index2) < scale->getLogMin())
 						return true;
-					if (getData<SET, true>(index1, index2, scale->isLog()) > scale->getLogMax())
+					if (getLoggedData<SET, true>(index1, index2) > scale->getLogMax())
 						return true;
 					return false;
 				}
 				else
 				{
-					if (getData<SET, true>(index1, index2, scale->isLog()) < scale->getLinearMin())
+					if (getLinearData<SET, true>(index1, index2) < scale->getLinearMin())
 						return true;
-					if (getData<SET, true>(index1, index2, scale->isLog()) > scale->getLinearMax())
+					if (getLinearData<SET, true>(index1, index2) > scale->getLinearMax())
 						return true;
 					return false;
 				}
@@ -689,11 +720,15 @@ namespace sci
 			template<int index>
 			constexpr void calculateLog()
 			{
+				using scaleType = typename std::tuple_element_t<index, SCALESTUPLE>::element_type::value_type;
 				auto& linear = std::get<index>(m_data);
 				auto& log = std::get<index>(m_dataLogged);
-				log = linear;
-				for (auto& v : log)
-					v = sci::log10(v);
+				log.reshape(linear.shape());
+				auto linearIter = linear.begin();
+				auto linearEnd = linear.end();
+				auto logIter = log.begin();
+				for (; linearIter != linearEnd; ++linearIter, ++logIter)
+					*logIter = sci::log10(*linearIter/scaleType(1));
 				if constexpr (index != nDimensions - 1)
 					calculateLog<index + 1>();
 			}
@@ -708,7 +743,7 @@ namespace sci
 			}
 
 			containersTuple m_data;
-			containersTuple m_dataLogged;
+			logTuple m_dataLogged;
 		};
 	}
 }

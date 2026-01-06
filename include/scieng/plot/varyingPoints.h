@@ -24,7 +24,7 @@ namespace sci
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale), xs, ys, zs), m_symbol(symbol)
 			{
 			}
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(rgbcolour(), millimetre(0.0));
 				for (size_t i = 0; i < this->getNPoints<0>(); ++i)
@@ -61,7 +61,7 @@ namespace sci
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, sizeScale), xs, ys, zs ), m_symbol(symbol), m_colour(colour)
 			{
 			}
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setBrush(m_colour);
 				renderer.setPen(rgbcolour(), millimetre(0.0));
@@ -101,7 +101,7 @@ namespace sci
 				: data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, colourScale, sizeScale), xs, ys, zsColour, zsSize ), m_symbol(symbol)
 			{
 			}
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setPen(rgbcolour(), millimetre(0.0));
 				for (size_t i = 0; i < this->getNPoints<0>(); ++i)

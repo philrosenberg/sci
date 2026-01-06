@@ -26,6 +26,8 @@ using perMillimetre = sci::graphics::perMillimetre;
 using perInch = sci::graphics::perInch;
 using HlsColour = sci::graphics::HlsColour;
 using RgbColour = sci::graphics::RgbColour;
+using metre = sci::Physical<sci::Ohm<>, double>;
+using ohm = sci::Physical<sci::Ohm<>, double>;
 
 mainFrame::mainFrame(wxFrame *frame, const wxString& title)
 	: wxFrame(frame, -1, title)
@@ -81,6 +83,26 @@ void basicContourTest()
 	contourData1->draw(renderer, perMillimetre(1));//should give a horizontal line at y=0.5
 	contourData2->preDraw();
 	contourData2->draw(renderer, perMillimetre(1));//should give a vertical line at x=0.5
+}
+
+void testUnitData()
+{
+	sci::plot::Axis<metre>::Options optionsX;
+	sci::plot::Axis<ohm>::Options optionsY;
+	auto xAxis = sci::plot::makeAxis<metre>(metre(0.0), metre(1.0), false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.9), unitless(0.9)), optionsX.setTitle(sU("Radius (m)")));
+	auto yAxis = sci::plot::makeAxis<ohm>(ohm(0.0), ohm(10.0), false, sci::graphics::Point(unitless(0.1), unitless(0.9)), sci::graphics::Point(unitless(0.1), unitless(0.1)), optionsY.setTitle(sU("Current (Ohm)")));
+	sci::GridData<metre, 1> xs(10);
+	sci::GridData<ohm, 1> ys(10);
+	auto constant = decltype(ohm() * metre() * metre())(0.9);
+	for (size_t i = 0; i < 10; ++i)
+	{
+		xs[i] = metre(0.1) * unitless(i);
+		ys[i] = constant / xs[i] / xs[i];
+	}
+	auto lineData = sci::plot::makeLine(xs, ys, xAxis, yAxis, sci::plot::LineStyle());
+	sci::graphics::NullRenderer renderer;
+	lineData->preDraw();
+	lineData->draw(renderer, perMillimetre(1));
 }
 
 void do2dplot(wxFrame *parent, sci::string title, double scaleBegin, double scaleEnd, bool log, bool autoscale, bool fillOffscaleBottom, bool fillOffscaleTop)

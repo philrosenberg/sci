@@ -112,7 +112,7 @@ namespace sci
 				{
 					for (auto& x : data)
 					{
-						if (x > 0 && x < std::numeric_limits<value_type>::infinity())
+						if (x > value_type(0) && x < std::numeric_limits<value_type>::infinity())
 						{
 							min = min < x ? min : x;
 							max = max > x ? max : x;
@@ -123,7 +123,7 @@ namespace sci
 				{
 					for (auto& x : data)
 					{
-						if (std::isfinite(x))
+						if (x==x && x != std::numeric_limits<value_type>::infinity() && x != -std::numeric_limits<value_type>::infinity())
 						{
 							min = min < x ? min : x;
 							max = max > x ? max : x;
@@ -137,7 +137,7 @@ namespace sci
 			{
 				if (!m_autoscale)
 					return;
-				if (!std::isfinite(value))
+				if ( value != value || value == std::numeric_limits<value_type>::infinity() || value == -std::numeric_limits<value_type>::infinity())
 					return;
 				if (m_minPoint != m_minPoint || value < m_minPoint)
 				{
@@ -167,13 +167,13 @@ namespace sci
 				m_autoscale = false;
 				m_minFixed = min;
 				m_maxFixed = max;
-				m_logMinFixed = sci::log10(min);
-				m_logMaxFixed = sci::log10(max);
-				m_minPoint = std::numeric_limits<double>::quiet_NaN();
-				m_maxPoint = std::numeric_limits<double>::quiet_NaN();
-				m_logMinPoint = std::numeric_limits<double>::quiet_NaN();
-				m_logMaxPoint = std::numeric_limits<double>::quiet_NaN();
-				m_autoscaleEndSpace = std::numeric_limits<double>::quiet_NaN();
+				m_logMinFixed = sci::log10(min/value_type(1));
+				m_logMaxFixed = sci::log10(max/value_type(1));
+				m_minPoint = std::numeric_limits<value_type>::quiet_NaN();
+				m_maxPoint = std::numeric_limits<value_type>::quiet_NaN();
+				m_logMinPoint = std::numeric_limits<unitless_type>::quiet_NaN();
+				m_logMaxPoint = std::numeric_limits<unitless_type>::quiet_NaN();
+				m_autoscaleEndSpace = std::numeric_limits<unitless_type>::quiet_NaN();
 			}
 			constexpr void setLog()
 			{
@@ -231,8 +231,8 @@ namespace sci
 					if (normalisedValues[i] < linearMinGtZero && normalisedValues[i] > value_type(0))
 						linearMinGtZero = normalisedValues[i];
 				}
-				logMin = sci::log10(linearMinGtZero);
-				logMax = sci::log10(linearMax);
+				logMin = sci::log10(linearMinGtZero / value_type(1));
+				logMax = sci::log10(linearMax / value_type(1));
 				bool monotonic = ascending || descending;
 				assert(monotonic);
 
@@ -844,6 +844,8 @@ namespace sci
 		class SizeScale : public Scale<T>
 		{
 		public:
+			using unitless_type = Scale<T>::unitless_type;
+			using value_type = Scale<T>::value_type;
 			constexpr SizeScale()
 				:sci::plot::Scale<T>(false, Scale<T>::Direction::none, 0.0)
 			{
@@ -1014,6 +1016,8 @@ namespace sci
 		class LevelScale : public Scale<T>
 		{
 		public:
+			using unitless_type = Scale<T>::unitless_type;
+			using value_type = Scale<T>::value_type;
 			constexpr LevelScale()
 				:sci::plot::Scale<T>(false, Scale<T>::Direction::none, 0.0)
 			{
@@ -1161,14 +1165,15 @@ namespace sci
 		class Axis : public Scale<T>, public DrawableItem
 		{
 		public:
-			using data_type = T;
+			using unitless_type = Scale<T>::unitless_type;
+			using value_type = Scale<T>::value_type;
 			class Options
 			{
 			public:
 				Options(sci::string title = sU(""))
 					:m_title(title), m_titleDistance(textPoint(42)), m_majorTickLength(millimetre(4.0)), m_minorTickLength(millimetre(2.0)),
 					m_ticksLeftOrDown(true), m_ticksRightOrUp(false), m_labelsLeftOrDown(true), m_labelDirection(millimetre(1.0), millimetre(0.0)), m_majorInterval(0.0),
-					m_nSubticks(0), m_autoMajorInterval(true), m_autoNSubticks(true), m_customlabelcreator(nullptr), m_maxDigits(4)
+					m_majorLogInterval(1.0), m_nSubticks(0), m_autoMajorInterval(true), m_autoNSubticks(true), m_customlabelcreator(nullptr), m_maxDigits(4)
 				{
 				}
 				static constexpr Options getDefaultAxis()
@@ -1200,7 +1205,8 @@ namespace sci
 				Renderer::Font m_labelFont;
 				bool m_labelsLeftOrDown;
 				Distance m_labelDirection;
-				double m_majorInterval;
+				Scale<T>::value_type m_majorInterval;
+				Scale<T>::unitless_type m_majorLogInterval;
 				size_t m_nSubticks;
 				bool m_autoMajorInterval;
 				bool m_autoNSubticks;
@@ -1303,58 +1309,56 @@ namespace sci
 				return true;
 			}
 
-			constexpr Distance alongAxisDistanceFromLinearData(T value) const
+			constexpr Distance alongAxisDistanceFromLinearData(const value_type &value) const
 			{
-				typename Scale<T>::unitless_type fraction;
-				if (Scale<T>::isLog())
-					fraction = (sci::log10(value/T(1)) - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
-				else
-					fraction = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
+				typename Scale<T>::unitless_type fraction = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
 				return (m_end - m_start) * unitless(fraction);
 			}
 
-			constexpr Distance alongAxisDistanceFromLoggedIfNeededData(typename Scale<T>::unitless_type value) const
+			constexpr Distance alongAxisDistanceFromLoggedData(const unitless_type &value) const
 			{
-				typename Scale<T>::unitless_type fraction;
-				if (Scale<T>::isLog())
-					fraction = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
-				else
-					fraction = (value - Scale<T>::getLinearMin()) / (Scale<T>::getLinearMax() - Scale<T>::getLinearMin());
+				typename Scale<T>::unitless_type fraction = (value - Scale<T>::getLogMin()) / (Scale<T>::getLogMax() - Scale<T>::getLogMin());
 				return (m_end - m_start) * unitless(fraction);
+			}
+
+			constexpr Distance alongAxisDistanceFromLoggedIfNeededData(const value_type& linearValue, const unitless_type& loggedValue) const
+			{
+				if (Scale<T>::isLog())
+					return alongAxisDistanceFromLoggedData(loggedValue);
+				else
+					return alongAxisDistanceFromLinearData(linearValue);
 			}
 
 		private:
 			void drawLinear(Renderer& renderer, perMillimetre scale)
 			{
-				using unitless_type = typename Scale<T>::unitless_type;
-
 				//calculate the min, max and span
-				T min = Scale<T>::getLinearMin();
-				T max = Scale<T>::getLinearMax();
+				value_type min = Scale<T>::getLinearMin();
+				value_type max = Scale<T>::getLinearMax();
 				if (min > max)
 					std::swap(min, max);
-				T span = max - min;
+				value_type span = max - min;
 
 				//calculate major interval if needed
-				T majorInterval;
+				value_type majorInterval;
 				size_t nAutoSubticks = 0;
 				if (m_options.m_autoMajorInterval)
 				{
-					unitless_type spanMagnitude = sci::floor(sci::log10(span/T(1.0)));
-					unitless_type spanNormalised = span / sci::pow(unitless_type(10.0), spanMagnitude); //this will be in the range 1-9.99999;
-					if (spanNormalised <= unitless_type(2.0))
+					unitless_type spanMagnitude = sci::floor(sci::log10(span/value_type(1.0)));
+					value_type spanNormalised = span / sci::pow(unitless_type(10.0), spanMagnitude); //this will be in the range 1-9.99999;
+					if (spanNormalised <= value_type(2.0))
 					{
-						majorInterval = unitless_type(0.2) * sci::pow(unitless_type(10.0), spanMagnitude);
+						majorInterval = value_type(0.2) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 3;
 					}
-					else if (spanNormalised <= unitless_type(5.0))
+					else if (spanNormalised <= value_type(5.0))
 					{
-						majorInterval = unitless_type(0.5) * sci::pow(unitless_type(10.0), spanMagnitude);
+						majorInterval = value_type(0.5) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 4;
 					}
 					else
 					{
-						majorInterval = unitless_type(1.0) * sci::pow(unitless_type(10.0), spanMagnitude);
+						majorInterval = value_type(1.0) * sci::pow(unitless_type(10.0), spanMagnitude);
 						nAutoSubticks = 4;
 					}
 				}
@@ -1375,9 +1379,9 @@ namespace sci
 
 				//draw the ticks and labels
 				renderer.setFont(m_options.m_labelFont);
-				T currentMajorPosition = sci::floor<unitless_type>(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
+				value_type currentMajorPosition = sci::floor<unitless_type>(min / majorInterval) * majorInterval; //start with the tick mark at or below the axis start
 
-				T minorInterval = majorInterval / unitless_type(nSubticks + 1);
+				value_type minorInterval = majorInterval / unitless_type(nSubticks + 1);
 				millimetre maxLabelSize(0);
 				while (currentMajorPosition <= max) //note this will be false if currentMajorPosition is a nan, so we don't need to worry about infite loops
 				{
@@ -1389,7 +1393,7 @@ namespace sci
 					}
 					for (size_t i = 0; i < nSubticks; ++i)
 					{
-						T minorPosition = currentMajorPosition + unitless_type(i + 1) * minorInterval;
+						value_type minorPosition = currentMajorPosition + unitless_type(i + 1) * minorInterval;
 						if (minorPosition <= max && minorPosition >= min)
 							drawTick(renderer, scale, minorPosition, true);
 					}
@@ -1406,8 +1410,6 @@ namespace sci
 
 			void drawLog(Renderer& renderer, perMillimetre scale)
 			{
-				using unitless_type = typename Scale<T>::unitless_type;
-
 				//calculate the min, max and span
 				unitless_type logMin = Scale<T>::getLogMin();
 				unitless_type logMax = Scale<T>::getLogMax();
@@ -1420,7 +1422,7 @@ namespace sci
 				if (m_options.m_autoMajorInterval)
 					majorLogInterval = sci::ceil(logSpan / unitless_type(10.0));
 				else
-					majorLogInterval = m_options.m_majorInterval;
+					majorLogInterval = m_options.m_majorLogInterval;
 
 				//calculate the number of subticks and the interval
 				size_t nSubticks;
@@ -1481,7 +1483,7 @@ namespace sci
 				drawTitle(renderer, scale, m_options.m_majorTickLength * unitless(1.4) + maxLabelSize);
 			}
 
-			void drawTick(Renderer& renderer, perMillimetre scale, typename Scale<T>::unitless_type plotPosition, bool minor)
+			void drawTick(Renderer& renderer, perMillimetre scale, typename Scale<T>::value_type plotPosition, bool minor)
 			{
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
 				Length length = minor ? m_options.m_minorTickLength : m_options.m_majorTickLength;
@@ -1516,7 +1518,6 @@ namespace sci
 
 			millimetre drawLabel(Renderer& renderer, perMillimetre scale, T plotPosition, T minorInterval) //returns the size of the label perpedicular to the axis
 			{
-				using unitless_type = typename Scale<T>::unitless_type;
 				sci::graphics::StatePusher statePusher(&renderer);
 				renderer.setBrush(m_options.m_labelFont.m_colour);
 				Point pagePosition = m_start + alongAxisDistanceFromLinearData(plotPosition);
@@ -1644,6 +1645,8 @@ namespace sci
 		class CubehelixColourscale : public ColourScale<T>
 		{
 		public:
+			using unitless_type = ColourScale<T>::unitless_type;
+			using value_type = ColourScale<T>::value_type;
 			CubehelixColourscale(std::span<const T> values, degree startHue, degree hueRotation, double startBrightness, double endBrightness, double saturation, double gamma, bool logarithmic, bool autostretch, bool fillOffscaleBottom, bool fillOffscaleTop, bool discrete)
 				: ColourScale<T>(values, CubehelixColourscale::getCubehelixColours(values, logarithmic, startHue, hueRotation, startBrightness, endBrightness, saturation, gamma, discrete),
 					logarithmic, autostretch, fillOffscaleBottom, fillOffscaleTop)
@@ -1727,12 +1730,11 @@ namespace sci
 		private:
 			static sci::GridData<T, 1> getEvenlyDistributedValues(T minValue, T maxValue, size_t nPoints, bool logarithmic)
 			{
-				using unitless_type = decltype(T() / T());
 				sci::GridData<T, 1> values(nPoints);
 				if (logarithmic)
 				{
-					unitless_type minValueLog = sci::log10(minValue / T(1.0));
-					unitless_type maxValueLog = sci::log10(maxValue / T(1.0));
+					unitless_type minValueLog = sci::log10(minValue / value_type(1.0));
+					unitless_type maxValueLog = sci::log10(maxValue / value_type(1.0));
 
 					for (size_t i = 0; i < nPoints; ++i)
 					{

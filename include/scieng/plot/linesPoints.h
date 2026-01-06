@@ -24,7 +24,7 @@ namespace sci
 			{
 			}
 		private:
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				m_lineStyle.setPen(renderer);
 				std::vector<Point> points(this->getNPoints<0>());
@@ -62,7 +62,7 @@ namespace sci
 			Symbol m_symbol;
 			sci::graphics::RgbColour m_colour;
 
-			void plotData(const SpacialAxesSet<X, Y>& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
+			void plotData(const data::spacialAxesSet& axisSet, const data::scalesTuple& scales, Renderer& renderer, sci::plot::perMillimetre scale) const override
 			{
 				renderer.setBrush(m_colour);
 				renderer.setPen(sci::graphics::RgbColour(), sci::plot::millimetre(0.0));
