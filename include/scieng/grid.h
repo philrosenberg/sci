@@ -314,13 +314,33 @@ namespace sci
 
 		static const size_t ndims = NDIMS;
 
-		constexpr GridData(const std::array<size_t, NDIMS>& shape)
+		constexpr GridData(const std::array<size_t, NDIMS>& shape) requires (NDIMS >1)
 			:members(vector_type(), std::array<size_t, NDIMS>{})
 		{
 			setShape(shape);
 		}
-		constexpr GridData(const std::array<size_t, NDIMS>& shape, const T& value)
+		constexpr GridData(const std::array<size_t, NDIMS>& shape) requires (NDIMS == 1)
+			: members(vector_type())
+		{
+			setShape(shape);
+		}
+		constexpr GridData(const std::array<size_t, NDIMS>& shape) requires (NDIMS == 0)
+			: members()
+		{
+			setShape(shape);
+		}
+		constexpr GridData(const std::array<size_t, NDIMS>& shape, const T& value) requires (NDIMS > 1)
 			: members(vector_type(), std::array<size_t, NDIMS>{})
+		{
+			setShape(shape, value);
+		}
+		constexpr GridData(const std::array<size_t, NDIMS>& shape, const T& value) requires (NDIMS == 1)
+			: members(vector_type())
+		{
+			setShape(shape, value);
+		}
+		constexpr GridData(const std::array<size_t, NDIMS>& shape, const T& value) requires (NDIMS == 0)
+			: members(value)
 		{
 			setShape(shape, value);
 		}
@@ -333,6 +353,11 @@ namespace sci
 			:members(vector_type())
 		{
 			setShape(std::array<size_t, 1>{size}, value);
+		}
+		constexpr GridData(const T& value) requires (NDIMS == 0)
+			: members(value)
+		{
+			setShape(std::array<size_t, 0>{}, value);
 		}
 
 		constexpr GridData() requires (NDIMS > 1)
@@ -407,10 +432,6 @@ namespace sci
 			setShape(shape);
 		}
 		
-		constexpr GridData(const T &value) requires(NDIMS == 0)
-			:members(value)
-		{
-		}
 		iterator begin()
 		{
 			return iterator(members::m_view.begin());
