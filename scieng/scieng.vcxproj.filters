@@ -114,5 +114,17 @@
     <ClInclude Include="..\include\scieng\wxplot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\colourbar.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\plot\styles.h">
+      <Filter>Header Files\plot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\multitransformview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\scieng\tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

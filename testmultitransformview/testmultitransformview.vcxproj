@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{84e61613-c4e3-4969-959e-87344078e0aa}</ProjectGuid>
-    <RootNamespace>scieng</RootNamespace>
+    <ProjectGuid>{2468cd7e-a1a9-428c-beeb-de9673abd41d}</ProjectGuid>
+    <RootNamespace>testmultitransformview</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -93,8 +93,6 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -104,6 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,48 +120,11 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\scieng\algorithm.h" />
-    <ClInclude Include="..\include\scieng\codepage.h" />
-    <ClInclude Include="..\include\scieng\functional.h" />
-    <ClInclude Include="..\include\scieng\graphics.h" />
-    <ClInclude Include="..\include\scieng\grid.h" />
-    <ClInclude Include="..\include\scieng\gridtransformview.h" />
-    <ClInclude Include="..\include\scieng\gridview.h" />
-    <ClInclude Include="..\include\scieng\iostream.h" />
-    <ClInclude Include="..\include\scieng\math.h" />
-    <ClInclude Include="..\include\scieng\multitransformview.h" />
-    <ClInclude Include="..\include\scieng\plot.h" />
-    <ClInclude Include="..\include\scieng\plot\colourbar.h" />
-    <ClInclude Include="..\include\scieng\plot\elements.h" />
-    <ClInclude Include="..\include\scieng\plot\errorBar.h" />
-    <ClInclude Include="..\include\scieng\plot\fillBars.h" />
-    <ClInclude Include="..\include\scieng\plot\gridContour.h" />
-    <ClInclude Include="..\include\scieng\plot\linesPoints.h" />
-    <ClInclude Include="..\include\scieng\plot\physical.h" />
-    <ClInclude Include="..\include\scieng\plot\plot.h" />
-    <ClInclude Include="..\include\scieng\plot\plotable.h" />
-    <ClInclude Include="..\include\scieng\plot\styles.h" />
-    <ClInclude Include="..\include\scieng\plot\transforms.h" />
-    <ClInclude Include="..\include\scieng\plot\varyingPoints.h" />
-    <ClInclude Include="..\include\scieng\Ranges.h" />
-    <ClInclude Include="..\include\scieng\RangeTree.h" />
-    <ClInclude Include="..\include\scieng\rendering.h" />
-    <ClInclude Include="..\include\scieng\sstream.h" />
-    <ClInclude Include="..\include\scieng\string.h" />
-    <ClInclude Include="..\include\scieng\stringfuncs.h" />
-    <ClInclude Include="..\include\scieng\time.h" />
-    <ClInclude Include="..\include\scieng\Traits.h" />
-    <ClInclude Include="..\include\scieng\tuple.h" />
-    <ClInclude Include="..\include\scieng\unicode.h" />
-    <ClInclude Include="..\include\scieng\Units.h" />
-    <ClInclude Include="..\include\scieng\wxplot.h" />
-    <ClInclude Include="..\include\scieng\wxrenderer.h" />
+    <ClCompile Include="testmultitransformview.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

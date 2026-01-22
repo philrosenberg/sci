@@ -10,6 +10,7 @@
 #include"../grid.h"
 #include"../gridtransformview.h"
 #include"plot.h"
+#include"../tuple.h"
 
 
 namespace sci
@@ -278,87 +279,7 @@ namespace sci
 			bool m_axesReadyToDraw;
 		};
 
-		template<size_t N, class TUPLE>
-		struct TailTuple
-		{
-		private:
-			using thisType = std::tuple_element_t<N, TUPLE>;
-			using thisSingleTupleType = std::tuple<thisType>;
-			using remainderType = typename TailTuple<N + 1, TUPLE>::type;
-		public:
-			using type = decltype(std::tuple_cat(std::declval<thisSingleTupleType>(), std::declval<remainderType>()));
-		};
-
-		template<size_t N, class TUPLE> requires(std::tuple_size<TUPLE>() == N + 1)
-		struct TailTuple<N, TUPLE>
-		{
-		private:
-			using thisType = std::tuple_element_t<N, TUPLE>;
-			using thisSingleTupleType = std::tuple<thisType>;
-		public:
-			using type = thisSingleTupleType;
-		};
-
-		template<size_t N, class TUPLE> requires(std::tuple_size<TUPLE>() == N)
-		struct TailTuple<N, TUPLE>
-		{
-			using type = std::tuple<>;
-		};
-
-		template<size_t N, class TUPLE>
-		using TailTuple_t = typename TailTuple<N, TUPLE>::type;
-
-
-		//Tuple must be a tuple-like item
-		//TRANSFORMTRAIT::type must be the type you wish to transform std::get<0,TUPLE>() into;
-		//TRANSFORMTRAIT::next::type must be the type you wish to transform std::get<1,TUPLE>() into
-		//next must be callable recursively to get the nth transformed type
-		//TRANSFORMTRAIT::size must be the number of elements to transform
-		//Recursive calls will be made up to and including when TRANSFORMTRAIT::size == 1.
-		//if TRANSFORMTRAIT::size == 0 and empty tuple will be created
-		// 
-		//This example would get pointers to types
-		//template<size_t N, class TUPLETOTRANSFORM>
-		//struct PointerTransform
-		//{
-		//	using type = std::tuple_element_t<N, TUPLETOTRANSFORM>*;
-		//	using next = PointerTransform<N + 1, TUPLETOTRANSFORM>;
-		//  static const size_t size = std::tuple_size_v<TUPLETOTRANSFORM> - N;
-		//}
-		//
-		//using MyTuple = std::tuple<double, int, float>
-		//using pointersTuple = TransformedTuple_t<PointerTransform<0,MyTuple>>; //should be std::tuple<double*, int*, float*>
-		template<class TRANSFORMTRAIT>
-		struct TransformedTuple
-		{
-		private:
-			using transformedType = typename TRANSFORMTRAIT::type;
-			using transformedSingleTupleType = std::tuple<transformedType>;
-			using transformTraitRemainderType = typename TRANSFORMTRAIT::next;
-			using transformedRemainderType = typename TransformedTuple<transformTraitRemainderType >::type;
-		public:
-			using type = decltype(std::tuple_cat(std::declval<transformedSingleTupleType>(), std::declval<transformedRemainderType>()));
-		};
-
-		template<class TRANSFORMTRAIT> requires( TRANSFORMTRAIT::size == 1)
-		struct TransformedTuple<TRANSFORMTRAIT>
-		{
-		private:
-			using transformedType = typename TRANSFORMTRAIT::type;
-			using transformedSingleTupleType = std::tuple<transformedType>;
-		public:
-			using type = transformedSingleTupleType;
-		};
-
-		template<class TRANSFORMTRAIT> requires(TRANSFORMTRAIT::size == 0)
-		struct TransformedTuple<TRANSFORMTRAIT>
-		{
-			using type = std::tuple<>;
-		};
-
-		template<class TRANSFORMTRAIT>
-		using TransformedTuple_t = typename TransformedTuple<TRANSFORMTRAIT>::type;
-
+		
 
 		template<class containers>
 		struct SpScale
@@ -386,9 +307,9 @@ namespace sci
 			template<class SCALESTUPLETOEXTRACTFROM, class CONTAINERSTUPLETOGETDIMSFROM> requires(std::tuple_size_v<SCALESTUPLETOEXTRACTFROM> == std::tuple_size_v<CONTAINERSTUPLETOGETDIMSFROM>)
 			struct UnitlessExtract
 			{
-				using type = sci::GridData<typename std::tuple_element_t<0, SCALESTUPLETOEXTRACTFROM>::element_type::unitless_type,
+				using firstType = sci::GridData<typename std::tuple_element_t<0, SCALESTUPLETOEXTRACTFROM>::element_type::unitless_type,
 					std::tuple_element_t<0, CONTAINERSTUPLETOGETDIMSFROM>::ndims>;
-				using next = UnitlessExtract<TailTuple_t<1, SCALESTUPLETOEXTRACTFROM>, TailTuple_t<1, CONTAINERSTUPLETOGETDIMSFROM>>;
+				using remainder = UnitlessExtract<TailTuple_t<1, SCALESTUPLETOEXTRACTFROM>, TailTuple_t<1, CONTAINERSTUPLETOGETDIMSFROM>>;
 				static const size_t size = std::tuple_size_v<SCALESTUPLETOEXTRACTFROM>;
 			};
 		public:
