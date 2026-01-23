@@ -3,6 +3,8 @@
 #include<algorithm>
 #include<iterator>
 #include"math.h"
+#include<ranges>
+#include"multitransformview.h"
 namespace sci
 {
 	//This sci vesion of std::transform avoids the MSVC security warnings which won't switch off
@@ -36,9 +38,23 @@ namespace sci
 		{ t(u) }-> std::convertible_to<bool>;
 	};
 
+	template<class Value, std::forward_iterator FilterIt, std::forward_iterator OutputIt, Unary_Predicate<decltype(*FilterIt())> UnaryPred = decltype(sci::default_pred<decltype(*FilterIt())>)>
+	void assign_if(const Value &v, FilterIt filter_first, OutputIt first, OutputIt last, UnaryPred pred = sci::default_pred<decltype(*filter_first)>)
+	{
+		for (; first != last; ++first, ++filter_first)
+			if (pred(*filter_first))
+				*first = v;
+	}
+
+	template<class Value, std::ranges::forward_range U, std::ranges::forward_range V, Unary_Predicate<typename U::value_type> UnaryPred = decltype(sci::default_pred<typename U::value_type>)>
+	void assign_if(const Value& value, const U& filter, V& dest, UnaryPred pred = sci::default_pred<typename U::value_type>)
+	{
+		return assign_if(value, filter.begin(), dest.begin(), dest.end(), pred);
+	}
+
 	//differs from std::copy_if by having the if based on a potentially other container
 	//also has defined behaviour if input and dest overlap providing dest <= input
-	template<class InputIt, class FilterIt, class OutputIt, Unary_Predicate<decltype(*FilterIt())> UnaryPred = decltype(sci::default_pred<decltype(*FilterIt())>)>
+	template<std::forward_iterator InputIt, std::forward_iterator FilterIt, std::forward_iterator OutputIt, Unary_Predicate<decltype(*FilterIt())> UnaryPred = decltype(sci::default_pred<decltype(*FilterIt())>)>
 	OutputIt copy_if(InputIt first, InputIt last, FilterIt filter_first, OutputIt dest_first, UnaryPred pred = sci::default_pred<decltype(*filter_first)>)
 	{
 		for (; first != last; ++first, ++filter_first)
@@ -58,6 +74,72 @@ namespace sci
 	auto copy_if(const T &input, const U &filter, V &dest, UnaryPred pred = sci::default_pred<typename U::value_type>)
 	{
 		return copy_if(input.begin(), input.end(), filter.begin(), dest.begin(), pred);
+	}
+
+	template<class TUPLE>
+	struct SubrangeBuilderTraits
+	{
+		using firstType = std::ranges::subrange<std::tuple_element_t<0, TUPLE>>;
+		using remainder = SubrangeBuilderTraits<sci::TailTuple_t<1, TUPLE>>;
+		static const size_t size = std::tuple_size_v<TUPLE>;
+	};
+
+	//a class that will build a tuple of subranges from a tuple of
+	//begin iterators and a single length
+	template<class TUPLE>
+	struct SubrangeBuilder
+	{
+		//Constructor
+		SubrangeBuilder(size_t length)
+			:m_length(length)
+		{
+		}
+
+		//public function to create the tuple
+		using result_tuple_type = typename sci::TransformedTuple<SubrangeBuilderTraits<TUPLE>>::type;
+		constexpr result_tuple_type values(const TUPLE& tuple)
+		{
+			if constexpr (std::tuple_size_v< TUPLE> > 0)
+			{
+				result_tuple_type result;
+				valuesInternal<0>(tuple, result); //start the recursive calls
+				return result;
+			}
+			else
+				return std::tuple<>();
+		}
+	private:
+		//private function called by the above
+		template<size_t N>
+		constexpr void valuesInternal(const TUPLE& tuple, result_tuple_type& result)
+		{
+			//assign the element
+			auto first = std::get<N>(tuple);
+			using iter_type = std::tuple_element_t<N, TUPLE>;
+			std::get<N>(result) = std::ranges::subrange<iter_type>(first, first + m_length);
+
+			//if this is not the final element continue recursion
+			if constexpr (N < std::tuple_size_v<TUPLE> -1)
+				valuesInternal<N + 1>(tuple, result);
+		}
+		const size_t m_length;
+	};
+
+	//As per sci::copy_if, but the predicate can take any number of arguments. Provide the filters as a parameter pack
+	template<auto Pred, std::forward_iterator InputIt, std::forward_iterator OutputIt, std::forward_iterator... FilterIts>
+	OutputIt copy_if_multi(InputIt first, InputIt last, OutputIt dest_first, FilterIts... iterators)
+	{
+		auto length = std::distance(first, last);
+		auto itersTuple = std::make_tuple(iterators...);
+		auto subranges = SubrangeBuilder<decltype(itersTuple)>(length).values(itersTuple);
+		auto combinedFilterView = sci::make_multitransform_view<Pred>(subranges);
+
+		using iterator = decltype(combinedFilterView.begin());
+		static_assert(std::input_or_output_iterator<iterator>);
+		static_assert(std::input_iterator<iterator>);
+		static_assert(std::forward_iterator<iterator>);
+
+		return sci::copy_if(first, last, combinedFilterView.begin(), dest_first);
 	}
 
 	//differs from std::remove_if by having the if based on a potentially other container

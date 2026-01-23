@@ -21,7 +21,8 @@ namespace sci
 			template<class TUPLE>
 			struct IteratorTransform
 			{
-				using firstType = std::remove_reference_t<std::tuple_element_t<0, TUPLE>>::const_iterator;
+				using firstType = decltype(std::get<0>(std::declval<TUPLE>()).begin());
+				//using firstType = std::remove_reference_t<std::tuple_element_t<0, TUPLE>>::const_iterator;
 				using remainder = IteratorTransform<sci::TailTuple_t<1, TUPLE>>;
 				static const size_t size = std::tuple_size_v<TUPLE>;
 			};
@@ -70,7 +71,8 @@ namespace sci
 			using value_type = transform_return_type;
 			using pointer = value_type*;
 			using const_pointer = const value_type*;
-			using size_type = typename std::remove_reference_t<std::tuple_element_t<0, containerTuple>>::size_type;
+			using size_type = decltype(std::get<0>(std::declval<containerTuple>()).size());
+			//using size_type = typename std::remove_reference_t<std::tuple_element_t<0, containerTuple>>::size_type;
 			using difference_type = typename std::tuple_element_t<0, iterator_tuple>::difference_type;
 
 			Iterator() = default;
@@ -104,7 +106,7 @@ namespace sci
 				if constexpr (N < std::tuple_size_v<iterator_tuple>)
 				{
 					++std::get<N>(m_iter);
-					increment<N + 1>;
+					increment<N + 1>();
 				}
 			}
 
@@ -116,7 +118,7 @@ namespace sci
 				if constexpr (N < std::tuple_size_v<iterator_tuple>)
 				{
 					--std::get<N>(m_iter);
-					decrement<N + 1>;
+					decrement<N + 1>();
 				}
 			}
 
@@ -208,13 +210,13 @@ namespace sci
 
 			constexpr difference_type operator-(const Iterator& right) const
 			{
-				return static_cast<const base_type1&>(std::get<0>(*this)) - static_cast<const base_type1&>(std::get<0>(right));
+				return static_cast<const base_type1&>(std::get<0>(m_iter)) - static_cast<const base_type1&>(std::get<0>(right.m_iter));
 			}
 			bool operator==(const Iterator& right) const noexcept
 			{
 				//This logic works providing we do not mix up iterators from different conainers, but as that is
 				//undefined behaviour anyway, I don't think we should worry about it.
-				return static_cast<const base_type1&>(std::get<0>(*this)) == static_cast<const base_type1&>(right.first);
+				return static_cast<const base_type1&>(std::get<0>(m_iter)) == static_cast<const base_type1&>(std::get<0>(right.m_iter));
 			}
 			bool operator!=(const Iterator& right) const noexcept
 			{
@@ -226,7 +228,7 @@ namespace sci
 				//This logic works providing we do not mix up iterators from different conainers, but as that is
 				//undefined behaviour anyway, I don't think we should worry about it. Also we must have these
 				//operators to be reandom access iterators
-				return static_cast<const base_type1&>(std::get<0>(*this)) < static_cast<const base_type1>(right.first);
+				return static_cast<const base_type1&>(std::get<0>(m_iter)) < static_cast<const base_type1>(std::get<0>(right.m_iter));
 			}
 
 			bool operator>=(const Iterator& right) const noexcept
@@ -261,6 +263,10 @@ namespace sci
 		constexpr multitransform_view& operator=(multitransform_view<TRANSFORM, CONTAINERS...>&& rhs) = default;
 		constexpr multitransform_view(const CONTAINERS&... containers)
 			:m_containers(containers...)
+		{
+		}
+		constexpr multitransform_view(const iterator::containerTuple& containers)
+			: m_containers(containers)
 		{
 		}
 		~multitransform_view() = default;
@@ -319,7 +325,7 @@ namespace sci
 		sentinel end() const
 		{
 			typename iterator::iterator_tuple ends;
-			Begin::values(m_containers, ends);
+			End::values(m_containers, ends);
 			return sentinel(ends);
 		}
 		sentinel cend() const
@@ -347,6 +353,12 @@ namespace sci
 	auto make_multitransform_view(const CONTAINERS&... containers)
 	{
 		return multitransform_view<TRANSFORM, CONTAINERS...>(containers...);
+	}
+
+	template<auto TRANSFORM, class... CONTAINERS>
+	auto make_multitransform_view(const std::tuple<CONTAINERS...>& containers)
+	{
+		return multitransform_view<TRANSFORM, CONTAINERS...>(containers);
 	}
 
 	/*template<size_t NDIMS>
