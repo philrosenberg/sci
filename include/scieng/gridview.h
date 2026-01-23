@@ -23,8 +23,9 @@ namespace sci
 		requires(std::remove_cvref_t < T > t)
 	{
 		t.shape();
-		t.ndims;
+		T::ndims;
 		t.operator[](std::array<size_t, T::ndims>());
+		typename T::view_type;
 		t.getView();
 		typename T::value_type;
 	};
@@ -458,6 +459,7 @@ namespace sci
 		using difference_type = GridViewTypeDefs<RANGE, NDIMS>::difference_type;
 		using sentinel = GridViewTypeDefs<RANGE, NDIMS>::sentinel;
 		using value_type = GridViewTypeDefs<RANGE, NDIMS>::value_type;
+		using view_type = grid_view<RANGE, NDIMS>;
 		//using iterator = typename IteratorChooser<std::ranges::range<typename std::remove_reference<RANGE>::type>>::type;
 		//using const_iterator = iterator;
 		
@@ -755,6 +757,10 @@ namespace sci
 		template<size_t NDIMS>
 		grid_fn<NDIMS> grid;
 	}
+
+	template<class T>
+	concept IsGridView =
+		IsGrid<T> && std::is_same_v<T, typename T::view_type>;
 	
 	/*template <class _Ty>
 	struct pointer_traits

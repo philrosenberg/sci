@@ -60,6 +60,8 @@ static_assert((bool)!std::ranges::contiguous_range< sci::grid_view<std::deque<do
 //static_assert((bool)std::ranges::contiguous_range<sci::grid_view<std::vector<double>, 1>>, "sci::grid_view<std::vector<>> failed the test for being a contiguous range");
 
 using gv = sci::grid_view<std::deque<double>, 1>;
+static_assert(sci::IsGrid<gv>);
+static_assert(sci::IsGridView<gv>);
 using gpv = sci::gridpairtransform_view<sci::plus<double, double>, gv, gv>;
 static_assert((bool)std::ranges::random_access_range<gpv>, "sci::gridpair_view failed the test for being a random access range");
 static_assert((bool)std::ranges::range<gpv>, "sci::gridpair_view failed the test for being a range");
@@ -210,7 +212,7 @@ int main()
 	{
 		//transforming 1d arrays
 		sci::GridData<double, 1> grid1(3, 1);
-		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 1>, sci::GridData<double, 1>> pair1d(grid1, grid1);
+		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 1>::view_type, sci::GridData<double, 1>::view_type> pair1d(grid1.getView(), grid1.getView());
 		std::cout << "testing gridtuple_view operator[](size_t) accessor for a 1D case\n";
 		output1d(pair1d);
 
@@ -218,7 +220,7 @@ int main()
 		std::array<size_t, 2> shape2d{ 4, 3 };
 		sci::GridData<double, 2>grid2(shape2d, 1.0);
 		sci::GridData<double, 2>grid3(shape2d, 3.0);
-		sci::gridpairtransform_view<sci::plus<double, double>, sci::GridData<double, 2>, sci::GridData<double, 2>> pair2d(grid2, grid3);
+		auto pair2d = sci::make_gridpairtransform_view<sci::plus<double, double>>(grid2, grid3);
 		std::cout << "Testing gridtuple_view operator[](std::array) accessor for a 2D case\n";
 		auto val2 = pair2d[{0, 0}];
 		std::cout << val2 << "\n\n";

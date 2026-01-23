@@ -9,7 +9,7 @@
 
 namespace sci
 {
-	template<auto TRANSFORM, class GRID1, class GRID2 >
+	template<auto TRANSFORM, IsGridView GRID1, IsGridView GRID2 >
 	class gridpairtransform_view
 	{
 	private:
@@ -249,8 +249,9 @@ namespace sci
 		using size_type = typename iterator::size_type;
 		using difference_type = typename iterator::difference_type;
 		using sentinel = iterator;
-		using  const_reference_type = typename const_iterator::value_type;
+		using const_reference_type = typename const_iterator::value_type;
 		using value_type = typename iterator::value_type;
+		using view_type = gridpairtransform_view<TRANSFORM, GRID1, GRID2>;
 
 		constexpr gridpairtransform_view() requires(NDIMS1 == NDIMS2 || NDIMS1 == 0 || NDIMS2 == 0)
 		{ }
