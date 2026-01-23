@@ -2,6 +2,9 @@
 #define SCIUNICODE_H
 
 #include<string>
+#ifdef _WIN32
+#include<clocale>
+#endif
 
 
 //A way to set unicode strings, but change it globally if I want to swap the types
