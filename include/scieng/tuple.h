@@ -15,7 +15,7 @@ namespace sci
 		using type = decltype(std::tuple_cat(std::declval<thisSingleTupleType>(), std::declval<remainderType>()));
 	};
 
-	template<size_t N, class TUPLE> requires(std::tuple_size<TUPLE>() == N + 1)
+	template<size_t N, class TUPLE> requires (std::tuple_size_v<TUPLE> == N + 1)
 		struct TailTuple<N, TUPLE>
 	{
 	private:
@@ -25,7 +25,7 @@ namespace sci
 		using type = thisSingleTupleType;
 	};
 
-	template<size_t N, class TUPLE> requires(std::tuple_size<TUPLE>() == N)
+	template<size_t N, class TUPLE> requires(std::tuple_size_v<TUPLE> == N)
 		struct TailTuple<N, TUPLE>
 	{
 		using type = std::tuple<>;
