@@ -156,6 +156,11 @@ namespace sci
 
 			return result;
 		}
+
+		inline ::sci::graphics::wxGraphicsFrame<wxPlotCanvasPanel>* makeWxPlotFrame(wxFrame* parent)
+		{
+			return new ::sci::graphics::wxGraphicsFrame<wxPlotCanvasPanel>(parent);
+		}
 	}
 }
 

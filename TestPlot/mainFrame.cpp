@@ -517,7 +517,7 @@ void mainFrame::OnRunPlotTests(wxCommandEvent& event)
 
 	{
 		//create a plot showing points with varying size and colour
-		sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>* frame = new sci::graphics::wxGraphicsFrame<sci::plot::wxPlotCanvasPanel>(this);
+		auto frame = sci::plot::makeWxPlotFrame(this);
 		frame->SetClientSize(800, 800);
 		auto canvas = frame->getPanel()->getCanvas();
 
