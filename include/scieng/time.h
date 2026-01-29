@@ -9,6 +9,8 @@
 #include<iomanip>
 #include<sstream>
 #include<type_traits>
+#include"unicode.h"
+#include"codepage.h"
 
 
 namespace sci
@@ -150,6 +152,11 @@ namespace sci
 		{
 			set(time, secondFraction);
 		}
+		template <class STRING>
+		constexpr GregorianTime(const STRING& dateTimeString, STRING dateSeparator = sci::utf8To<STRING>(u8"-"), STRING timeSeparator = sci::utf8To<STRING>(u8":"), STRING dateTimeSeparator = sci::utf8To<STRING>(u8"T"))
+		{
+			set(dateTimeString, dateSeparator, timeSeparator, dateTimeSeparator);
+		}
 		constexpr void set(int year, unsigned int month, unsigned int dayOfMonth, unsigned int hour, unsigned int minute, double second)
 		{
 			m_cTime.tm_year = year - 1900;
@@ -182,37 +189,61 @@ namespace sci
 			m_cTime.tm_mday = dayOfMonth;
 			m_secsAfterPosixEpoch = mkgmtime(m_cTime);
 		}
-		//parse a date/time the date must be in the order year, month, day of month, followed by the time as hours, minutes seconds.
-		//Each part of the date must be separated by the dateSeparator. Each part of the time must be separated by the timeSeparator.
-		//The date and time must be separated by the dateTimeSeparator. Two digit years are not permitted, but leading zeros on any
-		//value can be omitted. Any text following the second is ignored as per the std::stod function
-		//seconds without checking for a valid decimal number.
-		void set(const std::string& dateTimeString, std::string dateSeparator = "-", std::string timeSeparator = ":", std::string dateTimeSeparator = "T")
+		//parse a date/time from a string. The date must be in the order year, month, day of month, followed by the time as hours, minutes,
+		//seconds.
+		//The function will split the string using dateSeparator (between year-month and month-day of month) dateTimeSeparator (between
+		//day of month/hour) and timeSeparator (between hour/minute and minute/second). Everything after the last timeSeparator is assumed
+		//to be seconds. std::atod is used to convert the text to seconds and std::atoi is used to convert the string to all other time parts.
+		//If a delimiter is zero size or missing from the string, then the function assumes that a year is four characters, a month, day of
+		//the month, hour and minute are two characters.
+		//If the delimeters are used then there is no need to ensure the date and time elements have any specific number of characters.
+		//The string "2025-1-27T9:50:7.5" will correctly parse to 27th Jan 2025 at time 9:50:07.5.
+		//Note that silent unexpected behaviour is likely if the first dateSeparator or timeSeparator is missing, but the second one is there.
+		//The string "20251-27T950:7.5" will attempt to set the year to 20251 the month to 27, the day of the month to an empty string
+		//(which will be converted to 0 by std::atoi) the hour to 950, the minute to 0 (atoi will fail to parse the decimal number) and the
+		//seconds to 0 (an empty string).
+		template <class STRING>
+		void set(const STRING& dateTimeString, STRING dateSeparator = "-", STRING timeSeparator = ":", STRING dateTimeSeparator = "T")
 		{
-			std::string part;
+			if (dateTimeString.length() == 0)
+			{
+				m_secondFraction = 0.0;
+				m_secsAfterPosixEpoch =0;
+				m_cTime = gmtime(0);
+				return;
+			}
+			STRING part;
 			size_t partBegin = 0;
+			size_t nextPartBegin = 0;
+			size_t partEnd = STRING::npos;
 
-			size_t partEnd = dateTimeString.find(dateSeparator, partBegin);
-			int year = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
-			partBegin = partEnd + dateSeparator.length();
+			//year
+			getToken(dateTimeString, dateSeparator, partBegin, partEnd, nextPartBegin, 4);
+			int year = std::atoi(sci::toCodepage(dateTimeString.substr(partBegin, partEnd - partBegin)).c_str());
+			partBegin = nextPartBegin;
 
-			partEnd = dateTimeString.find(dateSeparator, partBegin);
-			int month = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
-			partBegin = partEnd + dateSeparator.length();
+			//month
+			getToken(dateTimeString, dateSeparator, partBegin, partEnd, nextPartBegin, 2);
+			int month = std::atoi(sci::toCodepage(dateTimeString.substr(partBegin, partEnd - partBegin)).c_str());
+			partBegin = nextPartBegin;
 
-			partEnd = dateTimeString.find(dateTimeSeparator, partBegin);
-			int day = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
-			partBegin = partEnd + dateTimeSeparator.length();
+			//day of month
+			getToken(dateTimeString, dateTimeSeparator, partBegin, partEnd, nextPartBegin, 2);
+			int day = std::atoi(sci::toCodepage(dateTimeString.substr(partBegin, partEnd - partBegin)).c_str());
+			partBegin = nextPartBegin;
 
-			partEnd = dateTimeString.find(timeSeparator, partBegin);
-			int hour = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
-			partBegin = partEnd + timeSeparator.length();
+			//hour
+			getToken(dateTimeString, timeSeparator, partBegin, partEnd, nextPartBegin, 2);
+			int hour = std::atoi(sci::toCodepage(dateTimeString.substr(partBegin, partEnd - partBegin)).c_str());
+			partBegin = nextPartBegin;
 
-			partEnd = dateTimeString.find(timeSeparator, partBegin);
-			int minute = std::atoi(dateTimeString.substr(partBegin, partEnd - partBegin).c_str());
-			partBegin = partEnd + timeSeparator.length();
+			//minute
+			getToken(dateTimeString, timeSeparator, partBegin, partEnd, nextPartBegin, 2);
+			int minute = std::atoi(sci::toCodepage(dateTimeString.substr(partBegin, partEnd - partBegin)).c_str());
+			partBegin = nextPartBegin;
 
-			double second = std::stod(dateTimeString.substr(partBegin));
+			//second
+			double second = std::stod(sci::toCodepage(dateTimeString.substr(partBegin)));
 
 			set(year, month, day, hour, minute, second);
 		}
@@ -300,6 +331,20 @@ namespace sci
 			m_cTime = time;
 			m_secondFraction = secondFraction;
 			m_secsAfterPosixEpoch = mkgmtime(m_cTime);
+		}
+
+		template<class STRING>
+		void getToken(const STRING& string, const STRING& delimiter, size_t start, size_t& end, size_t& nextStart, size_t defaultLength) const
+		{
+			end = STRING::npos;
+			if (delimiter.length() > 0)
+				end = string.find(delimiter, start);
+			nextStart = end + delimiter.length();
+			if (end == STRING::npos)
+			{
+				end = std::min(string.length(), start + defaultLength);
+				nextStart = end;
+			}
 		}
 
 		//The input is the representation of time as per this time type.
