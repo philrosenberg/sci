@@ -33,7 +33,7 @@ namespace sci
 		{
 		}
 		GridDataMembers(GridDataMembers<T, NDIMS>&& other)
-			:m_strides(other.strides), m_data(std::move(other.m_data())), m_view(m_data, GridPremultipliedStridesReference<NDIMS>(&m_strides[0]))
+			:m_strides(other.m_strides), m_data(std::move(other.m_data)), m_view(m_data, GridPremultipliedStridesReference<NDIMS>(&m_strides[0]))
 		{
 		}
 		constexpr size_t multiToVectorPosition(const std::array<size_t, NDIMS>& position) const
