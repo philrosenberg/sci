@@ -154,6 +154,7 @@
     <ClInclude Include="..\include\scieng\RangeTree.h" />
     <ClInclude Include="..\include\scieng\rendering.h" />
     <ClInclude Include="..\include\scieng\sstream.h" />
+    <ClInclude Include="..\include\scieng\statistics.h" />
     <ClInclude Include="..\include\scieng\string.h" />
     <ClInclude Include="..\include\scieng\stringfuncs.h" />
     <ClInclude Include="..\include\scieng\time.h" />

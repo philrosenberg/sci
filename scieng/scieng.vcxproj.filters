@@ -126,5 +126,8 @@
     <ClInclude Include="..\include\scieng\tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\scieng\statistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
