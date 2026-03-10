@@ -427,6 +427,13 @@ const std::map<std::string, LCID> codepages
 
 int main()
 {
+
+    sci::toSci(std::u8string(u8"test"));
+    static_assert(sci::IsString<sci::string>);
+    static_assert(sci::IsString<std::u8string>);
+    static_assert(sci::IsString<std::u16string>);
+    static_assert(sci::IsString<std::u32string>);
+
     const sci::string test = sU("a\u007F \u0080 \u07ff \u0800 \uFFFF \U00010000 \U0010FFFF");
     const std::u8string utf8Test = sci::toUtf8(test);
     const std::u8string utf8Result = u8"a\x7F \xC2\x80 \xDF\xBF \xE0\xA0\x80 \xEF\xBF\xBF \xF0\x90\x80\x80 \xF4\x8F\xBF\xBF";

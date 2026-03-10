@@ -103,6 +103,13 @@ namespace sci
 		//sci::string intermediate = toSci(string);
 		return fromSci<TOSTRING>(string);
 	}
+
+
+	template<class STRING>
+	concept IsString = requires(STRING string)
+	{
+		{ sci::toSci(string) } ->std::convertible_to<sci::string>;
+	};
 }
 
 #ifdef _WIN32

@@ -152,7 +152,7 @@ namespace sci
 		{
 			set(time, secondFraction);
 		}
-		template <class STRING>
+		template <IsString STRING>
 		constexpr GregorianTime(const STRING& dateTimeString, STRING dateSeparator = sci::utf8To<STRING>(u8"-"), STRING timeSeparator = sci::utf8To<STRING>(u8":"), STRING dateTimeSeparator = sci::utf8To<STRING>(u8"T"))
 		{
 			set(dateTimeString, dateSeparator, timeSeparator, dateTimeSeparator);
@@ -202,7 +202,7 @@ namespace sci
 		//The string "20251-27T950:7.5" will attempt to set the year to 20251 the month to 27, the day of the month to an empty string
 		//(which will be converted to 0 by std::atoi) the hour to 950, the minute to 0 (atoi will fail to parse the decimal number) and the
 		//seconds to 0 (an empty string).
-		template <class STRING>
+		template <IsString STRING>
 		void set(const STRING& dateTimeString, STRING dateSeparator = "-", STRING timeSeparator = ":", STRING dateTimeSeparator = "T")
 		{
 			if (dateTimeString.length() == 0)
