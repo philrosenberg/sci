@@ -76,6 +76,7 @@ namespace sci
 
 		std::wstring buffer((size_t)nCharsNeeded, 0);
 		MultiByteToWideChar(codePage, 0, string.c_str(), -1, &buffer[0], nCharsNeeded);
+		buffer.pop_back(); // remove the null character from the end
 		return nativeUnicodeTo<STRING>(buffer);
 #else
 		return utf8To<STRING>(string);
@@ -93,6 +94,7 @@ namespace sci
 		int nBytesNeeded = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
 		std::string buffer((size_t)nBytesNeeded, 0);
 		WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &buffer[0], (int)buffer.size(), &replacementCharacter, NULL);
+		buffer.pop_back(); // remove the null character from the end
 		return buffer;
 	}
 #else
