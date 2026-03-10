@@ -5,7 +5,7 @@
 #ifdef _WIN32
 #include<clocale>
 #endif
-
+#include<concepts>
 
 //A way to set unicode strings, but change it globally if I want to swap the types
 #define sU(x) u8##x
@@ -30,7 +30,8 @@ namespace sci
 	typedef std::basic_stringstream<sci::char_t> stringstream;
 	typedef std::basic_istringstream<sci::char_t> istringstream;
 	typedef std::basic_ostringstream<sci::char_t> ostringstream;
-	const std::u16string bom = u"\uFEFF";
+	const std::u8string bom8 = u8"\uFEFF";
+	const std::u16string bom16 = u"\uFEFF";
 	const std::u32string bom32 = U"\U0000FEFF";
 
 	inline void ensureUtf8()
@@ -42,7 +43,6 @@ namespace sci
 #endif
 		//do nothing on linux
 	}
-
 
 	void inline constexpr appendCodepoint(std::u8string& utf8String, uint32_t codePoint)
 	{
@@ -191,7 +191,8 @@ namespace sci
 		result.reserve(string.length() * 2);
 		uint32_t codePoint;
 
-		size_t i = string[0] == bom[0] ? 1 : 0; //skip any BOM
+		//size_t i = string[0] == bom16[0] ? 1 : 0; //skip any BOM
+		size_t i = 0;
 		for (; i < string.length() - 1; ++i) //the -1 is in case the last codepoint is a surrogate pair
 		{
 			if (uint16_t(string[i]) < uint16_t(0xD800) || uint16_t(string[i]) > uint16_t(0xDFFF))
@@ -225,7 +226,7 @@ namespace sci
 		//in theory if we have long strings we can check the higer order 8 bits and most of them
 		//will be 0 if this is native. However, this won't work if we are reencoding short strings
 		//so I don't do it.
-		std::u16string bomSwapped = bom;
+		std::u16string bomSwapped = bom16;
 		swapEndian(bomSwapped[0]);
 		bool nativeEndian = string[0] != bomSwapped[0];
 
