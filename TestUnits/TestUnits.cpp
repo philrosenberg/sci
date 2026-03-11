@@ -4,29 +4,7 @@
 #include"../include/scieng/codepage.h"
 #include<assert.h>
 
-typedef sci::Physical<sci::Metre<>, double> dMetre;
-typedef sci::Physical<sci::Second<>, double> dSecond;
-typedef sci::Physical<sci::Metre<1, -2>, double> dCentimetre;
-typedef sci::Physical<sci::Metre<2, -2>, double> dCentimetreSquared;
-typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
-typedef sci::Physical<sci::Metre<1, 6>, double> dMegaMetre;
-typedef sci::Physical< sci::PoweredUnit<sci::Metre<>,2>, double> dMetreSquared;
-typedef sci::Physical<sci::PoweredUnit<sci::Metre<1, 6>, 2>, double> dMegametreSquared;
-typedef sci::Physical<sci::PoweredUnit<sci::Metre<1,3>,2>, double> dKilometreSquared;
-typedef sci::Physical< sci::Metre<2>, double> dMetreSquaredOther;
-typedef sci::Physical<sci::Metre<2, 6>, double> dMegametreSquaredOther;
-typedef sci::Physical<sci::Metre<2, 3>, double> dKilometreSquaredOther;
-typedef sci::Physical<sci::Second<1,-9>, double> dnanoSecond;
-//typedef sci::Physical<sci::Degree<>, double> dDegree;
-//typedef sci::Physical<sci::Degree<1, -6>, double> dmicroDegree;
-typedef sci::Physical<sci::Unitless, double> dUnitless;
-typedef sci::Physical<sci::Newton<>, double> dNewton;
-typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double> dnewtonMetre;
-typedef sci::Physical < sci::Gram<>, double> dGram;
-typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
-typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
-typedef sci::Physical<sci::Inch<>, double> dInch;
-typedef sci::Physical<sci::Percent, double> dPercent;
+
 
 #include<array>
 template<int ...INTS>
@@ -66,41 +44,245 @@ concept canGetExponentName = requires()
 	sci::getExponentName<N, std::string>();
 };
 
+
+
+//these structs allow us to get a "milli" version of some unit passed in
+
+//this default template has no definition as it should never be created
+template<class T>
+struct MakeMilli;
+
+//this partially specializes the above.
+//Note it still accepts one template parameter as per <UNIT<P,E>>
+//This one paremeter and the template <UNIT<P,E>> allows UNIT, P
+//and E to be deduced
+template<template<int8_t, int64_t>class UNIT, int8_t P, int64_t E>
+struct MakeMilli<UNIT<P, E>>
+{
+	using type = UNIT<P, -3>;
+};
+
+template<template<int8_t>class UNIT, int8_t P>
+struct MakeMilli<UNIT<P>>
+{
+	using type = UNIT<1>;
+};
+
+
+template<class UNIT>
+void testUnitAndUnitless()
+{
+	using physical = sci::Physical<UNIT, double>;
+
+	static_assert(sci::IsUnit<UNIT>, "A unit should be a unit");
+	static_assert(std::is_same_v<UNIT, typename UNIT::unit>, "A unit's ::unit member should be itself");
+	static_assert(sci::IsUnit<physical>, "A Physical should also be also a unit");
+	static_assert(sci::IsPhysical<physical>, "A Physical should be a physical");
+	static_assert(!sci::IsPhysical<UNIT>, "A unit should not be a physical");
+	static_assert(UNIT::template compatibleWith<UNIT>(), "A unit must be compatible with itself");
+	static_assert(std::is_standard_layout_v<physical> && std::is_trivial_v<physical>, "sci::Physicals should be POD");
+	static_assert(sizeof(physical) == sizeof(physical::valueType), "sci::Physicals should have the same size as their value type");
+
+	constexpr physical positive(5.0);
+	constexpr physical negative(-5.0);
+	
+
+	static_assert(positive.value<UNIT>() == 5.0, "getting the value of a physical with its own unit, should give the value as is");
+	static_assert(positive.value<physical>() == 5.0, "getting the value of a physical with itself as a unit, should give the value as is");
+
+	//test maths
+	static_assert(positive + negative == physical(0.0), "Test of adding Physicals failed");
+	static_assert(positive - negative == physical(10.0), "Test of subtracting Physicals failed");
+
+	//can't do a static_assert of += or -=, but check they compile
+	physical temp(0.0);
+	temp += positive;
+	assert(temp == physical(5.0)); //Test of += Physicals failed
+	temp -= positive;
+	assert(temp == physical(0.0)); //Test of -= Physicals failed
+
+	if constexpr (!UNIT::needsScaling)
+	{
+		//rounding errors stop this test working for scaled units
+		static_assert(positive * negative == sci::Physical<sci::PoweredUnit<UNIT,2>, double>(-25.0), "Test of multiplying Physicals (and equivalence of powered and multiplied units) failed");
+		static_assert(positive / negative == sci::Physical<sci::PoweredUnit<UNIT, 0>, double>(-1.0), "Test of dividing Physicals (and equivalence of powered and divided units) failed");
+
+		using unitless = typename sci::TypeTraits<physical>::unitlessType;
+		unitless factor(2.0);
+		temp = physical(5.0);
+		temp *= factor;
+		assert(temp == physical(10.0)); //Test of *= Physicals failed
+		temp /= factor;
+		assert(temp == physical(5.0)); //Test of /= Physicals failed
+	}
+
+	//test functions
+	//Nope - the std functions are not constexpr in C++20
+	//static_assert (sci::abs(positive) == positive, "Abs of a positive Physical should be itself");
+	//static_assert (sci::abs(negative) == -negative, "Abs of a negative Physical should be the negative of itself");
+}
+
+template<class UNIT>
+void testUnit()
+{
+	testUnitAndUnitless<UNIT>();
+	using unitSquared = sci::PoweredUnit<UNIT, 2>;
+	static_assert(!UNIT::template compatibleWith<unitSquared>(), "A unit should not be compatible with itself squared");
+	using unitMultipledItself = sci::MultipliedUnit<UNIT, UNIT>;
+	static_assert(!UNIT::template compatibleWith<unitMultipledItself>(), "A unit should not be compatible with the unit multiplied by itself");
+
+	if constexpr (!std::is_same_v < UNIT, sci::Kilogram<1>>)
+	{
+		using milli = MakeMilli<UNIT>::type;
+		static_assert(UNIT::template compatibleWith<milli>(), "A unit should be compatible with a milli version of itself");
+
+		constexpr sci::Physical<UNIT, double> n1(5.0);
+		constexpr sci::Physical<milli, double> n2(1000.0);
+
+		static_assert(n1.value<UNIT>() == 5.0, "getting the value of a physical with its own unit, should give the value as is");
+		static_assert(n2.value<UNIT>() == 1.0, "getting the value of a physical with a 1000 times larger unit, should give a value 1000 times smaller");
+		static_assert((n1 + n2).value<UNIT>() == 6.0, " 5 <unit> + 1000 milli<unit> should equal 6<unit>");
+		if constexpr (!UNIT::needsScaling)
+		{
+			static_assert(n2 * n2 == sci::pow<2>(n2), "Failed testing that a physical with an exponent times itself is the same as it squared");
+			static_assert((n2 * n2).value<unitSquared>() == 1.0, "Failed testing that multiplying physicals with exponents is correct");
+			static_assert(sci::pow<2>(n2).value<unitSquared>() == 1.0, "Failed testing that squaring physicals with exponents is correct");
+		}
+	}
+}
+
+template<class UNIT>
+void testUnitless()
+{
+	testUnitAndUnitless<UNIT>();
+	using unitSquared = sci::PoweredUnit<UNIT, 2>;
+	static_assert(UNIT::template compatibleWith<unitSquared>(), "A unitless unit should be compatible with itself squared");
+	using unitMultipledItself = sci::MultipliedUnit<UNIT, UNIT>;
+	static_assert(UNIT::template compatibleWith<unitMultipledItself>(), "A unitless unit should be compatible with the unit multiplied by itself");
+
+	constexpr sci::Physical<UNIT, double> v1(5.0);
+	//check a unitless to the power of unitless compiles
+	sci::pow(v1, v1);
+}
+
 int main()
 {
-	static_assert(std::is_standard_layout_v<dMetre> && std::is_trivial_v<dMetre>, "sci::Physicals should be pod");
+	testUnit<sci::Kelvin<>>();
+	testUnit<sci::Second<>>();
+	testUnit<sci::Metre<>>();
+	testUnit<sci::Gram<>>();
+	testUnit<sci::Kilogram<>>();
+	testUnit<sci::Candela<>>();
+	testUnit<sci::Mole<>>();
+	testUnit<sci::Radian<>>();
+	testUnit<sci::Steradian<>>();
+	testUnit<sci::Hertz<>>();
+	testUnit<sci::Newton<>>();
+	testUnit<sci::Pascal<>>();
+	testUnit<sci::Joule<>>();
+	testUnit<sci::Watt<>>();
+	testUnit<sci::Coulomb<>>();
+	testUnit<sci::Volt<>>();
+	testUnit<sci::Farad<>>();
+	testUnit<sci::Ohm<>>();
+	testUnit<sci::Seimens<>>();
+	testUnit<sci::Weber<>>();
+	testUnit<sci::Tesla<>>();
+	testUnit<sci::Henry<>>();
+	testUnit<sci::Lumen<>>();
+	testUnit<sci::Lux<>>();
+	testUnit<sci::Becquerel<>>();
+	testUnit<sci::Gray<>>();
+	testUnit<sci::Seivert<>>();
+	testUnit<sci::Katal<>>();
+
+	testUnitless<sci::Unitless>();
+	testUnitless<sci::Percent>();
+	testUnitless<sci::PerMille>();
+	testUnitless<sci::BasisPoint>();
+
+	testUnit<sci::Degree<>>();
+	testUnit<sci::ArcMinute<>>();
+	testUnit<sci::ArcSecond<>>();
+	testUnit<sci::Turn<>>();
+	testUnit<sci::Quadrant<>>();
+	testUnit<sci::Sextant<>>();
+	testUnit<sci::Hexacontade<>>();
+	testUnit<sci::BinaryDegree<>>();
+	testUnit<sci::Gradian<>>();
+	testUnit<sci::Rankine<>>();
+
+	typedef sci::Physical<sci::Metre<>, double> dMetre;
+	typedef sci::Physical<sci::Second<>, double> dSecond;
+	typedef sci::Physical<sci::Metre<1, -2>, double> dCentimetre;
+	typedef sci::Physical<sci::Metre<2, -2>, double> dCentimetreSquared;
+	typedef sci::Physical<sci::Second<2>, double> dSecondSquared;
+	typedef sci::Physical<sci::Metre<1, 6>, double> dMegaMetre;
+	typedef sci::Physical< sci::PoweredUnit<sci::Metre<>, 2>, double> dMetreSquared;
+	typedef sci::Physical<sci::PoweredUnit<sci::Metre<1, 6>, 2>, double> dMegametreSquared;
+	typedef sci::Physical<sci::PoweredUnit<sci::Metre<1, 3>, 2>, double> dKilometreSquared;
+	typedef sci::Physical< sci::Metre<2>, double> dMetreSquaredOther;
+	typedef sci::Physical<sci::Metre<2, 6>, double> dMegametreSquaredOther;
+	typedef sci::Physical<sci::Metre<2, 3>, double> dKilometreSquaredOther;
+	typedef sci::Physical<sci::Second<1, -9>, double> dnanoSecond;
+	//typedef sci::Physical<sci::Degree<>, double> dDegree;
+	//typedef sci::Physical<sci::Degree<1, -6>, double> dmicroDegree;
+	typedef sci::Physical<sci::Unitless, double> dUnitless;
+	typedef sci::Physical<sci::Newton<>, double> dNewton;
+	typedef sci::Physical < sci::MultipliedUnit<sci::Newton<>, sci::Metre<>>, double> dnewtonMetre;
+	typedef sci::Physical < sci::Gram<>, double> dGram;
+	typedef sci::Physical < sci::Gram<1, 3>, double> dKilogram;
+	typedef sci::Physical < sci::DividedUnit<sci::Gram<>, sci::Gram<1, 3>>, double> dGramPerKilogram;
+	typedef sci::Physical<sci::Inch<>, double> dInch;
+	typedef sci::Physical<sci::Percent, double> dPercent;
 
 
 	static_assert(sci::is_physical_v<dMetre>); //dMetre is a physical
 	static_assert(!sci::is_physical_v<double>); //double is not a physical
-	static_assert(!sci::is_unit<dMetre>::value); //dMetre is not a unit
 	static_assert(sci::is_unit<sci::Metre<>>::value); //sci::Metre is a unit
+	static_assert(sci::IsUnit<sci::Metre<>>);
+	static_assert(sci::IsUnit<dMetre>);
 	constexpr auto shouldBeUnitlessPhysical = dMetre(4) / dMetre(2);
 	static_assert(shouldBeUnitlessPhysical == dUnitless(2)); // 4 metres / 2 metres = 2 
 	static_assert(sci::is_unitless_physical_v<decltype(shouldBeUnitlessPhysical)>); // metre/metre is a unitless
 	static_assert(sci::is_unitless_physical_v<decltype(dMetre(5) / dMetre(2))>); //metre/ metre is a unitless
 
-	sci::pow(shouldBeUnitlessPhysical, shouldBeUnitlessPhysical);//a unitless to the power of unitless compiles
 
 
 
 
-	static_assert(sci::IsValidSiExponent<0>); //0 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<1>); //1 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-1>); //-1 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<2>); //2 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-2>); //-2 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<3>); //3 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-3>); //-3 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<6>); //6 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-6>); //-6 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<9>); //9 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-9>); //-9 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<12>); //12 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-12>); //-12 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<15>); //15 is a valid SI exponent
-	static_assert(sci::IsValidSiExponent<-15>); //-15 is a valid SI exponent
-	static_assert(!sci::IsValidSiExponent<4>); //4 is not a valid SI exponent
+	static_assert(sci::IsValidSiExponent<0>, "0 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<1>, "1 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-1>, "-1 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<2>, "2 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-2>, "-2 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<3>, "3 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-3>, "-3 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<6>, "6 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-6>, "-6 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<9>, "9 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-9>, "-9 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<12>, "12 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-12>, "-12 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<15>, "15 should be a valid exponent");
+	static_assert(sci::IsValidSiExponent<-15>, "-15 should be a valid exponent");
+
+	static_assert(!sci::IsValidSiExponent<4>, "4 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-4>, "-4 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<5>, "5 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-5>, "-5 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<7>, "7 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-7>, "-7 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<8>, "8 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-8>, "-8 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<10>, "10 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-10>, "-10 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<11>, "11 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-11>, "-11 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<13>, "13 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-13>, "-13 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<14>, "14 should not be a valid exponent");
+	static_assert(!sci::IsValidSiExponent<-14>, "-14 should not be a valid exponent");
 
 	std::string milliString = sci::getExponentName<sci::milli, std::string>();
 	static_assert(!canGetExponentName<4>);
@@ -286,6 +468,7 @@ int main()
 	std::wcout << "length3 = " << length3 << "\n";
 	std::cout << "length3 = 100001 m\n\n";
 
+	sci::Metre<>::getShortRepresentation<std::string>();
 	std::cout << length1.getShortUnitString<std::string>() << " " << length1.getLongUnitString<std::string>() << "\n";
 	std::wcout << length1.getShortUnitString<std::wstring>() << " " << length1.getLongUnitString<std::wstring>() << "\n";
 	std::wcout << "m metre\n\n";

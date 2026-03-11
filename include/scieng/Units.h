@@ -690,21 +690,21 @@ namespace sci
 		constexpr bool unitCompatible()
 		{
 			return
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 0>(), decodePower< UNIT1::unit::basePowersDenominators, 0>(), decodePower< UNIT2::unit::basePowersNumerators, 0>(), decodePower< UNIT2::unit::basePowersDenominators, 0>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 1>(), decodePower< UNIT1::unit::basePowersDenominators, 1>(), decodePower< UNIT2::unit::basePowersNumerators, 1>(), decodePower< UNIT2::unit::basePowersDenominators, 1>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 2>(), decodePower< UNIT1::unit::basePowersDenominators, 2>(), decodePower< UNIT2::unit::basePowersNumerators, 2>(), decodePower< UNIT2::unit::basePowersDenominators, 2>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 3>(), decodePower< UNIT1::unit::basePowersDenominators, 3>(), decodePower< UNIT2::unit::basePowersNumerators, 3>(), decodePower< UNIT2::unit::basePowersDenominators, 3>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 4>(), decodePower< UNIT1::unit::basePowersDenominators, 4>(), decodePower< UNIT2::unit::basePowersNumerators, 4>(), decodePower< UNIT2::unit::basePowersDenominators, 4>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 5>(), decodePower< UNIT1::unit::basePowersDenominators, 5>(), decodePower< UNIT2::unit::basePowersNumerators, 5>(), decodePower< UNIT2::unit::basePowersDenominators, 5>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 6>(), decodePower< UNIT1::unit::basePowersDenominators, 6>(), decodePower< UNIT2::unit::basePowersNumerators, 6>(), decodePower< UNIT2::unit::basePowersDenominators, 6>()>() &&
-				fractionsEquivalent<decodePower< UNIT1::unit::basePowersNumerators, 7>(), decodePower< UNIT1::unit::basePowersDenominators, 7>(), decodePower< UNIT2::unit::basePowersNumerators, 7>(), decodePower< UNIT2::unit::basePowersDenominators, 7>()>();
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 0>(), decodePower< UNIT1::encoding::basePowersDenominators, 0>(), decodePower< UNIT2::encoding::basePowersNumerators, 0>(), decodePower< UNIT2::encoding::basePowersDenominators, 0>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 1>(), decodePower< UNIT1::encoding::basePowersDenominators, 1>(), decodePower< UNIT2::encoding::basePowersNumerators, 1>(), decodePower< UNIT2::encoding::basePowersDenominators, 1>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 2>(), decodePower< UNIT1::encoding::basePowersDenominators, 2>(), decodePower< UNIT2::encoding::basePowersNumerators, 2>(), decodePower< UNIT2::encoding::basePowersDenominators, 2>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 3>(), decodePower< UNIT1::encoding::basePowersDenominators, 3>(), decodePower< UNIT2::encoding::basePowersNumerators, 3>(), decodePower< UNIT2::encoding::basePowersDenominators, 3>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 4>(), decodePower< UNIT1::encoding::basePowersDenominators, 4>(), decodePower< UNIT2::encoding::basePowersNumerators, 4>(), decodePower< UNIT2::encoding::basePowersDenominators, 4>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 5>(), decodePower< UNIT1::encoding::basePowersDenominators, 5>(), decodePower< UNIT2::encoding::basePowersNumerators, 5>(), decodePower< UNIT2::encoding::basePowersDenominators, 5>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 6>(), decodePower< UNIT1::encoding::basePowersDenominators, 6>(), decodePower< UNIT2::encoding::basePowersNumerators, 6>(), decodePower< UNIT2::encoding::basePowersDenominators, 6>()>() &&
+				fractionsEquivalent<decodePower< UNIT1::encoding::basePowersNumerators, 7>(), decodePower< UNIT1::encoding::basePowersDenominators, 7>(), decodePower< UNIT2::encoding::basePowersNumerators, 7>(), decodePower< UNIT2::encoding::basePowersDenominators, 7>()>();
 
 		}
 		template<class UNIT1, class UNIT2>
 		constexpr bool unitSameExponent()
 		{
 			//scale powers to a common denominator and compare - basically multiply each numerator by the other unit's denominator
-			return fractionsEquivalent < UNIT1::unit::exponentNumerator, UNIT1::unit::exponentDenominator, UNIT2::unit::exponentNumerator, UNIT2::unit::exponentDenominator>();
+			return fractionsEquivalent < UNIT1::encoding::exponentNumerator, UNIT1::encoding::exponentDenominator, UNIT2::encoding::exponentNumerator, UNIT2::encoding::exponentDenominator>();
 		}
 		template<class UNIT1, class UNIT2>
 		constexpr bool unitIdentical()
@@ -743,8 +743,8 @@ namespace sci
 			static constexpr uint64_t basePowersDenominators = BASE_POWERS_DENOMINATORS;
 			static constexpr int64_t exponentNumerator = EXPONENT_NUMERATOR;
 			static constexpr int64_t exponentDenominator = EXPONENT_DENOMINATOR;
-			typedef EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling> unit;
-			typedef unit baseUnit;
+			using encoding = EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling>;
+			using baseEncoding = encoding;
 
 			template<class VALUE_TYPE>
 			struct Converter //We have to put all these functions into a struct to avoid having to partial specialize them
@@ -752,12 +752,12 @@ namespace sci
 				template <class DESTINATION_UNIT>
 				static constexpr VALUE_TYPE convertTo(VALUE_TYPE value)
 				{
-					static_assert(unitsPrivate::unitCompatible<unit, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
+					static_assert(unitsPrivate::unitCompatible<encoding, DESTINATION_UNIT>(), "Cannot convert between units with different powers or dimensions.");
 					//If the destination unit is identical to this unit we can do nothing
 					//not sure if this really optimises anything, but we might as well do it
 					//Note that we can't just check equivalence of the base powers and exponent
 					//as the DESTINATION_UNIT might be a scaled unit.
-					if constexpr (std::is_same<unit, DESTINATION_UNIT>::value)
+					if constexpr (std::is_same<encoding, DESTINATION_UNIT>::value)
 						return value;
 					//This class is always the base type for the DESTINATION_UNIT, but with potentially different exponents
 					//therefore to convert from this type, to the DESTINATION_UNIT we can use the DESTINATION_UNIT::convertFromBase
@@ -772,12 +772,16 @@ namespace sci
 					//so all we need to do is apply the difference in the exponent
 					if constexpr (unitsPrivate::fractionsEquivalent<EXPONENT_NUMERATOR, EXPONENT_DENOMINATOR, BASE_EXPONENT_NUMERATOR, BASE_EXPONENT_DENOMINATOR>())
 						return value;
-					//check if we can use the templated recursive pow10
-					constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * EXPONENT_DENOMINATOR - EXPONENT_NUMERATOR * BASE_EXPONENT_DENOMINATOR;
-					constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * EXPONENT_DENOMINATOR;
-					if constexpr (NUM % DEN == 0)
-						return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>();
-					return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
+					else
+					{
+						//check if we can use the templated recursive pow10
+						constexpr int64_t NUM = BASE_EXPONENT_NUMERATOR * EXPONENT_DENOMINATOR - EXPONENT_NUMERATOR * BASE_EXPONENT_DENOMINATOR;
+						constexpr int64_t DEN = BASE_EXPONENT_DENOMINATOR * EXPONENT_DENOMINATOR;
+						if constexpr (NUM % DEN == 0)
+							return value * sci::unitsPrivate::pow10<NUM / DEN, VALUE_TYPE>();
+						else
+							return value * std::pow(VALUE_TYPE(10.0), VALUE_TYPE(NUM) / VALUE_TYPE(DEN));
+					}
 				}
 			};
 			static constexpr bool isUnitless()
@@ -787,7 +791,7 @@ namespace sci
 			template<class OTHER_UNIT>
 			static constexpr bool compatibleWith()
 			{
-				return unitsPrivate::unitCompatible<unit, OTHER_UNIT>();
+				return unitsPrivate::unitCompatible<encoding, OTHER_UNIT>();
 			}
 		};
 
@@ -799,19 +803,20 @@ namespace sci
 	}
 
 	template<class T>
-	concept IsUnit =
-		requires(std::remove_cvref_t < T > t)
+	concept IsUnit = requires()
 	{
-		t.needsScaling;
-		t.basePowersNumerators;
-		t.basePowersDenominators;
-		t.exponentNumerator;
-		t.exponentDenominator;
+		T::needsScaling;
+		T::basePowersNumerators;
+		T::basePowersDenominators;
+		T::exponentNumerator;
+		T::exponentDenominator;
 		typename T::baseUnit;
 		typename T::unit;
 		typename T::template Converter<double>;
-		t.isUnitless();
-		t.template compatibleWith<T>();
+		T::isUnitless();
+		T::template compatibleWith<T>();
+		T::template getShortRepresentation<std::string>("", "");
+		T::template getLongRepresentation<std::string>();
 	};
 
 	template<class T>
@@ -846,8 +851,8 @@ namespace sci
 		static constexpr uint64_t basePowersDenominators = encodedUnitClass::basePowersDenominators;
 		static constexpr int64_t exponentNumerator = encodedUnitClass::exponentNumerator;
 		static constexpr int64_t exponentDenominator = encodedUnitClass::exponentDenominator;
-		typedef PoweredUnit< ENCODEDUNIT, POW_NUMERATOR, POW_DENOMINATOR> unit;
-		typedef PoweredUnit<typename ENCODEDUNIT::baseUnit, POW_NUMERATOR, POW_DENOMINATOR> baseUnit;
+		using unit = PoweredUnit< typename ENCODEDUNIT::unit, POW_NUMERATOR, POW_DENOMINATOR>;
+		using baseUnit = PoweredUnit<typename ENCODEDUNIT::baseUnit, POW_NUMERATOR, POW_DENOMINATOR>;
 
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
@@ -951,8 +956,8 @@ namespace sci
 		static constexpr uint64_t basePowersDenominators = encodedUnitClass::basePowersDenominators;
 		static constexpr int64_t exponentNumerator = encodedUnitClass::exponentNumerator;
 		static constexpr int64_t exponentDenominator = encodedUnitClass::exponentDenominator;
-		typedef MultipliedUnit< ENCODEDUNIT1, ENCODEDUNIT2> unit;
-		typedef MultipliedUnit<typename ENCODEDUNIT1::baseUnit, typename ENCODEDUNIT2::baseUnit> baseUnit;
+		using unit =  MultipliedUnit<typename ENCODEDUNIT1::unit, typename ENCODEDUNIT2::unit>;
+		using baseUnit = MultipliedUnit<typename ENCODEDUNIT1::baseUnit, typename ENCODEDUNIT2::baseUnit>;
 
 		template<class STRING>
 		static STRING getShortRepresentation(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
@@ -1128,6 +1133,8 @@ namespace sci
 
 	struct Unitless : public unitsPrivate::EncodedUnitWholePower<0, 0, false>
 	{
+		using unit = Unitless;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
 		template<class STRING>
@@ -1190,6 +1197,8 @@ namespace sci
 
 	struct Percent : public unitsPrivate::EncodedUnitWholePower<0, -2, false>
 	{
+		using unit = Percent;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
 		template<class STRING>
@@ -1270,6 +1279,8 @@ namespace sci
 
 	struct PerMille : public unitsPrivate::EncodedUnitWholePower<0, -3, false>
 	{
+		using unit = PerMille;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
 		template<class STRING>
@@ -1348,6 +1359,8 @@ namespace sci
 
 	struct BasisPoint : public unitsPrivate::EncodedUnitWholePower<0, -4, false>
 	{
+		using unit = BasisPoint;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = 0;
 		template<class STRING>
@@ -1427,6 +1440,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ampere : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 0>(), EXPONENT*POWER, false>
 	{
+		using unit = Ampere<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("A", "ampere")
@@ -1435,6 +1450,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Kelvin : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 1>(), EXPONENT*POWER, false>
 	{
+		using unit = Kelvin<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("K", "kelvin")
@@ -1443,6 +1460,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Second : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 2>(), EXPONENT*POWER, false>
 	{
+		using unit = Second<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("s", "second")
@@ -1451,6 +1470,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Metre : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 3>(), EXPONENT*POWER, false>
 	{
+		using unit = Metre<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("m", "metre")
@@ -1459,6 +1480,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gram : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 4>(), EXPONENT*POWER, false>
 	{
+		using unit = Gram<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("g", "gram")
@@ -1467,12 +1490,16 @@ namespace sci
 	template<int8_t POWER = 1>
 	struct Kilogram : public Gram<POWER, 3>
 	{
+		using unit = Kilogram<POWER>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Candela : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 5>(), EXPONENT*POWER, false>
 	{
+		using unit = Candela<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("cd", "candela")
@@ -1481,6 +1508,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Mole : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 6>(), EXPONENT*POWER, false>
 	{
+		using unit = Mole<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("mol", "mole")
@@ -1489,6 +1518,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Radian : public unitsPrivate::EncodedUnitWholePower<unitsPrivate::encodePower<POWER, 7>(), EXPONENT*POWER, false>
 	{
+		using unit = Radian<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = false;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("rad", "radian")
@@ -1502,13 +1533,17 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Steradian : public MultipliedUnit<Radian<POWER>, Radian<POWER, EXPONENT>> //Note we don't have any linear base units so we split the rd^2 into rd and rd and just pass the exponent through one
 	{
+		using unit = Steradian<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("sr", "steradian")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Hertz : public Second<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
+	struct Hertz : public Second<-POWER, -EXPONENT>//note the negative exponent because 1 mHz= 1ks-1 i.e 1/1ks
 	{
+		using unit = Hertz<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Hz", "hertz")
 	};
@@ -1516,6 +1551,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Newton : public MultipliedUnit<MultipliedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>
 	{
+		using unit = Newton<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr bool needsScaling = MultipliedUnit<MultipliedUnit<Kilogram<POWER>, Metre<POWER, EXPONENT>>, Second<-2 * POWER>>::needsScaling;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("N", "newton")
@@ -1524,6 +1561,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Pascal : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
+		using unit = Pascal<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Pa", "pascal")
 	};
@@ -1531,6 +1570,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Joule : public MultipliedUnit<Newton<POWER, EXPONENT>, Metre<POWER>>
 	{
+		using unit = Joule<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("J", "joule")
 	};
@@ -1538,6 +1579,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Watt : public MultipliedUnit<Joule<POWER, EXPONENT>, Second<-POWER>>
 	{
+		using unit = Watt<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("W", "watt")
 	};
@@ -1545,6 +1588,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Coulomb : public MultipliedUnit<Ampere<POWER, EXPONENT>, Second<POWER>>
 	{
+		using unit = Coulomb<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("C", "coulomb")
 	};
@@ -1552,6 +1597,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Volt : public MultipliedUnit<Watt<POWER, EXPONENT>, Ampere<-POWER>>
 	{
+		using unit = Volt<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("V", "volt")
 	};
@@ -1559,6 +1606,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Farad : public MultipliedUnit<Coulomb<POWER, EXPONENT>, Volt<-POWER>>
 	{
+		using unit = Farad<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("F", "farad")
 	};
@@ -1566,14 +1615,17 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Ohm : public MultipliedUnit<Volt<POWER, EXPONENT>, Ampere<-POWER>>
 	{
+		using unit = Ohm<POWER, EXPONENT>;
 		static constexpr int8_t power = POWER;
 		NAMEDEFASCIISUB("\u2126", "ohm", "ohm", "ohm")
 	};
 
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Seimens : public Ohm<-1 * POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
+	struct Seimens : public Ohm<-POWER, -EXPONENT>//note the negative exponent because 1 mS= 1kOhm-1, i.e 1/1kOhm
 	{
+		using unit = Seimens<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("S", "seimens")
 	};
@@ -1581,6 +1633,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Weber : public MultipliedUnit<Volt<POWER, EXPONENT>, Second<POWER>>
 	{
+		using unit = Weber<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Wb", "weber")
 	};
@@ -1588,6 +1642,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Tesla : public MultipliedUnit<Weber<POWER, EXPONENT>, Metre<-2 * POWER>>
 	{
+		using unit = Tesla<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("T", "tesla")
 	};
@@ -1595,6 +1651,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Henry : public MultipliedUnit<Weber<POWER, EXPONENT>, Ampere<-POWER>>
 	{
+		using unit = Henry<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("H", "henry")
 	};
@@ -1602,6 +1660,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lumen : public MultipliedUnit<Candela<POWER, EXPONENT>, Steradian<-POWER>>
 	{
+		using unit = Lumen<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("lm", "lumen")
 	};
@@ -1609,13 +1669,17 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Lux : public MultipliedUnit<Lumen<POWER, EXPONENT>, Metre<-2 * POWER>>::unit
 	{
+		using unit = Lux<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("lx", "lux")
 	};
 
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
-	struct Becquerel : public Second<-POWER, EXPONENT>
+	struct Becquerel : public Second<-POWER, -EXPONENT>//note the negative exponent because 1 mBq= 1ks-1, i.e 1/1ks
 	{
+		using unit = Becquerel<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Bq", "baquerel")
 	};
@@ -1623,6 +1687,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Gray : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
+		using unit = Gray<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Gy", "grey")
 	};
@@ -1630,6 +1696,7 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Seivert : public MultipliedUnit<Joule<POWER, EXPONENT>, Kilogram<-POWER>>
 	{
+		using unit = Seivert<POWER, EXPONENT>;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("Sv", "seivert")
 	};
@@ -1637,6 +1704,8 @@ namespace sci
 	template<int8_t POWER = 1, int64_t EXPONENT = 0>
 	struct Katal : public MultipliedUnit<Mole<POWER, EXPONENT>, Second<-POWER>>
 	{
+		using unit = Katal<POWER, EXPONENT>;
+		using baseUnit = unit;
 		static constexpr int8_t power = POWER;
 		NAMEDEF("kat", "katal")
 	};
@@ -1651,8 +1720,8 @@ namespace sci
 	class CLASS_NAME\
 	{\
 	public:\
-		typedef BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT> baseUnit;\
-		typedef CLASS_NAME< POWER, EXPONENT > unit;\
+		using baseUnit = BASE_CLASS<POWER*BASE_CLASS_POWER,EXPONENT>;\
+		using unit = CLASS_NAME< POWER, EXPONENT >;\
 		static constexpr bool needsScaling = true;\
 		static constexpr uint64_t basePowersNumerators = baseUnit::basePowersNumerators;\
 		static constexpr uint64_t basePowersDenominators = baseUnit::basePowersDenominators;\
@@ -1661,6 +1730,8 @@ namespace sci
 		static constexpr int64_t exponentNumerator = EXPONENT;\
 		static constexpr int64_t exponentDenominator = 1;\
 		static constexpr int8_t power = POWER;\
+		using encoding = unitsPrivate::EncodedUnit< basePowersNumerators, basePowersDenominators, exponentNumerator, exponentDenominator, needsScaling>;\
+		using baseEncoding = typename baseUnit::encoding;\
 		template <class VALUE_TYPE>\
 		struct Converter\
 		{\
@@ -1771,7 +1842,22 @@ namespace sci
 	{
 	public:
 		using valueType = VALUE_TYPE;
-		using  unit = ENCODED_UNIT;
+		using unit = ENCODED_UNIT::unit;
+
+		static constexpr bool needsScaling = unit::needsScaling;
+		static constexpr uint64_t basePowersNumerators = unit::basePowersNumerators;
+		static constexpr uint64_t basePowersDenominators = unit::basePowersDenominators;
+		static constexpr uint64_t exponentNumerator = unit::exponentNumerator;
+		static constexpr uint64_t exponentDenominator = unit::exponentDenominator;
+		using baseUnit = typename ENCODED_UNIT::baseUnit;
+		static constexpr bool isUnitless()
+		{
+			return unit::isUnitless();
+		}
+
+		template<class VALUE_TYPE>
+		struct Converter : public unit::Converter
+		{ };
 
 #pragma warning(push)
 #pragma warning(disable : 26495)
@@ -1785,7 +1871,7 @@ namespace sci
 			m_v = (VALUE_TYPE)other.template value<unit>();
 		}
 		template<class U, class V>
-		constexpr Physical<unit, VALUE_TYPE> &operator=(const Physical<U, V>& other)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator=(const Physical<U, V>& other)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only convert between units with the same dimensions.");
 			m_v = other.template value<unit>();
@@ -1794,7 +1880,7 @@ namespace sci
 
 		//+= operator
 		template <class U, class V>
-		constexpr Physical<unit, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator+=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only add assign units with the same dimensions.");
 			m_v += second.template value<unit>();
@@ -1803,7 +1889,7 @@ namespace sci
 
 		//-= operator
 		template <class U, class V>
-		constexpr Physical<unit, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator-=(const Physical<U, V> &second)
 		{
 			static_assert(compatibleWith<Physical<U, V>>(), "We can only minus assign units with the same dimensions.");
 			m_v -= second.template value<unit>();
@@ -1812,7 +1898,7 @@ namespace sci
 
 		// /= operator
 		template <class U, class V>
-		constexpr Physical<unit, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator/=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only divide assign with a dimensionless quantity.");
 			m_v /= second.template value<Unitless>();
@@ -1821,7 +1907,7 @@ namespace sci
 
 		//*= operator
 		template <class U, class V>
-		constexpr Physical<unit, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
+		constexpr Physical<ENCODED_UNIT, VALUE_TYPE> &operator*=(const Physical<U, V> &second)
 		{
 			static_assert(U::isUnitless(), "Can only multiply assign with a dimensionless quantity.");
 			m_v *= second.template value<Unitless>();
@@ -1830,7 +1916,7 @@ namespace sci
 		//although trying to set a Physical with a VALUE_TYPE causes a compile error with just
 		//the above, the error message is pretty cryptic. This should give something more
 		//sensible
-		Physical<unit, VALUE_TYPE>& operator=(const VALUE_TYPE& other)
+		Physical<ENCODED_UNIT, VALUE_TYPE>& operator=(const VALUE_TYPE& other)
 		{
 			//use std::is_same to ensure we always fail the assert, but avoid a constant false that can be
 			//seen by some compilers as a reason to throw an error without the template being instantiated
@@ -1840,11 +1926,23 @@ namespace sci
 		template<class STRING>
 		static STRING getShortUnitString(const STRING &exponentPrefix = STRING(), const STRING &exponentSuffix = STRING())
 		{
-			return unit::getShortRepresentation(exponentPrefix, exponentSuffix);
+			return unit::template getShortRepresentation<STRING>(exponentPrefix, exponentSuffix);
 		}
 
 		template<class STRING>
-		static STRING getLongUnitString(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		static STRING getLongUnitString()
+		{
+			return unit::template getLongRepresentation<STRING>();
+		}
+
+		template<class STRING>
+		static STRING getShortRepresentation(const STRING& exponentPrefix = STRING(), const STRING& exponentSuffix = STRING())
+		{
+			return unit::template getShortRepresentation<STRING>(exponentPrefix, exponentSuffix);
+		}
+
+		template<class STRING>
+		static STRING getLongRepresentation()
 		{
 			return unit::template getLongRepresentation<STRING>();
 		}
@@ -1852,13 +1950,16 @@ namespace sci
 		template <class REQUIRED>
 		constexpr VALUE_TYPE value() const
 		{
-			if (std::is_same< REQUIRED, unit>::value)
+			if constexpr (std::is_same< REQUIRED, unit>::value)
 				return m_v;
-			if (std::is_same< REQUIRED, Physical<unit, VALUE_TYPE>>::value)
+			else if constexpr (std::is_same< REQUIRED, Physical<unit, VALUE_TYPE>>::value)
 				return m_v;
-			//this should work whether REQUIRED is a Physical or an Encoded Unit
-			using Converter = typename unit::template Converter<valueType>;
-			return Converter::template convertTo<typename REQUIRED::unit>(m_v);
+			else
+			{
+				//this should work whether REQUIRED is a Physical or an Encoded Unit
+				using Converter = typename unit::template Converter<valueType>;
+				return Converter::template convertTo<typename REQUIRED::unit>(m_v);
+			}
 		}
 
 		template<class OTHER>
@@ -2188,7 +2289,7 @@ namespace sci
 	template <int POWER, IsUnitfulPhysical T>
 	constexpr Physical<PoweredUnit<typename T::unit, POWER>, typename T::valueType> pow(const T& base)
 	{
-		return Physical<PoweredUnit<typename T::unit, POWER>, typename T::valueType>(typename T::valueType(std::pow(base.template value<T>(), POWER)));
+		return Physical<PoweredUnit<typename T::unit, POWER>, typename T::valueType>(typename T::valueType(sci::pow<POWER>(base.template value<T>())));
 	}
 	//same but for Unitless - we can't have a Physical<PoweredUnit<Unitless, POWER>>
 	template <int POWER, IsUnitlessPhysical V>
@@ -2353,9 +2454,12 @@ namespace sci
 	}
 
 	template <IsPhysical T>
-	T abs(const T &value)
+	constexpr T abs(const T &value)
 	{
-		return T(std::abs(value.template value<T>()));
+		if (std::is_constant_evaluated())
+			return value < TypeTraits<T>::zero ? -value : value;
+		else
+			return T(std::abs(value.template value<T>()));
 	}
 
 	//floor a Physical - the first template parameter is the unit that
