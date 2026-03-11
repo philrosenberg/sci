@@ -5,6 +5,7 @@
 #include"math.h"
 #include<ranges>
 #include"multitransformview.h"
+#include"statistics.h"
 namespace sci
 {
 	//This sci vesion of std::transform avoids the MSVC security warnings which won't switch off
@@ -336,6 +337,116 @@ namespace sci
 			++requestedYs;
 		}
 
+	}
+
+	template<std::ranges::random_access_range T, std::ranges::forward_range U>
+	void reorder(T& v, const U& newLocations)
+	{
+		if (sci::max(newLocations) >= newLocations.size())
+			throw(std::out_of_range("Called sci::reorder, but the maximum index is to large to fit in the result"));
+		T result = v;
+		size_t i = 0;
+		for (auto locIter = newLocations.begin(); locIter != newLocations.end(); ++locIter, ++i)
+		{
+			if constexpr (std::ranges::range<decltype(v[i])>)
+				std::copy(v[i].begin(), v[i].end(), result[*locIter].begin());
+			else
+				result[*locIter] = v[i];
+		}
+		std::swap(result, v);
+	}
+
+	template<size_t N, class TUPLEOFARRAYPOINTERS, std::ranges::forward_range T>
+	void reorder(TUPLEOFARRAYPOINTERS vs, const T& newlocations)
+	{
+		if constexpr (N > std::tuple_size_v< TUPLEOFARRAYPOINTERS>-1)
+			return;
+		else
+		{
+			reorder(*std::get<N>(vs), newlocations);
+			reorder<N + 1>(vs, newlocations);
+		}
+	}
+
+	template<std::ranges::random_access_range SORTBY, class TUPLEOFARRAYPOINTERS>
+	void sortBy(SORTBY& toSortBy, TUPLEOFARRAYPOINTERS arrays)
+	{
+		//create a vector of indices which will represent the original locations of each element after it has been sorted
+		std::vector<size_t> originalLocations(toSortBy.size());
+		for (size_t i = 0; i < originalLocations.size(); ++i)
+			originalLocations[i] = i;
+		//sort the locations based on the data in v
+		//the custom comparator function compares based on the element at the original index stored in the element being compared
+		//by the end of the sort originalLocations[i] is the index of the ith lowest element of toSortBy
+		std::sort(originalLocations.begin(), originalLocations.end(), [toSortBy](size_t originalIndex1, size_t originalIndex2) {return toSortBy[originalIndex1] < toSortBy[originalIndex2]; });
+
+		//invert originalLocatons to set up our newLocations for each element of toSortBy
+		std::vector<size_t> newLocations(originalLocations.size());
+		for (size_t i = 0; i < originalLocations.size(); ++i)
+		{
+			newLocations[originalLocations[i]] = i;
+		}
+
+		//reorder the arrays
+		reorder(toSortBy, newLocations);
+		reorder<0>(arrays, newLocations);
+	}
+
+	//puta all values less than or equal to the last element at the beginning
+	//of the container and all those bigger to the right of the container
+	//values passed in must be iterator types
+	//result is an iterator to the first element with a value bigger than the
+	//pivot value.
+	template <std::forward_iterator T>
+	T partitionOnLastElement(T containerBegin, T containerEnd)
+	{
+		T result = containerBegin;
+		auto pivotValue = *(containerEnd - 1);
+		for (T iter = containerBegin; iter != containerEnd - 1; ++iter)
+		{
+			if (*iter <= pivotValue)
+			{
+				std::swap(*iter, *result);
+				++result;
+			}
+		}
+		std::swap(*result, *(containerEnd - 1));
+		return result;
+	}
+
+	//find the kth Biggest element. k=0 is the smallest element
+	template<std::ranges::forward_range RANGE>
+	auto findKthBiggestValueInPlace(RANGE& v, size_t k)
+	{
+		if (k <= v.size())
+			throw(std::out_of_range("Attempt to find the kth biggest element of a vector, but k was langer than the max index"));
+
+		auto partitionValue = *(v.end() - 1);
+		auto begin = v.begin();
+		auto end = v.end();
+		auto partitionPoint = partitionOnLastElement(begin, end);
+		while (begin + k != partitionPoint)
+		{
+			if (begin + k < partitionPoint)
+			{
+				end = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+			else
+			{
+				k -= partitionPoint - begin;
+				begin = partitionPoint;
+				partitionPoint = partitionOnLastElement(begin, end);
+			}
+		}
+		return *partitionPoint;
+	}
+
+	template<std::ranges::forward_range RANGE>
+	auto findKthBiggestValue(const RANGE& v, size_t k)
+	{
+		std::vector<typename RANGE::value_type> copy(v.begin(), v.end());
+		return findKthBiggestValueInPlace(copy, k);
 	}
 }
 #endif
