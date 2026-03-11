@@ -2,6 +2,7 @@
 #define svectormath_h
 
 #include<cmath>
+#include"Traits.h"
 
 
 namespace sci
@@ -23,9 +24,24 @@ namespace sci
 	const double m_sqrt1_2 = 0.707106781186547524401;// 1/sqrt(2)
 
 	template<int POW, class T>
-	auto pow(const double &base)
+	constexpr auto pow(const T &base)
 	{
-		return std::pow(base, POW);
+		if constexpr (POW == 0)
+			return sci::TypeTraits<T>::unity;
+		else if constexpr (POW == 1)
+			return base;
+		else if constexpr (POW == 2)
+			return base * base;
+		else if constexpr (POW == 3)
+			return base * base * base;
+		else if constexpr (POW < 0)
+			return sci::TypeTraits<typename sci::TypeTraits<T>::unitlessType>::unity / pow<-POW, T>(base);
+		else if constexpr (POW % 2 == 0)
+			return pow<2>(pow<POW / 2>(base));
+		else if constexpr (POW % 3 == 0)
+			return pow<3>(pow<POW / 3>(base));
+		else
+			return pow<POW / 2, T>(base) * pow<POW - POW / 2, T>(base);
 	}
 
 	template<int ROOT, class T>

@@ -11,6 +11,8 @@
 #include<limits>
 #include"string.h"
 #include"Traits.h"
+#include"math.h"
+#include<string>
 namespace sci
 {
 	//declarations and definitions of prefixes
@@ -514,9 +516,22 @@ namespace sci
 		template <int64_t pow, class VALUE_TYPE>
 		constexpr VALUE_TYPE pow10()
 		{
-			if (pow == 0)
+			if constexpr (pow == 0)
 				return VALUE_TYPE(1);
-			return pow10<VALUE_TYPE>(pow);
+			else if constexpr (pow == 1)
+				return VALUE_TYPE(10);
+			else if constexpr (pow == 2)
+				return VALUE_TYPE(100);
+			else if constexpr (pow == 3)
+				return VALUE_TYPE(1000);
+			else if constexpr (pow == -1)
+				return VALUE_TYPE(0.1);
+			else if constexpr (pow == -2)
+				return VALUE_TYPE(0.01);
+			else if constexpr (pow == -3)
+				return VALUE_TYPE(0.001);
+			else
+				return pow10<pow / 2, VALUE_TYPE>()* pow10<pow - pow / 2, VALUE_TYPE>();
 		}
 
 		template<class VALUE_TYPE>
