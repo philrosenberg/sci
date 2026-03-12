@@ -638,7 +638,7 @@ namespace sci
 
 		template<class RANGE, size_t NSTRIDES>
 		inline constexpr auto make_grid_view(RANGE &&range, const std::array<size_t, NSTRIDES> &premultipliedStrides)
-			requires(NSTRIDES >= 0 && std::is_lvalue_reference_v<decltype(premultipliedStrides)>)
+			requires(NSTRIDES >= 0)
 		{
 			internal::grid_view_adaptor<NSTRIDES + 1> adaptor(premultipliedStrides);
 			return adaptor(std::views::all(range));
@@ -650,6 +650,10 @@ namespace sci
 			internal::grid_view_adaptor<1> adaptor(premultipliedStrides);
 			return adaptor(std::views::all(range));
 		}
+
+		//define and delete the version which accepts the strides as an rvalue (with &&). This avoids passing in strides that are a temporary 
+		template<class RANGE, size_t NSTRIDES>
+		inline constexpr auto make_grid_view(RANGE&& range, const std::array<size_t, NSTRIDES>&& premultipliedStrides) requires(NSTRIDES > 0) = delete;
 
 		template<class RANGE>
 		inline constexpr auto make_grid_view_1d(RANGE&& range)

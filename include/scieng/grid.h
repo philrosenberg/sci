@@ -138,6 +138,7 @@ namespace sci
 		using vector_type = std::vector<typename GridDataVectorType<T>::type>;
 		using shape_type = std::array<size_t, NDIMS>;
 		using strides_type = std::array<size_t, NDIMS - 1>;
+		using strides_reference_type = std::add_lvalue_reference_t<strides_type>;
 		using adaptor_type = internal::grid_view_adaptor<NDIMS>;
 		strides_type m_strides;
 		static std::array<size_t, NDIMS - 1> calculateStrides(const std::array<size_t, NDIMS> &shape)
@@ -153,7 +154,7 @@ namespace sci
 		}
 	protected:
 		std::vector<typename GridDataVectorType<T>::type> m_data;
-		using view_type = decltype(views::make_grid_view(std::declval<vector_type>(), std::declval<strides_type>()));
+		using view_type = decltype(views::make_grid_view(std::declval<vector_type>(), std::declval<strides_reference_type>()));
 		view_type m_view;
 	};
 
