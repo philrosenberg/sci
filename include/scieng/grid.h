@@ -90,6 +90,15 @@ namespace sci
 		constexpr std::array<size_t, NDIMS> getShape() const
 		{
 			std::array<size_t, NDIMS> result;
+			for (const auto& s : m_strides)
+			{
+				if (s == 0)
+				{
+					for (auto& r : result)
+						r = 0;
+					return result;
+				}
+			}
 			result[0] = m_data.size() / m_strides[0];
 			for (size_t i = 1; i < NDIMS-1; ++i)
 				result[i] = m_strides[i - 1] / m_strides[i];
@@ -115,7 +124,7 @@ namespace sci
 		}
 		constexpr void refreshView()
 		{
-			m_view.retarget(m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0])));
+			m_view.retarget(views::make_grid_view(m_data, m_strides));
 		}
 		void swap(GridDataMembers& other)
 		{
@@ -126,7 +135,11 @@ namespace sci
 		}
 
 	private:
-		std::array<size_t, NDIMS - 1> m_strides;
+		using vector_type = std::vector<typename GridDataVectorType<T>::type>;
+		using shape_type = std::array<size_t, NDIMS>;
+		using strides_type = std::array<size_t, NDIMS - 1>;
+		using adaptor_type = internal::grid_view_adaptor<NDIMS>;
+		strides_type m_strides;
 		static std::array<size_t, NDIMS - 1> calculateStrides(const std::array<size_t, NDIMS> &shape)
 		{
 			std::array<size_t, NDIMS - 1> strides;
@@ -140,7 +153,7 @@ namespace sci
 		}
 	protected:
 		std::vector<typename GridDataVectorType<T>::type> m_data;
-		using view_type = std::remove_cv_t<decltype(m_data | views::grid<NDIMS>(GridPremultipliedStridesReference<NDIMS>(&m_strides[0])))>; //must be after m_data and m_strides
+		using view_type = decltype(views::make_grid_view(std::declval<vector_type>(), std::declval<strides_type>()));
 		view_type m_view;
 	};
 
@@ -185,6 +198,10 @@ namespace sci
 			other.refreshView();
 			return *this;
 		}
+	private:
+		using vector_type = std::vector<typename GridDataVectorType<T>::type>;
+		using shape_type = std::array<size_t, 1>;
+		using strides_type = std::array<size_t, 0>;
 	protected:
 		constexpr std::array<size_t, 1> getShape() const
 		{
@@ -204,7 +221,7 @@ namespace sci
 		}
 		constexpr void refreshView()
 		{
-			m_view.retarget(m_data | views::grid<1>);
+			m_view.retarget(views::make_grid_view(m_data, std::array<size_t, 0>()));
 		}
 		void swap(GridDataMembers& other)
 		{
@@ -214,7 +231,7 @@ namespace sci
 		}
 
 		std::vector<typename GridDataVectorType<T>::type> m_data;
-		using view_type = std::remove_cvref_t<decltype(m_data | views::grid<1>)>;
+		using view_type = decltype(views::make_grid_view(m_data, std::declval<std::array<size_t, 0>>()));
 		view_type m_view;
 	};
 
@@ -258,6 +275,9 @@ namespace sci
 			std::swap(m_data, other.m_data);
 			return *this;
 		}
+	private:
+		using vector_type = typename GridDataVectorType<T>::type;
+		using shape_type = std::array<size_t, 0>;
 	protected:
 		constexpr std::array<size_t, 0> getShape() const
 		{
@@ -283,7 +303,9 @@ namespace sci
 			std::swap(m_data, other.m_data);
 		}
 		T m_data;
-		using view_type = decltype(m_data | views::grid<0>);
+		//using view_type = sci::internal::grid_view<decltype(m_data), 0>;
+		//using view_type = decltype(std::declval<vector_type>() | views::grid_view(std::declval<shape_type>()));
+		using view_type = decltype(views::make_grid_view(std::declval<vector_type>()));
 		//view_type m_view;
 	};
 
@@ -306,11 +328,11 @@ namespace sci
 		using const_reference = const data_type&;
 		using size_type = typename vector_type::size_type;
 		using difference_type = typename vector_type::difference_type;
-		using iterator = members::view_type::iterator;
-		using const_iterator = members::view_type::const_iterator;
+		using view_type = typename GridDataMembers<value_type, NDIMS>::view_type;
+		using iterator = typename members::view_type::iterator;
+		using const_iterator = typename members::view_type::const_iterator;
 		using reverse_iterator = typename std::reverse_iterator<iterator>;
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
-		using view_type = typename GridDataMembers<value_type, NDIMS>::view_type;
 
 		static const size_t ndims = NDIMS;
 
@@ -407,7 +429,7 @@ namespace sci
 			setShape({ members::m_data.size() });
 		}
 		template<std::input_iterator ITER>
-		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape) requires(NDIMS == 1)
+		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape) requires(NDIMS == 0)
 			:members(*begin)
 		{
 				if( begin - end != 1)
@@ -421,13 +443,22 @@ namespace sci
 		}
 
 		template<std::input_iterator ITER>
-		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape)
-			:members(vector_type(begin, end))
+		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape) requires (NDIMS > 1)
+			:members(vector_type(begin, end), shape)
 		{
 			size_t size = 1;
 			for (size_t i = 0; i < NDIMS; ++i)
 				size *= shape[i];
 			if (size != end - begin)
+				throw(std::out_of_range("Attempted to construct a GridData object with first and last iterators which did not match the shape."));
+			setShape(shape);
+		}
+
+		template<std::input_iterator ITER>
+		constexpr GridData(ITER begin, ITER end, const std::array<size_t, NDIMS>& shape) requires (NDIMS == 1)
+			: members(vector_type(begin, end))
+		{
+			if (shape[0] != end - begin)
 				throw(std::out_of_range("Attempted to construct a GridData object with first and last iterators which did not match the shape."));
 			setShape(shape);
 		}
@@ -735,7 +766,7 @@ namespace sci
 		auto getView()
 		{
 			if constexpr (ndims == 0)
-				return members::m_data | views::grid<0>;
+				return views::make_grid_view(members::m_data);
 			else
 				return members::m_view;
 		}

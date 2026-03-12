@@ -439,7 +439,7 @@ namespace sci
 	template<class T>
 	auto getGridView(T& scalar) requires(!IsGrid<T>)
 	{
-		return scalar | views::grid<0>;
+		return views::make_grid_view(scalar);
 	}
 
 
@@ -530,7 +530,7 @@ namespace sci
 		requires std::ranges::random_access_range<RANGE>
 			friend auto operator|(RANGE&& range, gridpair_fn const& fn)
 		{
-			return grid_view<RANGE, NDIMS>{ std::forward<RANGE>(range), fn.m_strides };
+			return range |views::grid_view<RANGE, NDIMS>(fn.m_strides);
 		}
 	private:
 		const GridPremultipliedStridesReference<NDIMS> m_strides;
