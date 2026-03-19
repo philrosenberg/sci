@@ -418,8 +418,8 @@ namespace sci
 	template<std::ranges::forward_range RANGE>
 	auto findKthBiggestValueInPlace(RANGE& v, size_t k)
 	{
-		if (k <= v.size())
-			throw(std::out_of_range("Attempt to find the kth biggest element of a vector, but k was langer than the max index"));
+		if (v.size() <= k)
+			throw(std::out_of_range("Attempt to find the kth biggest element of a vector, but k was larger than the max index"));
 
 		auto partitionValue = *(v.end() - 1);
 		auto begin = v.begin();
