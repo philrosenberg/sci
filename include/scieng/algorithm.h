@@ -342,8 +342,12 @@ namespace sci
 	template<std::ranges::random_access_range T, std::ranges::forward_range U>
 	void reorder(T& v, const U& newLocations)
 	{
+		if(newLocations.size() != v.size())
+			throw(std::out_of_range("Called sci::reorder, but the size of the newLocations range does not match the size of the data range"));
+		if (newLocations.size() == 0)
+			return;
 		if (sci::max(newLocations) >= newLocations.size())
-			throw(std::out_of_range("Called sci::reorder, but the maximum index is to large to fit in the result"));
+			throw(std::out_of_range("Called sci::reorder, but the maximum index is too large too fit in the result"));
 		T result = v;
 		size_t i = 0;
 		for (auto locIter = newLocations.begin(); locIter != newLocations.end(); ++locIter, ++i)
