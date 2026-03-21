@@ -418,8 +418,43 @@ namespace sci
 		return result;
 	}
 
+	template <std::bidirectional_iterator T, class U>
+	size_t segregate_if(T containerBegin, T containerEnd, U predicate)
+	{
+		if (containerEnd - containerBegin == 0)
+			return 0;
+		size_t count = 0;
+		auto writePoint = containerEnd;
+		--writePoint;
+		auto readPoint = containerBegin;
+		while (true)
+		{
+			while (predicate(*writePoint) && readPoint != writePoint)
+			{
+				--writePoint;
+				++count;
+			}
+			while (!predicate(*readPoint) && readPoint != writePoint)
+			{
+				++readPoint;
+			}
+			if (readPoint == writePoint)
+				break;
+			std::swap(*readPoint, *writePoint);
+		}
+		if (predicate(*readPoint))
+			++count;
+		return count;
+	}
+
+	template <std::ranges::bidirectional_range T, class U>
+	size_t segregate_if(T& container, U predecate)
+	{
+		return segregate_if(std::ranges::begin(container), std::ranges::end(container), predecate);
+	}
+
 	//find the kth Biggest element. k=0 is the smallest element
-	template<std::ranges::forward_range RANGE>
+	template<std::ranges::random_access_range RANGE>
 	auto findKthBiggestValueInPlace(RANGE& v, size_t k)
 	{
 		if (v.size() <= k)
@@ -428,20 +463,29 @@ namespace sci
 		auto partitionValue = *(v.end() - 1);
 		auto begin = v.begin();
 		auto end = v.end();
+		std::swap(*(begin + k), *(end - 1)); //this makes the algorithm O(1)instead of O(N^2) if it is presorted
 		auto partitionPoint = partitionOnLastElement(begin, end);
-		while (begin + k != partitionPoint)
+		size_t duplicates = segregate_if(begin, partitionPoint, [partitionPoint](const auto &val) {return val == *partitionPoint; });
+		while (begin + k > partitionPoint  || begin + k < partitionPoint - duplicates)
 		{
 			if (begin + k < partitionPoint)
 			{
-				end = partitionPoint;
+				//move all the duplicates to the end of the first partition
+				if (duplicates > 0)
+					groupValuesToEnd(begin, partitionPoint, *partitionPoint);
+				end = partitionPoint - duplicates;
+				std::swap(*(begin + k), *(end - 1));
 				partitionPoint = partitionOnLastElement(begin, end);
 			}
 			else
 			{
 				k -= partitionPoint - begin;
 				begin = partitionPoint;
+				std::swap(*(begin + k), *(end - 1));
 				partitionPoint = partitionOnLastElement(begin, end);
 			}
+			//check how many values we have equal to k
+			duplicates = segregate_if(begin, partitionPoint, [partitionPoint](const auto &val) {return val == *partitionPoint; });
 		}
 		return *partitionPoint;
 	}
