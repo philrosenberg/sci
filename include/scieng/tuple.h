@@ -34,6 +34,17 @@ namespace sci
 	template<size_t N, class TUPLE>
 	using TailTuple_t = typename TailTuple<N, TUPLE>::type;
 
+	template<size_t N, class TUPLE>
+	TailTuple_t<N, TUPLE>make_TailTuple(TUPLE& tuple)
+	{
+		if constexpr (N == 0)
+			return tuple;
+		else if constexpr (N == std::tuple_size<TUPLE>() - 1)
+			return std::make_tuple(std::get<N>(tuple));
+		else
+			return std::tuple_cat(std::make_tuple(std::get<N>(tuple)), make_TailTuple<N + 1, TUPLE>(tuple));
+	}
+
 
 	//A trait class to get a Tuple class which is a transformed version
 	//of an existing tuple.
