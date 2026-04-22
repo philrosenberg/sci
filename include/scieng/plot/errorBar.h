@@ -21,7 +21,7 @@ namespace sci
 			template<class XCONTAINER, class YCONTAINER>
 			HorizontalErrorBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& plusErrors, const XCONTAINER& minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
 				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
-				:data(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), xs, ys, (xs | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (xs | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+				:data(xAxis, yAxis, std::make_tuple( xAxis, yAxis, xAxis, xAxis), xs, ys,  sci::views::make_grid_view_1d(xs) + sci::views::make_grid_view_1d(plusErrors), sci::views::make_grid_view_1d(xs) - sci::views::make_grid_view_1d(minusErrors))
 			{
 				m_style = style;
 				m_stopLength = stopLength;
@@ -77,7 +77,7 @@ namespace sci
 
 			template<class XCONTAINER, class YCONTAINER>
 			VerticalErrorBars(XCONTAINER xs, YCONTAINER ys, YCONTAINER plusErrors, YCONTAINER minusErrors, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, Length stopLength, const LineStyle style = sci::plot::LineStyle(), bool useForAutoscale = true)
-				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), xs, ys, (ys | sci::views::grid<1>) + (plusErrors | sci::views::grid<1>), (ys | sci::views::grid<1>) - (minusErrors | sci::views::grid<1>))
+				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis, yAxis), xs, ys, sci::views::make_grid_view_1d(ys) + sci::views::make_grid_view_1d(plusErrors), sci::views::make_grid_view_1d(ys) - sci::views::make_grid_view_1d(minusErrors))
 			{
 				m_style = style;
 				m_stopLength = stopLength;

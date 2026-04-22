@@ -21,7 +21,7 @@ namespace sci
 			template<class XCONTAINER, class YCONTAINER>
 			VerticalBars(const XCONTAINER& xs, const YCONTAINER& ys, const XCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, Y zeroLine = Y(0.0))
 				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
-				:data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), (xs | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (xs | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>), ys)
+				:data(xAxis, yAxis, std::make_tuple(xAxis, xAxis, yAxis), sci::views::make_grid_view_1d(xs) - 0.5 * sci::views::make_grid_view_1d(widths), sci::views::make_grid_view_1d(xs) + 0.5 * sci::views::make_grid_view_1d(widths), ys)
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
@@ -76,7 +76,7 @@ namespace sci
 			template<class XCONTAINER, class YCONTAINER>
 			HorizontalBars(const XCONTAINER& xs, const YCONTAINER& ys, const YCONTAINER& widths, std::shared_ptr<Axis<X>> xAxis, std::shared_ptr<Axis<Y>> yAxis, const LineStyle& lineStyle, const FillStyle& fillStyle, X zeroLine = X(0.0))
 				requires XYPlotable<XCONTAINER, YCONTAINER, X, Y>
-				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis), xs, (ys | sci::views::grid<1>) - 0.5 * (widths | sci::views::grid<1>), (ys | sci::views::grid<1>) + 0.5 * (widths | sci::views::grid<1>))
+				:data(xAxis, yAxis, std::make_tuple(xAxis, yAxis, yAxis), xs, sci::views::make_grid_view_1d(ys) - 0.5 * sci::views::make_grid_view_1d(widths), sci::views::make_grid_view_1d(ys) + 0.5 * sci::views::make_grid_view_1d(widths))
 			{
 				//a note on the above - the result of xs-0.5*widths and xs+0.5*widths is an r-value, meaning we
 				//can't directly take it's address. However, when we assign it to a const reference the temporary's
