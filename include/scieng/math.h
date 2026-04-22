@@ -130,7 +130,7 @@ namespace sci
 	}
 
 	template<class T>
-	T round(T n)
+	T round(const T &n)
 	{
 		if (n > T(0.0))
 			return floor(n + T(0.5));
