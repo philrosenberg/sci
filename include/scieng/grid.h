@@ -907,7 +907,6 @@ namespace sci
 		}
 		template<IsGridDims<NDIMS> GRID>
 		GridData<value_type, NDIMS, Allocator>& operator=(const GRID& rhs)
-			//requires std::convertible_to<typename GRID::data_type, data_type>
 		{
 			reshape(rhs.shape());
 			auto iter = begin();
@@ -918,7 +917,6 @@ namespace sci
 		}
 		template<IsGridDims<NDIMS> GRID>
 		GridData<value_type, NDIMS, Allocator>& operator=(GRID&& rhs)
-			//requires std::convertible_to<typename GRID::data_type, data_type>
 		{
 			reshape(rhs.shape());
 			auto iter = begin();
@@ -930,7 +928,6 @@ namespace sci
 		//fill the grid with a specific value
 		template<class U>
 		GridData<value_type, NDIMS, Allocator>& operator=(const U& rhs)
-			//requires std::convertible_to<U, data_type>
 		{
 			auto iter = begin();
 			for (; iter != end(); ++iter)

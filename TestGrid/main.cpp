@@ -112,6 +112,35 @@ void output1d(T grid) requires (T::ndims == 1)
 	std::cout << "\n\n";
 }
 
+template<class Rng>
+struct all_elements : std::ranges::view_interface<all_elements<Rng>>
+{
+	template<std::ranges::viewable_range VRNG>
+	all_elements( VRNG&& rng) //viewable_range is a constraint, which is why we can have it precede auto
+		: m_range(std::forward<VRNG>(rng))
+	{
+
+	}
+	auto begin() const
+	{
+		return m_range.begin();
+	}
+	auto end() const
+	{
+		return m_range.begin();
+	}
+private:
+	Rng m_range;
+};
+
+//This is something called a deduction guide
+//It maps the constructor template arguments to the class template arguments
+//in this case it says if we call the constructor with RNG &&, then make the class template std::ranges::views::all_t<RNG>
+// it means we can do
+//all_elements myAllElements(someRange);
+//without including the template parameter
+//In particular the std::ranges::views::all_t<RNG> will be an owning type if we pass in an r-value, or a non-owning type if we pass in an l-value
+template<std::ranges::viewable_range RNG> all_elements(RNG&& rng) -> all_elements<std::ranges::views::all_t<RNG>>;
 
 int main()
 {
