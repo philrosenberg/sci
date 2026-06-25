@@ -278,7 +278,7 @@ namespace sci
 
 		template<class RANGE, size_t NDIMS>
 			requires (std::ranges::random_access_range<typename GridViewTypeDefs<RANGE, NDIMS>::range_type>&&
-		std::ranges::view<typename GridViewTypeDefs<RANGE, NDIMS>::range_type>) //this ensures RANGE is a view so is cheap to copy - needed for data_members_t
+		std::ranges::view<typename GridViewTypeDefs<RANGE, NDIMS>::range_type>) //this ensures RANGE is a view if NDIMS > 0 so is cheap to copy - needed for data_members_t
 			class grid_view : public std::ranges::view_interface<grid_view<typename GridViewTypeDefs<RANGE, NDIMS>::range_type, NDIMS>>
 		{
 		public:
@@ -324,37 +324,37 @@ namespace sci
 			}
 			void retarget(grid_view<RANGE, NDIMS> const& other)
 			{
-				m_dataMembers = other.m_dataMembers;
+				m_range = other.m_range;
 				m_strides = other.m_strides;
 			}
 			void retarget(grid_view<RANGE, NDIMS>&& other)
 			{
-				std::swap(m_dataMembers, other.m_dataMembers);
+				std::swap(m_range, other.m_range);
 				std::swap(m_strides, other.m_strides);
 			}
 			~grid_view() = default;
 
 			grid_view(RANGE&& range, const GridPremultipliedStridesReference<NDIMS>& strides) requires (std::ranges::random_access_range<RANGE>)
-				: m_dataMembers{ data_members_t{std::forward<RANGE>(range)} }, m_strides(strides)
+				: m_range{ std::forward<RANGE>(range) }, m_strides(strides)
 			{
 			}
 
 			grid_view(RANGE&& range) requires (std::ranges::random_access_range<RANGE>)
-				: m_dataMembers{ data_members_t{std::forward<RANGE>(range)} }
+				: m_range{ std::forward<RANGE>(range) }
 			{
 			}
 
-			grid_view(RANGE&& range) requires (!std::ranges::range<RANGE>&& NDIMS == 0)
-				: m_dataMembers{ data_members_t{std::forward<RANGE>(range)} }
+			grid_view(RANGE& range) requires (!std::ranges::range<RANGE>&& NDIMS == 0)
+				: m_range(&range, 1 ) // m_range is a unit length span when NDIMS == 0
 			{
 			}
 
 			iterator begin() const
 			{
 				if constexpr (NDIMS > 0)
-					return std::ranges::begin(m_dataMembers.m_range);
+					return std::ranges::begin(m_range);
 				else
-					return std::span(&m_dataMembers.m_range, 1).begin(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
+					return std::span(&m_range, 1).begin(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
 			}
 			iterator cbegin() const
 			{
@@ -363,9 +363,9 @@ namespace sci
 			sentinel end() const
 			{
 				if constexpr (NDIMS > 0)
-					return std::ranges::end(m_dataMembers.m_range);
+					return std::ranges::end(m_range);
 				else
-					return std::span(&m_dataMembers.m_range, 1).end(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
+					return std::span(&m_range, 1).end(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
 			}
 			sentinel cend() const
 			{
@@ -376,14 +376,14 @@ namespace sci
 				if constexpr (NDIMS > 0)
 					return *begin();
 				else
-					return m_dataMembers.m_range;
+					return m_range;
 			}
 			reference_type last() const
 			{
 				if constexpr (NDIMS > 0)
 					return *(end() - 1);
 				else
-					return m_dataMembers.m_range;
+					return m_range;
 			}
 			const GridPremultipliedStridesReference<NDIMS> getStrides() const
 			{
@@ -392,52 +392,51 @@ namespace sci
 			auto size() const
 			{
 				if constexpr (NDIMS > 0)
-					return std::ranges::size(m_dataMembers.m_range);
+					return std::ranges::size(m_range);
 				else
 					return size_t(1);
 			}
 			reference_type operator[](const difference_type& index) requires(NDIMS == 1)
 			{
-				return m_dataMembers.m_range[index];
+				return m_range[index];
 			}
 			const reference_type operator[](const difference_type& index) const requires(NDIMS == 1)
 			{
-				return m_dataMembers.m_range[index];
+				return m_range[index];
 			}
 			reference_type operator[](const std::array<size_t, NDIMS>& index)
 			{
 				if constexpr (NDIMS == 0)
-					return m_dataMembers.m_range;
+					return m_range[0];
 				else if constexpr (NDIMS == 1)
 					return operator[](index[0]);
 				else
 				{
-					RANGE& range = m_dataMembers.m_range;
 					size_t offset = m_strides.getOffset(index);
-					return range[offset];
-					//return m_dataMembers.m_range[m_strides.getOffset(index)];
+					return m_range[offset];
+					//return m_range[m_strides.getOffset(index)];
 				}
 			}
 			const reference_type operator[](const std::array<size_t, NDIMS>& index) const
 			{
 				if constexpr (NDIMS == 0)
-					return m_dataMembers.m_range;
+					return m_range;
 				else if constexpr (NDIMS == 1)
 					return operator[](index[0]);
 				else
-					return m_dataMembers.m_range[m_strides.getOffset(index)];
+					return m_range[m_strides.getOffset(index)];
 			}
 			auto operator[](const difference_type& index) requires(NDIMS > 1)
 			{
-				auto subrange = std::ranges::subrange(m_dataMembers.m_range.begin() + index * m_strides.stride(),
-					m_dataMembers.m_range.begin() + (index + 1) * m_strides.stride());
+				auto subrange = std::ranges::subrange(m_range.begin() + index * m_strides.stride(),
+					m_range.begin() + (index + 1) * m_strides.stride());
 				static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 				return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 			}
 			const auto operator[](const difference_type& index) const requires(NDIMS > 1)
 			{
-				auto subrange = std::ranges::subrange(m_dataMembers.m_range.begin() + index * m_strides.stride(),
-					m_dataMembers.m_range.begin() + (index + 1) * m_strides.stride());
+				auto subrange = std::ranges::subrange(m_range.begin() + index * m_strides.stride(),
+					m_range.begin() + (index + 1) * m_strides.stride());
 				static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 				return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 			}
@@ -447,45 +446,45 @@ namespace sci
 			}
 			reference_type at(const difference_type& index) requires(NDIMS == 1)
 			{
-				return m_dataMembers.m_range.at(index);
+				return m_range.at(index);
 			}
 			const reference_type at(const difference_type& index) const requires(NDIMS == 1)
 			{
-				return m_dataMembers.m_range.at(index);
+				return m_range.at(index);
 			}
 			reference_type at(const std::array<size_t, NDIMS>& index)
 			{
-				return m_dataMembers.m_range.at(m_strides.getOffset(index));
+				return m_range.at(m_strides.getOffset(index));
 			}
 			const reference_type at(const std::array<size_t, NDIMS>& index) const
 			{
-				return m_dataMembers.m_range.at(m_strides.getOffset(index));
+				return m_range.at(m_strides.getOffset(index));
 			}
 			auto at(const difference_type& index) requires(NDIMS > 1)
 			{
 				//use vector::at to do range checking on first and last element
-				auto first = m_dataMembers.m_range.at(index * m_strides.stride());
-				auto last = m_dataMembers.m_range.at((index + 1) * m_strides.stride() - 1);
+				auto first = m_range.at(index * m_strides.stride());
+				auto last = m_range.at((index + 1) * m_strides.stride() - 1);
 
-				auto subrange = std::ranges::subrange(m_dataMembers.m_range.begin() + index * m_strides.stride(),
-					m_dataMembers.m_range.begin() + (index + 1) * m_strides.stride());
+				auto subrange = std::ranges::subrange(m_range.begin() + index * m_strides.stride(),
+					m_range.begin() + (index + 1) * m_strides.stride());
 				static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 				return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 			}
 			const auto at(const difference_type& index) const requires(NDIMS > 1)
 			{
 				//use vector::at to do range checking on first and last element
-				auto first = m_dataMembers.m_range.at(index * m_strides.stride());
-				auto last = m_dataMembers.m_range.at((index + 1) * m_strides.stride() - 1);
+				auto first = m_range.at(index * m_strides.stride());
+				auto last = m_range.at((index + 1) * m_strides.stride() - 1);
 
-				auto subrange = std::ranges::subrange(m_dataMembers.m_range.begin() + index * m_strides.stride(),
-					m_dataMembers.m_range.begin() + (index + 1) * m_strides.stride());
+				auto subrange = std::ranges::subrange(m_range.begin() + index * m_strides.stride(),
+					m_range.begin() + (index + 1) * m_strides.stride());
 				static_assert((bool)std::ranges::random_access_range<decltype(subrange)>, "subrange failed the test for being a random access range");
 				return grid_view<decltype(subrange), NDIMS - 1>(std::forward<decltype(subrange)>(subrange), m_strides.next());
 			}
 			bool empty() const
 			{
-				return std::ranges::empty(m_dataMembers.m_range);
+				return std::ranges::empty(m_range);
 			}
 			grid_view<RANGE, NDIMS>& getView()
 			{
@@ -509,19 +508,15 @@ namespace sci
 			}
 			auto data() const requires sci::has_data<RANGE>
 			{
-				return m_dataMembers.m_range.data();
+				return m_range.data();
 			}
 			auto data()
 			{
-				return m_dataMembers.m_range.data();
+				return m_range.data();
 			}
 
 		private:
-			struct data_members_t
-			{
-				RANGE m_range; //RANGE is a view so is cheap to copy
-			};
-			data_members_t m_dataMembers;
+			range_type m_range; //m_range will be a view the same as RANGE for NDIMS > 0 or std::span<RANGE> if RANGE was a scalar
 			GridPremultipliedStridesReference<NDIMS> m_strides;
 		};
 
