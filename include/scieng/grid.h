@@ -907,7 +907,18 @@ namespace sci
 		}
 		template<IsGridDims<NDIMS> GRID>
 		GridData<value_type, NDIMS, Allocator>& operator=(const GRID& rhs)
-			requires std::convertible_to<typename GRID::data_type, data_type>
+			//requires std::convertible_to<typename GRID::data_type, data_type>
+		{
+			reshape(rhs.shape());
+			auto iter = begin();
+			auto rhsIter = rhs.begin();
+			for (; iter != end(); ++iter, ++rhsIter)
+				*iter = data_type(*rhsIter);
+			return *this;
+		}
+		template<IsGridDims<NDIMS> GRID>
+		GridData<value_type, NDIMS, Allocator>& operator=(GRID&& rhs)
+			//requires std::convertible_to<typename GRID::data_type, data_type>
 		{
 			reshape(rhs.shape());
 			auto iter = begin();
@@ -919,7 +930,7 @@ namespace sci
 		//fill the grid with a specific value
 		template<class U>
 		GridData<value_type, NDIMS, Allocator>& operator=(const U& rhs)
-			requires std::convertible_to<U, data_type>
+			//requires std::convertible_to<U, data_type>
 		{
 			auto iter = begin();
 			for (; iter != end(); ++iter)
@@ -927,7 +938,11 @@ namespace sci
 			return *this;
 		}
 		GridData<T, NDIMS, Allocator>& operator=(const GridData<T, NDIMS, Allocator>& rhs) = default;
-		GridData<T, NDIMS, Allocator>& operator=(GridData<T, NDIMS, Allocator>&& rhs) = default;
+		GridData<T, NDIMS, Allocator>& operator=(GridData<T, NDIMS, Allocator>&& rhs)
+		{
+			swap(rhs);
+			return *this;
+		}
 	private:
 		void setShape(const std::array<size_t, NDIMS>& shape)
 		{
