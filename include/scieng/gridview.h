@@ -351,10 +351,7 @@ namespace sci
 
 			iterator begin() const
 			{
-				if constexpr (NDIMS > 0)
-					return std::ranges::begin(m_range);
-				else
-					return std::span(&m_range, 1).begin(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
+				return std::ranges::begin(m_range);
 			}
 			iterator cbegin() const
 			{
@@ -362,10 +359,7 @@ namespace sci
 			}
 			sentinel end() const
 			{
-				if constexpr (NDIMS > 0)
-					return std::ranges::end(m_range);
-				else
-					return std::span(&m_range, 1).end(); //std::span is a borrowed range meaning iterators are still valid beyond the lifetime of the span
+				return std::ranges::end(m_range);
 			}
 			sentinel cend() const
 			{
@@ -373,17 +367,11 @@ namespace sci
 			}
 			reference_type first() const
 			{
-				if constexpr (NDIMS > 0)
-					return *begin();
-				else
-					return m_range;
+				return *begin();
 			}
 			reference_type last() const
 			{
-				if constexpr (NDIMS > 0)
-					return *(end() - 1);
-				else
-					return m_range;
+				return *(end() - 1);
 			}
 			const GridPremultipliedStridesReference<NDIMS> getStrides() const
 			{
@@ -391,10 +379,7 @@ namespace sci
 			}
 			auto size() const
 			{
-				if constexpr (NDIMS > 0)
-					return std::ranges::size(m_range);
-				else
-					return size_t(1);
+				return std::ranges::size(m_range);
 			}
 			reference_type operator[](const difference_type& index) requires(NDIMS == 1)
 			{
@@ -420,9 +405,9 @@ namespace sci
 			const reference_type operator[](const std::array<size_t, NDIMS>& index) const
 			{
 				if constexpr (NDIMS == 0)
-					return m_range;
+					return begin();
 				else if constexpr (NDIMS == 1)
-					return operator[](index[0]);
+					return m_range[(index[0])];
 				else
 					return m_range[m_strides.getOffset(index)];
 			}
